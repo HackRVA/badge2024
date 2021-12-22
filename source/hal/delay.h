@@ -9,6 +9,6 @@
 
 void sleep_ms(uint32_t time);
 
-void sleep_us(uint32_t time);
+void sleep_us(uint64_t time);
 
 #endif //badge2022_c_DELAY_H
