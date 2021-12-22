@@ -50,3 +50,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# IDE Settings for CLion (not commonly used)
+.idea/
+
+# Build artifacts
+build/
+
+# Mac clutter
+**/.DS_Store
