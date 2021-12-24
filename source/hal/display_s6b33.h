@@ -53,6 +53,8 @@ void S6B33_init_device(void);
 void S6B33_rect(int x, int y, int width, int height);
 /** updates current pixel to the data in `pixel`. */
 void S6B33_pixel(unsigned short pixel);
+/** Updates a consecutive sequence of pixels. */
+void S6B33_pixels(unsigned short *pixel, int number);
 /** invert display */
 void S6B33_set_display_mode_inverted(void);
 /** uninvert display */

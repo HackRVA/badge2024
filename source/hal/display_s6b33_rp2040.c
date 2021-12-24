@@ -42,14 +42,21 @@ unsigned static const char G_contrast2 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 
 
 
 void S6B33_send_command(unsigned char data) {
-    gpio_put(BADGE_DISPLAY_DC, 0);
-    spi_write_blocking(NULL, &data, 1);
-
+    gpio_put(BADGE_DISPLAY_DC, LCD_COMMAND);
+    spi_set_format(spi0, 8, 0, 0, SPI_MSB_FIRST);
+    spi_write_blocking(spi0, &data, 1);
 }
 
 void S6B33_send_data(unsigned short data) {
-    gpio_put(BADGE_DISPLAY_DC, 1);
-    spi_write16_blocking(NULL, &data, 1);
+    gpio_put(BADGE_DISPLAY_DC, LCD_DATA);
+    spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
+    spi_write16_blocking(spi0, &data, 1);
+}
+
+void S6B33_send_data_multi(const unsigned short *data, int len) {
+    gpio_put(BADGE_DISPLAY_DC, LCD_DATA);
+    spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
+    spi_write16_blocking(spi0, data, len);
 }
 
 void S6B33_init_device(void)
@@ -208,6 +215,10 @@ void S6B33_contrast(unsigned char data)
 void S6B33_pixel(unsigned short pixel)
 {
     S6B33_send_data(pixel);
+}
+
+void S6B33_pixels(unsigned short *pixel, int number) {
+    S6B33_send_data_multi(pixel, number);
 }
 
 void S6B33_set_display_mode_inverted(void)
