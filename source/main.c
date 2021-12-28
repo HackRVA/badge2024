@@ -11,6 +11,7 @@
 
 #include "cli.h"
 #include "cli_flash.h"
+#include "cli_led.h"
 
 int exit_process(char *args) {
     return -1;
@@ -26,6 +27,7 @@ int help_process(char *args) {
     puts("Available commands are: ");
     puts("\thelp - Print this message");
     puts("\tflash - Write data to nonvolatile storage");
+    puts("\tled - Toggle lights on the device");
     puts("\texit - Exit command loop, triggering a reboot");
     return 0;
 }
@@ -49,7 +51,8 @@ int main() {
         [0] = help_command, // Add your command name to the printout in help_process!
         [1] = exit_command,
         [2] = flash_command,
-        [3] = {}
+        [3] = led_command,
+        [4] = {}
     };
 
     cli_run(root_commands);

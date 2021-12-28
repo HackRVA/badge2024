@@ -42,42 +42,48 @@ unsigned static const char G_contrast2 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 
 
 
 void S6B33_send_command(unsigned char data) {
-    gpio_put(BADGE_DISPLAY_DC, LCD_COMMAND);
+    gpio_put(BADGE_GPIO_DISPLAY_DC, LCD_COMMAND);
     spi_set_format(spi0, 8, 0, 0, SPI_MSB_FIRST);
     spi_write_blocking(spi0, &data, 1);
 }
 
 void S6B33_send_data(unsigned short data) {
-    gpio_put(BADGE_DISPLAY_DC, LCD_DATA);
+    gpio_put(BADGE_GPIO_DISPLAY_DC, LCD_DATA);
     spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
     spi_write16_blocking(spi0, &data, 1);
 }
 
 void S6B33_send_data_multi(const unsigned short *data, int len) {
-    gpio_put(BADGE_DISPLAY_DC, LCD_DATA);
+    gpio_put(BADGE_GPIO_DISPLAY_DC, LCD_DATA);
     spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
     spi_write16_blocking(spi0, data, len);
 }
 
-void S6B33_init_device(void)
-{
-    gpio_init(BADGE_DISPLAY_CS);
-    gpio_set_function(BADGE_DISPLAY_CS, GPIO_FUNC_SPI);
+void S6B33_init_gpio(void) {
 
-    gpio_init(BADGE_DISPLAY_SCK);
-    gpio_set_function(BADGE_DISPLAY_SCK, GPIO_FUNC_SPI);
+    gpio_init(BADGE_GPIO_DISPLAY_CS);
+    gpio_set_function(BADGE_GPIO_DISPLAY_CS, GPIO_FUNC_SPI);
 
-    gpio_init(BADGE_DISPLAY_MOSI);
-    gpio_set_function(BADGE_DISPLAY_MOSI, GPIO_FUNC_SPI);
+    gpio_init(BADGE_GPIO_DISPLAY_SCK);
+    gpio_set_function(BADGE_GPIO_DISPLAY_SCK, GPIO_FUNC_SPI);
 
-    gpio_init(BADGE_DISPLAY_MISO);
-    gpio_set_function(BADGE_DISPLAY_MISO, GPIO_FUNC_SPI);
+    gpio_init(BADGE_GPIO_DISPLAY_MOSI);
+    gpio_set_function(BADGE_GPIO_DISPLAY_MOSI, GPIO_FUNC_SPI);
 
-    gpio_init(BADGE_DISPLAY_DC);
-    gpio_set_dir(BADGE_DISPLAY_DC, true);
+    gpio_init(BADGE_GPIO_DISPLAY_DC);
+    gpio_set_dir(BADGE_GPIO_DISPLAY_DC, true);
+
+    gpio_init(BADGE_GPIO_DISPLAY_BACKLIGHT);
+    gpio_set_dir(BADGE_GPIO_DISPLAY_BACKLIGHT, true);
+
+    gpio_init(BADGE_GPIO_DISPLAY_RESET);
+    gpio_set_dir(BADGE_GPIO_DISPLAY_RESET, true);
 
     spi_init(spi0, 8000000);
+}
 
+void S6B33_init_device(void)
+{
     S6B33_send_command(STANDBY_ON);  /* standby on == display clocks off */
     S6B33_send_command(DCDC_AMP_ONOFF);
     S6B33_send_command(0x00);        /* booster off */

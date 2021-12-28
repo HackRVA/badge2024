@@ -49,6 +49,8 @@
 
 /** set important internal registers for the LCD display */
 void S6B33_init_device(void);
+/** set GPIO configuration for the LCD display */
+void S6B33_init_gpio(void);
 /** sets the current display region for calls to S6B33_pixel() */
 void S6B33_rect(int x, int y, int width, int height);
 /** updates current pixel to the data in `pixel`. */
