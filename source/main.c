@@ -13,6 +13,12 @@
 #include "cli_flash.h"
 #include "cli_led.h"
 
+#include "assets.h"
+#include "framebuffer.h"
+#include "display_s6b33.h"
+#include "colors.h"
+#include "led_pwm.h"
+
 int exit_process(char *args) {
     return -1;
 }
@@ -42,6 +48,13 @@ int main() {
 
     hal_init();
 
+    // Sam: temporary code to demo display working
+    led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 150);
+    S6B33_reset();
+    FbMove(0,0);
+    FbImage(1, 0);
+    FbPushBuffer();
+
     // Need to ensure USB is connected before reading stdin, or else that will hang
     while (!usb_is_connected()) {
         sleep_ms(5);
@@ -54,6 +67,7 @@ int main() {
         [3] = led_command,
         [4] = {}
     };
+
 
     cli_run(root_commands);
     puts("Exited CLI");

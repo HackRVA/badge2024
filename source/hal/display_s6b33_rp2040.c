@@ -73,13 +73,11 @@ void S6B33_init_gpio(void) {
     gpio_init(BADGE_GPIO_DISPLAY_DC);
     gpio_set_dir(BADGE_GPIO_DISPLAY_DC, true);
 
-    gpio_init(BADGE_GPIO_DISPLAY_BACKLIGHT);
-    gpio_set_dir(BADGE_GPIO_DISPLAY_BACKLIGHT, true);
-
     gpio_init(BADGE_GPIO_DISPLAY_RESET);
     gpio_set_dir(BADGE_GPIO_DISPLAY_RESET, true);
 
-    spi_init(spi0, 8000000);
+    // Sam: may be able to go faster on actual HW
+    spi_init(spi0, 4000000);
 }
 
 void S6B33_init_device(void)
@@ -185,6 +183,25 @@ void S6B33_init_device(void)
     S6B33_send_command(0x0); /* partial display mode off */
 
     S6B33_send_command(DISPLAY_ON);
+}
+
+// Was LCDReset
+void S6B33_reset(void) {
+    gpio_init(BADGE_GPIO_DISPLAY_CS);
+    gpio_set_dir(BADGE_GPIO_DISPLAY_CS, true);
+    gpio_put(BADGE_GPIO_DISPLAY_CS, 0);
+    gpio_put(BADGE_GPIO_DISPLAY_RESET, 0);
+
+    sleep_us(1000); // was a 1000 count spinloop
+
+    gpio_put(BADGE_GPIO_DISPLAY_RESET, 1);
+    sleep_us(1000);
+    gpio_put(BADGE_GPIO_DISPLAY_CS, 1);
+    sleep_us(1000);
+    gpio_init(BADGE_GPIO_DISPLAY_CS);
+    gpio_set_function(BADGE_GPIO_DISPLAY_CS, GPIO_FUNC_SPI);
+
+    S6B33_init_device();
 }
 
 /* window of LCD. Send byte will auto-inc x and wrap at xsize and inc y */
