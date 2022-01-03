@@ -9,6 +9,7 @@ add_subdirectory(display)
 target_link_libraries(badge2022_c
         pico_stdlib
         pico_multicore
+        hardware_dma
         hardware_flash
         hardware_pwm
         hardware_timer

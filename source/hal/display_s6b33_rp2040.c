@@ -8,6 +8,7 @@
 
 #include "pico/stdlib.h"
 #include "hardware/spi.h"
+#include "hardware/dma.h"
 
 
 // The high/low on the A0 pin tells the LCD if we are sending a data or command
@@ -40,6 +41,7 @@ unsigned static const char G_contrast1 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 
 
 unsigned static const char G_contrast2 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 */
 
+static int dma_channel = -1;
 
 void S6B33_send_command(unsigned char data) {
     gpio_put(BADGE_GPIO_DISPLAY_DC, LCD_COMMAND);
@@ -56,7 +58,10 @@ void S6B33_send_data(unsigned short data) {
 void S6B33_send_data_multi(const unsigned short *data, int len) {
     gpio_put(BADGE_GPIO_DISPLAY_DC, LCD_DATA);
     spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
-    spi_write16_blocking(spi0, data, len);
+
+    dma_channel_transfer_from_buffer_now(dma_channel, data, len);
+    dma_channel_wait_for_finish_blocking(dma_channel);
+
 }
 
 void S6B33_init_gpio(void) {
@@ -78,6 +83,18 @@ void S6B33_init_gpio(void) {
 
     // Sam: may be able to go faster on actual HW
     spi_init(spi0, 4000000);
+
+    if (dma_channel == -1) {
+        dma_channel = dma_claim_unused_channel(true);
+    }
+
+    // DMA channel: use this for bulk data transfers, which are 16-bit
+    dma_channel_config config = dma_channel_get_default_config(dma_channel);
+    channel_config_set_transfer_data_size(&config, DMA_SIZE_16);
+    channel_config_set_read_increment(&config, true);
+    channel_config_set_write_increment(&config, false);
+    channel_config_set_dreq(&config, spi_get_dreq(spi0, true));
+    dma_channel_configure(dma_channel,  &config, &spi_get_hw(spi0)->dr, NULL, 0, false);
 }
 
 void S6B33_init_device(void)

@@ -89,7 +89,7 @@ void FbClear()
     for (i=0; i<(LCD_XSIZE * LCD_YSIZE); i++) {
         BUFFER(i) = G_Fb.BGcolor;
     }
-    S6B33_pixels(LCDbuffer, sizeof(LCDbuffer)/sizeof(short));
+    S6B33_pixels(LCDbuffer, LCD_XSIZE*LCD_YSIZE);
     memset(max_changed_x, 0, sizeof(max_changed_x));
     memset(min_changed_x, 255, sizeof(min_changed_x));
 }
@@ -555,7 +555,7 @@ void FbSwapBuffers()
     if (G_Fb.changed == 0) return;
 
     S6B33_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
-    S6B33_pixels(LCDbuffer, sizeof(LCDbuffer)/sizeof(short));
+    S6B33_pixels(LCDbuffer, LCD_XSIZE*LCD_YSIZE);
     G_Fb.changed = 0;
 
     G_Fb.pos.x = 0;
