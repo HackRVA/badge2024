@@ -61,7 +61,7 @@ int run_button_mask(char *args) {
 
 static const CLI_COMMAND button_subcommands[] = {
         {.name="get", .process=run_button_get,
-                .help="usage: button get [left down up right switch]"},
+                .help="usage: button get [left down up right switch enc_a enc_b]"},
         {.name="mask", .process=run_button_mask,
                 .help="usage: button mask"},
         {},
