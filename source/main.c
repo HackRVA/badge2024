@@ -35,6 +35,7 @@ int help_process(char *args) {
     puts("\thelp - Print this message");
     puts("\tflash - Write data to nonvolatile storage");
     puts("\tled - Toggle lights on the device");
+    puts("\tbutton - Probe button state");
     puts("\texit - Exit command loop, triggering a reboot");
     return 0;
 }

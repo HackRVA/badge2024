@@ -54,7 +54,7 @@ int run_button_get(char *args) {
 
 int run_button_mask(char *args) {
     int mask = button_mask();
-    printf("Button mask: %08x", mask);
+    printf("Button mask: %02x\n", mask);
     return 0;
 }
 
@@ -68,7 +68,7 @@ static const CLI_COMMAND button_subcommands[] = {
 };
 
 const CLI_COMMAND button_command = {
-        .name="flash", .subcommands=(CLI_COMMAND *)button_subcommands,
+        .name="button", .subcommands=(CLI_COMMAND *)button_subcommands,
         .help="usage: button subcommand [[args...]]\n"
               "valid subcommands: get mask"
 };

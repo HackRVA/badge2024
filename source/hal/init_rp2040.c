@@ -10,6 +10,7 @@
 #include "display_s6b33.h"
 #include "led_pwm.h"
 #include "button.h"
+#include "hardware/pwm.h"
 
 
 _Noreturn void core1_procedure(void) {
@@ -37,6 +38,23 @@ static void _init_gpios(void) {
     // audio standby should be always driven, start off
     gpio_set_dir(BADGE_GPIO_AUDIO_STANDBY, true);
     gpio_put(BADGE_GPIO_AUDIO_STANDBY, 0);
+
+    // Temporary test of audio output
+    gpio_put(BADGE_GPIO_AUDIO_STANDBY, 1);
+    uint slice = pwm_gpio_to_slice_num(BADGE_GPIO_AUDIO_PWM);
+    uint channel = pwm_gpio_to_channel(BADGE_GPIO_AUDIO_PWM);
+
+    gpio_set_function(BADGE_GPIO_AUDIO_PWM, GPIO_FUNC_PWM);
+    pwm_set_enabled(slice, false);
+    pwm_set_clkdiv_mode(slice, PWM_DIV_FREE_RUNNING);
+    pwm_set_clkdiv(slice, 200.0f);
+    pwm_set_wrap(slice, 650);
+    pwm_set_chan_level(slice, channel, 325);
+    pwm_set_enabled(slice, true);
+    sleep_ms(1000);
+    pwm_set_enabled(slice, 0);
+    gpio_put(BADGE_GPIO_AUDIO_STANDBY, 0);
+
 }
 
 void hal_init(void) {

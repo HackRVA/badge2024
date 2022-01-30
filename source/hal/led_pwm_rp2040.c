@@ -5,6 +5,7 @@
 #include "led_pwm.h"
 #include "pinout_rp2040.h"
 #include "hardware/pwm.h"
+#include <stdio.h>
 
 const static int _gpio_map[BADGE_LED_MAX] = {
     BADGE_GPIO_LED_RED,
@@ -16,6 +17,8 @@ const static int _gpio_map[BADGE_LED_MAX] = {
 void led_pwm_init_gpio() {
     for (int i=0; i<BADGE_LED_MAX; i++) {
         gpio_init(_gpio_map[i]);
+        gpio_set_dir(_gpio_map[i], 1);
+        gpio_put(_gpio_map[i], 1);
     }
 }
 
@@ -28,11 +31,14 @@ void led_pwm_enable(BADGE_LED led, uint8_t duty) {
     uint channel = pwm_gpio_to_channel(_gpio_map[led]);
 
     gpio_set_function(_gpio_map[led], GPIO_FUNC_PWM);
-
     pwm_set_enabled(slice, false);
     pwm_set_clkdiv_mode(slice, PWM_DIV_FREE_RUNNING);
     pwm_set_wrap(slice, 255);
     pwm_set_chan_level(slice, channel, duty);
+    if (BADGE_LED_DISPLAY_BACKLIGHT != led) {
+        // Display is normal polarity, LEDs are active low
+        pwm_set_output_polarity(slice, true, true);
+    }
     pwm_set_enabled(slice, true);
 }
 
@@ -46,6 +52,10 @@ void led_pwm_disable(BADGE_LED led) {
 
     pwm_set_chan_level(slice, channel, 256);
     gpio_init(_gpio_map[led]);
+    gpio_set_dir(_gpio_map[led], 1);
+    if (BADGE_LED_DISPLAY_BACKLIGHT != led) {
+        gpio_put(_gpio_map[led], 1);
+    }
 
     // Check to see if GPIOs are still on this slice. There are 4 potential
     // GPIOs for most slices.
