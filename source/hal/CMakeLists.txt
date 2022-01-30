@@ -4,6 +4,7 @@ target_sources(badge2022_c PUBLIC
         flash_storage_rp2040.c
         init_rp2040.c usb_rp2040.c
         display_s6b33_rp2040.c
-        led_pwm_rp2040.c)
+        led_pwm_rp2040.c
+        button_rp2040.c)
 
 target_include_directories(badge2022_c PUBLIC .)
