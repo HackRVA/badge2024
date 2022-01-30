@@ -76,9 +76,9 @@ int run_led_off(char *args) {
 
 static const CLI_COMMAND led_subcommands[] = {
         {.name="on", .process=run_led_on,
-         .help="usage: led on [red green blue white backlight] [[level, 0-255]]"},
+         .help="usage: led on [red green blue backlight] [[level, 0-255]]"},
         {.name="off", .process=run_led_off,
-        .help="usage: led off [red green blue white backlight]"},
+        .help="usage: led off [red green blue backlight]"},
         {}
 };
 

@@ -12,6 +12,7 @@
 #include "cli.h"
 #include "cli_flash.h"
 #include "cli_led.h"
+#include "cli_button.h"
 
 #include "assets.h"
 #include "framebuffer.h"
@@ -65,7 +66,8 @@ int main() {
         [1] = exit_command,
         [2] = flash_command,
         [3] = led_command,
-        [4] = {}
+        [4] = button_command,
+        [5] = {}
     };
 
 
