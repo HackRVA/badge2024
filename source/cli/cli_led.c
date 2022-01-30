@@ -12,7 +12,6 @@ static const char* _led_names[BADGE_LED_MAX] = {
         "red",
         "green",
         "blue",
-        "white",
         "backlight",
 };
 

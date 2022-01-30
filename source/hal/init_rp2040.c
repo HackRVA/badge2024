@@ -29,13 +29,17 @@ static void _init_gpios(void) {
     gpio_init(BADGE_GPIO_DPAD_RIGHT);
     gpio_init(BADGE_GPIO_DPAD_DOWN);
     gpio_init(BADGE_GPIO_DPAD_LEFT);
-    gpio_init(BADGE_GPIO_BUTTON);
+
+    gpio_init(BADGE_GPIO_ENCODER_SW);
+    gpio_init(BADGE_GPIO_ENCODER_A);
+    gpio_init(BADGE_GPIO_ENCODER_B);
 
     gpio_init(BADGE_GPIO_IR_TX);
     gpio_init(BADGE_GPIO_IR_RX);
 
-    gpio_init(BADGE_GPIO_SPEAKER_PHASE1);
-    gpio_init(BADGE_GPIO_SPEAKER_PHASE2);
+    gpio_init(BADGE_GPIO_AUDIO_INPUT);
+    gpio_init(BADGE_GPIO_AUDIO_PWM);
+    gpio_init(BADGE_GPIO_AUDIO_STANDBY);
 }
 
 void hal_init(void) {
