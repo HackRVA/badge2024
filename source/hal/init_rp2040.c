@@ -33,6 +33,10 @@ static void _init_gpios(void) {
     gpio_init(BADGE_GPIO_AUDIO_INPUT);
     gpio_init(BADGE_GPIO_AUDIO_PWM);
     gpio_init(BADGE_GPIO_AUDIO_STANDBY);
+
+    // audio standby should be always driven, start off
+    gpio_set_dir(BADGE_GPIO_AUDIO_STANDBY, true);
+    gpio_put(BADGE_GPIO_AUDIO_STANDBY, 0);
 }
 
 void hal_init(void) {
