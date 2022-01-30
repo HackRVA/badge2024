@@ -11,15 +11,22 @@ static const int8_t _button_gpios[BADGE_BUTTON_MAX] = {
     BADGE_GPIO_DPAD_DOWN,
     BADGE_GPIO_DPAD_UP,
     BADGE_GPIO_DPAD_RIGHT,
-    BADGE_GPIO_ENCODER_SW,
+    // Rotary encoder button
+    BADGE_GPIO_SW,
+    // Rotary encoder state
+    BADGE_GPIO_ENCODER_A,
+    BADGE_GPIO_ENCODER_B,
 };
 
 void button_init_gpio(void) {
     for (int i=0; i<BADGE_BUTTON_MAX; i++) {
         gpio_init(_button_gpios[i]);
         gpio_set_input_enabled(_button_gpios[i], 1);
+        gpio_set_input_hysteresis_enabled(_button_gpios[i], 1);
         gpio_pull_up(_button_gpios[i]);
     }
+
+
 }
 
 int button_poll(BADGE_BUTTON button) {

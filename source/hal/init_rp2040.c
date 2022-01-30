@@ -9,6 +9,7 @@
 #include "pinout_rp2040.h"
 #include "display_s6b33.h"
 #include "led_pwm.h"
+#include "button.h"
 
 
 _Noreturn void core1_procedure(void) {
@@ -24,15 +25,7 @@ static void _init_gpios(void) {
 
     S6B33_init_gpio();
     led_pwm_init_gpio();
-
-    gpio_init(BADGE_GPIO_DPAD_UP);
-    gpio_init(BADGE_GPIO_DPAD_RIGHT);
-    gpio_init(BADGE_GPIO_DPAD_DOWN);
-    gpio_init(BADGE_GPIO_DPAD_LEFT);
-
-    gpio_init(BADGE_GPIO_ENCODER_SW);
-    gpio_init(BADGE_GPIO_ENCODER_A);
-    gpio_init(BADGE_GPIO_ENCODER_B);
+    button_init_gpio();
 
     gpio_init(BADGE_GPIO_IR_TX);
     gpio_init(BADGE_GPIO_IR_RX);

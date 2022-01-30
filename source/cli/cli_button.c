@@ -13,6 +13,8 @@ static const char* _button_names[BADGE_BUTTON_MAX] = {
         "up",
         "right",
         "switch",
+        "enc_a",
+        "enc_b",
 };
 
 static BADGE_BUTTON _button_for_name(const char* name) {

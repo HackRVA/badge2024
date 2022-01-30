@@ -19,7 +19,8 @@
 #define BADGE_GPIO_DPAD_DOWN (1)
 #define BADGE_GPIO_DPAD_LEFT (0)
 
-#define BADGE_GPIO_ENCODER_SW (12)
+// Pins on rotary encoder
+#define BADGE_GPIO_SW (12)
 #define BADGE_GPIO_ENCODER_A  (15)
 #define BADGE_GPIO_ENCODER_B  (13)
 
