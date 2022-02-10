@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include "delay.h"
 
+#include "ir.h"
 #define MAX_LINE_LEN 200
 void cli_run(const CLI_COMMAND *cmd) {
     char line[MAX_LINE_LEN];

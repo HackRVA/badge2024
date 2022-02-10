@@ -10,6 +10,7 @@
 #include "display_s6b33.h"
 #include "led_pwm.h"
 #include "button.h"
+#include "ir.h"
 #include "hardware/pwm.h"
 
 
@@ -27,9 +28,6 @@ static void _init_gpios(void) {
     S6B33_init_gpio();
     led_pwm_init_gpio();
     button_init_gpio();
-
-    gpio_init(BADGE_GPIO_IR_TX);
-    gpio_init(BADGE_GPIO_IR_RX);
 
     gpio_init(BADGE_GPIO_AUDIO_INPUT);
     gpio_init(BADGE_GPIO_AUDIO_PWM);
@@ -61,6 +59,7 @@ void hal_init(void) {
 
     stdio_init_all();
     _init_gpios();
+    ir_init();
 
     // allow suspend from other core, if we have it run something that needs to do that
     multicore_lockout_victim_init();

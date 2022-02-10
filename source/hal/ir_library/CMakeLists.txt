@@ -1,0 +1,3 @@
+
+add_subdirectory(nec_receive_library)
+add_subdirectory(nec_transmit_library)

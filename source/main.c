@@ -13,12 +13,14 @@
 #include "cli_flash.h"
 #include "cli_led.h"
 #include "cli_button.h"
+#include "cli_ir.h"
 
 #include "assets.h"
 #include "framebuffer.h"
 #include "display_s6b33.h"
 #include "colors.h"
 #include "led_pwm.h"
+#include "ir.h"
 
 int exit_process(char *args) {
     return -1;
@@ -36,6 +38,7 @@ int help_process(char *args) {
     puts("\tflash - Write data to nonvolatile storage");
     puts("\tled - Toggle lights on the device");
     puts("\tbutton - Probe button state");
+    puts("\tir - Send IR packets and check received data");
     puts("\texit - Exit command loop, triggering a reboot");
     return 0;
 }
@@ -68,7 +71,8 @@ int main() {
         [2] = flash_command,
         [3] = led_command,
         [4] = button_command,
-        [5] = {}
+        [5] = ir_command,
+        [6] = {}
     };
 
 

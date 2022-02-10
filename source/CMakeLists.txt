@@ -11,12 +11,15 @@ target_link_libraries(badge2022_c
         pico_multicore
         hardware_dma
         hardware_flash
+        hardware_pio
         hardware_pwm
         hardware_timer
         hardware_resets
         hardware_rtc
         hardware_irq
-        hardware_spi)
+        hardware_spi
+        nec_transmit_library
+        nec_receive_library)
 
 # enable usb output, disable uart output
 pico_enable_stdio_usb(badge2022_c 1)
