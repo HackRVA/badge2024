@@ -17,6 +17,9 @@ static const char* _button_names[BADGE_BUTTON_MAX] = {
         "enc_b",
 };
 
+static uint8_t _button_up_counts[BADGE_BUTTON_MAX];
+static uint8_t _button_down_counts[BADGE_BUTTON_MAX];
+
 static BADGE_BUTTON _button_for_name(const char* name) {
     for (int i=0; i<BADGE_BUTTON_MAX; i++) {
         if (strcmp(_button_names[i], name) == 0) {
@@ -59,16 +62,43 @@ int run_button_mask(char *args) {
 }
 
 
+void _button_event_handler(BADGE_BUTTON button, bool high) {
+    if (high) {
+        _button_up_counts[button] += 1;
+    } else {
+        _button_down_counts[button] += 1;
+    }
+}
+
+int run_install_handler(char* args) {
+    button_set_interrupt(_button_event_handler);
+    printf("Installed button event handler to count events.\n");
+    return 0;
+}
+
+int run_get_event_counts(char*args) {
+    for (int i=0; i<BADGE_BUTTON_MAX; i++) {
+        printf("Button %s - down %u times, up %u times.\n",
+               _button_names[i], _button_down_counts[i], _button_up_counts[i]);
+    }
+    return 0;
+}
+
+
 static const CLI_COMMAND button_subcommands[] = {
         {.name="get", .process=run_button_get,
                 .help="usage: button get [left down up right switch enc_a enc_b]"},
         {.name="mask", .process=run_button_mask,
                 .help="usage: button mask"},
+        {.name="handler", .process=run_install_handler,
+                .help="usage: button handler - Install event counting button IRQ handler"},
+        {.name="events", .process=run_get_event_counts,
+                .help="usage: button events - Show cumulative button event counts after handler install"},
         {},
 };
 
 const CLI_COMMAND button_command = {
         .name="button", .subcommands=(CLI_COMMAND *)button_subcommands,
         .help="usage: button subcommand [[args...]]\n"
-              "valid subcommands: get mask"
+              "valid subcommands: get mask handler events"
 };
