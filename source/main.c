@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "badge.h"
 
 #define MAX_COMMAND_LEN 200
 
@@ -53,9 +54,9 @@ int main() {
 
     hal_init();
 
+#if 0
     // Sam: temporary code to demo display working
     led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 150);
-    S6B33_reset();
     FbMove(0,0);
     FbImage(1, 0);
     FbPushBuffer();
@@ -77,6 +78,11 @@ int main() {
 
 
     cli_run(root_commands);
+#endif
+    UserInit();
+    while (1) {
+        ProcessIO();
+    }
     puts("Exited CLI");
     hal_deinit();
     hal_reboot();

@@ -411,6 +411,7 @@ void FbTransparentIndex(unsigned short color)
     G_Fb.transIndex = color;
 }
 
+#include <stdio.h>
 void FbCharacter(unsigned char charin)
 {
     if ((charin < 32) | (charin > 126)) charin = 32;
@@ -498,11 +499,9 @@ void FbLine(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char 
     G_Fb.changed = 1;
 }
 
-void FbWriteLine(unsigned char *string)
+void FbWriteLine(const char *string)
 {
     unsigned char j, x, y;
-
-    //debug("FbWriteLine ");
 
     x = G_Fb.pos.x;
     y = G_Fb.pos.y;
@@ -514,7 +513,7 @@ void FbWriteLine(unsigned char *string)
     G_Fb.changed = 1;
 }
 
-void FbWriteString(unsigned char *string)
+void FbWriteString(const char *string)
 {
     unsigned char j, x;
 
@@ -560,6 +559,8 @@ void FbSwapBuffers()
 
     G_Fb.pos.x = 0;
     G_Fb.pos.y = 0;
+
+    FbClear();
 }
 
 extern int getRotate(void);

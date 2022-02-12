@@ -5,7 +5,6 @@
 #define BYTES_PER_LINE (NUM_AUDIO_CHANNELS * sizeof(float) + 1)
 
 /** Muze buzzer */
-extern unsigned char G_mute;
 
 /** Stops playback of the current audio asset */
 void haltPlayback(void);
@@ -49,15 +48,5 @@ void drawLCD8(unsigned char assetId, int frame);
  * If the current note is done, calls callback for the current audio asset.
  */
 void doAudio();
-/**
- * Tells timer interrupt to play a note.
- * @param [in] wavehop The frequency in samples.
- * @param [in] steps The duration in samples.
- */
-void setNote(unsigned short freq, unsigned short dur);
-
-void nextNote(void);
-
-void endNote(void);
 
 #endif

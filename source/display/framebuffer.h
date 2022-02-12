@@ -55,6 +55,7 @@ void FbColor(unsigned short color);
 void FbBackgroundColor(unsigned short color);
 // void FbPicture(unsigned char assetId, unsigned char seqNum);
 void FbTransparency(unsigned short transparencyMask);
+void FbTransparentIndex(unsigned short color);
 void FbSprite(unsigned char picId, unsigned char imageNo);
 void FbCharacter(unsigned char charin);
 void FbFilledRectangle(unsigned char width, unsigned char height);
@@ -63,8 +64,8 @@ void FbPrintChar(unsigned char charin, unsigned char x, unsigned char y);
 void FbHorizontalLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2);
 void FbVerticalLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2);
 void FbLine(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1);
-void FbWriteLine(unsigned char *string);
-void FbWriteString(unsigned char *string);
+void FbWriteLine(const char *string);
+void FbWriteString(const char *string);
 void FbRectangle(unsigned char width, unsigned char height);
 
 void FbImage(unsigned char assetId, unsigned char seqNum);
@@ -81,4 +82,7 @@ void FbImage1bit(unsigned char assetId, unsigned char seqNum);
  */
 void FbDrawObject(const struct point drawing[], int npoints, int color, int x, int y, int scale);
 void FbPushBuffer(void);
+void FbSwapBuffers(void); // Currently does not swap buffers, just writes the current one.
+void FbPaintNewRows(void);
+
 #endif

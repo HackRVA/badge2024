@@ -5,16 +5,16 @@
 #include "cli_ir.h"
 #include "cli.h"
 #include "ir.h"
-#include "pico/time.h"
+#include "rtc.h"
 #include <stdlib.h>
 #include <stdio.h>
 
-static IR_PACKET last_ir_packet;
+static IR_DATA last_ir_packet;
 static uint32_t last_rx_time;
 
-void ir_handler(IR_PACKET pkt) {
-    last_ir_packet = pkt;
-    last_rx_time = to_ms_since_boot(get_absolute_time());
+void ir_handler(const IR_DATA* pkt) {
+    last_ir_packet = *pkt;
+    last_rx_time = rtc_get_ms_since_boot();
 }
 
 int run_ir_send(char *args) {
@@ -40,20 +40,21 @@ int run_ir_send(char *args) {
         puts("Command must be an 8-bit number");
         return 1;
     }
-
+#if 0
     IR_PACKET pkt = {
         .address = address,
         .command = command,
     };
 
     ir_enqueue(pkt);
+#endif
 
     return 0;
 }
 
 int run_ir_handler(char *args) {
 
-    ir_set_callback(ir_handler);
+    //ir_set_callback(ir_handler, 0);
     return 0;
 }
 
@@ -66,7 +67,7 @@ int run_ir_last(char *args) {
     }
 
     printf("Last packet (rx at %u ms) : addr 0x%02x, command 0x%02x\n",
-           last_rx_time, last_ir_packet.address, last_ir_packet.command);
+           last_rx_time, last_ir_packet.app_address, last_ir_packet.data[0]);
     return 0;
 }
 

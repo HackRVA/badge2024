@@ -59,7 +59,9 @@ void hal_init(void) {
 
     stdio_init_all();
     _init_gpios();
+
     ir_init();
+    S6B33_reset();
 
     // allow suspend from other core, if we have it run something that needs to do that
     multicore_lockout_victim_init();

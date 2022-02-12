@@ -20,7 +20,7 @@
 unsigned static const char G_bias  = 0b00000000; /* 0x00 = 1/4  0x11 = 1/5 0x22 = 1/6 0x33 = 1/7 */
 
 // PEB 20150529 unsigned char G_entry = 0b10000000; 0b00000000 inc Y when X=Xend VS 0b00000010 inc X when Y=Yend
-unsigned static const char G_entry = 0b10000000; /* 0x80 */
+unsigned static char G_entry = 0b10000000; /* 0x80 */
 
 // PEB WAS 20150313 unsigned char G_outputMode = 0b00000010; /* 0x02 lines=132 SDIR=0 SWP=1 CDIR=0 */
 // unsigned char G_outputMode = 0b00000110; /* 0x02 lines=132 SDIR=0 SWP=1 CDIR=0 */
@@ -81,8 +81,7 @@ void S6B33_init_gpio(void) {
     gpio_init(BADGE_GPIO_DISPLAY_RESET);
     gpio_set_dir(BADGE_GPIO_DISPLAY_RESET, true);
 
-    // Sam: may be able to go faster on actual HW
-    spi_init(spi0, 4000000);
+    spi_init(spi0, 20000000);
 
     if (dma_channel == -1) {
         dma_channel = dma_claim_unused_channel(true);
@@ -278,4 +277,34 @@ void S6B33_set_display_mode_noninverted(void)
 unsigned char S6B33_get_display_mode(void)
 {
     return G_outputMode;
+}
+
+int S6B33_get_rotation(void) {
+    return (G_outputMode & 0x01);
+}
+
+void S6B33_set_rotation(int yes) {
+
+    if (yes) {
+        G_outputMode = 0b00000111; /* CDIR=1 */
+        G_entry = 0b10000010; /* Y=Yend -> X incremented */
+    }
+    else {
+        /* old way */
+        G_outputMode = 0b00000110; /* CDIR=0 */
+        G_entry = 0b10000000; /* X=Xend -> Y incremented */
+    }
+
+    S6B33_reset();
+}
+
+void S6B33_color(unsigned short pixel) {
+
+    unsigned char i,j;
+
+    S6B33_rect(0, 0, 131, 131); /* display is really 132x132 */
+
+    for (i=0; i<132; i++)
+        for (j=0; j<132; j++)
+            S6B33_pixel(pixel);
 }

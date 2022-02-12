@@ -18,7 +18,7 @@
 #include "rvasec2016.h"
 
 //#include "font_2.xbm" // for size reasons just A-Z and a couple others
-#include "font8x8.xbm" // full font
+#include "font8x8.xbm.h" // full font
 
 
 /* for 1 bit images */
