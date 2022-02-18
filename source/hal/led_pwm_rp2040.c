@@ -26,6 +26,11 @@ void led_pwm_enable(BADGE_LED led, uint8_t duty) {
     if (led >= BADGE_LED_MAX) {
         return;
     }
+    
+    if (BADGE_LED_DISPLAY_BACKLIGHT == led) {
+        // LED backlight has opposite pin polarity (active high)
+        duty = ~duty;
+    }
 
     uint slice = pwm_gpio_to_slice_num(_gpio_map[led]);
     uint channel = pwm_gpio_to_channel(_gpio_map[led]);
@@ -35,10 +40,7 @@ void led_pwm_enable(BADGE_LED led, uint8_t duty) {
     pwm_set_clkdiv_mode(slice, PWM_DIV_FREE_RUNNING);
     pwm_set_wrap(slice, 255);
     pwm_set_chan_level(slice, channel, duty);
-    if (BADGE_LED_DISPLAY_BACKLIGHT != led) {
-        // Display is normal polarity, LEDs are active low
-        pwm_set_output_polarity(slice, true, true);
-    }
+    pwm_set_output_polarity(slice, true, true);
     pwm_set_enabled(slice, true);
 }
 
