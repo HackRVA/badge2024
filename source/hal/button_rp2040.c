@@ -94,11 +94,11 @@ void button_init_gpio(void) {
 }
 
 int button_poll(BADGE_BUTTON button) {
-    return (gpio_states & (1 << button)) ? 1 : 0;
+    return (gpio_states & (1 << button)) ? 0 : 1;
 }
 
 int button_mask(void) {
-    return (int) gpio_states;
+    return (int) ((~gpio_states) & ((1<<BADGE_BUTTON_MAX)-1));
 }
 
 void button_set_interrupt(user_gpio_callback cb) {
