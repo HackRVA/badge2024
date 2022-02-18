@@ -583,11 +583,12 @@ void FbPaintNewRows(void)
         if (!IS_ROW_CHANGED(i))
             continue;
         /* Copy changed rows to screen and to old[] buffer */
+        int num_pixels = max_changed_x[i] - min_changed_x[i] + 1;
         if (!rotated)
-            S6B33_rect(i, min_changed_x[i], 1, max_changed_x[i] - min_changed_x[i] + 1);
+            S6B33_rect(i, min_changed_x[i], 1, num_pixels);
         else
-            S6B33_rect(min_changed_x[i], i, max_changed_x[i] - min_changed_x[i] + 1, 1);
-        S6B33_pixels(&LCDbuffer[i*LCD_XSIZE+min_changed_x[i]], max_changed_x[i]-min_changed_x[i]+1);
+            S6B33_rect(min_changed_x[i], i, num_pixels, 1);
+        S6B33_pixels(&LCDbuffer[i*LCD_XSIZE+min_changed_x[i]], num_pixels);
         MARK_ROW_UNCHANGED(i);
     }
     G_Fb.changed = 0;

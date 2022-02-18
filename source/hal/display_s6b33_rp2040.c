@@ -61,6 +61,8 @@ void S6B33_send_data_multi(const unsigned short *data, int len) {
 
     dma_channel_transfer_from_buffer_now(dma_channel, data, len);
     dma_channel_wait_for_finish_blocking(dma_channel);
+    // Need a short delay between transactions
+    sleep_us(10);
 
 }
 
