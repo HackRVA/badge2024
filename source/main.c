@@ -23,6 +23,7 @@
 #include "led_pwm.h"
 #include "ir.h"
 #include "rtc.h"
+#include "button.h"
 
 int exit_process(char *args) {
     return -1;
@@ -54,33 +55,32 @@ CLI_COMMAND help_command = {
 int main() {
 
     hal_init();
+    UserInit();
 
-#if 0
-    // Sam: temporary code to demo display working
-    led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 150);
-    FbMove(0,0);
-    FbImage(1, 0);
-    FbPushBuffer();
+    if (button_poll(BADGE_BUTTON_LEFT)) {
 
-    // Need to ensure USB is connected before reading stdin, or else that will hang
-    while (!usb_is_connected()) {
-        sleep_ms(5);
+        // Run debug CLI
+
+        // Need to ensure USB is connected before reading stdin, or else that will hang
+        while (!usb_is_connected()) {
+            sleep_ms(5);
+        }
+
+        CLI_COMMAND root_commands[] = {
+                [0] = help_command, // Add your command name to the printout in help_process!
+                [1] = exit_command,
+                [2] = flash_command,
+                [3] = led_command,
+                [4] = button_command,
+                [5] = ir_command,
+                [6] = {}
+        };
+
+        cli_run(root_commands);
+        puts("Exited CLI, running main app");
     }
 
-    CLI_COMMAND root_commands[] = {
-        [0] = help_command, // Add your command name to the printout in help_process!
-        [1] = exit_command,
-        [2] = flash_command,
-        [3] = led_command,
-        [4] = button_command,
-        [5] = ir_command,
-        [6] = {}
-    };
-
-
-    cli_run(root_commands);
-#endif
-    UserInit();
+    // run main app
     uint64_t frame_time = rtc_get_us_since_boot();
     while (1) {
         uint64_t frame_period_us = ProcessIO();
@@ -96,7 +96,6 @@ int main() {
         printf("sleep us: %llu\n", frame_time-current_time);
         sleep_us(frame_time - current_time);
     }
-    puts("Exited CLI");
     hal_deinit();
     hal_reboot();
 
