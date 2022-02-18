@@ -42,11 +42,15 @@ unsigned static const char G_contrast1 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 
 unsigned static const char G_contrast2 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 */
 
 static int dma_channel = -1;
+static bool dma_transfer_started = true;
 
 static void wait_until_ready() {
-    if (dma_channel_is_busy(dma_channel)) {
+    if (dma_transfer_started) {
         dma_channel_wait_for_finish_blocking(dma_channel);
-        // Seems like the display requires some time between DMA transfers finishing and being properly ready
+        // Seems like the display requires some time between DMA transfers finishing and being properly ready. Hard to
+        // tell precisely when we need this and when we don't, partial display writes in particular get
+        // messed with
+        dma_transfer_started = false;
         sleep_us(10);
     }
 }
@@ -71,6 +75,7 @@ void S6B33_send_data_multi(const unsigned short *data, int len) {
     spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
 
     dma_channel_transfer_from_buffer_now(dma_channel, data, len);
+    dma_transfer_started = true;
 }
 
 void S6B33_init_gpio(void) {
