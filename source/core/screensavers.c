@@ -14,6 +14,23 @@ extern void render_screen_save_monsters(void);
 unsigned short anim_cnt = 0;
 
 
+#define IB1 1
+#define IB2 2
+#define IB5 16
+#define IB18 131072
+
+#define MASK (IB1+IB2+IB5)
+
+unsigned static int irbit2(unsigned int iseed) {
+    if (iseed & IB18){
+        iseed = ((iseed ^ MASK) << 1) | IB1;
+    }
+    else{
+        iseed <<= 1;
+    }
+    return iseed;
+}
+
 void disp_asset_saver(){
     static unsigned char imgnum = 0;
     if(!anim_cnt){
@@ -76,7 +93,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_disable(BADGE_LED_RGB_BLUE);
     }
-    else if(anim_cnt == 10){
+    else if(anim_cnt == 5){
         FbColor(GREEN);
         FbMove(rnd%60+rnd%60,rnd%55+rnd%10);
 
@@ -85,7 +102,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_disable(BADGE_LED_RGB_BLUE);
     }
-    else if(anim_cnt == 20){
+    else if(anim_cnt == 10){
         FbColor(CYAN);
         FbMove(rnd%70+rnd%45,rnd%45+rnd%33);
 
@@ -94,7 +111,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 30){
+    else if(anim_cnt == 15){
 
         FbColor(WHITE);
         FbMove(rnd%30+rnd%10,rnd%30+rnd%30);
@@ -104,7 +121,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 40){
+    else if(anim_cnt == 20){
 
         FbColor(BLUE);
         FbMove(rnd%50+rnd%30,rnd%10+rnd%15);
@@ -114,7 +131,7 @@ void stupid_rects(){
         led_pwm_disable(BADGE_LED_RGB_GREEN);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 50){
+    else if(anim_cnt == 25){
 
         FbColor(MAGENTA);
         FbMove(rnd%33+rnd%47,rnd%65+rnd%33);
@@ -124,7 +141,7 @@ void stupid_rects(){
         led_pwm_disable(BADGE_LED_RGB_GREEN);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt > 50)
+    else if(anim_cnt > 25)
         anim_cnt = 0;
 
     FbPushBuffer();
@@ -144,7 +161,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 10){
+    else if(anim_cnt == 5){
         FbColor(TUNNEL_COLOR);
         FbMove(64,64);
 
@@ -153,7 +170,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 5*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 5*255/100);
     }
-    else if(anim_cnt == 20){
+    else if(anim_cnt == 10){
         FbColor(TUNNEL_COLOR);
         FbMove(62,62);
 
@@ -162,7 +179,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 20*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 20*255/100);
     }
-    else if(anim_cnt == 30){
+    else if(anim_cnt == 15){
         FbColor(TUNNEL_COLOR);
         FbMove(58,58);
 
@@ -171,7 +188,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 45*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 45*255/100);
     }
-    else if(anim_cnt == 40){
+    else if(anim_cnt == 20){
         FbColor(TUNNEL_COLOR);
         FbMove(50,50);
 
@@ -180,7 +197,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 75*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 75*255/100);
     }
-    else if(anim_cnt == 50){
+    else if(anim_cnt == 25){
         FbColor(TUNNEL_COLOR);
         FbMove(34,34);
 
@@ -189,7 +206,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt > 60)
+    else if(anim_cnt > 30)
         anim_cnt = 0 - 1;
 
     FbSwapBuffers();
@@ -211,15 +228,14 @@ void dotty(){
         //FbPoint(rnd%130, irbit2(~timestamp)%130);
         //FbPoint(irbit2(get_rand_char(0, 132) + timestamp + i),
         //        irbit2(get_rand_char(0, 132) + ~timestamp + i));
-        uint32_t random1;
-        uint32_t random2;
-        random_insecure_bytes((uint8_t*)&random1, sizeof(uint32_t));
-        random_insecure_bytes((uint8_t*)&random2, sizeof(uint32_t));
+        uint32_t random;
+        random_insecure_bytes((uint8_t*)&random, sizeof(uint32_t));
+        random %= 132;
 
         // Sam: not sure this is correct...
         int timestamp = rtc_get_ms_since_boot();
-        FbMove(random1 % 132 + timestamp + i,
-                random2 % 132 + ~timestamp + i);
+        FbMove(irbit2(random + timestamp + i),
+               irbit2(random + ~timestamp + i));
         FbFilledRectangle(3, 3);
     }
 
