@@ -6,6 +6,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include "pico/stdio.h"
 #include <stdbool.h>
 #include "delay.h"
 
@@ -35,7 +36,13 @@ int cli_get_line(const char *prompt, char* line, size_t len) {
     int cur_len = 0;
     bool too_long = false;
     while (1) {
-        char input = getchar();
+
+        int raw_input = getchar_timeout_us(1000);
+        if (raw_input == PICO_ERROR_TIMEOUT) {
+            continue;
+        }
+        char input = (char) raw_input;
+
         // If we get EOF, signal this so we can exit command loop
         if (((int)input) == EOF) {
             return -1;
