@@ -16,6 +16,7 @@ time_t rtc_get_unix_seconds(void);
 struct timeval rtc_get_time_of_day(void);
 
 uint64_t rtc_get_ms_since_boot(void);
+uint64_t rtc_get_us_since_boot(void);
 
 
 #endif //BADGE2022_C_TIME_H

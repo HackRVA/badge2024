@@ -56,3 +56,7 @@ struct timeval rtc_get_time_of_day(void) {
 uint64_t rtc_get_ms_since_boot(void) {
     return to_ms_since_boot(get_absolute_time());
 }
+
+uint64_t rtc_get_us_since_boot(void) {
+    return to_us_since_boot(get_absolute_time());
+}

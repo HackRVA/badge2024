@@ -1,6 +1,8 @@
 #ifndef BADGE_H
 #define BADGE_H
 
+#include <stdint.h>
+
 typedef struct {
     char name[16];
     unsigned short badgeId; /* 2 bytes == our badge Id */
@@ -17,7 +19,7 @@ typedef struct {
 
 SYSTEM_DATA* badge_system_data(void);
 void UserInit(void);
-void ProcessIO(void);
+uint64_t ProcessIO(void);
 
 extern const char hextab[16];
 

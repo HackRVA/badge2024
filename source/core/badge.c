@@ -187,8 +187,10 @@ unsigned char screen_save_lockout = 0;
 
 unsigned char screensaver_inverted = 0;
 
-void ProcessIO(void)
+uint64_t ProcessIO(void)
 {
+    // 30 fps
+    static const uint64_t frame_interval_us_default = 1000000/30;
 
     /*
 	this ProcessIO() is the badge main loop
@@ -242,7 +244,7 @@ void ProcessIO(void)
                 }
             }
             
-            return;
+            return frame_interval_us_default;
         }
         else if (brightScreen){
             led_pwm_disable(BADGE_LED_DISPLAY_BACKLIGHT);
@@ -260,9 +262,11 @@ void ProcessIO(void)
             }
             do_screen_save_popup();
         }
-        return;
+        return frame_interval_us_default;
     }
     else {
         FbPushBuffer(); // may sync if any calls modified display ram
     }
+
+    return frame_interval_us_default;
 }

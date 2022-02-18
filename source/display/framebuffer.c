@@ -560,7 +560,9 @@ void FbSwapBuffers()
     G_Fb.pos.x = 0;
     G_Fb.pos.y = 0;
 
-    FbClear();
+    for (int i=0; i<LCD_XSIZE*LCD_YSIZE; i++) {
+        LCDbuffer[i] = G_Fb.BGcolor;
+    }
 }
 
 extern int getRotate(void);
@@ -585,7 +587,7 @@ void FbPaintNewRows(void)
             S6B33_rect(i, min_changed_x[i], 1, max_changed_x[i] - min_changed_x[i] + 1);
         else
             S6B33_rect(min_changed_x[i], i, max_changed_x[i] - min_changed_x[i] + 1, 1);
-        S6B33_pixels(&LCDbuffer[i*LCD_YSIZE], max_changed_x[i]-min_changed_x[i]);
+        S6B33_pixels(&LCDbuffer[i*LCD_XSIZE+min_changed_x[i]], max_changed_x[i]-min_changed_x[i]+1);
         MARK_ROW_UNCHANGED(i);
     }
     G_Fb.changed = 0;
