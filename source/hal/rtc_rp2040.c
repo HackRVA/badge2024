@@ -6,20 +6,20 @@
 #include "pico/time.h"
 #include "hardware/rtc.h"
 #include "rtc.h"
-#include <stdio.h>
 
 void rtc_init_badge(time_t start_time) {
     rtc_init();
-    if (start_time != 0) {
-        rtc_set_time(start_time);
+    if (start_time == 0) {
+        start_time = 1641013200; // Jan 1 2022
     }
+    rtc_set_time(start_time);
 }
 
 void rtc_set_time(time_t start_time) {
     struct tm time = *localtime(&start_time);
     datetime_t pico_time;
     pico_time.year = time.tm_year+1900;
-    pico_time.month = time.tm_mon;
+    pico_time.month = time.tm_mon+1;
     pico_time.day = time.tm_mday;
     pico_time.hour = time.tm_hour;
     pico_time.min = time.tm_min;
@@ -34,7 +34,7 @@ time_t rtc_get_unix_seconds(void) {
 
     struct tm time = {0};
     time.tm_year = pico_time.year-1900;
-    time.tm_mon = pico_time.month;
+    time.tm_mon = pico_time.month-1;
     time.tm_mday = pico_time.day;
     time.tm_wday = pico_time.dotw;
     time.tm_hour = pico_time.hour;

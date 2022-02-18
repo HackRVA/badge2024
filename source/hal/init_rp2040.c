@@ -6,13 +6,13 @@
 #include "pico/multicore.h"
 #include "pico/stdio.h"
 #include "hardware/watchdog.h"
+#include "hardware/pwm.h"
 #include "pinout_rp2040.h"
 #include "display_s6b33.h"
 #include "led_pwm.h"
 #include "button.h"
 #include "ir.h"
-#include "hardware/pwm.h"
-
+#include "rtc.h"
 
 _Noreturn void core1_procedure(void) {
     // For now, nothing for core 1 to do except allow lockout and sleep forever.
@@ -62,6 +62,7 @@ void hal_init(void) {
 
     ir_init();
     S6B33_reset();
+    rtc_init_badge(0);
 
     // allow suspend from other core, if we have it run something that needs to do that
     multicore_lockout_victim_init();
