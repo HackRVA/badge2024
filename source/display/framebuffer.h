@@ -18,7 +18,6 @@ enum {
 
 /* the output buffer */
 #define FBSIZE (LCD_XSIZE * LCD_YSIZE)
-extern unsigned short LCDbuffer[] ;
 
 struct vector8_t {
     unsigned char x;

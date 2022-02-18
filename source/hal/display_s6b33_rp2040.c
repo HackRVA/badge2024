@@ -43,27 +43,34 @@ unsigned static const char G_contrast2 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 
 
 static int dma_channel = -1;
 
+static void wait_until_ready() {
+    if (dma_channel_is_busy(dma_channel)) {
+        dma_channel_wait_for_finish_blocking(dma_channel);
+        // Seems like the display requires some time between DMA transfers finishing and being properly ready
+        sleep_us(10);
+    }
+}
+
 void S6B33_send_command(unsigned char data) {
+    wait_until_ready();
     gpio_put(BADGE_GPIO_DISPLAY_DC, LCD_COMMAND);
     spi_set_format(spi0, 8, 0, 0, SPI_MSB_FIRST);
     spi_write_blocking(spi0, &data, 1);
 }
 
 void S6B33_send_data(unsigned short data) {
+    wait_until_ready();
     gpio_put(BADGE_GPIO_DISPLAY_DC, LCD_DATA);
     spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
     spi_write16_blocking(spi0, &data, 1);
 }
 
 void S6B33_send_data_multi(const unsigned short *data, int len) {
+    wait_until_ready();
     gpio_put(BADGE_GPIO_DISPLAY_DC, LCD_DATA);
     spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
 
     dma_channel_transfer_from_buffer_now(dma_channel, data, len);
-    dma_channel_wait_for_finish_blocking(dma_channel);
-    // Need a short delay between transactions
-    sleep_us(10);
-
 }
 
 void S6B33_init_gpio(void) {
@@ -100,6 +107,7 @@ void S6B33_init_gpio(void) {
 
 void S6B33_init_device(void)
 {
+    wait_until_ready();
     S6B33_send_command(STANDBY_ON);  /* standby on == display clocks off */
     S6B33_send_command(DCDC_AMP_ONOFF);
     S6B33_send_command(0x00);        /* booster off */
@@ -225,6 +233,7 @@ void S6B33_reset(void) {
 /* window of LCD. Send byte will auto-inc x and wrap at xsize and inc y */
 void S6B33_rect(int x, int y, int width, int height)
 {
+    wait_until_ready();
     S6B33_send_command(ENTRY_MODE);
     //S6B33_send_command(0x82); /* auto inc y instead of x */
     // also works    S6B33_send_command(0x80);
@@ -241,12 +250,14 @@ void S6B33_rect(int x, int y, int width, int height)
 
 void S6B33_bias(unsigned char data)
 {
+    wait_until_ready();
     S6B33_send_command(BIAS_SET);
     S6B33_send_command(data); /* 0x11 = 1/5 & 1/5 -> 0x[0-3][0-3] bias normal and partial 0=1/4 1=1/5 2=1/6 3=1/7 bias --------*/
 }
 
 void S6B33_contrast(unsigned char data)
 {
+    wait_until_ready();
     S6B33_send_command(CONTRAST_CONTROL1);
     S6B33_send_command(data);
     S6B33_send_command(CONTRAST_CONTROL2);
@@ -255,15 +266,18 @@ void S6B33_contrast(unsigned char data)
 
 void S6B33_pixel(unsigned short pixel)
 {
+    wait_until_ready();
     S6B33_send_data(pixel);
 }
 
 void S6B33_pixels(unsigned short *pixel, int number) {
+    wait_until_ready();
     S6B33_send_data_multi(pixel, number);
 }
 
 void S6B33_set_display_mode_inverted(void)
 {
+    wait_until_ready();
     G_outputMode = DISPLAY_MODE_INVERTED; /* 0x02 lines=132 SDIR=0 SWP=1 CDIR=0 */
     S6B33_send_command(DRIVER_OUTPUT_MODE);
     S6B33_send_command(DISPLAY_MODE_INVERTED);
@@ -271,6 +285,7 @@ void S6B33_set_display_mode_inverted(void)
 
 void S6B33_set_display_mode_noninverted(void)
 {
+    wait_until_ready();
     G_outputMode = DISPLAY_MODE_NORMAL; /* 0x02 lines=132 SDIR=0 SWP=1 CDIR=0 */
     S6B33_send_command(DRIVER_OUTPUT_MODE);
     S6B33_send_command(DISPLAY_MODE_NORMAL);
