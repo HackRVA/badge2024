@@ -82,14 +82,16 @@ void FbMove(unsigned char x, unsigned char y)
 
 void FbClear()
 {
+
     unsigned short i;
-    G_Fb.changed = 0;
+    G_Fb.changed = 1;
 
     for (i=0; i<(LCD_XSIZE * LCD_YSIZE); i++) {
         BUFFER(i) = G_Fb.BGcolor;
     }
-    memset(max_changed_x, 0, sizeof(max_changed_x));
-    memset(min_changed_x, 255, sizeof(min_changed_x));
+    // Mark everything as changed
+    memset(max_changed_x, LCD_XSIZE, sizeof(max_changed_x));
+    memset(min_changed_x, 0, sizeof(min_changed_x));
 }
 
 void FbTransparency(unsigned short transparencyMask)
