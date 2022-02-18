@@ -61,7 +61,7 @@ void UserInit(void)
 // dormant returns 1 if touch/buttons are dormant for 2 minutes, otherwise returns 0
 unsigned char dormant(void) {
     uint32_t timestamp = (uint32_t)rtc_get_ms_since_boot();
-    if (timestamp >= (button_last_input_timestamp() + 1000 * 60 * 2)){
+    if (timestamp >= (button_last_input_timestamp() + 1000 * 6 * 2)){
         if(!ir_messages_seen(false)){
             return 1;
         }
@@ -76,12 +76,14 @@ unsigned char dormant(void) {
     }
 }
 
-
-#define SCREEN_SAVE_POPUP_DELAY 1000000
-//#define SCREEN_SAVE_POPUP_DELAY 150000
+// in frames
+#define SCREEN_SAVE_POPUP_DELAY (10 * 1000 / 30)
 unsigned int screen_save_popup_cnt = SCREEN_SAVE_POPUP_DELAY;
-#define POPUP_LENGTH 8000
+
+// in frames
+#define POPUP_LENGTH (8 * 30)
 unsigned short popup_time = POPUP_LENGTH;
+
 unsigned char brightScreen = 1;
 extern unsigned short anim_cnt;
 unsigned char current_screen_saver = 0;
@@ -105,63 +107,34 @@ void do_screen_save_popup(){
             
             switch(current_screen_saver%4){
                 case 0:
-                    if(popup_time == POPUP_LENGTH)
-                        popup_time = POPUP_LENGTH/100;
                     smiley();
                     break;
                 case 1:
-                    if(popup_time == POPUP_LENGTH)
-                        popup_time = POPUP_LENGTH/100;
                     bluescreen();
                     break;
                 case 2:
-                    if(popup_time == POPUP_LENGTH)
-                        popup_time = POPUP_LENGTH/100;
                     hack_the_dragon();
                     break;
                 case 3:
-                    if(popup_time == POPUP_LENGTH)
-                        popup_time = POPUP_LENGTH/100;
                     for_president();
                     break;
-             //   case 4:
-               //     if(popup_time == POPUP_LENGTH)
-                     //   popup_time = POPUP_LENGTH/100;
-                    //scoreBoard();
-                 //   break;
-                //case 5:
-                  //  if(popup_time == POPUP_LENGTH)
-                    //    popup_time = POPUP_LENGTH/100;
-                    //disp_ir_draw();  replace with something else
-                    //break;
             }
         }
         else if(prob_val < HIGH_PROB_THRESH){
             switch(current_screen_saver%5){
                 case 0:
-                    if(popup_time == POPUP_LENGTH)
-                        popup_time = POPUP_LENGTH/100;
                     disp_asset_saver();
                     break;
                 case 1:
                     stupid_rects();
                     break;
                 case 2:
-                    if(popup_time == POPUP_LENGTH)
-                        popup_time = POPUP_LENGTH/70;
                     dotty();
                     break;
                 case 3:
                     carzy_tunnel_animator();
                     break;
-                //case 3:
-                    //if(popup_time == POPUP_LENGTH)
-                      //  popup_time = POPUP_LENGTH/100;
-                    //matrix();
-                    //break;
                 case 4:
-                    if(popup_time == POPUP_LENGTH)
-                        popup_time = POPUP_LENGTH/100;
                     just_the_badge_tips();
                     break;
                     
@@ -221,9 +194,7 @@ uint64_t ProcessIO(void)
     
     if(is_dormant){
 
-        int down_latches = button_down_latches();
-
-        if (down_latches || ir_messages_seen(false)) {
+        if (!dormant() || ir_messages_seen(false)) {
             //|| (IRpacketInCurr != IRpacketInNext)){
             is_dormant = 0;
             ir_messages_seen(true);

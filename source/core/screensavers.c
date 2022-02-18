@@ -23,7 +23,6 @@ void disp_asset_saver(){
         imgnum = random % 3;
         anim_cnt++;
     }
-    //imgnum = 2;
 
     switch(imgnum){
         case 0:
@@ -39,14 +38,6 @@ void disp_asset_saver(){
         case 2:
             render_screen_save_monsters();
             break;
-//        case 2:
-//            for(x=0; x<126; x+=20)
-//                for(y=0; y<126; y+=14){
-//                    //FbColor(BLUE << ((x>>4) + (y>>4)));
-//                    FbMove(x, y);
-//                    FbImage(BADGEY_BIRD, 0);
-//                }
-//            break;
     }
 
     FbSwapBuffers();
@@ -85,7 +76,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_disable(BADGE_LED_RGB_BLUE);
     }
-    else if(anim_cnt == 200){
+    else if(anim_cnt == 10){
         FbColor(GREEN);
         FbMove(rnd%60+rnd%60,rnd%55+rnd%10);
 
@@ -94,7 +85,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_disable(BADGE_LED_RGB_BLUE);
     }
-    else if(anim_cnt == 400){
+    else if(anim_cnt == 20){
         FbColor(CYAN);
         FbMove(rnd%70+rnd%45,rnd%45+rnd%33);
 
@@ -103,7 +94,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 600){
+    else if(anim_cnt == 30){
 
         FbColor(WHITE);
         FbMove(rnd%30+rnd%10,rnd%30+rnd%30);
@@ -113,7 +104,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 800){
+    else if(anim_cnt == 40){
 
         FbColor(BLUE);
         FbMove(rnd%50+rnd%30,rnd%10+rnd%15);
@@ -123,7 +114,7 @@ void stupid_rects(){
         led_pwm_disable(BADGE_LED_RGB_GREEN);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 1000){
+    else if(anim_cnt == 50){
 
         FbColor(MAGENTA);
         FbMove(rnd%33+rnd%47,rnd%65+rnd%33);
@@ -133,7 +124,7 @@ void stupid_rects(){
         led_pwm_disable(BADGE_LED_RGB_GREEN);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt > 1199)
+    else if(anim_cnt > 50)
         anim_cnt = 0;
 
     FbPushBuffer();
@@ -153,7 +144,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 200){
+    else if(anim_cnt == 10){
         FbColor(TUNNEL_COLOR);
         FbMove(64,64);
 
@@ -162,7 +153,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 5*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 5*255/100);
     }
-    else if(anim_cnt == 400){
+    else if(anim_cnt == 20){
         FbColor(TUNNEL_COLOR);
         FbMove(62,62);
 
@@ -171,7 +162,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 20*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 20*255/100);
     }
-    else if(anim_cnt == 600){
+    else if(anim_cnt == 30){
         FbColor(TUNNEL_COLOR);
         FbMove(58,58);
 
@@ -180,7 +171,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 45*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 45*255/100);
     }
-    else if(anim_cnt == 800){
+    else if(anim_cnt == 40){
         FbColor(TUNNEL_COLOR);
         FbMove(50,50);
 
@@ -189,7 +180,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 75*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 75*255/100);
     }
-    else if(anim_cnt == 1000){
+    else if(anim_cnt == 50){
         FbColor(TUNNEL_COLOR);
         FbMove(34,34);
 
@@ -198,7 +189,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt > 1199)
+    else if(anim_cnt > 60)
         anim_cnt = 0 - 1;
 
     FbSwapBuffers();
@@ -250,7 +241,7 @@ void for_president(){
     FbMove(32, 35);
     FbWriteLine(president2);
 
-    if(popup_time > 30){
+    if(popup_time > 3){
         unsigned char i = 0;
         for(i=0; i<8; i++){
             FbColor((i+anim_cnt)%2 ? WHITE: RED);
