@@ -86,38 +86,6 @@ const struct menu_t myBadgeid_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
 
-/*
-    peer we want to talk to
-*/
-
-// Sam: This seems unused... Perhaps safe to remove?
-void peerBadgeid_cb(struct menu_t *h) {
-   struct menu_t *dstMenu, *selectedMenu;
-
-   dstMenu = getSelectedMenuStack(1);
-   selectedMenu = getSelectedMenu();
-   strcpy(dstMenu->name, selectedMenu->name);
-}
-
-
-const struct menu_t peerBadgeNum_m[] = {
-    {"ALL", 0|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"  1", 1|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"  2", 2|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"  3", 3|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"  4", 4|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"  5", 5|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"  6", 6|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"  7", 7|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"  8", 8|VERT_ITEM, FUNCTION, {(struct menu_t *)peerBadgeid_cb} },
-    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
-};
-
-struct menu_t peerBadgeid_m[] = {
-    {"0",   VERT_ITEM, MENU, {peerBadgeNum_m} },
-    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
-};
-
 
 /*
     backlight

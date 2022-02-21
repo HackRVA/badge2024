@@ -10,7 +10,7 @@
 #include <stdbool.h>
 
 #define IR_BADGE_ID_BROADCAST (0)
-#define MAX_IR_DATA_LEN_BYTES (64)
+#define MAX_IR_MESSAGE_SIZE (64)
 
 typedef enum {
 
@@ -40,7 +40,7 @@ typedef enum {
 // know if it should handle the rest of the message or not, and which app to send it to.
 //
 // In summary, this looks like:
-// | 1 (START, 1 bit) - device address (10 bit) - app ID (5 bit) |
+// | 1 (START, 1 bit) - recipient address (10 bit) - app ID (5 bit) |
 //
 // Subsequent bytes start with the MS bit /unset/, followed by a 1 if there are more bytes coming in the message, or
 // 0 if this is the last byte. After this, there is a 6-bit message sequence number, starting from 0. Finally there are
@@ -66,15 +66,17 @@ typedef void (*ir_data_callback)(const IR_DATA* data);
 
 void ir_init(void);
 
-void ir_set_callback(ir_data_callback data_cb, IR_APP_ID app_id);
+bool ir_add_callback(ir_data_callback data_cb, IR_APP_ID app_id);
+bool ir_remove_callback(ir_data_callback data_cb, IR_APP_ID app_id);
 
 bool ir_transmitting(void);
 
-// Note that sending > 3 data bytes will block; to prevent this check the ir_transmitting status before sending,
-// and only send 4 bytes at a time.
+// Note that sending > 3 data bytes at the start will block; to prevent this, use ir_send_partial message and check the
+// return value to see how far it got.
 void ir_send_complete_message(const IR_DATA *data);
 
-void ir_send_partial_message(const IR_DATA *data, uint8_t starting_sequence_num, bool is_end);
+// Returns the number of data packets that were queued to send, instead of blocking to send out all data.
+uint8_t ir_send_partial_message(const IR_DATA *data, uint8_t starting_sequence_num);
 
 // TODO maybe we can track this outside of the HAL and in the badge system files somewhere
 bool ir_messages_seen(bool reset);

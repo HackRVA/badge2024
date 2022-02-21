@@ -232,7 +232,6 @@ void dotty(){
         random_insecure_bytes((uint8_t*)&random, sizeof(uint32_t));
         random %= 132;
 
-        // Sam: not sure this is correct...
         int timestamp = rtc_get_ms_since_boot();
         FbMove(irbit2(random + timestamp + i),
                irbit2(random + ~timestamp + i));

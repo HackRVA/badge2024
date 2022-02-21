@@ -42,6 +42,12 @@ burst:
 
 jmp !OSRE data_bit                      ; continue sending bits until the OSR is empty
 
+nop [31]                                ; Sam: provide a gap between data words so the receiver can differentiate
+nop [31]                                ; This totals about 35ms (sending a full word is 67.5ms)
+nop [31]
+nop [31]
+nop [31]
+
 .wrap                                   ; fetch another data word from the FIFO
 
 
