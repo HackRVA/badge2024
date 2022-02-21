@@ -388,7 +388,7 @@ void menus()
   this is not meant for persistant menus
   like the main menu
 */
-void genericMenu(struct menu_t *L_menu, MENU_STYLE style)
+void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
 {
     static struct menu_t *L_currMenu = NULL; /* LOCAL not to be confused to much with menu()*/
     static struct menu_t *L_selectedMenu = NULL; /* LOCAL ditto   "    "    */
@@ -407,7 +407,6 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style)
 	return;
     }
 
-    int down_latches = button_down_latches();
     if (down_latches & (1<<BADGE_BUTTON_SW))
     {
             switch (L_selectedMenu->type) {

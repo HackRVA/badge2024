@@ -4,6 +4,18 @@
 #include "button.h"
 #include "audio_output.h"
 
+enum {
+    CONDUCTOR_TOP = 0,
+    CONDUCTOR_BOTTOM,
+    CONDUCTOR_SPACE,
+    CONDUCTOR_LEFT,
+    CONDUCTOR_RIGHT,
+    CONDUCTOR_SPACE2,
+    CONDUCTOR_MODE,
+    CONDUCTOR_GO,
+    CONDUCTOR_EXIT
+};
+
 struct menu_t conductor_config_m[] = {
     {"Top: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_conductor_top_note} },
     {"Bottom: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_conductor_bottom_note} },
@@ -138,11 +150,9 @@ void populate_menu()
 }
 
 
-void run_conductor()
+void run_conductor(uint32_t down_latches)
 {
     unsigned short freq=0;
-
-    int down_latches = button_down_latches();
 
     if (down_latches & (1<<BADGE_BUTTON_SW))
     {
@@ -200,7 +210,7 @@ void conductor_cb()
             con_state++;
             break;
         case SHOW_MENU:
-            genericMenu((struct menu_t *)conductor_config_m, MAIN_MENU_STYLE);
+            genericMenu(conductor_config_m, MAIN_MENU_STYLE, down_latches);
             break;
         case CONFIG_TOP:
             if (down_latches & (1<<BADGE_BUTTON_SW))
@@ -211,12 +221,14 @@ void conductor_cb()
                 top_note++;
                 audio_set_note(top_note, 4096);
                 populate_menu();
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_TOP], MAIN_MENU_STYLE);
             }
             else if(down_latches & (1<<BADGE_BUTTON_DOWN))
             {
                 top_note--;
                 audio_set_note(top_note, 4096);
                 populate_menu();
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_TOP], MAIN_MENU_STYLE);
             }
             break;
         case CONFIG_BOTTOM:
@@ -228,12 +240,14 @@ void conductor_cb()
                 bottom_note++;
                 audio_set_note(bottom_note, 4096);
                 populate_menu();
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_BOTTOM], MAIN_MENU_STYLE);
             }
             else if(down_latches & (1<<BADGE_BUTTON_DOWN))
             {
                 bottom_note--;
                 audio_set_note(bottom_note, 4096);
                 populate_menu();
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_BOTTOM], MAIN_MENU_STYLE);
             }
             break;
         case CONFIG_LEFT:
@@ -245,12 +259,14 @@ void conductor_cb()
                 left_note++;
                 audio_set_note(left_note, 4096);
                 populate_menu();
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_LEFT], MAIN_MENU_STYLE);
             }
             else if(down_latches & (1<<BADGE_BUTTON_DOWN))
             {
                 left_note--;
                 audio_set_note(left_note, 4096);
                 populate_menu();
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_LEFT], MAIN_MENU_STYLE);
             }
             break;
         case CONFIG_RIGHT:
@@ -262,16 +278,18 @@ void conductor_cb()
                 right_note++;
                 audio_set_note(right_note, 4096);
                 populate_menu();
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_RIGHT], MAIN_MENU_STYLE);
             }
             else if(down_latches & (1<<BADGE_BUTTON_DOWN))
             {
                 right_note--;
                 audio_set_note(right_note, 4096);
                 populate_menu();
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_RIGHT], MAIN_MENU_STYLE);
             }
             break;
         case RUN_CONDUCTOR:
-            run_conductor();
+            run_conductor(down_latches);
             break;
     }
 

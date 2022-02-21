@@ -1,6 +1,8 @@
 #ifndef menu_h
 #define menu_h
 
+#include <stdint.h>
+
 #define RED_BG 0
 #define GREEN_BG 0
 #define BLUE_BG 0
@@ -63,7 +65,7 @@ struct menu_t *getCurrMenu();
 struct menu_t *getSelectedMenu();
 
 extern void (*runningApp)() ;
-void genericMenu(struct menu_t *L_menu, MENU_STYLE);
+void genericMenu(struct menu_t *L_menu, MENU_STYLE, uint32_t button_latches);
 void closeMenuAndReturn();
 
 #endif
