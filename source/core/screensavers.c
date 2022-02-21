@@ -259,7 +259,7 @@ void for_president(){
     if(popup_time > 3){
         unsigned char i = 0;
         for(i=0; i<8; i++){
-            FbColor((i+anim_cnt)%2 ? WHITE: RED);
+            FbColor((i+(anim_cnt/15))%2 ? WHITE: RED);
             FbMove(0, 50 + (i*10));
             FbFilledRectangle(132, 10);
         }

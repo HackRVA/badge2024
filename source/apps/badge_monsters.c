@@ -199,12 +199,12 @@ int initial_mon;
 #ifndef __linux__
 static void register_ir_packet_callback(void (*callback)(const IR_DATA *))
 {
-    ir_set_callback(callback, BADGE_IR_GAME_ADDRESS);
+    ir_add_callback(callback, BADGE_IR_GAME_ADDRESS);
 }
 
-static void unregister_ir_packet_callback(void)
+static void unregister_ir_packet_callback(void (*callback)(const IR_DATA *))
 {
-    ir_set_callback(NULL, BADGE_IR_GAME_ADDRESS);
+    ir_remove_callback(callback, BADGE_IR_GAME_ADDRESS);
 }
 #endif
 
@@ -682,14 +682,6 @@ static void save_to_flash(void){
     */
 }
 
-static void exit_app(void)
-{
-    app_state = INIT_APP_STATE;
-    save_to_flash();
-    unregister_ir_packet_callback();
-    returnToMenus();
-}
-
 static void ir_packet_callback(const IR_DATA *data)
 {
 	/* Interrupts will be already disabled when this is called. */
@@ -703,6 +695,14 @@ static void ir_packet_callback(const IR_DATA *data)
     packet_queue[queue_in].data = packet_data[queue_in];
 
 	queue_in = next_queue_in;
+}
+
+static void exit_app(void)
+{
+    app_state = INIT_APP_STATE;
+    save_to_flash();
+    unregister_ir_packet_callback(ir_packet_callback);
+    returnToMenus();
 }
 
 static void app_init(void)
