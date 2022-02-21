@@ -86,14 +86,12 @@ int main() {
         uint64_t frame_period_us = ProcessIO();
         uint64_t current_time = rtc_get_us_since_boot();
         if (frame_time + frame_period_us <= current_time) {
-            printf("Frame time was too long: %llu\n", current_time - frame_time);
-
+            printf("Frame time was long: %llu\n", current_time - frame_time);
             frame_time = current_time;
             continue;
         }
 
         frame_time = frame_period_us + frame_time;
-        printf("sleep us: %llu\n", frame_time-current_time);
         sleep_us(frame_time - current_time);
     }
     hal_deinit();

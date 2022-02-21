@@ -110,7 +110,7 @@ int run_ir_last(char *args) {
     }
     printf("\n");
 
-#if 1
+#if IR_DEBUG
     extern uint32_t last_packets[20];
     for (int i=0; i<20; i++) {
         printf("\t%08x\n", last_packets[i]);

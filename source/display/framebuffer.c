@@ -509,6 +509,7 @@ void FbWriteLine(const char *string)
     for(j=0; string[j] != 0; j++) {
         FbMove(x + j * assetList[G_Fb.font].x, y);
         FbCharacter(string[j]);
+        FbMove(x + (j+1) * assetList[G_Fb.font].x, y);
     }
     G_Fb.changed = 1;
 }

@@ -29,9 +29,7 @@ Dustin Firebaugh <dafirebaugh@gmail.com>
 #include "audio_output.h"
 #include "menu.h"
 #include "badge.h"
-
-#define DISABLE_INTERRUPTS
-#define ENABLE_INTERRUPTS
+#include "init.h"
 
 #endif
 
@@ -241,8 +239,7 @@ static void enable_all_monsters(void)
 }
 #endif
 
-static void build_and_send_packet(unsigned char cmd, unsigned char start,
-            unsigned char address, unsigned short badge_id, unsigned short payload)
+static void build_and_send_packet(unsigned char address, unsigned short badge_id, unsigned short payload)
 {
     uint8_t byte_payload[2] = {payload >> 8, payload & 0xFF};
     IR_DATA ir_packet = {
@@ -258,7 +255,7 @@ static void build_and_send_packet(unsigned char cmd, unsigned char start,
 
 static unsigned short get_payload(IR_DATA* packet)
 {
-    return packet->data[0] << 7 | packet->data[1];
+    return packet->data[0] << 8 | packet->data[1];
 }
 
 static void process_packet(IR_DATA* packet)
@@ -269,7 +266,10 @@ static void process_packet(IR_DATA* packet)
     payload = get_payload(packet);
     opcode = payload >> 12;
 
+    printf("Got IR packet: %04x\n", payload);
+
     if(opcode == OPCODE_XMIT_MONSTER){
+        printf("Enabling monster %u!\n", payload &0xFF);
         enable_monster(payload & 0x0ff);
     }
 }
@@ -278,16 +278,16 @@ static void check_for_incoming_packets(void)
 {
     IR_DATA *new_packet;
     int next_queue_out;
-    DISABLE_INTERRUPTS;
+    uint32_t interrupt_state = hal_disable_interrupts();
     while (queue_out != queue_in) {
         next_queue_out = (queue_out + 1) % QUEUE_SIZE;
         new_packet = &packet_queue[queue_out];
         queue_out = next_queue_out;
-        ENABLE_INTERRUPTS;
+        hal_restore_interrupts(interrupt_state);
         process_packet(new_packet);
-        DISABLE_INTERRUPTS;
+        interrupt_state = hal_disable_interrupts();
     }
-    ENABLE_INTERRUPTS;
+    hal_restore_interrupts(interrupt_state);
 }
 
 static void draw_menu(void)
@@ -425,8 +425,8 @@ static void trade_monsters(void)
 	static int counter = 0;
 
 	counter++;
-	if ((counter % 10000) == 0) { /* transmit our monster IR packet */
-		build_and_send_packet(1,1,BADGE_IR_GAME_ADDRESS, BADGE_IR_BROADCAST_ID,
+	if ((counter % 10) == 0) { /* transmit our monster IR packet */
+		build_and_send_packet(BADGE_IR_GAME_ADDRESS, BADGE_IR_BROADCAST_ID,
 			(OPCODE_XMIT_MONSTER << 12) | (initial_mon & 0x01ff));
 	    audio_set_note(50, 100);
 	}
@@ -684,13 +684,17 @@ static void save_to_flash(void){
 
 static void ir_packet_callback(const IR_DATA *data)
 {
-	/* Interrupts will be already disabled when this is called. */
+    // This is called in an interrupt context!
 	int next_queue_in;
 
 	next_queue_in = (queue_in + 1) % QUEUE_SIZE;
 	if (next_queue_in == queue_out) /* queue is full, drop packet */
 		return;
-    memcpy(&packet_data[queue_in], data->data, data->data_length);
+    size_t data_size = data->data_length;
+    if (QUEUE_DATA_SIZE < data_size) {
+        data_size = QUEUE_DATA_SIZE;
+    }
+    memcpy(&packet_data[queue_in], data->data, data_size);
 	memcpy(&packet_queue[queue_in], data, sizeof(packet_queue[0]));
     packet_queue[queue_in].data = packet_data[queue_in];
 

@@ -6,10 +6,12 @@
 #else
 
 #include <string.h>
+#include <stdlib.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
+#include "rtc.h"
 
 #endif
 
@@ -47,7 +49,7 @@ static void render_screen(void)
 	FbClear();
 	FbDrawObject(smiley, ARRAYSIZE(smiley), WHITE, smiley_x, smiley_y, 410);
 	/* Display the time stamp for no particular reason */
-	itoa(buffer, (volatile int) timestamp, 10);
+	itoa(rtc_get_ms_since_boot(), buffer, 10);
 	FbMove(10, 100);
 	FbWriteLine(buffer);
 	FbSwapBuffers();

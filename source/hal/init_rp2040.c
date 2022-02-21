@@ -6,6 +6,7 @@
 #include "pico/multicore.h"
 #include "pico/stdio.h"
 #include "hardware/watchdog.h"
+#include "hardware/sync.h"
 #include "hardware/pwm.h"
 #include "pinout_rp2040.h"
 #include "display_s6b33.h"
@@ -77,4 +78,14 @@ void hal_deinit(void) {
 void hal_reboot(void) {
     // Go back to bootloader.
     watchdog_reboot(0, SRAM_END, 10);
+}
+
+
+/// disable / restore interrupt state;
+uint32_t hal_disable_interrupts(void) {
+    return save_and_disable_interrupts();
+}
+
+void hal_restore_interrupts(uint32_t state) {
+    restore_interrupts(state);
 }

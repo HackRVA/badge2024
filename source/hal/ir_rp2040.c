@@ -58,8 +58,10 @@ static bool get_payload(uint32_t raw_nec_data, uint16_t* payload) {
     return nec_decode_frame(raw_nec_data, &data[0], &data[1]);
 }
 
+#if IR_DEBUG
 uint32_t last_packets[20];
 static int pkt_idx;
+#endif
 
 void irq_fifo_handler(void) {
 
@@ -68,7 +70,7 @@ void irq_fifo_handler(void) {
 
         uint16_t payload = 0;
 
-#if 1
+#if IR_DEBUG
         last_packets[pkt_idx++] = rx_data;
         if (pkt_idx >= 20) {
             pkt_idx = 0;
