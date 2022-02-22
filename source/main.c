@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "badge.h"
 
 #define MAX_COMMAND_LEN 200
 
@@ -21,6 +22,8 @@
 #include "colors.h"
 #include "led_pwm.h"
 #include "ir.h"
+#include "rtc.h"
+#include "button.h"
 
 int exit_process(char *args) {
     return -1;
@@ -52,32 +55,45 @@ CLI_COMMAND help_command = {
 int main() {
 
     hal_init();
+    UserInit();
 
-    // Sam: temporary code to demo display working
-    led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 150);
-    S6B33_reset();
-    FbMove(0,0);
-    FbImage(1, 0);
-    FbPushBuffer();
+    if (button_poll(BADGE_BUTTON_LEFT)) {
 
-    // Need to ensure USB is connected before reading stdin, or else that will hang
-    while (!usb_is_connected()) {
-        sleep_ms(5);
+        // Run debug CLI
+
+        // Need to ensure USB is connected before reading stdin, or else that will hang
+        while (!usb_is_connected()) {
+            sleep_ms(5);
+        }
+
+        CLI_COMMAND root_commands[] = {
+                [0] = help_command, // Add your command name to the printout in help_process!
+                [1] = exit_command,
+                [2] = flash_command,
+                [3] = led_command,
+                [4] = button_command,
+                [5] = ir_command,
+                [6] = {}
+        };
+
+        cli_run(root_commands);
+        puts("Exited CLI, running main app");
     }
 
-    CLI_COMMAND root_commands[] = {
-        [0] = help_command, // Add your command name to the printout in help_process!
-        [1] = exit_command,
-        [2] = flash_command,
-        [3] = led_command,
-        [4] = button_command,
-        [5] = ir_command,
-        [6] = {}
-    };
+    // run main app
+    uint64_t frame_time = rtc_get_us_since_boot();
+    while (1) {
+        uint64_t frame_period_us = ProcessIO();
+        uint64_t current_time = rtc_get_us_since_boot();
+        if (frame_time + frame_period_us <= current_time) {
+            printf("Frame time was long: %llu\n", current_time - frame_time);
+            frame_time = current_time;
+            continue;
+        }
 
-
-    cli_run(root_commands);
-    puts("Exited CLI");
+        frame_time = frame_period_us + frame_time;
+        sleep_us(frame_time - current_time);
+    }
     hal_deinit();
     hal_reboot();
 

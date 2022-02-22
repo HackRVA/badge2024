@@ -66,4 +66,9 @@ void S6B33_set_display_mode_noninverted(void);
 /** get current display mode variable setting */
 unsigned char S6B33_get_display_mode(void);
 
+int S6B33_get_rotation(void);
+void S6B33_set_rotation(int yes);
+void S6B33_color(unsigned short pixel);
+
+
 #endif //BADGE2022_C_DISPLAY_SB633_H

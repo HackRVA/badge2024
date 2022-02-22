@@ -1,9 +1,11 @@
 
 add_executable(badge2022_c main.c)
 
+add_subdirectory(apps)
 add_subdirectory(cli)
-add_subdirectory(hal)
+add_subdirectory(core)
 add_subdirectory(display)
+add_subdirectory(hal)
 
 # pull in Pico subcomponents
 target_link_libraries(badge2022_c

@@ -5,8 +5,10 @@
 #include "button.h"
 #include "pinout_rp2040.h"
 #include "pico/time.h"
+#include "pico/sync.h"
 #include <stdint.h>
 #include <stdio.h>
+#include "rtc.h"
 
 #define DEBOUNCE_DELAY_MS 20
 
@@ -22,9 +24,13 @@ static const int8_t button_gpios[BADGE_BUTTON_MAX] = {
     BADGE_GPIO_ENCODER_B,
 };
 
+static critical_section_t critical_section;
 
 // bitmask of reported debounced pin states
 static uint32_t gpio_states;
+static uint32_t down_latches;
+static uint32_t up_latches;
+static uint32_t last_change;
 
 // callback
 static user_gpio_callback user_cb;
@@ -45,9 +51,16 @@ int64_t alarm_callback(alarm_id_t id, void* user_data) {
         gpio_states &= ~(1<<gpio_enum);
         gpio_states |= state<<gpio_enum;
 
+        if (state) {
+            up_latches |= 1<<gpio_enum;
+        } else {
+            down_latches |= 1<<gpio_enum;
+        }
+
         if (user_cb) {
             user_cb(gpio_enum, state);
         }
+        last_change = rtc_get_ms_since_boot();
     }
 
     gpio_set_irq_enabled_with_callback(gpio,
@@ -75,6 +88,7 @@ void gpio_callback(uint gpio, uint32_t events) {
 void button_init_gpio(void) {
 
     alarm_pool_init_default();
+    critical_section_init(&critical_section);
 
     for (int i=0; i<BADGE_BUTTON_MAX; i++) {
         uint gpio = (uint) button_gpios[i];
@@ -88,7 +102,7 @@ void button_init_gpio(void) {
         uint gpio = (uint) button_gpios[i];
         uint state = gpio_get(button_gpios[i]) ? 1 : 0;
         gpio_states |= (state<<i);
-        gpio_set_irq_enabled_with_callback(gpio,GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,true,
+        gpio_set_irq_enabled_with_callback(gpio, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, true,
                                            gpio_callback);
     }
 }
@@ -101,6 +115,37 @@ int button_mask(void) {
     return (int) ((~gpio_states) & ((1<<BADGE_BUTTON_MAX)-1));
 }
 
+int button_down_latches(void) {
+    critical_section_enter_blocking(&critical_section);
+    int response = (int) down_latches;
+    down_latches = 0;
+    critical_section_exit(&critical_section);
+    return response;
+}
+
+int button_up_latches(void) {
+    critical_section_enter_blocking(&critical_section);
+    int response = (int) up_latches;
+    up_latches = 0;
+    critical_section_exit(&critical_section);
+    return response;
+}
+
+void clear_latches(void) {
+    critical_section_enter_blocking(&critical_section);
+    up_latches = 0;
+    down_latches = 0;
+    critical_section_exit(&critical_section);
+}
+
 void button_set_interrupt(user_gpio_callback cb) {
     user_cb = cb;
+}
+
+unsigned int button_last_input_timestamp(void) {
+    return last_change;
+}
+
+void button_reset_last_input_timestamp(void) {
+    last_change = rtc_get_ms_since_boot();
 }

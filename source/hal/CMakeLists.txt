@@ -8,6 +8,9 @@ target_sources(badge2022_c PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/led_pwm_rp2040.c
         ${CMAKE_CURRENT_LIST_DIR}/button_rp2040.c
         ${CMAKE_CURRENT_LIST_DIR}/ir_rp2040.c
+        ${CMAKE_CURRENT_LIST_DIR}/audio_output_rp2040.c
+        ${CMAKE_CURRENT_LIST_DIR}/rtc_rp2040.c
+        ${CMAKE_CURRENT_LIST_DIR}/random_rp2040.c
         )
 
 add_subdirectory(ir_library)

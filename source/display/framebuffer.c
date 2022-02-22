@@ -19,7 +19,9 @@ struct framebuffer_t G_Fb;
 */
 
 /* the output buffer */
-unsigned short LCDbuffer[FBSIZE] ;
+unsigned short LCDbufferA[FBSIZE];
+unsigned short LCDbufferB[FBSIZE];
+
 unsigned char min_changed_x[LCD_YSIZE];
 unsigned char max_changed_x[LCD_YSIZE];
 #define IS_ROW_CHANGED(i) (min_changed_x[(i)] != 255)
@@ -34,10 +36,10 @@ void fb_mark_row_changed(int x, int y)
 
 #define MARK_ROW_UNCHANGED(i) do { max_changed_x[(i)] = 0; min_changed_x[(i)] = 255; } while (0)
 
-#define BUFFER( ADDR ) LCDbuffer[(ADDR)]
+#define BUFFER( ADDR ) G_Fb.buffer[(ADDR)]
 
 void FbInit() {
-    G_Fb.buffer = LCDbuffer;
+    G_Fb.buffer = LCDbufferA;
     G_Fb.pos.x = 0;
     G_Fb.pos.y = 0;
     G_Fb.font = FONT;
@@ -80,18 +82,16 @@ void FbMove(unsigned char x, unsigned char y)
 
 void FbClear()
 {
+
     unsigned short i;
-
-    S6B33_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
-
-    G_Fb.changed = 0;
+    G_Fb.changed = 1;
 
     for (i=0; i<(LCD_XSIZE * LCD_YSIZE); i++) {
         BUFFER(i) = G_Fb.BGcolor;
     }
-    S6B33_pixels(LCDbuffer, LCD_XSIZE*LCD_YSIZE);
-    memset(max_changed_x, 0, sizeof(max_changed_x));
-    memset(min_changed_x, 255, sizeof(min_changed_x));
+    // Mark everything as changed
+    memset(max_changed_x, LCD_XSIZE, sizeof(max_changed_x));
+    memset(min_changed_x, 0, sizeof(min_changed_x));
 }
 
 void FbTransparency(unsigned short transparencyMask)
@@ -411,6 +411,7 @@ void FbTransparentIndex(unsigned short color)
     G_Fb.transIndex = color;
 }
 
+#include <stdio.h>
 void FbCharacter(unsigned char charin)
 {
     if ((charin < 32) | (charin > 126)) charin = 32;
@@ -498,11 +499,9 @@ void FbLine(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char 
     G_Fb.changed = 1;
 }
 
-void FbWriteLine(unsigned char *string)
+void FbWriteLine(const char *string)
 {
     unsigned char j, x, y;
-
-    //debug("FbWriteLine ");
 
     x = G_Fb.pos.x;
     y = G_Fb.pos.y;
@@ -510,11 +509,12 @@ void FbWriteLine(unsigned char *string)
     for(j=0; string[j] != 0; j++) {
         FbMove(x + j * assetList[G_Fb.font].x, y);
         FbCharacter(string[j]);
+        FbMove(x + (j+1) * assetList[G_Fb.font].x, y);
     }
     G_Fb.changed = 1;
 }
 
-void FbWriteString(unsigned char *string)
+void FbWriteString(const char *string)
 {
     unsigned char j, x;
 
@@ -546,16 +546,21 @@ void FbRectangle(unsigned char width, unsigned char height)
     G_Fb.changed = 1;
 }
 
-/*
-  doesn't currently swap buffers, just flushes ram->LCD
-  could do double buffer with 4,2 or 1 bit per pixel
-*/
 void FbSwapBuffers()
 {
     if (G_Fb.changed == 0) return;
 
     S6B33_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
-    S6B33_pixels(LCDbuffer, LCD_XSIZE*LCD_YSIZE);
+    S6B33_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
+
+    if (G_Fb.buffer == LCDbufferA) {
+        G_Fb.buffer = LCDbufferB;
+    } else {
+        G_Fb.buffer = LCDbufferA;
+    }
+    for (int i=0; i<LCD_XSIZE*LCD_YSIZE; i++) {
+        G_Fb.buffer[i] = G_Fb.BGcolor;
+    }
     G_Fb.changed = 0;
 
     G_Fb.pos.x = 0;
@@ -580,11 +585,12 @@ void FbPaintNewRows(void)
         if (!IS_ROW_CHANGED(i))
             continue;
         /* Copy changed rows to screen and to old[] buffer */
+        int num_pixels = max_changed_x[i] - min_changed_x[i] + 1;
         if (!rotated)
-            S6B33_rect(i, min_changed_x[i], 1, max_changed_x[i] - min_changed_x[i] + 1);
+            S6B33_rect(i, min_changed_x[i], 1, num_pixels);
         else
-            S6B33_rect(min_changed_x[i], i, max_changed_x[i] - min_changed_x[i] + 1, 1);
-        S6B33_pixels(&LCDbuffer[i*LCD_YSIZE], max_changed_x[i]-min_changed_x[i]);
+            S6B33_rect(min_changed_x[i], i, num_pixels, 1);
+        S6B33_pixels(&G_Fb.buffer[i*LCD_XSIZE+min_changed_x[i]], num_pixels);
         MARK_ROW_UNCHANGED(i);
     }
     G_Fb.changed = 0;
@@ -601,7 +607,7 @@ void FbPushBuffer()
 
     if (G_Fb.changed == 0) return;
     S6B33_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
-    S6B33_pixels(LCDbuffer, LCD_XSIZE*LCD_YSIZE);
+    S6B33_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
     G_Fb.changed = 0;
 
 }
