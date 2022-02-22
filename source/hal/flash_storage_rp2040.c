@@ -32,11 +32,7 @@ size_t flash_data_read(uint8_t sector, uint16_t offset, uint8_t *buf, size_t len
 
 }
 
-#include "pico/stdio.h"
-#include <stdio.h>
-
 size_t flash_data_write(uint8_t sector, uint16_t offset, const uint8_t *buf, size_t len) {
-
 
     // Ensure we want to write a valid location
     size_t address = ((STORAGE_BASE) + sector * FLASH_SECTOR_SIZE + offset);

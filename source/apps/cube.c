@@ -1,11 +1,4 @@
-#ifdef __linux__
-#include <stdio.h>
-#include <sys/time.h>
-#include <stdlib.h>
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-#else
-#endif
+
 
 #include "colors.h"
 #include "button.h"
@@ -175,6 +168,9 @@ static void docube(void)
 	static int d1 = 1, d2 = 1, d3 = 1;
 	static unsigned int xorshift_state = 0xa5a5a5a5;
 
+    FbColor(BLACK);
+    draw_cube();
+
 	memcpy(&cubept, &cubept2, sizeof(cubept2));
 	FbColor(WHITE);
 	yrotate(cubept2, cubept, ARRAYSIZE(cubept), angle);
@@ -211,8 +207,6 @@ static void docube(void)
 	FbColor(WHITE);
 	draw_cube();
 	FbPaintNewRows();
-	FbColor(BLACK);
-	draw_cube();
 }
 
 static void check_buttons(void)

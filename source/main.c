@@ -5,10 +5,6 @@
 
 #define MAX_COMMAND_LEN 200
 
-#include "flash_storage.h"
-#include "usb.h"
-#include "delay.h"
-#include "init.h"
 
 #include "cli.h"
 #include "cli_flash.h"
@@ -16,14 +12,12 @@
 #include "cli_button.h"
 #include "cli_ir.h"
 
-#include "assets.h"
-#include "framebuffer.h"
-#include "display_s6b33.h"
-#include "colors.h"
-#include "led_pwm.h"
-#include "ir.h"
 #include "rtc.h"
 #include "button.h"
+#include "hal/usb.h"
+#include "flash_storage.h"
+#include "delay.h"
+#include "init.h"
 
 int exit_process(char *args) {
     return -1;
@@ -52,7 +46,7 @@ CLI_COMMAND help_command = {
     .process = help_process,
 };
 
-int main() {
+int app_main() {
 
     hal_init();
     UserInit();
@@ -99,3 +93,27 @@ int main() {
 
     return 0;
 }
+
+#if TARGET_PICO
+int main(void) {
+    return app_main();
+}
+#elif TARGET_SIMULATOR
+#include <pthread.h>
+
+void *main_in_thread(void* params) {
+    app_main();
+    return NULL;
+}
+
+int main(int argc, char** argv) {
+    pthread_t app_thread;
+    pthread_create(&app_thread, NULL, main_in_thread, NULL);
+
+    hal_start_gtk(&argc, &argv);
+
+    pthread_kill(app_thread, SIGKILL);
+    exit(0);
+}
+
+#endif

@@ -1,10 +1,4 @@
 
-#ifdef __linux__
-
-#include "../linux/linuxcompat.h"
-
-#else
-
 #include <string.h>
 #include <stdlib.h>
 #include "colors.h"
@@ -12,8 +6,6 @@
 #include "button.h"
 #include "framebuffer.h"
 #include "rtc.h"
-
-#endif
 
 #define INIT_APP_STATE 0
 #define RENDER_SCREEN 1

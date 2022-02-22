@@ -20,4 +20,8 @@ void hal_reboot(void);
 uint32_t hal_disable_interrupts(void);
 void hal_restore_interrupts(uint32_t state);
 
+#if TARGET_SIMULATOR
+void hal_start_gtk(int *argc, char ***argv);
+#endif
+
 #endif //badge2022_c_INIT_H

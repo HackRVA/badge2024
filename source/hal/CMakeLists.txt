@@ -31,6 +31,14 @@ if (${TARGET} STREQUAL "SIMULATOR")
             ${CMAKE_CURRENT_LIST_DIR}/rtc_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/random_sim.c
             )
+
+    cmake_policy(SET CMP0079 NEW)
+    find_package(GTK2 2.6 REQUIRED gtk)
+    target_include_directories(badge2022_c PRIVATE ${GTK2_INCLUDE_DIRS})
+    target_link_directories(badge2022_c PRIVATE ${GTK2_LIBRARY_DIRS})
+    target_link_libraries(badge2022_c ${GTK2_LIBRARIES})
+    # Add other flags to the compiler
+    target_compile_definitions(badge2022_c PRIVATE ${GTK2_CFLAGS_OTHER})
 endif()
 
 target_include_directories(badge2022_c PUBLIC .)

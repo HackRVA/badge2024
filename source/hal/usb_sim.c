@@ -4,3 +4,7 @@
 
 #include "usb.h"
 
+
+bool usb_is_connected(void) {
+    return true;
+}
