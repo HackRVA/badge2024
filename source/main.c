@@ -46,9 +46,8 @@ CLI_COMMAND help_command = {
     .process = help_process,
 };
 
-int app_main() {
+int badge_main(int argc, char** argv) {
 
-    hal_init();
     UserInit();
 
     if (button_poll(BADGE_BUTTON_LEFT)) {
@@ -88,32 +87,16 @@ int app_main() {
         frame_time = frame_period_us + frame_time;
         sleep_us(frame_time - current_time);
     }
-    hal_deinit();
-    hal_reboot();
 
     return 0;
 }
 
-#if TARGET_PICO
-int main(void) {
-    return app_main();
-}
-#elif TARGET_SIMULATOR
-#include <pthread.h>
-
-void *main_in_thread(void* params) {
-    app_main();
-    return NULL;
-}
-
 int main(int argc, char** argv) {
-    pthread_t app_thread;
-    pthread_create(&app_thread, NULL, main_in_thread, NULL);
 
-    hal_start_gtk(&argc, &argv);
+    hal_init();
+    int result = hal_run_main(badge_main, argc, argv);
+    hal_deinit();
+    hal_reboot();
+    return result;
 
-    pthread_kill(app_thread, SIGKILL);
-    exit(0);
 }
-
-#endif

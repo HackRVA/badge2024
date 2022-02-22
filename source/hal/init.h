@@ -10,6 +10,9 @@
 /// Do hardware-specific initialization.
 void hal_init(void);
 
+/// Launch main application.
+int hal_run_main(int (*main_func)(int, char**), int argc, char** argv);
+
 /// Do hardware-specific deinit before a reset or exit.
 void hal_deinit(void);
 
@@ -19,9 +22,5 @@ void hal_reboot(void);
 /// disable / restore interrupt state;
 uint32_t hal_disable_interrupts(void);
 void hal_restore_interrupts(uint32_t state);
-
-#if TARGET_SIMULATOR
-void hal_start_gtk(int *argc, char ***argv);
-#endif
 
 #endif //badge2022_c_INIT_H

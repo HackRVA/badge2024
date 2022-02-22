@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <gtk/gtk.h>
+#include <pthread.h>
 #include "framebuffer.h"
 #include "display_s6b33.h"
 #include "led_pwm.h"
@@ -15,7 +16,13 @@
 
 #define UNUSED __attribute__((unused))
 
-/// Do hardware-specific initialization.
+static int sim_argc;
+static char** sim_argv;
+
+// Forward declaration
+void hal_start_gtk(int *argc, char ***argv);
+
+// Do hardware-specific initialization.
 void hal_init(void) {
 
     S6B33_init_gpio();
@@ -26,18 +33,36 @@ void hal_init(void) {
     rtc_init_badge(0);
 }
 
-/// Do hardware-specific deinit before a reset or exit.
+void *main_in_thread(void* params) {
+    int (*main_func)(int, char**) = params;
+    main_func(sim_argc, sim_argv);
+    return NULL;
+}
+
+int hal_run_main(int (*main_func)(int, char**), int argc, char** argv) {
+
+    sim_argc = argc;
+    sim_argv = argv;
+
+    pthread_t app_thread;
+    pthread_create(&app_thread, NULL, main_in_thread, main_func);
+
+    hal_start_gtk(&argc, &argv);
+
+    // If we get here, GTK has exited
+    pthread_kill(app_thread, SIGKILL);
+    return 0;
+}
+
 void hal_deinit(void) {
     printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
 }
 
-/// Exit application or go back to reset vector.
 void hal_reboot(void) {
     printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
     exit(0);
 }
 
-/// disable / restore interrupt state;
 uint32_t hal_disable_interrupts(void) {
     printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
     return 0;
@@ -195,7 +220,7 @@ static int draw_window(GtkWidget *widget, UNUSED GdkEvent *event, UNUSED gpointe
 
 static gboolean draw_window_timer_callback(void* params) {
     GtkWidget *widget = (GtkWidget*)params;
-    draw_window(widget, NULL, NULL) == 0 ? gtk_true() : gtk_false();
+    return (draw_window(widget, NULL, NULL) == 0) ? gtk_true() : gtk_false();
 }
 
 

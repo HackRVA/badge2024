@@ -71,6 +71,10 @@ void hal_init(void) {
 
 }
 
+int hal_run_main(int (*main_func)(int, char**), int argc, char** argv) {
+    return main_func(argc, argv);
+}
+
 void hal_deinit(void) {
     multicore_reset_core1();
 }
@@ -79,7 +83,6 @@ void hal_reboot(void) {
     // Go back to bootloader.
     watchdog_reboot(0, SRAM_END, 10);
 }
-
 
 /// disable / restore interrupt state;
 uint32_t hal_disable_interrupts(void) {
