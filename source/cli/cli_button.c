@@ -6,6 +6,7 @@
 #include "button.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 
 static const char* _button_names[BADGE_BUTTON_MAX] = {
         "left",

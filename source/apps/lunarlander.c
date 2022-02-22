@@ -5,21 +5,14 @@ This is a lunar lander game for the HackRVA 2020 badge.
 Author: Stephen M. Cameron <stephenmcameron@gmail.com>
 
 **********************************************/
-#ifdef __linux__
-#include <stdio.h>
-#include <sys/time.h> /* for gettimeofday */
-#include <string.h> /* for memset */
 
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-#else
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
-#endif
 
 #include "xorshift.h"
 
@@ -644,7 +637,7 @@ static void draw_stats(void)
 	FbMove(5, 75);
 	FbWriteLine("BUDDIES");
 	FbMove(5, 90);
-	itoa(astronauts_rescued, buffer, 10);
+	sprintf( buffer, "%d", astronauts_rescued);
 	FbWriteLine("RESCUED: ");
 	FbMove(80, 90);
 	FbWriteLine(buffer);

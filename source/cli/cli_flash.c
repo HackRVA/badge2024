@@ -39,7 +39,7 @@ int run_flash_write(char * args) {
 
     printf("Writing %u bytes of data at offset %u into data sector %u\n", data_len, offset_num, sector_num);
     size_t written = flash_data_write(sector_num, offset_num, (uint8_t*) data, data_len);
-    printf(" ...wrote %u bytes of data\n", written);
+    printf(" ...wrote %u bytes of data\n", (unsigned int)written);
     return 0;
 }
 
@@ -96,9 +96,9 @@ int run_flash_write_hex(char * args) {
         data[i/2] = binary_data;
     }
 
-    printf("Writing %u bytes of data at offset %u into data sector %u\n", data_len/2, offset_num, sector_num);
+    printf("Writing %u bytes of data at offset %u into data sector %u\n", (unsigned int)(data_len/2), offset_num, sector_num);
     size_t written = flash_data_write(sector_num, offset_num, (uint8_t*) data, data_len/2);
-    printf(" ...wrote %u bytes of data\n", written);
+    printf(" ...wrote %u bytes of data\n", (unsigned int)written);
     return 0;
 
 }

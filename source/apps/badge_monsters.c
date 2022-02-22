@@ -10,18 +10,9 @@ Dustin Firebaugh <dafirebaugh@gmail.com>
 
 */
 
-#ifdef __linux__
-#include <string.h>
-
-#include "../linux/linuxcompat.h"
-#include <stdio.h>
-
-#define DISABLE_INTERRUPTS do { disable_interrupts(); } while (0)
-#define ENABLE_INTERRUPTS do { enable_interrupts(); } while (0)
-
-#else
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include "colors.h"
 #include "button.h"
 #include "ir.h"
@@ -30,8 +21,6 @@ Dustin Firebaugh <dafirebaugh@gmail.com>
 #include "menu.h"
 #include "badge.h"
 #include "init.h"
-
-#endif
 
 #include "dynmenu.h"
 #include "badge_monsters.h"
@@ -54,9 +43,6 @@ static void check_the_buttons(void);
 static void setup_main_menu(void);
 static void setup_monster_menu(void);
 static void exit_app(void);
-#ifdef __linux__
-static void enable_all_monsters(void);
-#endif
 
 typedef void (*state_to_function_map_fn_type)(void);
 
@@ -82,8 +68,8 @@ static state_to_function_map_fn_type state_to_function_map[] = {
 #define QUEUE_DATA_SIZE 4
 static int queue_in;
 static int queue_out;
-static IR_DATA packet_queue[QUEUE_SIZE] = { 0 };
-static uint8_t packet_data[QUEUE_SIZE][QUEUE_DATA_SIZE] = {0};
+static IR_DATA packet_queue[QUEUE_SIZE] = { {0} };
+static uint8_t packet_data[QUEUE_SIZE][QUEUE_DATA_SIZE] = {{0}};
 
 static int screen_changed = 0;
 static int smiley_x, smiley_y;
@@ -314,8 +300,8 @@ static void draw_menu(void)
                 nunlocked++;
             }
         }
-        itoa(nmonsters + nvendor_monsters, available_monsters, 10);
-        itoa(nunlocked, unlocked_monsters, 10);
+        sprintf( available_monsters, "%d", nmonsters + nvendor_monsters);
+        sprintf( unlocked_monsters, "%d", nunlocked);
 
         FbMove(1,25);
         FbWriteLine("Collected: ");

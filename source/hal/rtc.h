@@ -3,6 +3,7 @@
 //
 
 #include <time.h>
+#include <stdint.h>
 
 #ifndef BADGE2022_C_TIME_H
 #define BADGE2022_C_TIME_H
