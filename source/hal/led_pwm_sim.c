@@ -4,15 +4,49 @@
 
 #include "led_pwm.h"
 #include <stdio.h>
+#include <gtk/gtk.h>
+
+int lcd_brightness = 255;
+GdkColor led_color;
 
 void led_pwm_init_gpio() {
-    printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
+
 }
 
 void led_pwm_enable(BADGE_LED led, uint8_t duty) {
-    printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
+    switch(led) {
+        case BADGE_LED_RGB_BLUE:
+            led_color.blue = duty * 256;
+            break;
+        case BADGE_LED_RGB_GREEN:
+            led_color.green = duty * 256;
+            break;
+        case BADGE_LED_RGB_RED:
+            led_color.red = duty * 256;
+            break;
+        case BADGE_LED_DISPLAY_BACKLIGHT:
+            lcd_brightness = duty;
+            break;
+        default:
+            break;
+    }
 }
 
 void led_pwm_disable(BADGE_LED led) {
-    printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
+    switch(led) {
+        case BADGE_LED_RGB_BLUE:
+            led_color.blue = 0;
+            break;
+        case BADGE_LED_RGB_GREEN:
+            led_color.green = 0;
+            break;
+        case BADGE_LED_RGB_RED:
+            led_color.red = 0;
+            break;
+        case BADGE_LED_DISPLAY_BACKLIGHT:
+            lcd_brightness = 0;
+            break;
+        default:
+            break;
+    }
 }

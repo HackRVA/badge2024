@@ -86,10 +86,12 @@ static int screen_offset_x = 0;
 static int screen_offset_y = 0;
 extern int time_to_quit;
 static char *program_title;
-GdkColor led_color;
 
-GdkColor white = {.blue = 65535, .green = 65535, .red = 65535};
-GdkColor black = {};
+extern int lcd_brightness;
+extern GdkColor led_color;
+
+const GdkColor white = {.blue = 65535, .green = 65535, .red = 65535};
+const GdkColor black = {};
 
 
 
@@ -190,8 +192,8 @@ static int draw_window(GtkWidget *widget, UNUSED GdkEvent *event, UNUSED gpointe
     cairo_scale(cr, SCALE_FACTOR, SCALE_FACTOR);
     gdk_cairo_set_source_pixbuf(cr,pix_buf,0,0);
     cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
-    cairo_paint(cr);
-    cairo_fill (cr);
+    cairo_paint_with_alpha(cr, (double)lcd_brightness/255.0);
+    cairo_fill(cr);
     cairo_destroy(cr);
 
     int x, y, w, h;
@@ -203,16 +205,16 @@ static int draw_window(GtkWidget *widget, UNUSED GdkEvent *event, UNUSED gpointe
         h = 1;
 
     /* Draw a vertical line demarcating the right edge of the screen */
-    gdk_gc_set_foreground(gc, &white);
+    gdk_gc_set_rgb_fg_color(gc, &white);
     gdk_draw_line(widget->window, gc, LCD_XSIZE * w + 1, 0, LCD_XSIZE * w + 1, real_screen_height - 1);
 
     /* Draw simulated flare LED */
     x = LCD_XSIZE * w + EXTRA_WIDTH / 4;
     y = (LCD_YSIZE * h) / 2 - EXTRA_WIDTH / 4;
     draw_led_text(widget, LCD_XSIZE * w + EXTRA_WIDTH / 2 - 20, y - 10);
-    gdk_gc_set_foreground(gc, &led_color);
+    gdk_gc_set_rgb_fg_color(gc, &led_color);
     gdk_draw_rectangle(widget->window, gc, 1 /* filled */, x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2);
-    gdk_gc_set_foreground(gc, &white);
+    gdk_gc_set_rgb_fg_color(gc, &white);
     gdk_draw_rectangle(widget->window, gc, 0 /* not filled */, x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2);
 
     return 0;
@@ -273,7 +275,7 @@ static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vb
     gtk_widget_show(*window);
     gc = gdk_gc_new(GTK_WIDGET(*drawing_area)->window);
 
-    gdk_gc_set_foreground(gc, &white);
+    gdk_gc_set_rgb_fg_color(gc, &white);
 
     gdk_gc_set_clip_origin(gc, 0, 0);
     cliprect.x = 0;
