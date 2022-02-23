@@ -17,46 +17,64 @@ To use this file, do the following steps:
    wherever it appears in this file. (Think of a real name, don't actually
    use myapp_cb, please.)
 
-3. Modify linux/Makefile to build your program, for example:
+3. Add your app to the CMakeLists.txt file in this directory, for example:
 
-    TODO SAM UPDATE FOR CMAKE
+CMakeLists.txt:
+...
+        ${CMAKE_CURRENT_LIST_DIR}/smashout.c
+        ${CMAKE_CURRENT_LIST_DIR}/spacetripper.c
+        ${CMAKE_CURRENT_LIST_DIR}/username.c
+        ${CMAKE_CURRENT_LIST_DIR}/myapp.c      # Add my app!
+        )
+...
 
-4. Modify the main Makefile, for example:
+4.  In source/core/menu.c:
 
-    TODO SAM UPDATE FOR CMAKE
+    - Include your new app header.
+    - Add a new entry in the `games_m` menu structure for your app.
+    - Optional: To start the simulator running your app (skipping the menus), change the runningApp variable to your
+      app callback.
 
-6.  Build the linux program:
+    For example:
 
-    cd linux
-    make bin/myapp
+menu.c:
+...
+//Apps
+...
+#include "myapp.h"
+...
 
-    Or whatever you called it, (you didn't call it myapp, right?)
+...
+void (*runningApp)() = app_cb; // Don't commit this change; just for local testing
+...
 
-7.  Build the main program:
+...
+const struct menu_t games_m[] = {
+   {"Blinkenlights", VERT_ITEM|DEFAULT_ITEM, FUNCTION, {(struct menu_t *)blinkenlights_cb}},
+   ...
+   {"My App",    VERT_ITEM, FUNCTION, {(struct menu_t *)app_cb},
+   {"Back",	     VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+};
+...
 
-    cd ..
-    make clean
+5.  Build the linux program, from the top level of the repository
+
+    # (you only need to run cmake after modifying a CMakeLists.txt file)
+    cmake -S . -B build_sim/ -DCMAKE_BUILD_TYPE=Debug -DTARGET=SIMULATOR -G "Unix Makefiles"
+
+    cd build_sim
     make
 
-8.  Delete all these instruction comments from your copy of the file.
+6.  Delete all these instruction comments from your copy of the file.
 
-9.  Modify the program to make it do what you want.
+7.  Modify the program to make it do what you want.
 
 **********************************************/
-#ifdef __linux__
-#include <stdio.h>
-#include <sys/time.h> /* for gettimeofday */
-#include <string.h> /* for memset */
 
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-#else
-#include <string.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
-#endif
 
 
 /* Program states.  Initial state is MYPROGRAM_INIT */
@@ -114,7 +132,7 @@ static void myprogram_exit()
 }
 
 /* You will need to rename myprogram_cb() something else. */
-int myprogram_cb(void)
+void myprogram_cb(void)
 {
 	switch (myprogram_state) {
 	case MYPROGRAM_INIT:
@@ -129,13 +147,5 @@ int myprogram_cb(void)
 	default:
 		break;
 	}
-	return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-        start_gtk(&argc, &argv, myprogram_cb, 30);
-        return 0;
-}
-#endif
