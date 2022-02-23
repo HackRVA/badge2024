@@ -3,21 +3,40 @@ RVASec Badge 2022 Firmware
 
 # Initial Setup
 
+There are two ways you can run the badge software:
+
+1) You can build the badge software and run it on hardware. This is helpful when seeing how well something works on the
+   badge itself.
+2) You can build a simulator that can run the badge software on your computer. This is *usually* more helpful when
+   developing an app, since debugging tools on your computer are more sophisticated and easier to set up.
+
+They need a few different things in order to set yourself up to build and run the badge software.
+
+In both cases, you will need **CMake**, which is a build system / build system generator. (Version 3.13 or higher)
+
+## Building for Hardware
+
 For more info, see the [Pico SDK README](https://github.com/raspberrypi/pico-sdk).
 
-You will need two prerequisites:
-* the `arm-none-eabi-gcc` toolchain, installed locatable in your `$PATH`.
-* CMake, which is used as the build system and downloads the Pico SDK.
+When building the software for badge, you will need a *cross-compiler*. This takes code written on your computer and
+compiles it into machine code for the badge. The compiler used is the ARM Embedded GCC compiler. 
 
-There are various editor plugins you can add to better support CMake, but running just from CLI, you can run:
+This may be available in your package manager, or [here](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads).
+If downloaded from the ARM site, you will need to take steps to add it to your `$PATH` or equivalent environment
+variable. (If it works, when you open a new terminal window, the `arm-none-eabi-gcc` program can be run).
+
+There are various editor plugins you can add to better support CMake ([example](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)),
+but running just from CLI, you can run:
 
 `cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles"`
 
-to configure the build, and
+to configure the build. This generates a bunch of makefiles, and
 
-`cd build && make`
+`cd build && make` to build the firmware.
 
 After this, the file to flash on the device is at `build/source/badge2022_c.uf2`.
+
+You can clean the build by running `make clean`.
 
 You can flash the Pico by holding down the button on the Pico board as you're plugging it in to USB. That will make it
 show up as a USB mass storage device. Then, you can just put the `.uf2` on the mass storage device to flash it. The
@@ -25,56 +44,56 @@ Pico will boot your new firmware immediately.
 
 You can use Ninja, if you like, as well. \(Specify `-G Ninja` instead of Makefiles in the `cmake` command.\)
 
-## Current Status
-This repository is in a prototype phase. Major changes may be introduced.
+## Building the Simulator
+
+The simulator is intended to run on a Posix-y (that is, Linux or Mac) environment. Windows hasn't been tried yet, but
+it's likely that Windows Subsystem for Linux and or MinGW either work or will work without too much effort. But to
+build the simulator, you will need a C compiler for your computer, in addition to GTK2. The best way to install
+GTK2 is probably through a package manager.
+
+In a similar way to the hardware target, you can generate makefiles via CMake. Note that to make the simulator, there is
+an extra flag that gets passed in:
+
+`cmake -S . -B build_sim/ -DCMAKE_BUILD_TYPE=Debug -DTARGET=SIMULATOR -G "Unix Makefiles"`
+
+After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
+program is called `build_sim/source/badge2022_c`, which you can run.
+
+# Current Status
 
 The overall structure of the repository is:
 * `CMakeLists.txt` in the root directory is the main project definition. It includes subdirectories to add files/
   modules to the build. `pico_sdk_import.cmake` is provided by the Pico SDK.
-* Code that depends on Pico interfaces is within `source/hal/*_rp2040.c` files, with a platform agnostic header in the 
-  corresponding `source/hal/*.h` file. For the simulator, the hope is that implementation code can be put in a 
-  source file for the other platform (linux/posix). Hopefully also, this provides an interface we can use to 
-  run a more complete simulator.
+* Code for apps and games is in the `source/apps` folder.
 * Code for an interactive terminal (which may or may not be useful after the main application is running) is the
-  `source/hal` folder.
+  `source/cli` folder. To run the CLI, hold the D-Pad left button down as the badge is starting. The display will
+  show noise, and if you connect to the serial terminal that shows up on your computer, you can enter commands.
+* Code that depends on Pico interfaces is within `source/hal/*_rp2040.c` files, with a platform agnostic header in the 
+  corresponding `source/hal/*.h` file. Code built for the simulator is in `source/hal/*_sim.c`.
+* Generally helpful system code (main menus, screensavers, and the like) is in the `source/core` folder.
 * Code for display buffers and drawing is in the `source/display` folder.
 
-## Hardware
-Currently, this is hacked on to a 2021 badge by removing the Microchip processor nad flying wires out from a 
-Pico board out to the hardware. See `pinout_rp2040.h` for the Pico pinout I (Sam) have wired up.
-
 ## What's working
-There are a few functional components:
 
-* The display driver works over the SPI peripheral, and enough of the old code is copied with it to display 
-  assets and demonstrate this.
-* Basic flash storage is demonstrated.
-* The 3-color and white LEDs can be turned on and PWMed with Pico peripherals.
+Here's a list of major functional blocks and their current availability in software.
+* :heavy_check_mark: indicates the functionality is there!
+* :x: indicates the functionality still needs to be implemented.
 
-Right now, there is one way you can use the device interactively. After flashing, the Pico board will enumerate to
-the computer using an emulated serial port over USB. You can use `screen` or a similar utility to act as a serial
-terminal. There are commands for LED brightness, writing/reading nonvolatile storage, and some basic
-other commands. The `cli` files have the code that makes this work.
+| Component        | Badge Hardware     | Simulator          |
+|------------------|--------------------|--------------------|
+| LCD Display      | :heavy_check_mark: | :heavy_check_mark: |
+| 3-Color LED      | :heavy_check_mark: | :heavy_check_mark: |
+| D-Pad            | :heavy_check_mark: | :heavy_check_mark: |
+| IR Tx/RX         | :heavy_check_mark: | :x:      |
+| Rotary Encoder   | Button Only        | Button Only        |
+| Audio Output     | :x:                | :x:                |
+| Audio/Jack Input | :x:                | :x:                |
 
 # To Do:
 
 Basic Bringup:
-* Bring up IR TX / RX
-* Bring up Audio Driver
-* Bring up Button GPIO interfaces
-* Bring up microphone interface?
-* Bring up 3 color light sensors?
-
-Simulator:
-* Add a simulator target for the main badge app
-* Port HALs that are currently in the old repo 
-* Add HAL files for currently not-simulated data.
-
-Driver and application enhancements, as we're porting:
-* Display: double buffering, so software can update a display buffer while the other is being updated via DMA
-* Rework main loop to support double buffering.
-* Get current main app running
-* Audio: are there fancier things we can do with the driver we have currently?
+* Add audio driver
+* Enhance GPIO driver for rotary encoder
 
 Other Extensions:
 * Add a unit test framework
