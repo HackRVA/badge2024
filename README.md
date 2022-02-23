@@ -59,6 +59,11 @@ an extra flag that gets passed in:
 After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
 program is called `build_sim/source/badge2022_c`, which you can run.
 
+## Adding Your Own Apps
+
+Apps are mostly contained within a single .c/.h file in the apps folder. Take a look at the comments inside the
+`badge-app-template` files for help getting started.
+
 # Current Status
 
 The overall structure of the repository is:
