@@ -18,27 +18,20 @@
  for a reason, and is not how I would normally write a program.
 
 **********************************************/
-#ifdef __linux__
-#include <stdio.h>
-#include <sys/time.h> /* for gettimeofday */
-#include <string.h> /* for memset */
 
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-#else
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
-#endif
-
-#define UNUSED __attribute__((unused))
-
 #include "xorshift.h"
 #include "achievements.h"
 #include "dynmenu.h"
-#include <stdlib.h>
+
+#define UNUSED __attribute__((unused))
+
 
 /* Program states.  Initial state is MAZE_GAME_INIT */
 enum maze_program_state_t {
@@ -1643,8 +1636,8 @@ static void maze_draw_stats(void)
     char gold_pieces[10], hitpoints[10];
 
     FbColor(WHITE);
-    itoa(player.gp, gold_pieces, 10);
-    itoa(player.hitpoints, hitpoints, 10);
+    sprintf( gold_pieces, "%d", player.gp);
+    sprintf( hitpoints, "%d", player.hitpoints);
     FbMove(2, 122);
     if (player.hitpoints < 50)
        FbColor(RED);

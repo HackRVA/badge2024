@@ -5,10 +5,6 @@
 
 #define MAX_COMMAND_LEN 200
 
-#include "flash_storage.h"
-#include "usb.h"
-#include "delay.h"
-#include "init.h"
 
 #include "cli.h"
 #include "cli_flash.h"
@@ -16,14 +12,12 @@
 #include "cli_button.h"
 #include "cli_ir.h"
 
-#include "assets.h"
-#include "framebuffer.h"
-#include "display_s6b33.h"
-#include "colors.h"
-#include "led_pwm.h"
-#include "ir.h"
 #include "rtc.h"
 #include "button.h"
+#include "hal/usb.h"
+#include "flash_storage.h"
+#include "delay.h"
+#include "init.h"
 
 int exit_process(char *args) {
     return -1;
@@ -52,9 +46,8 @@ CLI_COMMAND help_command = {
     .process = help_process,
 };
 
-int main() {
+int badge_main(int argc, char** argv) {
 
-    hal_init();
     UserInit();
 
     if (button_poll(BADGE_BUTTON_LEFT)) {
@@ -94,8 +87,16 @@ int main() {
         frame_time = frame_period_us + frame_time;
         sleep_us(frame_time - current_time);
     }
-    hal_deinit();
-    hal_reboot();
 
     return 0;
+}
+
+int main(int argc, char** argv) {
+
+    hal_init();
+    int result = hal_run_main(badge_main, argc, argv);
+    hal_deinit();
+    hal_reboot();
+    return result;
+
 }

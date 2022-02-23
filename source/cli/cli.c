@@ -6,11 +6,14 @@
 
 #include <string.h>
 #include <stdio.h>
-#include "pico/stdio.h"
 #include <stdbool.h>
 #include "delay.h"
-
 #include "ir.h"
+
+#if TARGET_PICO
+#include "pico/stdio.h"
+#endif
+
 #define MAX_LINE_LEN 200
 void cli_run(const CLI_COMMAND *cmd) {
     char line[MAX_LINE_LEN];
@@ -37,10 +40,14 @@ int cli_get_line(const char *prompt, char* line, size_t len) {
     bool too_long = false;
     while (1) {
 
+#if TARGET_PICO
         int raw_input = getchar_timeout_us(1000);
         if (raw_input == PICO_ERROR_TIMEOUT) {
             continue;
         }
+#elif TARGET_SIMULATOR
+        int raw_input = getchar();
+#endif
         char input = (char) raw_input;
 
         // If we get EOF, signal this so we can exit command loop
@@ -74,7 +81,7 @@ int cli_get_line(const char *prompt, char* line, size_t len) {
     }
 
     if (too_long) {
-        printf("Command was too long - maximum length is %u", len);
+        printf("Command was too long - maximum length is %u", (unsigned int)len);
         return 0;
     }
 

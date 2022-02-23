@@ -5,23 +5,17 @@
  (c) 2020 Dusitn Firebaugh
 
  ******************************************************************/
-#ifdef __linux__
-#include <stdio.h>
-#include <sys/time.h> /* for gettimeofday */
-#include <string.h>   /* for memset */
 
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-#else
+#include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
-#endif
 
 #include "rtc.h"
-#include <stdlib.h>
 
 #include "dynmenu.h"
 #include "xorshift.h"
@@ -915,7 +909,7 @@ static void render_timer()
 {
 	char p[4];
 	FbMove(STARTX(TIMERX) + (CELL_SIZE / 5), STARTY(TIMERY) + (CELL_SIZE / 2));
-	itoa(game_tick_s, p, 10);
+	sprintf( p, "%d", game_tick_s);
 	FbWriteLine(p);
 }
 
@@ -946,7 +940,7 @@ static void render_cell(int posX, int posY)
 		render_timer();
 #if HACKSIM_DEBUG
 		FbMove(STARTX(posX) + (CELL_SIZE / 5), STARTY(posY) + (CELL_SIZE / 2));
-		itoa(p, current_cell->input, 10);
+		sprintf( current_cell->input, "%d", p);
 		FbWriteLine(p);
 #endif
 		return;
@@ -967,7 +961,7 @@ static void render_cell(int posX, int posY)
 
 #if HACKSIM_DEBUG
 		FbMove(STARTX(posX) + (CELL_SIZE / 5), STARTY(posY) + (CELL_SIZE / 2));
-		itoa(p, grid[posX][posY].pipe_index, 10);
+		sprintf( grid[posX][posY].pipe_index, "%d", p);
 		FbWriteLine(p);
 #endif
 	}

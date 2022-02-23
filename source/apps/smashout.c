@@ -6,25 +6,14 @@
  (c) 2019 Stephen M. Cameron
 
 **********************************************/
-#ifdef __linux__
 #include <stdio.h>
-#include <sys/time.h> /* for gettimeofday */
-#include <string.h> /* for memset */
-
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-#else
 #include <string.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
 #include "rtc.h"
-#endif
-
-#include <stdlib.h>
 #include "xorshift.h"
-#include "achievements.h"
 
 /* TODO figure out where these should really come from */
 #define PADDLE_HEIGHT 12
@@ -378,8 +367,8 @@ static void draw_score_and_balls(int color)
 {
 	char s[20], b[20];
 	FbColor(color);
-	itoa(score, s, 10);
-	itoa(balls, b, 10);
+	sprintf( s, "%d", score);
+	sprintf( b, "%d", balls);
 	FbMove(10, LCD_YSIZE - 10);
 	FbWriteLine(s);
 	FbMove(70, LCD_YSIZE - 10);

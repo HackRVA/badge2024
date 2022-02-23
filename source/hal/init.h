@@ -10,6 +10,9 @@
 /// Do hardware-specific initialization.
 void hal_init(void);
 
+/// Launch main application.
+int hal_run_main(int (*main_func)(int, char**), int argc, char** argv);
+
 /// Do hardware-specific deinit before a reset or exit.
 void hal_deinit(void);
 

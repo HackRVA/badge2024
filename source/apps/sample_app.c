@@ -1,10 +1,4 @@
 
-#ifdef __linux__
-
-#include "../linux/linuxcompat.h"
-
-#else
-
 #include <string.h>
 #include <stdlib.h>
 #include "colors.h"
@@ -12,8 +6,6 @@
 #include "button.h"
 #include "framebuffer.h"
 #include "rtc.h"
-
-#endif
 
 #define INIT_APP_STATE 0
 #define RENDER_SCREEN 1
@@ -49,7 +41,7 @@ static void render_screen(void)
 	FbClear();
 	FbDrawObject(smiley, ARRAYSIZE(smiley), WHITE, smiley_x, smiley_y, 410);
 	/* Display the time stamp for no particular reason */
-	itoa(rtc_get_ms_since_boot(), buffer, 10);
+	sprintf( buffer, %d, rtc_get_ms_since_boot());
 	FbMove(10, 100);
 	FbWriteLine(buffer);
 	FbSwapBuffers();

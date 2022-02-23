@@ -18,13 +18,19 @@ set(CMAKE_CXX_STANDARD 17)
 if (${TARGET} STREQUAL "PICO")
     add_compile_definitions(TARGET_PICO)
     pico_sdk_init()
+elseif(${TARGET} STREQUAL "SIMULATOR")
+    add_compile_definitions(TARGET_SIMULATOR)
 endif()
 
 
-add_compile_options(-Wall
+add_compile_options(-Wall)
+
+if (${TARGET} STREQUAL "PICO")
+    add_compile_options(
         -Wno-format          # pico-examples: int != int32_t as far as the compiler is concerned because gcc has int32_t as long int
         -Wno-unused-function # pico-examples: we have some for the docs that aren't called
         -Wno-maybe-uninitialized # sam: see if this causes extra warnings outside of pico-examples
-        )
+    )
+endif()
 
 add_subdirectory(source)

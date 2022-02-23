@@ -6,27 +6,18 @@
  (c) 2021 Stephen M. Cameron
 
 **********************************************/
-#ifdef __linux__
-#include <stdio.h>
-#include <sys/time.h> /* for gettimeofday */
-#include <string.h> /* for memset */
-
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-#else
 #include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
-#endif
-
-#include <stdlib.h>
 #include "rtc.h"
 #include "dynmenu.h"
 #include "xorshift.h"
 #include "trig.h"
-#include <math.h>
 
 static unsigned int xorshift_state = 0xa5a5a5a5;
 
@@ -575,7 +566,7 @@ static void button_pressed()
 static void strcatnum(char *s, int n)
 {
 	char num[10];
-	itoa(n, num, 10);
+	sprintf( num, "%d", n);
 	strcat(s, num);
 }
 
@@ -760,7 +751,7 @@ static void st_lrs(void) /* long range scanner */
 				char digit[5];
 
 				FbColor(color[i]);
-				itoa(scan[x][y][i], digit, 10);
+				sprintf( digit, "%d", scan[x][y][i]);
 				FbMove(25 + x * 30 + i * 8, y * 10 + 60);
 				FbWriteLine(digit);
 			}
@@ -987,10 +978,10 @@ static void print_numeric_item_with_frac(char *item, int value, int frac)
 	char num[10];
 
 	FbWriteString(item);
-	itoa(value, num, 10);
+	sprintf( num, "%d", value);
 	FbWriteString(num);
 	FbWriteString(".");
-	itoa(frac, num, 10);
+	sprintf( num, "%d", frac);
 	FbWriteString(num);
 	FbMoveX(2);
 	FbMoveRelative(0, 9);
@@ -1001,7 +992,7 @@ static void print_numeric_item(char *item, int value)
 	char num[10];
 
 	FbWriteString(item);
-	itoa(value, num, 10);
+	sprintf( num, "%d", value);
 	FbWriteString(num);
 	FbMoveX(2);
 	FbMoveRelative(0, 9);
@@ -1619,7 +1610,7 @@ static void st_damage_report(void)
 			FbColor(RED);
 		else
 			FbColor(GREEN);
-		itoa(d, ds, 10);
+		sprintf( ds, "%d", d);
 		FbMove(LCD_XSIZE - 9 * 4, 9 + i * 9);
 		FbWriteLine(ds);
 	}

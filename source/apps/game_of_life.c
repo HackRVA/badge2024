@@ -5,32 +5,20 @@ An implementation of Conway's Game of Life
  Author: Paul Chang <paulc1231@gmail.com>
  (c) 2021 Paul Chang
 **********************************************/
-#ifdef __linux__
-
-#include <stdio.h>
-#include <sys/time.h> /* for gettimeofday */
-#include <string.h>	  /* for memset */
-
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-
-#else
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
 #include "rtc.h"
 
-#endif
-
 #include "xorshift.h"
 
 static unsigned int gen_count = 0;
 static unsigned int max_gen = 100;
-static volatile int current_time;
 static volatile int last_time;
 
 #define ROW_SIZE 12
@@ -192,15 +180,7 @@ static int get_time(void)
 
 static void move_to_next_gen_every_second(void)
 {
-#ifdef __linux__
-	struct timeval tv;
-
-	gettimeofday(&tv, NULL);
-
-	volatile int current_time = tv.tv_sec;
-#else
 	volatile int current_time = get_time();
-#endif
 	// TODO: figure out why doing a mod 60 is important here. Probably worth asking Stephen.
 	if ((current_time % 60) != (last_time % 60))
 	{
@@ -246,7 +226,7 @@ static void render_next_gen_text(unsigned int gen_count)
 	FbMove(LCD_XSIZE / 4, LCD_YSIZE - 7);
 
 	strcpy(next_gen_text, "NEXT GEN ");
-	itoa((int)gen_count, gen_num_text, 10);
+	sprintf( gen_num_text, "%d", (int)gen_count);
 	strcat(next_gen_text, gen_num_text);
 
 	FbWriteLine(next_gen_text);
