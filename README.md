@@ -90,7 +90,7 @@ Here's a list of major functional blocks and their current availability in softw
 | 3-Color LED      | :heavy_check_mark: | :heavy_check_mark: |
 | D-Pad            | :heavy_check_mark: | :heavy_check_mark: |
 | IR Tx/RX         | :heavy_check_mark: | :x:                |
-| Rotary Encoder   | Button Only        | Button Only        |
+| Rotary Encoder   | :heavy_check_mark: | :heavy_check_mark: |
 | Audio Output     | :x:                | :x:                |
 | Audio/Jack Input | :x:                | :x:                |
 

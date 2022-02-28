@@ -10,7 +10,7 @@
 #include <stdio.h>
 #include "rtc.h"
 
-#define DEBOUNCE_DELAY_MS 20
+#define DEBOUNCE_DELAY_MS 3
 
 static const int8_t button_gpios[BADGE_BUTTON_MAX] = {
     BADGE_GPIO_DPAD_LEFT,
@@ -31,6 +31,7 @@ static uint32_t gpio_states;
 static uint32_t down_latches;
 static uint32_t up_latches;
 static uint32_t last_change;
+static int rotation_count;
 
 // callback
 static user_gpio_callback user_cb;
@@ -38,6 +39,33 @@ static user_gpio_callback user_cb;
 // forward declaration of GPIO callback since the alarm and GPIO handlers need to refer to each other
 static void gpio_callback(uint gpio, uint32_t events);
 
+static void process_rotary_pin_state(uint gpio, int state) {
+    static bool a_was_low;
+    static bool b_was_low;
+
+    if ((gpio != BADGE_BUTTON_ENCODER_A) && (gpio != BADGE_BUTTON_ENCODER_B)) {
+        return;
+    }
+    if (state == 1) {
+        a_was_low = 0;
+        b_was_low = 0;
+    }
+    if (gpio == BADGE_BUTTON_ENCODER_A) {
+        if (b_was_low) {
+            rotation_count--;
+            b_was_low = false;
+        } else {
+            a_was_low = true;
+        }
+    } else { // It's B
+        if (a_was_low) {
+            rotation_count++;
+            a_was_low = false;
+        } else {
+            b_was_low = true;
+        }
+    }
+}
 
 int64_t alarm_callback(alarm_id_t id, void* user_data) {
 
@@ -60,6 +88,7 @@ int64_t alarm_callback(alarm_id_t id, void* user_data) {
         if (user_cb) {
             user_cb(gpio_enum, state);
         }
+        process_rotary_pin_state(gpio_enum, state);
         last_change = rtc_get_ms_since_boot();
     }
 
@@ -148,4 +177,12 @@ unsigned int button_last_input_timestamp(void) {
 
 void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
+}
+
+int button_get_rotation(void) {
+    critical_section_enter_blocking(&critical_section);
+    int count = rotation_count;
+    rotation_count = 0;
+    critical_section_exit(&critical_section);
+    return count;
 }

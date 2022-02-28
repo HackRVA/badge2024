@@ -13,6 +13,7 @@ int time_to_quit = 0;
 static int down_latches = 0;
 static int up_latches = 0;
 static int button_states = 0;
+static int rotation_count = 0;
 static uint64_t last_change = 0;
 static user_gpio_callback callback = NULL;
 
@@ -42,6 +43,13 @@ gint key_press_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointer 
         case GDK_q:
         case GDK_KEY_Escape:
             time_to_quit = 1;
+        break;
+        case GDK_comma: // Or GT, looks like an arrow to the right
+            rotation_count += 1;
+        break;
+        case GDK_period: // Or LT, looks like an arrow to the left
+            rotation_count -= 1;
+        break;
         default:
             break;
     }
@@ -142,4 +150,10 @@ unsigned int button_last_input_timestamp(void) {
 
 void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
+}
+
+int button_get_rotation(void) {
+    int count = rotation_count;
+    rotation_count = 0;
+    return count;
 }

@@ -39,4 +39,8 @@ void button_set_interrupt(user_gpio_callback cb);
 unsigned int button_last_input_timestamp(void);
 void button_reset_last_input_timestamp(void);
 
+// Get rotary encoder rotations! Rotation count is automatically cleared between calls.
+// Positive indicates CW, negative indicates CCW.
+int button_get_rotation(void);
+
 #endif //BADGE2022_C_BUTTON_H
