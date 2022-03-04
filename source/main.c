@@ -79,7 +79,7 @@ int badge_main(int argc, char** argv) {
         uint64_t frame_period_us = ProcessIO();
         uint64_t current_time = rtc_get_us_since_boot();
         if (frame_time + frame_period_us <= current_time) {
-            printf("Frame time was long: %lu\n", current_time - frame_time);
+            printf("Frame time was long: %lu\n", (unsigned long)(current_time - frame_time));
             frame_time = current_time;
             continue;
         }
