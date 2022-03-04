@@ -1,29 +1,15 @@
 
-#ifdef __linux__
 
-#include <stdio.h>
-#include <string.h>
-#include <sys/time.h>
-#include <stdint.h>
-
-#include "../linux/linuxcompat.h"
-
-#else
 #include <string.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "badge.h"
 #include "framebuffer.h"
-#endif
 
 /* username is a global externally visible */
 #define NAMESIZE 10
-#ifndef __linux__
 char username[NAMESIZE] = { 0 };
-#else
-extern char username[NAMESIZE];
-#endif
 
 /* Restore username from flash.  uname is a pointer to the memory
  * in RAM to which the data should be stored. The user name is length
@@ -262,13 +248,3 @@ int username_cb(void)
 	state_to_function_map[app_state]();
 	return 0;
 }
-
-#ifdef __linux__
-
-int main(int argc, char *argv[])
-{
-	start_gtk(&argc, &argv, username_cb, 30);
-	return 0;
-}
-
-#endif

@@ -171,12 +171,10 @@ static void figure_out_alive_cells(void)
 	update_current_generation_grid();
 }
 
-#ifndef __linux__
 static int get_time(void)
 {
 	return (int) rtc_get_time_of_day().tv_sec;
 }
-#endif
 
 static void move_to_next_gen_every_second(void)
 {
@@ -397,10 +395,4 @@ int game_of_life_cb(void)
 	return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-	start_gtk(&argc, &argv, game_of_life_cb, 30);
-	return 0;
-}
-#endif
+

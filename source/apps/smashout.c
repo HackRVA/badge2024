@@ -423,10 +423,3 @@ int smashout_cb(void)
 	return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-        start_gtk(&argc, &argv, smashout_cb, 30);
-        return 0;
-}
-#endif
