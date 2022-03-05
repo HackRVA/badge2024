@@ -18,6 +18,7 @@ typedef enum {
     BADGE_BUTTON_MAX
 } BADGE_BUTTON;
 
+#define BUTTON_PRESSED(button, latches) ((latches) & (1 << (button)))
 
 void button_init_gpio(void);
 

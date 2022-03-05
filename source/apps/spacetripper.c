@@ -1028,23 +1028,23 @@ static void st_choose_angle_input(void)
 	gs.angle_chooser.old_angle = *gs.angle_chooser.angle;
 	gs.angle_chooser.old_new_angle = *gs.angle_chooser.new_angle;
 
-	if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		int angle = *gs.angle_chooser.new_angle;
 		*gs.angle_chooser.angle = angle;
 		gs.angle_chooser.old_angle = angle;
 		gs.angle_chooser.old_new_angle = angle;
 		gs.angle_chooser.finished = 1;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_UP)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		*gs.angle_chooser.new_angle += 15;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		*gs.angle_chooser.new_angle -= 15;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		(*gs.angle_chooser.new_angle)++;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		(*gs.angle_chooser.new_angle)--;
 		something_changed = 1;
 	}
@@ -1160,18 +1160,18 @@ static void st_process_input(void)
 {
     int down_latches = button_down_latches();
     int something_happened = 0;
-    if (down_latches & (1<<BADGE_BUTTON_SW)) {
+    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
         button_pressed();
 	something_happened = 1;
-    } else if (down_latches & (1<<BADGE_BUTTON_UP)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
         if (menu.menu_active)
             dynmenu_change_current_selection(&menu, -1);
 	something_happened = 1;
-    } else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
         if (menu.menu_active)
             dynmenu_change_current_selection(&menu, 1);
 	something_happened = 1;
-    } else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
         if (gs.last_screen == SRS_SCREEN) {
             st_program_state = ST_SRS_LEGEND;
 	    return;
@@ -1180,7 +1180,7 @@ static void st_process_input(void)
             st_program_state = ST_SRS;
             return;
         }
-    } else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
         if (gs.last_screen == SRS_SCREEN) {
             st_program_state = ST_SRS_LEGEND;
 	    return;
@@ -2086,18 +2086,18 @@ static void st_warp_input(void)
 	int old = gs.player.new_warp_factor;
 
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		gs.player.warp_factor = gs.player.new_warp_factor;
 		st_warp();
 		st_program_state = ST_PROCESS_INPUT;
 		return;
-	} else if (down_latches & (1<<BADGE_BUTTON_UP)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		gs.player.new_warp_factor += WARP1;
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		gs.player.new_warp_factor -= WARP1;
-	} else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		gs.player.new_warp_factor -= WARP1 / 10;
-	} else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		gs.player.new_warp_factor += WARP1 / 10;
 	}
 	if (gs.player.new_warp_factor < 0)
@@ -2212,17 +2212,17 @@ static void st_shield_energy_input()
 		min = -max_ship;
 
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		gs.player.shield_xfer = gs.player.new_shield_xfer;
 		st_program_state = ST_SHIELD_EXEC_ENERGY_XFER;
 		return;
-	} else if (down_latches & (1<<BADGE_BUTTON_UP)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		gs.player.new_shield_xfer += 500;
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		gs.player.new_shield_xfer -= 500;
-	} else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		gs.player.new_shield_xfer -= 100;
-	} else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		gs.player.new_shield_xfer += 100;
 	}
 	if (gs.player.new_shield_xfer < min)
@@ -2274,18 +2274,18 @@ static void st_phaser_power_input(void)
     int down_latches = button_down_latches();
 	int old = gs.player.new_phaser_power;
 
-	if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		gs.player.phaser_power = gs.player.new_phaser_power;
 		st_phaser_power();
 		st_program_state = ST_FIRE_PHASER;
 		return;
-	} else if (down_latches & (1<<BADGE_BUTTON_UP)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		gs.player.new_phaser_power += WARP1;
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		gs.player.new_phaser_power -= WARP1;
-	} else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		gs.player.new_phaser_power -= WARP1 / 10;
-	} else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		gs.player.new_phaser_power += WARP1 / 10;
 	}
 	if (gs.player.new_phaser_power < 0)
@@ -2456,7 +2456,7 @@ static void st_player_won(void)
 static void st_alert(void)
 {
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW))
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 		st_program_state = ST_CAPTAIN_MENU;
 }
 

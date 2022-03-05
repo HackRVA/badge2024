@@ -289,7 +289,7 @@ void menus()
 
     int down_latches = button_down_latches();
     /* see if physical button has been clicked */
-    if (down_latches & (1<<BADGE_BUTTON_SW))
+    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
     {
         // action happened that will result in menu redraw
         // do_animation = 1;
@@ -337,7 +337,7 @@ void menus()
 
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
     }
-    else if (down_latches & (1<<BADGE_BUTTON_UP)) /* handle slider/soft button clicks */
+    else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) /* handle slider/soft button clicks */
     {
         audio_set_note(70, NOTEDUR); /* f */
 
@@ -358,7 +358,7 @@ void menus()
 		G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
 	}
     }
-    else if (down_latches & (1<<BADGE_BUTTON_DOWN))
+    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
     {
         audio_set_note(100, NOTEDUR); /* g */
 
@@ -407,7 +407,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
 	return;
     }
 
-    if (down_latches & (1<<BADGE_BUTTON_SW))
+    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
     {
             switch (L_selectedMenu->type) {
 
@@ -458,7 +458,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
             }
 	    // L_selectedMenu = display_menu(L_currMenu, L_selectedMenu);
     }
-    else if (down_latches & (1<<BADGE_BUTTON_UP)) /* handle slider/soft button clicks */
+    else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) /* handle slider/soft button clicks */
     {
         audio_set_note(70, NOTEDUR); /* f */
 
@@ -474,7 +474,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
 	    L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
         }
     }
-    else if (down_latches & (1<<BADGE_BUTTON_DOWN))
+    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
     {
         audio_set_note(100, NOTEDUR); /* g */
 
@@ -628,7 +628,7 @@ void rvasec_splash_cb(){
     int down_latches = button_down_latches();
     if (down_latches)
         printf("latches: %08x\n", down_latches);
-    if(down_latches & (1<<BADGE_BUTTON_SW)){
+    if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)){
         returnToMenus();
     }
 }

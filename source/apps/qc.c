@@ -99,7 +99,7 @@ void QC_cb()
                 redraw = 1;
             }
 
-            if(down_latches & (1<<BADGE_BUTTON_SW)){
+            if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)){
                 data = 1;
                 ir_send_complete_message(&ir_packet);
                 audio_set_note(50, 1024);
@@ -110,7 +110,7 @@ void QC_cb()
                 redraw = 1;
             }
 
-            if(down_latches & (1<<BADGE_BUTTON_DOWN)){
+            if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)){
                 FbMove(16, 16);
                 FbWriteLine("DOWN");
                 audio_set_note(55, 1024);
@@ -129,7 +129,7 @@ void QC_cb()
                 return;
             }
 
-            if(down_latches & (1<<BADGE_BUTTON_UP)){
+            if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)){
                 FbMove(16, 16);
                 FbWriteLine("UP");
                 audio_set_note(60, 1024);
@@ -138,7 +138,7 @@ void QC_cb()
                 redraw = 1;
             }
 
-            if(down_latches & (1<<BADGE_BUTTON_LEFT)){
+            if(BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)){
                 FbMove(16, 16);
                 FbWriteLine("LEFT");
                 audio_set_note(45, 1024);
@@ -147,7 +147,7 @@ void QC_cb()
                 redraw = 1;
             }
 
-            if(down_latches & (1<<BADGE_BUTTON_RIGHT)){
+            if(BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)){
                 FbMove(16, 16);
                 FbWriteLine("RIGHT");
                 led(0, 0, LED_LVL);

@@ -212,13 +212,13 @@ static void docube(void)
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		/* Pressing the button exits the program. You probably want to change this. */
 		cube_state = CUBE_EXIT;
-	} else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
-	} else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
-	} else if (down_latches & (1<<BADGE_BUTTON_UP)) {
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 	}
 }
 

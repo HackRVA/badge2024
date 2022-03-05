@@ -1189,24 +1189,24 @@ static void process_commands(void)
     base_direction = combat_mode ? 0 : player.direction;
 
     int down_latches = button_down_latches();
-    if (down_latches & (1<<BADGE_BUTTON_SW)) {
+    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
         maze_button_pressed();
-    } else if (down_latches & (1<<BADGE_BUTTON_UP)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
         if (maze_menu.menu_active)
             dynmenu_change_current_selection(&maze_menu, -1);
         else
             move_player_one_step(base_direction);
-    } else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
         if (maze_menu.menu_active)
             dynmenu_change_current_selection(&maze_menu, 1);
         else
             move_player_one_step(normalize_direction(base_direction + 4));
-    } else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
         if (combat_mode)
             move_player_one_step(6);
         else
             player.direction = left_dir(player.direction);
-    } else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
         if (combat_mode)
             move_player_one_step(2);
         else

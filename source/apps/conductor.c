@@ -154,7 +154,7 @@ void run_conductor(uint32_t down_latches)
 {
     unsigned short freq=0;
 
-    if (down_latches & (1<<BADGE_BUTTON_SW))
+    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
     {
         //returnToMenus();
         con_state = SHOW_MENU;
@@ -213,17 +213,17 @@ void conductor_cb()
             genericMenu(conductor_config_m, MAIN_MENU_STYLE, down_latches);
             break;
         case CONFIG_TOP:
-            if (down_latches & (1<<BADGE_BUTTON_SW))
+            if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
-            else if(down_latches & (1<<BADGE_BUTTON_UP))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 top_note++;
                 audio_set_note(top_note, 4096);
                 populate_menu();
                 display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_TOP], MAIN_MENU_STYLE);
             }
-            else if(down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 top_note--;
                 audio_set_note(top_note, 4096);
@@ -232,17 +232,17 @@ void conductor_cb()
             }
             break;
         case CONFIG_BOTTOM:
-            if (down_latches & (1<<BADGE_BUTTON_SW))
+            if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
-            else if(down_latches & (1<<BADGE_BUTTON_UP))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 bottom_note++;
                 audio_set_note(bottom_note, 4096);
                 populate_menu();
                 display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_BOTTOM], MAIN_MENU_STYLE);
             }
-            else if(down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 bottom_note--;
                 audio_set_note(bottom_note, 4096);
@@ -251,17 +251,17 @@ void conductor_cb()
             }
             break;
         case CONFIG_LEFT:
-            if (down_latches & (1<<BADGE_BUTTON_SW))
+            if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
-            else if(down_latches & (1<<BADGE_BUTTON_UP))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 left_note++;
                 audio_set_note(left_note, 4096);
                 populate_menu();
                 display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_LEFT], MAIN_MENU_STYLE);
             }
-            else if(down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 left_note--;
                 audio_set_note(left_note, 4096);
@@ -270,17 +270,17 @@ void conductor_cb()
             }
             break;
         case CONFIG_RIGHT:
-            if (down_latches & (1<<BADGE_BUTTON_SW))
+            if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
-            else if(down_latches & (1<<BADGE_BUTTON_UP))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 right_note++;
                 audio_set_note(right_note, 4096);
                 populate_menu();
                 display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_RIGHT], MAIN_MENU_STYLE);
             }
-            else if(down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 right_note--;
                 audio_set_note(right_note, 4096);

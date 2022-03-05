@@ -474,11 +474,11 @@ static void check_the_buttons(void)
 
     /* If we are trading monsters, stop trading monsters on a button press */
     if (trading_monsters_enabled) {
-		if (down_latches & (1<<BADGE_BUTTON_UP) ||
-			down_latches & (1<<BADGE_BUTTON_DOWN) ||
-			down_latches & (1<<BADGE_BUTTON_LEFT) ||
-			down_latches & (1<<BADGE_BUTTON_RIGHT) ||
-			down_latches & (1<<BADGE_BUTTON_SW)) {
+		if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 			trading_monsters_enabled = 0;
 			app_state = GAME_MENU;
 			return;
@@ -493,19 +493,19 @@ static void check_the_buttons(void)
 		screen_changed = 1;
                 something_changed = 1;
             }
-            else if (down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 dynmenu_change_current_selection(&menu, 1);
 		screen_changed = 1;
                 something_changed = 1;
             }
-            else if (down_latches & (1<<BADGE_BUTTON_LEFT))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
             {
             }
-            else if (down_latches & (1<<BADGE_BUTTON_RIGHT))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
             {
             }
-            else if (down_latches & (1<<BADGE_BUTTON_SW))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
             {
                 switch(menu.current_item){
                     case 0:
@@ -528,26 +528,26 @@ static void check_the_buttons(void)
 
             break;
         case MONSTER_MENU:
-            if (down_latches & (1<<BADGE_BUTTON_UP))
+            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 dynmenu_change_current_selection(&menu, -1);
 		screen_changed = 1;
                 current_monster = menu.item[menu.current_item].cookie;
                 render_monster();
             }
-            else if (down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 dynmenu_change_current_selection(&menu, 1);
 		screen_changed = 1;
                 current_monster = menu.item[menu.current_item].cookie;
                 render_monster();
             }
-            else if (down_latches & (1<<BADGE_BUTTON_LEFT))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
             {
                 change_menu_level(MAIN_MENU);
                 something_changed = 1;
             }
-            else if (down_latches & (1<<BADGE_BUTTON_RIGHT))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
             {
                 if(current_monster >= 100)
                 {
@@ -558,7 +558,7 @@ static void check_the_buttons(void)
                     show_message(monsters[current_monster].blurb);
                 }
             }
-            else if (down_latches & (1<<BADGE_BUTTON_SW))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
             {
                 #ifdef __linux__
                     print_menu_info();
@@ -574,23 +574,23 @@ static void check_the_buttons(void)
             }
             break;
         case DESCRIPTION:
-            if (down_latches & (1<<BADGE_BUTTON_UP))
+            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (down_latches & (1<<BADGE_BUTTON_LEFT))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (down_latches & (1<<BADGE_BUTTON_RIGHT))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (down_latches & (1<<BADGE_BUTTON_SW))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
