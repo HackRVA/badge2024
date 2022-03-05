@@ -43,6 +43,9 @@ static void check_the_buttons(void);
 static void setup_main_menu(void);
 static void setup_monster_menu(void);
 static void exit_app(void);
+#ifdef __linux__
+static void enable_all_monsters(void);
+#endif
 
 typedef void (*state_to_function_map_fn_type)(void);
 
@@ -180,7 +183,7 @@ struct dynmenu_item menu_item[ARRAYSIZE(monsters) + ARRAYSIZE(vendor_monsters)];
 
 int initial_mon;
 
-#ifndef __linux__
+
 static void register_ir_packet_callback(void (*callback)(const IR_DATA *))
 {
     ir_add_callback(callback, BADGE_IR_GAME_ADDRESS);
@@ -190,7 +193,6 @@ static void unregister_ir_packet_callback(void (*callback)(const IR_DATA *))
 {
     ir_remove_callback(callback, BADGE_IR_GAME_ADDRESS);
 }
-#endif
 
 enum menu_level_t {
     MAIN_MENU,
@@ -721,20 +723,3 @@ int badge_monsters_cb(void)
     return 0;
 }
 
-#ifdef __linux__
-
-int main(int argc, char *argv[])
-{
-    char *serial_port = NULL;
-
-#define IRXMIT_UDP_PORT 12345
-#define LASERTAG_UDP_PORT 12346
-
-	if (argc >= 2)
-		serial_port = argv[1];
-	setup_linux_ir_simulator(serial_port, IRXMIT_UDP_PORT, LASERTAG_UDP_PORT);
-    start_gtk(&argc, &argv, badge_monsters_cb, 30);
-    return 0;
-}
-
-#endif

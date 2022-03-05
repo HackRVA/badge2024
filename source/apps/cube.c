@@ -247,14 +247,6 @@ int cube_cb(void)
 	return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-        start_gtk(&argc, &argv, cube_cb, 30);
-        return 0;
-}
-#endif
-
 
 
 

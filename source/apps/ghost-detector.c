@@ -114,11 +114,3 @@ int ghostdetector_cb(void)
 	}
 	return 0;
 }
-
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-        start_gtk(&argc, &argv, ghostdetector_cb, 30);
-        return 0;
-}
-#endif

@@ -5,6 +5,7 @@
 #include "framebuffer.h"
 #include "dynmenu.h"
 #include <string.h>
+#include <stdio.h>
 
 void dynmenu_init(struct dynmenu *dm, struct dynmenu_item *item, unsigned char max_items)
 {

@@ -28,7 +28,7 @@ variable. (If it works, when you open a new terminal window, the `arm-none-eabi-
 There are various editor plugins you can add to better support CMake ([example](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)),
 but running just from CLI, you can run:
 
-`cmake -S . -B build/ -DCMAKE_BUILD_TYPE=Debug -G "Unix Makefiles"`
+`cmake -S . -B build/ -G "Unix Makefiles"`
 
 to configure the build. This generates a bunch of makefiles, and
 
@@ -38,6 +38,11 @@ After this, the file to flash on the device is at `build/source/badge2022_c.uf2`
 
 You can clean the build by running `make clean`.
 
+A note for Windows users: [This link](https://community.element14.com/products/raspberry-pi/b/blog/posts/working-with-the-raspberry-pi-pico-with-windows-and-c-c)
+has a bunch of useful information for getting started and installing prerequisites. Note that you don't need to do the
+`PICO_SDK_PATH` setting portion, and when running and building this repository, you will want to use "NMake Makefiles" 
+instead of "Unix Makefiles" (unless you want to install and use `make` as well). 
+
 You can flash the Pico by holding down the button on the Pico board as you're plugging it in to USB. That will make it
 show up as a USB mass storage device. Then, you can just put the `.uf2` on the mass storage device to flash it. The
 Pico will boot your new firmware immediately.
@@ -46,15 +51,16 @@ You can use Ninja, if you like, as well. \(Specify `-G Ninja` instead of Makefil
 
 ## Building the Simulator
 
-The simulator is intended to run on a Posix-y (that is, Linux or Mac) environment. Windows hasn't been tried yet, but
-it's likely that Windows Subsystem for Linux and or MinGW either work or will work without too much effort. But to
-build the simulator, you will need a C compiler for your computer, in addition to GTK2. The best way to install
+The simulator is intended to run on a Posix-y (that is, Linux or Mac) environment. Windows can build and run it, but
+using Windows Subsystem for Linux if your Linux subsystem has a desktop environment set up.
+
+But to build the simulator, you will need a C compiler for your computer, in addition to GTK2. The best way to install
 GTK2 is probably through a package manager.
 
 In a similar way to the hardware target, you can generate makefiles via CMake. Note that to make the simulator, there is
 an extra flag that gets passed in:
 
-`cmake -S . -B build_sim/ -DCMAKE_BUILD_TYPE=Debug -DTARGET=SIMULATOR -G "Unix Makefiles"`
+`cmake -S . -B build_sim/ -DTARGET=SIMULATOR -G "Unix Makefiles"`
 
 After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
 program is called `build_sim/source/badge2022_c`, which you can run.

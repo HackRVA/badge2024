@@ -82,10 +82,3 @@ int about_badge_cb(void)
 	return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-        start_gtk(&argc, &argv, about_badge_cb, 30);
-        return 0;
-}
-#endif

@@ -1,5 +1,6 @@
 #include "trig.h"
 #include <stdio.h>
+#include <stdint.h>
 
 /* 128 sine values * 256 */
 const static int16_t sine_array[] = {

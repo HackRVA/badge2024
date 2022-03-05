@@ -3,20 +3,12 @@
 Test flair LED
 
 **********************************************/
-#ifdef __linux__
-#include <stdio.h>
-#include <sys/time.h> /* for gettimeofday */
-#include <string.h> /* for memset */
 
-#include "../linux/linuxcompat.h"
-#include "../linux/bline.h"
-#else
 #include <string.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
-#endif
 
 
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
@@ -163,10 +155,3 @@ int test_flair_led_cb(void)
 	return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-        start_gtk(&argc, &argv, test_flair_led_cb, 30);
-        return 0;
-}
-#endif

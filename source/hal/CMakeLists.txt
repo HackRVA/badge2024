@@ -39,6 +39,9 @@ if (${TARGET} STREQUAL "SIMULATOR")
     target_link_libraries(badge2022_c ${GTK2_LIBRARIES})
     # Add other flags to the compiler
     target_compile_definitions(badge2022_c PRIVATE ${GTK2_CFLAGS_OTHER})
+    
+    find_package(Threads REQUIRED)
+    target_link_libraries(badge2022_c Threads::Threads)
 endif()
 
 target_include_directories(badge2022_c PUBLIC .)

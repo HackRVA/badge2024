@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
@@ -2024,10 +2025,4 @@ int maze_cb(void)
     return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-        start_gtk(&argc, &argv, maze_cb, 240);
-        return 0;
-}
-#endif
+

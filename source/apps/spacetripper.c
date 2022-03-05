@@ -53,12 +53,10 @@ static unsigned int xorshift_state = 0xa5a5a5a5;
 static char *torpedo_name = "TORPEDO";
 static char *phaser_name = "PHASER";
 
-#ifndef __linux__
 static int get_time(void)
 {
     return (int) rtc_get_time_of_day().tv_sec;
 }
-#endif
 
 static const char *object_type_name(char object_type)
 {
@@ -2499,17 +2497,13 @@ static int time_to_move_objects(void) /* Returns true once per second */
 	if (gs.last_screen == REPORT_DAMAGE_SCREEN && st_program_state == ST_PROCESS_INPUT)
 		return 0;
 
-#ifdef __linux__
-	ticks++;
-	return (ticks % 30) == 0;
-#else
+
 	int new_ticks = get_time();
 	if (new_ticks != ticks) {
 		ticks = new_ticks;
 		return 1;
 	}
 	return 0;
-#endif
 }
 
 static void report_damage(void)
@@ -2720,10 +2714,3 @@ int spacetripper_cb(void)
 	return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-	start_gtk(&argc, &argv, spacetripper_cb, 30);
-	return 0;
-}
-#endif

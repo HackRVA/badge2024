@@ -653,24 +653,14 @@ static void evaluate_connection()
 }
 
 
-#ifndef __linux__
 static int get_time(void)
 {
     return (int) rtc_get_time_of_day().tv_sec;
 }
-#endif
 
 static void advance_tick()
-{
-#ifdef __linux__
-	struct timeval tv;
-
-	gettimeofday(&tv, NULL);
-
-	volatile int current_time = tv.tv_sec;
-#else
-	volatile int current_time = get_time();
-#endif
+{	
+	int current_time = get_time();
 	if ((current_time % 60) != (last_time % 60))
 	{
 		if (game_tick_s > 0)
@@ -1115,10 +1105,3 @@ int hacking_simulator_cb(void)
 	return 0;
 }
 
-#ifdef __linux__
-int main(int argc, char *argv[])
-{
-	start_gtk(&argc, &argv, hacking_simulator_cb, 30);
-	return 0;
-}
-#endif
