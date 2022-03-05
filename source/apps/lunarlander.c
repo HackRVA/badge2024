@@ -400,28 +400,28 @@ static void reduce_fuel(struct lander_data *lander, int amount)
 static void check_buttons()
 {
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		/* Pressing the button exits the program. You probably want to change this. */
 		lunarlander_state = LUNARLANDER_EXIT;
-	} else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		if (lander.fuel > 0) {
 			lander.vx = lander.vx - (1 << 7);
 			add_sparks(lander.x + (5 << 8), lander.y, lander.vx + (5 << 8), lander.vy, 10);
 			reduce_fuel(&lander, HORIZONTAL_FUEL);
 		}
-	} else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		if (lander.fuel > 0) {
 			lander.vx = lander.vx + (1 << 7);
 			add_sparks(lander.x - (5 << 8), lander.y, lander.vx - (5 << 8), lander.vy, 10);
 			reduce_fuel(&lander, HORIZONTAL_FUEL);
 		}
-	} else if (down_latches & (1<<BADGE_BUTTON_UP)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		if (lander.fuel > 0) {
 			lander.vy = lander.vy - (1 << 7);
 			add_sparks(lander.x, lander.y + (5 << 8), lander.vx, lander.vy + (5 << 8), 10);
 			reduce_fuel(&lander, VERTICAL_FUEL);
 		}
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 	}
 }
 

@@ -174,29 +174,29 @@ static void check_the_buttons(void)
 	int action;
     int down_latches = button_down_latches();
 
-	if (down_latches & (1<<BADGE_BUTTON_UP)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		current_row--;
 		if (current_row < 0)
 			current_row = 4;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		current_row++;
 		if (current_row > 4)
 			current_row = 0;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		if (current_col == 5 && current_row == 4) /* special case for exit */
 			current_col--;
 		current_col--;
 		if (current_col < 0)
 			current_col = 5;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		current_col++;
 		if (current_col > 5)
 			current_col = 0;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		action = row_col_to_letter(current_row, current_col);
 		if (action == -1) { /* exit */
 			app_state = EXIT_APP;

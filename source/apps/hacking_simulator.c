@@ -702,7 +702,7 @@ static void check_buttons()
 	static int button_presses = 0;
 
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW))
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 	{
 		button_presses++;
 
@@ -722,25 +722,25 @@ static void check_buttons()
 		}
 		screen_changed = 1;
 	}
-	else if (down_latches & (1<<BADGE_BUTTON_LEFT))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
 	{
 		button_presses = 0;
 		cursor_x_index--;
 		screen_changed = 1;
 	}
-	else if (down_latches & (1<<BADGE_BUTTON_RIGHT))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
 	{
 		button_presses = 0;
 		cursor_x_index++;
 		screen_changed = 1;
 	}
-	else if (down_latches & (1<<BADGE_BUTTON_UP))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
 	{
 		button_presses = 0;
 		cursor_y_index--;
 		screen_changed = 1;
 	}
-	else if (down_latches & (1<<BADGE_BUTTON_DOWN))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
 	{
 		button_presses = 0;
 		cursor_y_index++;
@@ -796,7 +796,7 @@ static void render_hackingsimulator_splash_screen()
 	render_splash_screen();
 
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW))
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 		handle_splash_screen_btn();
 }
 
@@ -809,7 +809,7 @@ static void render_hackingsimulator_fail_screen()
 	FbPaintNewRows();
 
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW))
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 		hacking_simulator_state = HACKINGSIMULATOR_EXIT;
 }
 
@@ -822,7 +822,7 @@ static void render_hackingsimulator_win_screen()
 	FbPaintNewRows();
 
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW))
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 		hacking_simulator_state = HACKINGSIMULATOR_EXIT;
 }
 
@@ -1056,15 +1056,15 @@ static void hackingsimulator_quit_confirm(void)
 static void hackingsimulator_quit_input(void)
 {
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		hacking_simulator_state =
 			(enum hacking_simulator_state_t) quitmenu.item[quitmenu.current_item].next_state;
 		return;
-	} else if (down_latches & (1<<BADGE_BUTTON_UP)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		dynmenu_change_current_selection(&quitmenu, -1);
 		dynmenu_draw(&quitmenu);
 		FbSwapBuffers();
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		dynmenu_change_current_selection(&quitmenu, 1);
 		dynmenu_draw(&quitmenu);
 		FbSwapBuffers();

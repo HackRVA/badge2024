@@ -177,14 +177,14 @@ void blinkenlights_cb()
             genericMenu((struct menu_t *)blinkenlights_config_m, MAIN_MENU_STYLE, down_latches);
             break;
         case CONFIG_RED:;
-            if(down_latches & (1<<BADGE_BUTTON_SW))
+            if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
                 led_pwm_enable(BADGE_LED_RGB_GREEN, 0);
                 led_pwm_enable(BADGE_LED_RGB_BLUE, 0);
                 bl_state = SHOW_MENU;
             }
-            else if(down_latches & (1<<BADGE_BUTTON_UP))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 bl_red += BL_INCR_AMNT;
                 if(bl_red > 100)
@@ -195,7 +195,7 @@ void blinkenlights_cb()
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_RED], MAIN_MENU_STYLE);
                 
             }
-            else if(down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 if(bl_red  > BL_INCR_AMNT)
                     bl_red -= BL_INCR_AMNT;
@@ -208,14 +208,14 @@ void blinkenlights_cb()
             }
             break;
         case CONFIG_GREEN:
-            if(down_latches & (1<<BADGE_BUTTON_SW))
+            if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
                 led_pwm_enable(BADGE_LED_RGB_GREEN, 0);
                 led_pwm_enable(BADGE_LED_RGB_BLUE, 0);
                 bl_state = SHOW_MENU;
             }
-            else if(down_latches & (1<<BADGE_BUTTON_UP))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 bl_green += BL_INCR_AMNT;
                 if(bl_green > 100)
@@ -226,7 +226,7 @@ void blinkenlights_cb()
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_GREEN], MAIN_MENU_STYLE);
 
             }
-            else if(down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 if(bl_green > BL_INCR_AMNT)
                     bl_green -= BL_INCR_AMNT;
@@ -239,14 +239,14 @@ void blinkenlights_cb()
             }
             break;
         case CONFIG_BLUE:
-            if(down_latches & (1<<BADGE_BUTTON_SW))
+            if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
                 led_pwm_enable(BADGE_LED_RGB_GREEN, 0);
                 led_pwm_enable(BADGE_LED_RGB_BLUE, 0);
                 bl_state = SHOW_MENU;
             }
-            else if(down_latches & (1<<BADGE_BUTTON_UP))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 bl_blue += BL_INCR_AMNT;
                 if(bl_blue > 100)
@@ -257,7 +257,7 @@ void blinkenlights_cb()
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_BLUE], MAIN_MENU_STYLE);
 
             }
-            else if(down_latches & (1<<BADGE_BUTTON_DOWN))
+            else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 if(bl_blue  > BL_INCR_AMNT)
                     bl_blue -= BL_INCR_AMNT;

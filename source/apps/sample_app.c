@@ -58,19 +58,19 @@ static void check_the_buttons(void)
 	int something_changed = 0;
     int down_latches = button_down_latches();
 
-	if (down_latches & (1<<BADGE_BUTTON_UP)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		smiley_y -= 1;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_DOWN)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		smiley_y += 1;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_LEFT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		smiley_x -= 1;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_RIGHT)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		smiley_x += 1;
 		something_changed = 1;
-	} else if (down_latches & (1<<BADGE_BUTTON_SW)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		app_state = EXIT_APP;
 	}
 	if (smiley_x < left_limit)

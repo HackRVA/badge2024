@@ -269,7 +269,7 @@ static void render_end_game_screen(void)
 	}
 
     int down_latches = button_down_latches();
-	if (down_latches & (1<<BADGE_BUTTON_SW))
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 	{
 		game_of_life_state = GAME_OF_LIFE_EXIT;
 		already_rendered = 0;
@@ -295,17 +295,17 @@ static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 
-	if (down_latches & (1<<BADGE_BUTTON_LEFT) || down_latches & (1<<BADGE_BUTTON_RIGHT))
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) || BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
 	{
 		game_of_life_state = GAME_OF_LIFE_EXIT;
 		return;
 	}
-	if (down_latches & (1<<BADGE_BUTTON_UP))
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
 	{
 		game_of_life_cmd = CMD_RESUME;
 		return;
 	}
-	if (down_latches & (1<<BADGE_BUTTON_DOWN))
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
 	{
 		game_of_life_cmd = CMD_PAUSE;
 		return;
@@ -345,13 +345,13 @@ static void game_of_life_splash_screen(void)
 		already_rendered_splash_screen = 1;
 	}
 
-	if (down_latches & (1<<BADGE_BUTTON_SW))
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 	{
 		already_rendered_splash_screen = 0;
 		init_cells();
 		game_of_life_state = GAME_OF_LIFE_RUN;
 	}
-	else if (down_latches & (1<<BADGE_BUTTON_LEFT) || down_latches & (1<<BADGE_BUTTON_RIGHT))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) || BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
 	{
 		already_rendered_splash_screen = 0;
 		game_of_life_state = GAME_OF_LIFE_EXIT;
