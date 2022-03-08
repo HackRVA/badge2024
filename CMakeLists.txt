@@ -33,4 +33,9 @@ if (${TARGET} STREQUAL "PICO")
     )
 endif()
 
+if (${TARGET} STREQUAL "SIMULATOR")
+    # Suppress GTK deprecated declarations
+    add_compile_options(-Wno-deprecated-declarations)
+endif()
+
 add_subdirectory(source)
