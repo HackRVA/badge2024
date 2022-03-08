@@ -7,7 +7,7 @@
 #include "hardware/pwm.h"
 #include <stdio.h>
 
-const static int _gpio_map[BADGE_LED_MAX] = {
+static const int _gpio_map[BADGE_LED_MAX] = {
     BADGE_GPIO_LED_RED,
     BADGE_GPIO_LED_GREEN,
     BADGE_GPIO_LED_BLUE,

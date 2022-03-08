@@ -17,29 +17,29 @@
 
 
 
-unsigned static const char G_bias  = 0b00000000; /* 0x00 = 1/4  0x11 = 1/5 0x22 = 1/6 0x33 = 1/7 */
+static unsigned const char G_bias  = 0b00000000; /* 0x00 = 1/4  0x11 = 1/5 0x22 = 1/6 0x33 = 1/7 */
 
 // PEB 20150529 unsigned char G_entry = 0b10000000; 0b00000000 inc Y when X=Xend VS 0b00000010 inc X when Y=Yend
-unsigned static char G_entry = 0b10000000; /* 0x80 */
+static unsigned char G_entry = 0b10000000; /* 0x80 */
 
 // PEB WAS 20150313 unsigned char G_outputMode = 0b00000010; /* 0x02 lines=132 SDIR=0 SWP=1 CDIR=0 */
 // unsigned char G_outputMode = 0b00000110; /* 0x02 lines=132 SDIR=0 SWP=1 CDIR=0 */
-unsigned static char G_outputMode = DISPLAY_MODE_NORMAL; /* 0x02 lines=132 SDIR=0 SWP=1 CDIR=0 */
+static unsigned char G_outputMode = DISPLAY_MODE_NORMAL; /* 0x02 lines=132 SDIR=0 SWP=1 CDIR=0 */
 
 /* 0x11 = fose/32 & fose/16 -> set clock fpck=fose/32(Normal)/fpck=fose/16(partial1)-------*/
-unsigned static const char G_clockDiv = 0b00010001; /* default = fose/32 & fose/64  normal and partial modes each */
+static unsigned const char G_clockDiv = 0b00010001; /* default = fose/32 & fose/64  normal and partial modes each */
 
-unsigned static const char G_DCDCselect = 0b00000000; /* step up multplier 1, 1.5 and 2 */
+static unsigned const char G_DCDCselect = 0b00000000; /* step up multplier 1, 1.5 and 2 */
 
-unsigned static const char G_displayPattern = 0b00000000; /* 0 = normal, 1 = inverted, 2&3 read datasheet */
+static unsigned const char G_displayPattern = 0b00000000; /* 0 = normal, 1 = inverted, 2&3 read datasheet */
 
-unsigned static const char G_addressMode = 0b00011101; /* 0b0001 1101 65536 colors default GSM=00 DSG=1 SGF=1 SGP=10 SGM=1  */
+static unsigned const char G_addressMode = 0b00011101; /* 0b0001 1101 65536 colors default GSM=00 DSG=1 SGF=1 SGP=10 SGM=1  */
 
-unsigned static const char G_rowVector = 0b00001110; /* default row vector type=Diagonal INC=111 V=0-----*/
+static unsigned const char G_rowVector = 0b00001110; /* default row vector type=Diagonal INC=111 V=0-----*/
 
-unsigned static const char G_contrast1 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 */
+static unsigned const char G_contrast1 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 */
 
-unsigned static const char G_contrast2 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 */
+static unsigned const char G_contrast2 = 0b00110100; /* 52 = 0x34 48 = hex 0x30 */
 
 static int dma_channel = -1;
 static bool dma_transfer_started = true;

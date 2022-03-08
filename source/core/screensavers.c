@@ -21,7 +21,7 @@ unsigned short anim_cnt = 0;
 
 #define MASK (IB1+IB2+IB5)
 
-unsigned static int irbit2(unsigned int iseed) {
+static unsigned int irbit2(unsigned int iseed) {
     if (iseed & IB18){
         iseed = ((iseed ^ MASK) << 1) | IB1;
     }

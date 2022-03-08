@@ -23,7 +23,7 @@
 
 /* for 1 bit images */
 /* testing color instead of BW */
-const static char BW_cmap[2][3] = {
+static const char BW_cmap[2][3] = {
         { 32, 32, 32 },
         { 64, 192, 64 },
 };
