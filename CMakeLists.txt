@@ -23,7 +23,7 @@ elseif(${TARGET} STREQUAL "SIMULATOR")
 endif()
 
 
-add_compile_options(-Wall)
+add_compile_options(-Wall -Wextra)
 
 if (${TARGET} STREQUAL "PICO")
     add_compile_options(
