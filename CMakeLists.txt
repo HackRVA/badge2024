@@ -35,7 +35,8 @@ endif()
 
 if (${TARGET} STREQUAL "SIMULATOR")
     # Suppress GTK deprecated declarations
-    add_compile_options(-Wno-deprecated-declarations)
+    add_compile_options(-Wno-deprecated-declarations -fsanitize=address)
+    add_link_options(-fsanitize=address)
 endif()
 
 add_subdirectory(source)
