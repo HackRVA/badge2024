@@ -67,7 +67,7 @@ static void process_rotary_pin_state(uint gpio, int state) {
     }
 }
 
-int64_t alarm_callback(alarm_id_t id, void* user_data) {
+int64_t alarm_callback(__attribute__((unused)) alarm_id_t id, void* user_data) {
 
     uint gpio_enum = (uint)user_data;
     uint gpio = button_gpios[gpio_enum];
@@ -99,7 +99,7 @@ int64_t alarm_callback(alarm_id_t id, void* user_data) {
     return 0;
 }
 
-void gpio_callback(uint gpio, uint32_t events) {
+void gpio_callback(uint gpio, __attribute__((unused)) uint32_t events) {
     for (int i=0; i<BADGE_BUTTON_MAX; i++) {
         uint gpio_pin = (uint)(button_gpios[i]);
         if (gpio_pin == gpio) {

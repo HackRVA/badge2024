@@ -56,7 +56,7 @@ int run_button_get(char *args) {
     return 0;
 }
 
-int run_button_mask(char *args) {
+int run_button_mask(__attribute__((unused)) char *args) {
     int mask = button_mask();
     printf("Button mask: %02x\n", mask);
     return 0;
@@ -71,13 +71,13 @@ void _button_event_handler(BADGE_BUTTON button, bool high) {
     }
 }
 
-int run_install_handler(char* args) {
+int run_install_handler(__attribute__((unused)) char* args) {
     button_set_interrupt(_button_event_handler);
     printf("Installed button event handler to count events.\n");
     return 0;
 }
 
-int run_get_event_counts(char*args) {
+int run_get_event_counts(__attribute__((unused)) char*args) {
     for (int i=0; i<BADGE_BUTTON_MAX; i++) {
         printf("Button %s - down %u times, up %u times.\n",
                _button_names[i], _button_down_counts[i], _button_up_counts[i]);

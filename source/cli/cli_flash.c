@@ -199,7 +199,7 @@ int run_flash_erase(char * args) {
     return 0;
 }
 
-int run_flash_erase_all(char * args) {
+int run_flash_erase_all(__attribute__((unused)) char * args) {
     flash_erase_all();
     puts("Erased all flash.");
     return 0;

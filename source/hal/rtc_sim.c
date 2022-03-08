@@ -8,14 +8,14 @@
 
 uint64_t boot_microseconds = 0;
 
-void rtc_init_badge(time_t start_time) {
+void rtc_init_badge(__attribute__((unused)) time_t start_time) {
 
     struct timespec now;
     timespec_get(&now, TIME_UTC);
     boot_microseconds = now.tv_sec * 1000000 + now.tv_nsec / 1000;
 }
 
-void rtc_set_time(time_t start_time) {
+void rtc_set_time(__attribute__((unused)) time_t start_time) {
     // Just use system time, do nothing here
 }
 

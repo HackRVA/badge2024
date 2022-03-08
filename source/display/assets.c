@@ -23,7 +23,7 @@ void drawAsset(unsigned char assetId)
     assetList[assetId].datacb(assetId, G_videoFrame);
 }
 
-void drawLCD1(unsigned char assetId, int frame)
+void drawLCD1(unsigned char assetId, __attribute__((unused)) int frame)
 {
     unsigned char i, j, p, r, g, b, pixbyte;
     const char *cmap, *pixdata;
@@ -55,7 +55,7 @@ void drawLCD1(unsigned char assetId, int frame)
     }
 }
 
-void drawLCD2(unsigned char assetId, int frame)
+void drawLCD2(unsigned char assetId, __attribute__((unused)) int frame)
 {
     unsigned char i, j, r, g, b, pixbyte;
     const char *cmap, *pixdata;
@@ -119,7 +119,7 @@ void drawLCD2(unsigned char assetId, int frame)
     }
 }
 
-void drawLCD4(unsigned char assetId, int frame)
+void drawLCD4(unsigned char assetId, __attribute__((unused)) int frame)
 {
     unsigned char i, j, r, g, b, pixbyte;
     const char *cmap, *pixdata;
@@ -159,7 +159,7 @@ void drawLCD4(unsigned char assetId, int frame)
     }
 }
 
-void drawLCD8(unsigned char assetId, int frame)
+void drawLCD8(unsigned char assetId, __attribute__((unused)) int frame)
 {
     unsigned char i, j, r, g, b, pixbyte;
     const char *cmap;

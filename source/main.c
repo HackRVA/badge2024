@@ -19,7 +19,7 @@
 #include "delay.h"
 #include "init.h"
 
-int exit_process(char *args) {
+int exit_process(__attribute__((unused)) char *args) {
     return -1;
 }
 
@@ -29,7 +29,7 @@ CLI_COMMAND exit_command = {
     .process = exit_process,
 };
 
-int help_process(char *args) {
+int help_process(__attribute__((unused)) char *args) {
     puts("Available commands are: ");
     puts("\thelp - Print this message");
     puts("\tflash - Write data to nonvolatile storage");
@@ -46,7 +46,7 @@ CLI_COMMAND help_command = {
     .process = help_process,
 };
 
-int badge_main(int argc, char** argv) {
+int badge_main(__attribute__((unused)) int argc, __attribute__((unused)) char** argv) {
 
     UserInit();
 

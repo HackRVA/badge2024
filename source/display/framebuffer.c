@@ -455,7 +455,7 @@ void FbPoint(unsigned char x, unsigned char y)
     G_Fb.changed = 1;
 }
 
-void FbHorizontalLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2)
+void FbHorizontalLine(unsigned char x1, unsigned char y1, unsigned char x2, __attribute__((unused)) unsigned char y2)
 {
     unsigned char x;
 
@@ -465,7 +465,7 @@ void FbHorizontalLine(unsigned char x1, unsigned char y1, unsigned char x2, unsi
     G_Fb.changed = 1;
 }
 
-void FbVerticalLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2)
+void FbVerticalLine(unsigned char x1, unsigned char y1, __attribute__((unused)) unsigned char x2, unsigned char y2)
 {
     unsigned char y;
 

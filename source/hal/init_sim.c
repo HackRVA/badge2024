@@ -68,7 +68,7 @@ uint32_t hal_disable_interrupts(void) {
     return 0;
 }
 
-void hal_restore_interrupts(uint32_t state) {
+void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
     printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
 }
 

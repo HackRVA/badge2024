@@ -95,7 +95,7 @@ int run_ir_handler(char *args) {
 }
 
 
-int run_ir_last(char *args) {
+int run_ir_last(__attribute__((unused)) char *args) {
 
     if (!last_rx_time) {
         puts("No IR packets received by handler (make sure handler is installed).");

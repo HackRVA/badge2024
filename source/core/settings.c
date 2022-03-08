@@ -64,7 +64,7 @@ const struct menu_t ping_m[] = {
 /*
     set badge Id
 */
-void myBadgeid_cb(struct menu_t *h) {
+void myBadgeid_cb(__attribute__((unused)) struct menu_t *h) {
    struct menu_t *selectedMenu;
 
    //dstMenu = getSelectedMenuStack(1);
@@ -90,7 +90,7 @@ const struct menu_t myBadgeid_m[] = {
 /*
     backlight
 */
-void backlight_cb(struct menu_t *h) {
+void backlight_cb(__attribute__((unused)) struct menu_t *h) {
    struct menu_t *dstMenu, *selectedMenu;
 
    dstMenu = getSelectedMenuStack(1);
@@ -137,7 +137,7 @@ void setRotate(int yes)
 /*
    rotate screen
 */
-void rotate_cb(struct menu_t *h) {
+void rotate_cb(__attribute__((unused)) struct menu_t *h) {
     unsigned char rotated=0;
     struct menu_t *selectedMenu;
     selectedMenu = getSelectedMenu();
@@ -152,7 +152,7 @@ void rotate_cb(struct menu_t *h) {
 extern void S6B33_set_display_mode_inverted(void);
 extern void S6B33_set_display_mode_noninverted(void);
 
-static void invert_cb(struct menu_t *h) {
+static void invert_cb(__attribute__((unused)) struct menu_t *h) {
 	static int inverted = 0;
 	inverted = !inverted;
 	if (inverted)
@@ -174,7 +174,7 @@ const struct menu_t rotate_m[] = {
 /*
     LED brightness
 */
-void LEDlight_cb(struct menu_t *h) {
+void LEDlight_cb(__attribute__((unused)) struct menu_t *h) {
     struct menu_t *dstMenu, *selectedMenu;
 
     dstMenu = getSelectedMenuStack(1);
@@ -249,7 +249,7 @@ struct menu_t buzzer_m[] = {
 extern unsigned char screen_save_lockout;
 extern unsigned char screensaver_inverted;
 
-void screen_save_lock_cb(struct menu_t *h) {
+void screen_save_lock_cb(__attribute__((unused)) struct menu_t *h) {
     struct menu_t *selectedMenu;
     selectedMenu = getSelectedMenu();
     screen_save_lockout = selectedMenu->attrib & 0x1FF;
