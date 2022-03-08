@@ -66,6 +66,8 @@ bool nec_decode_frame(uint32_t frame, uint8_t *p_address, uint8_t *p_data) {
 
     // a valid (non-extended) 'NEC' frame should contain 8 bit
     // address, inverted address, data and inverted data
+    // FIXME: -Wextra gives "comparison of promoted ~unsigned with unsigned" but I do not see why.
+    // Googling suggests it may be a compiler bug.
     if (f.address != (f.inverted_address ^ 0xff) ||
         f.data != (f.inverted_data ^ 0xff)) {
         return false;

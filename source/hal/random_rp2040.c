@@ -9,7 +9,7 @@
 
 void random_insecure_bytes(uint8_t *bytes, size_t len) {
     memset(bytes, 0, len);
-    for (int i=0; i<len; i++) {
+    for (size_t i=0; i<len; i++) {
         for (int j=0; j<8; j++) {
             bytes[i] |= (rosc_hw->randombit << j);
         }

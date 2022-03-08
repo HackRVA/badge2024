@@ -69,7 +69,7 @@ void hack_the_dragon(){
     FbColor(RED);
     FbWriteLine(drag_hack);
 
-    unsigned int i = 0;
+    int i = 0;
     for(i=0; i<(8 - popup_time%8); i++){
         FbMove(17, 35+ (i*10));
         FbWriteLine(drag_hack_num);

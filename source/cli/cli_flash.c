@@ -70,7 +70,7 @@ int run_flash_write_hex(char * args) {
         return 1;
     }
 
-    for (int i=0; i<data_len; i+=2) {
+    for (size_t i=0; i<data_len; i+=2) {
         uint8_t binary_data = 0;
         for (int j=0; j<2; j++) {
             // On second loop this will shift first nibble upward

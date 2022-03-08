@@ -23,7 +23,7 @@ void add_achievement(enum achievement achievement, unsigned short achievement_in
 {
 	int new_value;
 
-	if (achievement < 0 || achievement >= ACHIEVEMENT_COUNT)
+	if (achievement >= ACHIEVEMENT_COUNT)
 		return;
 
 	new_value = achievements[achievement] + achievement_increment;
@@ -37,7 +37,7 @@ int get_achievement_count(enum achievement achievement)
 
 	maybe_load_achievements_from_flash();
 
-	if (achievement < 0 || achievement >= ACHIEVEMENT_COUNT)
+	if (achievement >= ACHIEVEMENT_COUNT)
 		return -1;
 	return achievements[achievement];
 }

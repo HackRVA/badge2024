@@ -73,7 +73,7 @@ size_t flash_data_write(uint8_t sector, uint16_t offset, const uint8_t *buf, siz
 
         // Fill dummy data (0xFF) at the end fo the page, if there is any.
         uint32_t empty_page_len = FLASH_PAGE_SIZE - (page_data_len + page_offset);
-        if (empty_page_len >= 0) {
+        if (page_data_len + page_offset <= FLASH_PAGE_SIZE) {
             memset(&_flash_cache[FLASH_PAGE_SIZE-empty_page_len], 0xFF, empty_page_len);
         }
 

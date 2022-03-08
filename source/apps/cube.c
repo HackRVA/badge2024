@@ -130,7 +130,7 @@ static void draw_cube(void)
 {
 	int i, n;
 	int x, y, z, lx, ly, nx, ny;
-	char x1, y1, x2, y2;
+	signed char x1, y1, x2, y2;
 
 	n = cube[0];
 	x = ((cubept[n].x * cubescale) >> SHIFT) + cubetransx;

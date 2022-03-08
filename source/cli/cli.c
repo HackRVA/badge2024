@@ -36,7 +36,7 @@ int cli_get_line(const char *prompt, char* line, size_t len) {
     }
     printf("> ");
 
-    int cur_len = 0;
+    size_t cur_len = 0;
     bool too_long = false;
     while (1) {
 
@@ -51,7 +51,7 @@ int cli_get_line(const char *prompt, char* line, size_t len) {
         char input = (char) raw_input;
 
         // If we get EOF, signal this so we can exit command loop
-        if (((int)input) == EOF) {
+        if (raw_input == EOF) {
             return -1;
         }
 
