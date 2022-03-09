@@ -30,6 +30,10 @@ but running just from CLI, you can run:
 
 `cmake -S . -B build/ -G "Unix Makefiles"`
 
+or, if that's too hard to type or remember:
+
+`./run_cmake.sh`
+
 to configure the build. This generates a bunch of makefiles, and
 
 `cd build && make` to build the firmware.
@@ -61,6 +65,10 @@ In a similar way to the hardware target, you can generate makefiles via CMake. N
 an extra flag that gets passed in:
 
 `cmake -S . -B build_sim/ -DTARGET=SIMULATOR -G "Unix Makefiles"`
+
+or, if that's too hard to type or remember:
+
+`./run_cmake_sim.sh`
 
 After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
 program is called `build_sim/source/badge2022_c`, which you can run.
