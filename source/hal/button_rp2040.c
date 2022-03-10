@@ -40,30 +40,8 @@ static user_gpio_callback user_cb;
 static void gpio_callback(uint gpio, uint32_t events);
 
 static void process_rotary_pin_state(uint gpio, int state) {
-    static bool a_was_low;
-    static bool b_was_low;
-
-    if ((gpio != BADGE_BUTTON_ENCODER_A) && (gpio != BADGE_BUTTON_ENCODER_B)) {
-        return;
-    }
-    if (state == 1) {
-        a_was_low = 0;
-        b_was_low = 0;
-    }
-    if (gpio == BADGE_BUTTON_ENCODER_A) {
-        if (b_was_low) {
-            rotation_count--;
-            b_was_low = false;
-        } else {
-            a_was_low = true;
-        }
-    } else { // It's B
-        if (a_was_low) {
-            rotation_count++;
-            a_was_low = false;
-        } else {
-            b_was_low = true;
-        }
+    if (gpio == BADGE_BUTTON_ENCODER_A && state == 0) {
+        rotation_count += button_poll(BADGE_BUTTON_ENCODER_B) ? 1 : -1;
     }
 }
 
