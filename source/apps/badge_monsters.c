@@ -471,6 +471,7 @@ static void check_the_buttons(void)
 {
     int something_changed = 0;
     int down_latches = button_down_latches();
+    int rotary = button_get_rotation();
 
     /* If we are trading monsters, stop trading monsters on a button press */
     if (trading_monsters_enabled) {
@@ -487,13 +488,13 @@ static void check_the_buttons(void)
 
     switch(menu_level){
         case MAIN_MENU:
-            if (down_latches & (1<<BADGE_BUTTON_UP))
+            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
             {
                 dynmenu_change_current_selection(&menu, -1);
 		screen_changed = 1;
                 something_changed = 1;
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
             {
                 dynmenu_change_current_selection(&menu, 1);
 		screen_changed = 1;
@@ -528,14 +529,14 @@ static void check_the_buttons(void)
 
             break;
         case MONSTER_MENU:
-            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
             {
                 dynmenu_change_current_selection(&menu, -1);
 		screen_changed = 1;
                 current_monster = menu.item[menu.current_item].cookie;
                 render_monster();
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
             {
                 dynmenu_change_current_selection(&menu, 1);
 		screen_changed = 1;
@@ -574,11 +575,11 @@ static void check_the_buttons(void)
             }
             break;
         case DESCRIPTION:
-            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
             {
                 change_menu_level(MONSTER_MENU);
             }
