@@ -44,11 +44,13 @@ gint key_press_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointer 
         case GDK_KEY_Escape:
             time_to_quit = 1;
         break;
-        case GDK_comma: // Or GT, looks like an arrow to the right
-            rotation_count += 1;
-        break;
-        case GDK_period: // Or LT, looks like an arrow to the left
+        case GDK_comma:
+        case GDK_less:
             rotation_count -= 1;
+        break;
+        case GDK_period:
+        case GDK_greater:
+            rotation_count += 1;
         break;
         default:
             break;
