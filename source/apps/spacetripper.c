@@ -1022,7 +1022,8 @@ static void show_energy_and_torps(void)
 
 static void st_choose_angle_input(void)
 {
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
+	int rotary = button_get_rotation();
 	int something_changed = 0;
 
 	gs.angle_chooser.old_angle = *gs.angle_chooser.angle;
@@ -1035,10 +1036,10 @@ static void st_choose_angle_input(void)
 		gs.angle_chooser.old_new_angle = angle;
 		gs.angle_chooser.finished = 1;
 		something_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
 		*gs.angle_chooser.new_angle += 15;
 		something_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
 		*gs.angle_chooser.new_angle -= 15;
 		something_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
@@ -1159,15 +1160,16 @@ static void st_choose_weapons(void)
 static void st_process_input(void)
 {
     int down_latches = button_down_latches();
+    int rotary = button_get_rotation();
     int something_happened = 0;
     if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
         button_pressed();
 	something_happened = 1;
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
         if (menu.menu_active)
             dynmenu_change_current_selection(&menu, -1);
 	something_happened = 1;
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
         if (menu.menu_active)
             dynmenu_change_current_selection(&menu, 1);
 	something_happened = 1;
@@ -2085,15 +2087,16 @@ static void st_warp_input(void)
 {
 	int old = gs.player.new_warp_factor;
 
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
+	int rotary = button_get_rotation();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		gs.player.warp_factor = gs.player.new_warp_factor;
 		st_warp();
 		st_program_state = ST_PROCESS_INPUT;
 		return;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
 		gs.player.new_warp_factor += WARP1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
 		gs.player.new_warp_factor -= WARP1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		gs.player.new_warp_factor -= WARP1 / 10;
@@ -2211,14 +2214,15 @@ static void st_shield_energy_input()
 	if (-max_ship > min)
 		min = -max_ship;
 
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
+	int rotary = button_get_rotation();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		gs.player.shield_xfer = gs.player.new_shield_xfer;
 		st_program_state = ST_SHIELD_EXEC_ENERGY_XFER;
 		return;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
 		gs.player.new_shield_xfer += 500;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
 		gs.player.new_shield_xfer -= 500;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		gs.player.new_shield_xfer -= 100;
@@ -2271,7 +2275,8 @@ static void st_shield_exec_energy_xfer(void)
 
 static void st_phaser_power_input(void)
 {
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
+	int rotary = button_get_rotation();
 	int old = gs.player.new_phaser_power;
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
@@ -2279,9 +2284,9 @@ static void st_phaser_power_input(void)
 		st_phaser_power();
 		st_program_state = ST_FIRE_PHASER;
 		return;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
 		gs.player.new_phaser_power += WARP1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
 		gs.player.new_phaser_power -= WARP1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		gs.player.new_phaser_power -= WARP1 / 10;
