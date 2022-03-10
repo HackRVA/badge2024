@@ -47,8 +47,11 @@ has a bunch of useful information for getting started and installing prerequisit
 `PICO_SDK_PATH` setting portion, and when running and building this repository, you will want to use "NMake Makefiles" 
 instead of "Unix Makefiles" (unless you want to install and use `make` as well). 
 
-You can flash the Pico by holding down the button on the Pico board as you're plugging it in to USB. That will make it
-show up as a USB mass storage device. Then, you can just put the `.uf2` on the mass storage device to flash it. The
+## Flashing the Badge
+
+You can flash the Pico by holding down the button on the Pico board (not the rotary switch button)
+as you're plugging it in to USB. That will make it show up as a USB mass storage device. Then,
+you can copy the file `build/source/badge2022_c.uf2` onto the mass storage device to flash it. The
 Pico will boot your new firmware immediately.
 
 You can use Ninja, if you like, as well. \(Specify `-G Ninja` instead of Makefiles in the `cmake` command.\)
