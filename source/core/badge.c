@@ -233,10 +233,6 @@ uint64_t ProcessIO(void)
             }
             do_screen_save_popup();
         }
-        return frame_interval_us_default;
-    }
-    else {
-        FbPushBuffer(); // may sync if any calls modified display ram
     }
 
     return frame_interval_us_default;

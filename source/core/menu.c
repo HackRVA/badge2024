@@ -232,6 +232,8 @@ struct menu_t *display_menu(struct menu_t *menu,
 	/* in case last menu item is a skip */
         if (selected == NULL) selected = root_menu;
 
+    // Write menu onto the screen
+    FbPushBuffer();
 	return (selected);
 }
 
