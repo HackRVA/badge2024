@@ -268,6 +268,7 @@ void menus() {
     }
 
     int down_latches = button_down_latches();
+    int rotary = button_get_rotation();
     /* see if physical button has been clicked */
     if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
         // action happened that will result in menu redraw
@@ -315,7 +316,7 @@ void menus() {
         }
 
         G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
         /* handle slider/soft button clicks */
         audio_set_note(70, NOTEDUR); /* f */
 
@@ -336,7 +337,7 @@ void menus() {
             }
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         }
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
         audio_set_note(100, NOTEDUR); /* g */
 
         /* make sure not on last menu item */
