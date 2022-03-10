@@ -70,25 +70,21 @@ struct menu_t *G_selectedMenu = NULL; /* item the cursor is on */
 struct menu_t *G_currMenu = NULL; /* init */
 
 
-struct menu_t *getSelectedMenu()
-{
+struct menu_t *getSelectedMenu() {
     return G_selectedMenu;
 }
 
-struct menu_t *getCurrMenu()
-{
+struct menu_t *getCurrMenu() {
     return G_currMenu;
 }
 
-struct menu_t *getMenuStack(unsigned char item)
-{
+struct menu_t *getMenuStack(unsigned char item) {
    if (item > G_menuCnt) return 0;
 
    return G_menuStack[G_menuCnt-item].currMenu;
 }
 
-struct menu_t *getSelectedMenuStack(unsigned char item)
-{
+struct menu_t *getSelectedMenuStack(unsigned char item) {
    if (item > G_menuCnt) return 0;
 
    return G_menuStack[G_menuCnt-item].selectedMenu;
@@ -112,138 +108,123 @@ unsigned char menu_left=5;
 #define RGBPACKED(R,G,B) ( ((unsigned short)(R)<<11) | ((unsigned short)(G)<<6) | (unsigned short)(B) )
 struct menu_t *display_menu(struct menu_t *menu,
                             struct menu_t *selected,
-                            MENU_STYLE style)
-{
-        static unsigned char cursor_x, cursor_y;
-	unsigned char c;
-	struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
+                            MENU_STYLE style) {
+    static unsigned char cursor_x, cursor_y;
+    unsigned char c;
+    struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
 
-	root_menu = menu;
+    root_menu = menu;
 
-        switch (style)
-        {
+    switch (style) {
+        case MAIN_MENU_STYLE:
+            FbBackgroundColor(MAIN_MENU_BKG_COLOR);
+            FbClear();
+
+            FbColor(GREEN);
+            FbMove(2,5);
+            FbRectangle(123, 120);
+
+            FbColor(CYAN);
+            FbMove(1,4);
+            FbRectangle(125, 122);
+            break;
+
+        case WHITE_ON_BLACK:
+            FbClear();
+            FbBackgroundColor(BLACK);
+            FbTransparentIndex(0);
+            break;
+
+        case BLANK:
+        default:
+            break;
+    }
+
+    cursor_x = MENU_LEFT;
+    //cursor_y = CHAR_HEIGHT;
+    cursor_y = 2; // CHAR_HEIGHT;
+    FbMove(cursor_x, cursor_y);
+
+    while (1) {
+        unsigned char rect_w=0;
+
+        if (menu->attrib & HIDDEN_ITEM) {
+            // don't jump out of the menu array if this is the last item!
+            if(menu->attrib & LAST_ITEM) {
+                break;
+            } else {
+                menu++;
+            }
+
+            continue;
+        }
+
+        for (c=0, rect_w=0; (menu->name[c] != 0); c++) rect_w += CHAR_WIDTH;
+
+        if (menu->attrib & VERT_ITEM) {
+            cursor_y += (CHAR_HEIGHT + 2 * SCAN_BLANK);
+        }
+
+        if (!(menu->attrib & HORIZ_ITEM)) {
+            cursor_x = MENU_LEFT;
+        }
+
+        if (selected == menu) {
+            // If we happen to be on a skip ITEM, just increment off it
+            // The menus() method mostly avoids this, except for some cases
+            if (menu->attrib & SKIP_ITEM) selected++;
+        }
+
+        if (selected == NULL) {
+            if (menu->attrib & DEFAULT_ITEM) 
+            selected = menu;
+        }
+
+        // Determine selected item color
+        switch(style) {
             case MAIN_MENU_STYLE:
-		FbBackgroundColor(MAIN_MENU_BKG_COLOR);
-		FbClear();
+                if (menu == selected) {
+                    FbColor(YELLOW);
 
-		FbColor(GREEN);
-		FbMove(2,5);
-		FbRectangle(123, 120);
+                    FbMove(3, cursor_y + 1);
+                    FbFilledRectangle(2, 8);
 
-		FbColor(CYAN);
-		FbMove(1,4);
-		FbRectangle(125, 122);
-
+                    // Set the selected color for the coming writeline
+                    FbColor(GREEN);
+                } else {
+                    // unselected writeline color
+                    FbColor(GREY16);
+                }
                 break;
-
             case WHITE_ON_BLACK:
-		FbClear();
-		FbBackgroundColor(BLACK);
-		FbTransparentIndex(0);
+                FbColor((menu == selected) ? GREEN : WHITE);
                 break;
-
             case BLANK:
             default:
                 break;
         }
+        
+        FbMove(cursor_x+1, cursor_y+1);
+        FbWriteLine(menu->name);
+        cursor_x += (rect_w + CHAR_WIDTH);
+        if (menu->attrib & LAST_ITEM) break;
+        menu++;
+    } // END WHILE
 
-	cursor_x = MENU_LEFT;
-	//cursor_y = CHAR_HEIGHT;
-	cursor_y = 2; // CHAR_HEIGHT;
-        FbMove(cursor_x, cursor_y);
-
-	while (1) {
-		unsigned char rect_w=0;
-
-		if (menu->attrib & HIDDEN_ITEM) {
-		    // don't jump out of the menu array if this is the last item!
-		    if(menu->attrib & LAST_ITEM)
-			break;
-		    else
-			menu++;
-
-		    continue;
-		}
-
-		for (c=0, rect_w=0; (menu->name[c] != 0); c++) rect_w += CHAR_WIDTH;
-
-		if (menu->attrib & VERT_ITEM) 
-			cursor_y += (CHAR_HEIGHT + 2 * SCAN_BLANK);
-
-		if (!(menu->attrib & HORIZ_ITEM))
-			cursor_x = MENU_LEFT;
-
-                // extra decorations for menu items
-                switch(style)
-                {
-                    case MAIN_MENU_STYLE:
-                        break;
-                    case WHITE_ON_BLACK:
-                        break;
-                    case BLANK:
-                    default:
-                        break;
-                }
-
-		if (selected == menu) {
-                    // If we happen to be on a skip ITEM, just increment off it
-                    // The menus() method mostly avoids this, except for some cases
-                    if (menu->attrib & SKIP_ITEM) selected++;
-		}
-
-		if (selected == NULL) {
-		    if (menu->attrib & DEFAULT_ITEM) 
-			selected = menu;
-		}
-
-                // Determine selected item color
-                switch(style)
-                {
-                    case MAIN_MENU_STYLE:
-			if (menu == selected)
-			{
-			    FbColor(YELLOW);
-
-			    FbMove(3, cursor_y+1);
-			    FbFilledRectangle(2,8);
-
-			    // Set the selected color for the coming writeline
-			    FbColor(GREEN);
-			}
-                        else
-                            // unselected writeline color
-			    FbColor(GREY16);
-                        break;
-                    case WHITE_ON_BLACK:
-			FbColor((menu == selected) ? GREEN : WHITE);
-                        break;
-                    case BLANK:
-                    default:
-                        break;
-                }
-		
-		FbMove(cursor_x+1, cursor_y+1);
-		FbWriteLine(menu->name);
-		cursor_x += (rect_w + CHAR_WIDTH);
-		if (menu->attrib & LAST_ITEM) break;
-		menu++;
-	} // END WHILE
-
-	/* in case last menu item is a skip */
+    /* in case last menu item is a skip */
     if (selected == NULL) {
         selected = root_menu;
     }
 
     // Write menu onto the screen
     FbPushBuffer();
-	return selected;
+    return selected;
 }
 
 /* for this increment the units are menu items */
 #define PAGESIZE 8
 
-void closeMenuAndReturn()
-{
+void closeMenuAndReturn() {
     if (G_menuCnt == 0) return; /* stack is empty, error or main menu */
     G_menuCnt--;
     G_currMenu = G_menuStack[G_menuCnt].currMenu ;
@@ -258,8 +239,7 @@ void closeMenuAndReturn()
      apps will call this but since this returns to the callback
      code will execute up the the fuction return()
 */
-void returnToMenus()
-{
+void returnToMenus() {
     if (G_currMenu == NULL) {
         G_currMenu = (struct menu_t *)main_m;
         G_selectedMenu = NULL;
@@ -271,119 +251,112 @@ void returnToMenus()
     runningApp = NULL;
 }
 
-void menus()
-{
+void menus() {
     if (runningApp != NULL) { /* running app is set by menus() not genericMenus() */
-            (*runningApp)();
-            return;
+        (*runningApp)();
+        return;
     }
 
-    if (G_currMenu == NULL 
-        //|| (redraw_main_menu && G_menuStack[G_menuCnt].currMenu == main_m)) {
-        || (redraw_main_menu)){
-            redraw_main_menu = 0;
-            G_menuStack[G_menuCnt].currMenu = (struct menu_t *)main_m;
-            G_menuStack[G_menuCnt].selectedMenu = NULL;
-            G_currMenu = (struct menu_t *)main_m;
-            //selectedMenu = G_currMenu;
-            G_selectedMenu = NULL;
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+    if (G_currMenu == NULL || (redraw_main_menu)){
+        redraw_main_menu = 0;
+        G_menuStack[G_menuCnt].currMenu = (struct menu_t *)main_m;
+        G_menuStack[G_menuCnt].selectedMenu = NULL;
+        G_currMenu = (struct menu_t *)main_m;
+        //selectedMenu = G_currMenu;
+        G_selectedMenu = NULL;
+        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
     }
-
 
     int down_latches = button_down_latches();
     /* see if physical button has been clicked */
-    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
-    {
+    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
         // action happened that will result in menu redraw
         // do_animation = 1;
-            switch (G_selectedMenu->type) {
+        switch (G_selectedMenu->type) {
 
             case MORE: /* jump to next page of menu */
-                    audio_set_note(50, NOTEDUR); /* a */
-                    G_currMenu += PAGESIZE;
-                    G_selectedMenu = G_currMenu;
-                    break;
+                audio_set_note(50, NOTEDUR); /* a */
+                G_currMenu += PAGESIZE;
+                G_selectedMenu = G_currMenu;
+                break;
 
             case BACK: /* return from menu */
-		    audio_set_note(60, NOTEDUR);
-		    if (G_menuCnt == 0) return; /* stack is empty, error or main menu */
-		    G_menuCnt--;
-		    G_currMenu = G_menuStack[G_menuCnt].currMenu ;
-		    G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu ;
-		    //G_selectedMenu = G_currMenu;
-                    break;
+                audio_set_note(60, NOTEDUR);
+                if (G_menuCnt == 0) return; /* stack is empty, error or main menu */
+                G_menuCnt--;
+                G_currMenu = G_menuStack[G_menuCnt].currMenu ;
+                G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu ;
+                //G_selectedMenu = G_currMenu;
+                break;
 
             case TEXT: /* maybe highlight if clicked?? */
-                    audio_set_note(70, NOTEDUR); /* c */
-                    break;
+                audio_set_note(70, NOTEDUR); /* c */
+                break;
 
             case MENU: /* drills down into menu if clicked */
-                    audio_set_note(80, NOTEDUR); /* d */
-                    G_menuStack[G_menuCnt].currMenu = G_currMenu; /* push onto stack  */
-                    G_menuStack[G_menuCnt].selectedMenu = G_selectedMenu;
-		    G_menuCnt++;
-                    if (G_menuCnt == MAX_MENU_DEPTH) G_menuCnt--; /* too deep, undo */
-                    G_currMenu = (struct menu_t *)G_selectedMenu->data.menu; /* go into this menu */
-                    //selectedMenu = G_currMenu;
-                    G_selectedMenu = NULL;
-                    break;
+                audio_set_note(80, NOTEDUR); /* d */
+                G_menuStack[G_menuCnt].currMenu = G_currMenu; /* push onto stack  */
+                G_menuStack[G_menuCnt].selectedMenu = G_selectedMenu;
+                G_menuCnt++;
+                if (G_menuCnt == MAX_MENU_DEPTH) G_menuCnt--; /* too deep, undo */
+                G_currMenu = (struct menu_t *)G_selectedMenu->data.menu; /* go into this menu */
+                //selectedMenu = G_currMenu;
+                G_selectedMenu = NULL;
+                break;
 
             case FUNCTION: /* call the function pointer if clicked */
-                    audio_set_note(90, NOTEDUR); /* e */
-                    runningApp = G_selectedMenu->data.func;
-                    //(*selectedMenu->data.func)();
-                    break;
+                audio_set_note(90, NOTEDUR); /* e */
+                runningApp = G_selectedMenu->data.func;
+                //(*selectedMenu->data.func)();
+                break;
 
             default:
-                    break;
-            }
+                break;
+        }
 
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
-    }
-    else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) /* handle slider/soft button clicks */
-    {
+        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+        /* handle slider/soft button clicks */
         audio_set_note(70, NOTEDUR); /* f */
 
         /* make sure not on first menu item */
-        if (G_selectedMenu > G_currMenu)
-        {
+        if (G_selectedMenu > G_currMenu) {
             G_selectedMenu--;
 
             while ( ((G_selectedMenu->attrib & SKIP_ITEM) || (G_selectedMenu->attrib & HIDDEN_ITEM))
-                    && G_selectedMenu > G_currMenu)
+                    && G_selectedMenu > G_currMenu) {
                 G_selectedMenu--;
+            }
 
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         } else {
-		/* Move to the last item if press UP from the first item */
-		while (!(G_selectedMenu->attrib & LAST_ITEM))
-			G_selectedMenu++;
-		G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
-	}
-    }
-    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
-    {
+            /* Move to the last item if press UP from the first item */
+            while (!(G_selectedMenu->attrib & LAST_ITEM)) {
+                G_selectedMenu++;
+            }
+            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+        }
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
         audio_set_note(100, NOTEDUR); /* g */
 
-
         /* make sure not on last menu item */
-        if (!(G_selectedMenu->attrib & LAST_ITEM))
-        {
+        if (!(G_selectedMenu->attrib & LAST_ITEM)) {
             G_selectedMenu++;
 
             //Last item should never be a skipped item!!
             while ( ((G_selectedMenu->attrib & SKIP_ITEM) || (G_selectedMenu->attrib & HIDDEN_ITEM))
-                    && (!(G_selectedMenu->attrib & LAST_ITEM)) ) 
+                    && (!(G_selectedMenu->attrib & LAST_ITEM)) ) {
                 G_selectedMenu++;
+            }
 
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         } else {
-		/* Move to the first item if press DOWN from the last item */
-		while (G_selectedMenu > G_currMenu)
-			G_selectedMenu--;
-		G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
-	}
+            /* Move to the first item if press DOWN from the last item */
+            while (G_selectedMenu > G_currMenu) {
+                G_selectedMenu--;
+            }
+            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+        }
     }
 }
 
@@ -392,8 +365,7 @@ void menus()
   this is not meant for persistant menus
   like the main menu
 */
-void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
-{
+void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches) {
     static struct menu_t *L_currMenu = NULL; /* LOCAL not to be confused to much with menu()*/
     static struct menu_t *L_selectedMenu = NULL; /* LOCAL ditto   "    "    */
     static unsigned char L_menuCnt=0; // index for G_menuStack
@@ -402,96 +374,90 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
     if (L_menu == NULL) return; /* no thanks */
 
     if (L_currMenu == NULL) {
-	L_menuCnt = 0;
-	L_menuStack[L_menuCnt] = L_menu;
-	L_currMenu = L_menu;
-	//L_selectedMenu = L_menu;
-	L_selectedMenu = NULL;
-	L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
-	return;
+        L_menuCnt = 0;
+        L_menuStack[L_menuCnt] = L_menu;
+        L_currMenu = L_menu;
+        //L_selectedMenu = L_menu;
+        L_selectedMenu = NULL;
+        L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+        return;
     }
 
-    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
-    {
-            switch (L_selectedMenu->type) {
-
+    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+        switch (L_selectedMenu->type) {
             case MORE: /* jump to next page of menu */
-                    audio_set_note(50, NOTEDUR); /* a */
-                    L_currMenu += PAGESIZE;
-                    L_selectedMenu = L_currMenu;
-                    break;
+                audio_set_note(50, NOTEDUR); /* a */
+                L_currMenu += PAGESIZE;
+                L_selectedMenu = L_currMenu;
+                break;
 
             case BACK: /* return from menu */
-                    audio_set_note(60, NOTEDUR); /* b */
-                    if (L_menuCnt == 0) return; /* stack is empty, error or main menu */
-                    L_menuCnt--;
-                    L_currMenu = L_menuStack[L_menuCnt] ;
-                    L_selectedMenu = L_currMenu;
-		    L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
-                    break;
+                audio_set_note(60, NOTEDUR); /* b */
+                if (L_menuCnt == 0) return; /* stack is empty, error or main menu */
+                L_menuCnt--;
+                L_currMenu = L_menuStack[L_menuCnt] ;
+                L_selectedMenu = L_currMenu;
+                L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+                break;
 
             case TEXT: /* maybe highlight if clicked?? */
-                    audio_set_note(70, NOTEDUR); /* c */
-                    break;
+                audio_set_note(70, NOTEDUR); /* c */
+                break;
 
             case MENU: /* drills down into menu if clicked */
-                    audio_set_note(80, NOTEDUR); /* d */
-                    L_menuStack[L_menuCnt++] = L_currMenu; /* push onto stack  */
-                    if (L_menuCnt == MAX_MENU_DEPTH) L_menuCnt--; /* too deep, undo */
-                    L_currMenu = (struct menu_t *)L_selectedMenu->data.menu; /* go into this menu */
-                    //L_selectedMenu = L_currMenu;
-                    L_selectedMenu = NULL;
-		    L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
-                    break;
+                audio_set_note(80, NOTEDUR); /* d */
+                L_menuStack[L_menuCnt++] = L_currMenu; /* push onto stack  */
+                if (L_menuCnt == MAX_MENU_DEPTH) L_menuCnt--; /* too deep, undo */
+                L_currMenu = (struct menu_t *)L_selectedMenu->data.menu; /* go into this menu */
+                //L_selectedMenu = L_currMenu;
+                L_selectedMenu = NULL;
+                L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+                break;
 
             case FUNCTION: /* call the function pointer if clicked */
-                    audio_set_note(90, NOTEDUR); /* e */
-                    (*L_selectedMenu->data.func)(L_selectedMenu);
+                audio_set_note(90, NOTEDUR); /* e */
+                (*L_selectedMenu->data.func)(L_selectedMenu);
 
-		    /* clean up for nex call back */
-		    L_menu = NULL;
-		    L_currMenu = NULL;
-		    L_selectedMenu = NULL;
+                /* clean up for nex call back */
+                L_menu = NULL;
+                L_currMenu = NULL;
+                L_selectedMenu = NULL;
 
-		    L_menuCnt = 0;
-		    L_menuStack[L_menuCnt] = NULL;
-                    break;
+                L_menuCnt = 0;
+                L_menuStack[L_menuCnt] = NULL;
+                break;
 
             default:
-                    break;
-            }
-	    // L_selectedMenu = display_menu(L_currMenu, L_selectedMenu);
-    }
-    else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) /* handle slider/soft button clicks */
-    {
+                break;
+        }
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+        /* handle slider/soft button clicks */
         audio_set_note(70, NOTEDUR); /* f */
 
         /* make sure not on first menu item */
-        if (L_selectedMenu > L_currMenu)
-        {
+        if (L_selectedMenu > L_currMenu) {
             L_selectedMenu--;
 
             while ((L_selectedMenu->attrib & SKIP_ITEM)
-                    && L_selectedMenu > L_currMenu)
+                    && L_selectedMenu > L_currMenu) {
                 L_selectedMenu--;
+            }
 
-	    L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+            L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
         }
-    }
-    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
-    {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
         audio_set_note(100, NOTEDUR); /* g */
 
         /* make sure not on last menu item */
-        if (!(L_selectedMenu->attrib & LAST_ITEM))
-        {
+        if (!(L_selectedMenu->attrib & LAST_ITEM)) {
             L_selectedMenu++;
 
             //Last item should never be a skipped item!!
-            while (L_selectedMenu->attrib & SKIP_ITEM)
+            while (L_selectedMenu->attrib & SKIP_ITEM) {
                 L_selectedMenu++;
+            }
 
-	    L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+            L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
         }
     }
 }
@@ -506,17 +472,17 @@ const struct menu_t games_m[] = {
    {"Hacking Sim",   VERT_ITEM, FUNCTION, {(struct menu_t *)hacking_simulator_cb} },
    {"Spinning Cube", VERT_ITEM, FUNCTION, {(struct menu_t *)cube_cb} },
    {"Game of Life", VERT_ITEM, FUNCTION, {(struct menu_t *)game_of_life_cb} },
-   {"Back",	     VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 
 const struct menu_t settings_m[] = {
    {"Backlight",VERT_ITEM, MENU, {(struct menu_t *)backlight_m}},
-   {"Led",	VERT_ITEM, MENU, {(struct menu_t *)LEDlight_m}},  /* coerce/cast to a menu_t data pointer */
-   {"Buzzer",	VERT_ITEM|DEFAULT_ITEM, MENU, {(struct menu_t *)buzzer_m}},
+   {"Led",    VERT_ITEM, MENU, {(struct menu_t *)LEDlight_m}},  /* coerce/cast to a menu_t data pointer */
+   {"Buzzer",    VERT_ITEM|DEFAULT_ITEM, MENU, {(struct menu_t *)buzzer_m}},
    {"Rotate",   VERT_ITEM, MENU, {(struct menu_t *)rotate_m}},
    {"User Name",VERT_ITEM, FUNCTION, {(struct menu_t *)username_cb} },
    {"Screensaver", VERT_ITEM, MENU, {(struct menu_t *)screen_lock_m} },
-   {"Back",	VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"Back",    VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 
 const struct menu_t main_m[] = {
@@ -561,13 +527,11 @@ void rvasec_splash_cb(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 50 * 255/100);
         //if(buzzer)
         audio_set_note(100, 4092);
-    }
-    else if(wait < 40){
+    } else if(wait < 40){
         drawLCD4(HACKRVA4, 0);
         FbSwapBuffers();
         //PowerSaveIdle();
-    }
-    else if(wait < 80){
+    } else if(wait < 80){
         FbMove(0, 2);
         FbImage2bit(RVASEC2016, 0);
         FbMove(10,SPLASH_SHIFT_DOWN);
@@ -592,8 +556,7 @@ void rvasec_splash_cb(){
 
         FbSwapBuffers();
 
-    }
-    else if(wait <160){
+    } else if(wait <160){
         FbMove(0, 2);
         FbImage2bit(RVASEC2016, 0);
         FbMove(10,SPLASH_SHIFT_DOWN);
@@ -630,8 +593,7 @@ void rvasec_splash_cb(){
 
     // Sam: had some buzzer code here prior
     int down_latches = button_down_latches();
-    if (down_latches)
-        printf("latches: %08x\n", down_latches);
+
     if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)){
         returnToMenus();
     }
