@@ -109,14 +109,17 @@ static void smashout_game_init(void)
 
 static void smashout_check_buttons()
 {
-    int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+	int rotary_switch = button_get_rotation();
+	int down_latches = button_down_latches();
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 		smashout_program_state = SMASHOUT_GAME_EXIT;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
 		paddle.vx = -PADDLE_SPEED;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
+	else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
 		paddle.vx = PADDLE_SPEED;
-	}
+	if (rotary_switch)
+		paddle.vx += PADDLE_SPEED * rotary_switch;
 }
 
 static void smashout_draw_paddle()
