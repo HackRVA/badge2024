@@ -230,11 +230,13 @@ struct menu_t *display_menu(struct menu_t *menu,
 	} // END WHILE
 
 	/* in case last menu item is a skip */
-        if (selected == NULL) selected = root_menu;
+    if (selected == NULL) {
+        selected = root_menu;
+    }
 
     // Write menu onto the screen
     FbPushBuffer();
-	return (selected);
+	return selected;
 }
 
 /* for this increment the units are menu items */
