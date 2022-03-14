@@ -90,7 +90,7 @@ void FbClear()
         BUFFER(i) = G_Fb.BGcolor;
     }
     // Mark everything as changed
-    memset(max_changed_x, LCD_XSIZE, sizeof(max_changed_x));
+    memset(max_changed_x, LCD_XSIZE - 1, sizeof(max_changed_x));
     memset(min_changed_x, 0, sizeof(min_changed_x));
 }
 
