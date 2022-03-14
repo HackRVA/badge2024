@@ -433,7 +433,7 @@ static void trade_monsters(void)
 void render_screen_save_monsters(void) {
     static unsigned char current_index = 0;
     int npoints, color;
-    if(current_index == ARRAYSIZE(monsters)) {
+    if(current_index == ARRAYSIZE(monsters) - 1) {
         current_index = 0;
     }
     else {
