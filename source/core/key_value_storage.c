@@ -2,30 +2,83 @@
 // Created by Samuel Jones on 3/15/22.
 //
 
+
 #include "key_value_storage.h"
 #include "flash_storage.h"
 #include <stdint.h>
 #include <string.h>
 
+/**
+ * This key-value storage module works under the following model of NOR flash:
+ *
+ * 1) Data can be read and written randomly.
+ * 2) Erases can only happen on a sector and not a smaller unit.
+ * 3) Erased flash reads back 0xFF, and writes only bits that are 1 to 0,
+ *    not the reverse (Writes can't turn 0s into 1s).
+ * 4) Following from (1) and (3), It's fine to write a location that has
+ *    already been written, but the resulting value will be the logical
+ *    AND of the old data and the new data.
+ *
+ * The structure implemented here has the following properties:
+ *
+ * 1) There are at least two "instances" or NOR flash locations where
+ *    data are be stored. One is considered "active".
+ * 2) When data is written, it is written into bare areas of the
+ *    active area.
+ * 3) Eventually, the instance area will become too full to write
+ *    data. When that happens, the module will erase an inactive area,
+ *    and copy all data that is not old or deleted from the active
+ *    area to the new area. This will clean up old values that are
+ *    no longer used, and should free enough space. This new area
+ *    becomes the active area.
+ *
+ * An instance has the following layout:
+ *  [storage header (8 bytes)]
+ *  [entry table (8 bytes * maximum entries)]
+ *  [data (rest of area)]
+ *
+ * The storage header holds version information, a magic value, and
+ * metadata.
+ *
+ * The entry table holds information on where a key/value are stored
+ * and if this record is unwritten, valid, or outdated/deleted.
+ *
+ * The data table just stores keys and values.
+ *
+ * Care is taken to try to ensure that if an inopportune reset happens
+ * between internal writes/erases, data isn't be corrupted or lost.
+ */
+
+/// This is a magic value that should be at the start of an initialized instance.
+const uint16_t KV_SECTOR_MAGIC = 0x6b76; // "kv"
+
+/// A version number so we can tell the data structure on flash, if it
+/// becomes necessary.
+const int KV_STORAGE_VERSION = 1;
+
+/// The first flash page sector that stores key-value data. (The nor flash
+/// driver puts sector 0 in a more proper location - not actually address 0.)
+const int KV_BASE_SECTOR = 0;
+
+/// The number of flash sectors in a given area.
+const int KV_SECTORS_PER_INSTANCE = 2;
+
+/// The number of instances the module cycles through. Should be 2. With some
+/// code changes it could be greater than 2.
+const int KV_INSTANCES = 2;
+
+/// The number of values (including old/overwritten) values that can be stored
+/// in an instance before needing to clean up. This is in addition to general
+/// storage requirements.
+const int KV_MAX_ENTRIES = 128;
+
+/// Sector states. Note that a sector begins in UNINIT state after erase, and
+/// can only progress down the enum until the next time it is erased.
 enum {
     SECTOR_STATE_UNINIT = 0xFF,
     SECTOR_STATE_ACTIVE = 0x7F,
     SECTOR_STATE_INACTIVE = 0x3F,
 };
-
-enum {
-    ENTRY_STATE_UNINIT = 0xFF,
-    ENTRY_STATE_ALLOC = 0x7F,
-    ENTRY_STATE_WRITTEN = 0x3F,
-    ENTRY_STATE_DELETED = 0x1F,
-};
-
-const uint16_t KV_SECTOR_MAGIC = 0x6b76; // "kv"
-const int KV_STORAGE_VERSION = 1;
-const int KV_MAX_ENTRIES = 128;
-const int KV_BASE_SECTOR = 0;
-const int KV_SECTORS_PER_INSTANCE = 2;
-const int KV_INSTANCES = 2;
 
 // 8 bytes
 typedef struct {
@@ -33,8 +86,23 @@ typedef struct {
     uint8_t  state;
     uint8_t  version;
     uint16_t num_sectors;
+    // Maximum number of entries allowed. This dictates the size of the
+    // entry table.
     uint16_t num_entries;
 } STORAGE_HEADER;
+
+
+/// Entry states. Note that a sector begins in UNINIT state after erase, and
+/// can only progress down the enum until the next time it is erased.
+enum {
+    ENTRY_STATE_UNINIT = 0xFF,
+    // Used to mark an entry as "currently being written". So in case of
+    // reset or power failure, we detect this don't use the value, and don't
+    // re-use data that may have been pointed to here.
+    ENTRY_STATE_ALLOC = 0x7F,
+    ENTRY_STATE_WRITTEN = 0x3F,
+    ENTRY_STATE_DELETED = 0x1F,
+};
 
 // 8 bytes
 typedef struct {
@@ -70,8 +138,13 @@ static bool load_storage_header(STORAGE_HEADER *header, int sector) {
     return (header->magic == KV_SECTOR_MAGIC);
 }
 
+void save_storage_header(const STORAGE_HEADER *header, int sector) {
+    flash_data_write(sector, 0, (uint8_t*)header, sizeof(STORAGE_HEADER));
+}
+
 static bool find_key(const char* key, ENTRY_HEADER *entry, int sector, int used_entries, int* index) {
 
+    // Scan through entries to see if we have a match for this key.
     for (int i=used_entries-1; i>=0; i--) {
         load_entry_header(entry, sector, i);
         if (entry->state != ENTRY_STATE_WRITTEN) {
@@ -97,8 +170,11 @@ static bool find_key(const char* key, ENTRY_HEADER *entry, int sector, int used_
     return false;
 }
 
+/// This function moves valid data from a full instance to a new instance. Old or invalid
+/// data is discarded.
 static void move_and_clean(void) {
-    int new_sector_base = (current_base_sector == KV_BASE_SECTOR) ? KV_BASE_SECTOR + KV_SECTORS_PER_INSTANCE : KV_BASE_SECTOR;
+    int new_sector_base = (current_base_sector == KV_BASE_SECTOR) ?
+            KV_BASE_SECTOR + KV_SECTORS_PER_INSTANCE : KV_BASE_SECTOR;
 
     // Erase new area
     for (int i=0; i<KV_SECTORS_PER_INSTANCE; i++) {
@@ -149,7 +225,6 @@ static void move_and_clean(void) {
         }
     }
 
-
     // Finalize - mark new area as ready and invalidate old one
     STORAGE_HEADER new_storage_header = {
             .magic = KV_SECTOR_MAGIC,
@@ -163,17 +238,15 @@ static void move_and_clean(void) {
     current_storage_header.state = SECTOR_STATE_INACTIVE;
     flash_data_write(current_base_sector, 0, (uint8_t*)&current_storage_header, sizeof(STORAGE_HEADER));
 
+    // Update static variables to point to new data.
     current_storage_header = new_storage_header;
     current_entries_used = new_entries_used;
     current_free_data_offset = new_free_data_offset;
     current_base_sector = new_sector_base;
 }
 
-
-void save_storage_header(const STORAGE_HEADER *header, int sector) {
-    flash_data_write(sector, 0, (uint8_t*)header, sizeof(STORAGE_HEADER));
-}
-
+/// Load and check flash data, initializing RAM data from flash state. If there
+/// is no data on flash, set it up as new flash storage.
 bool flash_kv_init(void) {
 
     STORAGE_HEADER header;
@@ -226,8 +299,8 @@ bool flash_kv_init(void) {
 }
 
 bool flash_kv_clear(void) {
-    for (int i=0; i<NUM_DATA_SECTORS; i++) {
-        flash_erase(i);
+    for (int i=0; i<KV_SECTORS_PER_INSTANCE*KV_INSTANCES; i++) {
+        flash_erase(KV_BASE_SECTOR + i);
     }
     current_storage_header.magic = KV_SECTOR_MAGIC;
     current_storage_header.version = KV_STORAGE_VERSION;
@@ -235,7 +308,7 @@ bool flash_kv_clear(void) {
     current_storage_header.num_entries = KV_MAX_ENTRIES;
     current_storage_header.num_sectors = KV_SECTORS_PER_INSTANCE;
 
-    save_storage_header(&current_storage_header, 0);
+    save_storage_header(&current_storage_header, KV_BASE_SECTOR);
     current_base_sector = 0;
     current_entries_used = 0;
     current_free_data_offset = sizeof(STORAGE_HEADER) + KV_MAX_ENTRIES * sizeof(ENTRY_HEADER);
@@ -248,11 +321,12 @@ bool flash_kv_store_binary(const char *key, const void* value, size_t len) {
         move_and_clean();
     }
     if (!space_is_available(space_needed)) {
+        // Failed to make enough space :(
         return false;
     }
 
     ENTRY_HEADER new;
-    ENTRY_HEADER existing;
+    ENTRY_HEADER existing; // need to see if there was old data so we can mark it as deleted.
     int existing_index = -1;
     bool write_key = false;
     if (find_key(key, &existing, current_base_sector, current_entries_used, &existing_index)) {
@@ -283,7 +357,7 @@ bool flash_kv_store_binary(const char *key, const void* value, size_t len) {
     new.state = ENTRY_STATE_WRITTEN;
     save_entry_header(&new, current_base_sector, current_entries_used);
 
-    // Mark old data as deleted. Not necessary to work, but will make clean operations faster.
+    // Mark old data as deleted. This isn't strictly necessary, but will make clean operations faster.
     if (existing_index >= 0) {
         existing.state = ENTRY_STATE_DELETED;
         save_entry_header(&existing, current_base_sector, existing_index);
@@ -316,7 +390,7 @@ bool flash_kv_delete(const char* key) {
 }
 
 size_t flash_kv_get_binary(const char* key, void* value, size_t max_len) {
-    if (current_base_sector < 0) {
+    if (current_base_sector < KV_BASE_SECTOR) {
         return 0;
     }
     ENTRY_HEADER entry;
@@ -330,7 +404,6 @@ size_t flash_kv_get_binary(const char* key, void* value, size_t max_len) {
 }
 
 bool flash_kv_get_string(const char* key, char* value, size_t max_strlen) {
-
     size_t len = flash_kv_get_binary(key, value, max_strlen);
     value[len] = '\0';
     return len > 0;

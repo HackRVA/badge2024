@@ -1,4 +1,8 @@
 
+/**
+ * Test program for key-value storage.
+ */
+
 #include "key_value_storage.h"
 #include <stdio.h>
 #include <string.h>
