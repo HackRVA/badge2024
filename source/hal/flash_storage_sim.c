@@ -9,7 +9,7 @@
 #include <string.h>
 
 const char *flash_filename = "simulator_flash_storage.bin";
-static unsigned char flash_data[NUM_DATA_SECTORS][FLASH_PAGE_SIZE];
+static unsigned char flash_data[NUM_DATA_SECTORS][FLASH_SECTOR_SIZE];
 static bool flash_loaded = false;
 
 static void load_flash(void) {
@@ -48,7 +48,7 @@ size_t flash_data_read(uint8_t sector, uint16_t offset, uint8_t *buf, size_t len
         // invalid offset
         return 0;
     }
-    if (max_len >= (int)len) {
+    if (max_len <= (int)len) {
         len = max_len;
     }
 
@@ -67,13 +67,13 @@ size_t flash_data_write(uint8_t sector, uint16_t offset, const uint8_t *buf, siz
         // invalid offset
         return 0;
     }
-    if (max_len >= (int)len) {
+    if (max_len <= (int)len) {
         len = max_len;
     }
 
     for (size_t i=0; i<len; i++) {
         // NOR flash writes pull 1s to 0s only.
-        flash_data[sector][offset] &= buf[i];
+        flash_data[sector][offset+i] &= buf[i];
     }
 
     save_flash();
