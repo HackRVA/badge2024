@@ -19,7 +19,7 @@ static void load_flash(void) {
     if (!f) {
         return;
     }
-    size_t loaded = fread(flash_data, sizeof(flash_data), 1, f);
+    size_t loaded = fread(flash_data, 1, sizeof(flash_data), f);
     fclose(f);
 
     printf("Loaded %zu bytes of flash data from %s\n", loaded, flash_filename);
@@ -32,7 +32,7 @@ void save_flash(void) {
         printf("error opening flash file to save: %s\n", flash_filename);
         return;
     }
-    fwrite(flash_data, sizeof(flash_data), 1, f);
+    fwrite(flash_data, 1, sizeof(flash_data), f);
 
     fclose(f);
 }

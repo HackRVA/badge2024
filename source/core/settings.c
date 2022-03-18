@@ -7,6 +7,7 @@
 #include "delay.h"
 #include "led_pwm.h"
 #include "display_s6b33.h"
+#include "key_value_storage.h"
 
 #define PING_REQUEST      0x1000
 #define PING_RESPONSE     0x2000
@@ -101,7 +102,8 @@ void backlight_cb(__attribute__((unused)) struct menu_t *h) {
 
    badge_system_data()->backlight = selectedMenu->attrib & 0x1FF;
    led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, badge_system_data()->backlight);
-   //flashWriteKeyValue((unsigned int)&G_sysData, (char *)&G_sysData, sizeof(struct sysData_t));
+
+   flash_kv_store_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
 
    returnToMenus();
 }
@@ -182,19 +184,9 @@ void LEDlight_cb(__attribute__((unused)) struct menu_t *h) {
 
     strcpy(dstMenu->name, selectedMenu->name);
 
-    badge_system_data()->ledBrightness = selectedMenu->attrib & 0x7;
-    //flashWriteKeyValue((unsigned int)&G_sysData, (char *)&G_sysData, sizeof(struct sysData_t));
-
-    /* because of calcs done on pwm, 
-       have to reload the values for
-       it to take effect. because of division, 
-       info is lost in this process
-    */
-
-    // Sam: this used to point to set some global variables; perhaps this was config? TODO check this out.
-    led_pwm_enable(BADGE_LED_RGB_RED, 127);
-    led_pwm_enable(BADGE_LED_RGB_GREEN, 127);
-    led_pwm_enable(BADGE_LED_RGB_BLUE, 127);
+    badge_system_data()->ledBrightness = selectedMenu->attrib & 0xFF;
+    led_pwm_set_scale(badge_system_data()->ledBrightness);
+    flash_kv_store_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
 
     returnToMenus();
 }
@@ -202,13 +194,13 @@ void LEDlight_cb(__attribute__((unused)) struct menu_t *h) {
 
 const struct menu_t LEDlightList_m[] = {
 //    {"       ", 7|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"      -", 6|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"     --", 5|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"    ---", 4|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"   ----", 3|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"  -----", 2|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {" ------", 1|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"-------", 0|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"      -", 0|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"     --", 30|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"    ---", 75|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"   ----", 100|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"  -----", 150|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {" ------", 200|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"-------", 255|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
     {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL} },
 };
 
@@ -227,7 +219,7 @@ void buzzer_config_cb()
     strcpy(dstMenu->name, selectedMenu->name);
 
     badge_system_data()->mute = selectedMenu->attrib & 0x1; /* low order bits of attrib can store values */
-    //flashWriteKeyValue((unsigned int)&G_sysData, (char *)&G_sysData, sizeof(struct sysData_t));
+    flash_kv_store_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
 
     returnToMenus();
 }

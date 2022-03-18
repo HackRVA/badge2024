@@ -11,6 +11,7 @@
 #include "display_s6b33.h"
 #include "ir.h"
 #include "rtc.h"
+#include "key_value_storage.h"
 
 /*
   inital system data, will be save/restored from flash
@@ -43,17 +44,17 @@ SYSTEM_DATA* badge_system_data(void) {
 
 void UserInit(void)
 {
+    flash_kv_init();
     FbInit();
     FbClear();
 
     /* if not in flash, use the default assigned by make */
     G_sysData.badgeId = finalBadgeId;
 
-    // TODO load system user data/config from flash, previous commented code below.
-    //flashReadKeyValue((unsigned int)&G_sysData, (unsigned char *)&G_sysData, sizeof(struct sysData_t));
-    //restore_username_from_flash(G_sysData.name, 10);
-    //backlight(G_sysData.backlight);
-    //led_brightness(G_sysData.ledBrightness);
+    flash_kv_get_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
+
+    led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, G_sysData.backlight);
+    led_pwm_set_scale(G_sysData.ledBrightness);
     //G_mute = G_sysData.mute;
 }
 
