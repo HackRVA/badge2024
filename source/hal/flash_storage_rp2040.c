@@ -106,3 +106,7 @@ void flash_erase_all(void) {
         flash_erase(i);
     }
 }
+
+void flash_deinit(void) {
+    // Do nothing.
+}
