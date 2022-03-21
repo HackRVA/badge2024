@@ -12,6 +12,7 @@
 #include "ir.h"
 #include "rtc.h"
 #include "key_value_storage.h"
+#include "settings.h"
 
 /*
   inital system data, will be save/restored from flash
@@ -55,7 +56,12 @@ void UserInit(void)
 
     led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, G_sysData.backlight);
     led_pwm_set_scale(G_sysData.ledBrightness);
-    //G_mute = G_sysData.mute;
+    S6B33_set_rotation(G_sysData.display_rotated);
+    if (G_sysData.display_inverted) {
+        S6B33_set_display_mode_inverted();
+    }
+
+    setup_settings_menus();
 }
 
 

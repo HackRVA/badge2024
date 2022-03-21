@@ -567,15 +567,13 @@ void FbSwapBuffers()
     G_Fb.pos.y = 0;
 }
 
-extern int getRotate(void);
-
 /* Copies LCDbuffer to screen one row at at time and only if that row has changed.
  * If your app only changes small parts of the screen at a time, this can be faster.
  */
 void FbPaintNewRows(void)
 {
     unsigned int i;
-    int rotated = getRotate();
+    int rotated = S6B33_get_rotation();
 
     if (G_Fb.changed == 0)
         return;
