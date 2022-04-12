@@ -3,8 +3,8 @@
 //
 
 /**
- * key_value_storage.c - a NOR-flash based key:value store for nonvolatile
- * data
+ * @file key_value_storage.h
+ * @brief a NOR-flash based key:value store for nonvolatile data
  *
  * This module helps store arbitrary pieces of data to a collection of
  * NOR flash sectors. NOR flash has some oddities around how writes
