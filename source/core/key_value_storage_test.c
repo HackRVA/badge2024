@@ -1,6 +1,9 @@
 
 /**
  * Test program for key-value storage.
+ *
+ * This file is linked with key_value_storage and the simulator
+ * flash driver to create a standalone test executable.
  */
 
 #include "key_value_storage.h"
@@ -9,9 +12,9 @@
 
 
 int simple_test(void) {
+
     // Reset the flash, and then write some values and ensure they can be
     // read back fine.
-
     flash_kv_clear();
 
     // Try storing some values
@@ -127,7 +130,7 @@ int overwrite_test(void) {
     return 0;
 }
 
-void get_value(char* val, int i) {
+void make_value(char* val, int i) {
     if (i%15) {
         sprintf(val, "val%d", i);
     }
@@ -140,15 +143,17 @@ int long_term_test(void) {
 
     flash_kv_clear();
 
+    // Write a bunch of keys and values (over the instance size), and make sure data is retained
+    // throughout.
     for (int i=0; i<4000; i++) {
         char key[15];
         char value[200];
         snprintf(key, 15, "key%d", i%10);
-        get_value(value, i);
+        make_value(value, i);
 
         if (i >= 10) {
             char old_value[200];
-            get_value(old_value, i-10);
+            make_value(old_value, i-10);
             char output[200] = {0};
             bool successful = flash_kv_get_string(key, output, 199);
             if (!successful) {
@@ -173,6 +178,8 @@ int long_term_test(void) {
 }
 
 
+// The main test function for key-value storage. This primarily does setup, and then runs test functions
+// in sequence. Test functions return 0 if they are successful and 1 if they fail.
 int main(void) {
 
     flash_kv_init();
@@ -187,7 +194,7 @@ int main(void) {
         return 1;
     }
 
-    // Test that saving a new value invalidates an old value.
+    // Test that saving a new value invalidates an old value for a given key.
     printf("Running value overwrite test:\n");
     result = overwrite_test();
     if (result) {
@@ -203,7 +210,6 @@ int main(void) {
         printf("%u - long term test failed: %d\n", __LINE__, result);
         return 1;
     }
-
 
     printf("Tests passed.\n");
 

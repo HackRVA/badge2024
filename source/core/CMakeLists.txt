@@ -12,6 +12,7 @@ target_sources(badge2022_c PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/xorshift.c
         )
 
+# Define a test executable for the off-target key-value storage test.
 add_executable(test_key_value_storage
         ${CMAKE_CURRENT_LIST_DIR}/key_value_storage_test.c
         ${CMAKE_CURRENT_LIST_DIR}/key_value_storage.c
