@@ -2,13 +2,10 @@
 // Created by Samuel Jones on 3/15/22.
 //
 
-
-#include "key_value_storage.h"
-#include "flash_storage.h"
-#include <stdint.h>
-#include <string.h>
-
 /**
+ * @file key_value_storage.c
+ * @brief Key-value storage module implementation.
+ *
  * This key-value storage module works under the following model of NOR flash:
  *
  * 1) Data can be read and written randomly.
@@ -49,6 +46,11 @@
  * between internal writes/erases, data isn't be corrupted or lost.
  */
 
+#include "key_value_storage.h"
+#include "flash_storage.h"
+#include <stdint.h>
+#include <string.h>
+
 /// This is a magic value that should be at the start of an initialized instance.
 const uint16_t KV_SECTOR_MAGIC = 0x6b76; // "kv"
 
@@ -74,20 +76,23 @@ const int KV_MAX_ENTRIES = 128;
 
 /// Sector states. Note that a sector begins in UNINIT state after erase, and
 /// can only progress down the enum until the next time it is erased.
-enum {
-    SECTOR_STATE_UNINIT = 0xFF,
-    SECTOR_STATE_ACTIVE = 0x7F,
-    SECTOR_STATE_INACTIVE = 0x3F,
-};
+typedef enum {
+    SECTOR_STATE_UNINIT = 0xFF,    /// Sector hasn't yet been set up.
+    SECTOR_STATE_ACTIVE = 0x7F,    /// Sector is set up and is currently being used.
+    SECTOR_STATE_INACTIVE = 0x3F,  /// Sector was used in the past, but has old data.
+} SECTOR_STATE;
 
-// 8 bytes
+/// 8 bytes of flash data that gets stored at the beginning of a storage instance.
 typedef struct {
+    /// set to KV_SECTOR_MAGIC as part of setup.
     uint16_t magic;
+    /// set to a SECTOR_STATE value.
     uint8_t  state;
+    /// Storage version number. New instances will be KV_STORAGE_VERSION.
     uint8_t  version;
+    /// Number of physical sectors in this storage instance.
     uint16_t num_sectors;
-    // Maximum number of entries allowed. This dictates the size of the
-    // entry table.
+    /// Maximum number of entries allowed. This dictates the size of the entry table.
     uint16_t num_entries;
 } STORAGE_HEADER;
 
@@ -102,46 +107,61 @@ enum {
     ENTRY_STATE_ALLOC = 0x7F,
     ENTRY_STATE_WRITTEN = 0x3F,
     ENTRY_STATE_DELETED = 0x1F,
-};
+} ENTRY_STATE;
 
-// 8 bytes
+/// 8 bytes of data corresponding to where entry data can be found.
 typedef struct {
+    /// set to an ENTRY_STATE value.
     uint8_t state;
+    /// Length of key string (not including null-termination).
     uint8_t key_len;
+    /// Length of value data.
     uint16_t value_len;
+    /// Physical offset of the key from the start of the instance.
     uint16_t key_offset;
+    /// Physical offset of teh value from the start of the instance.
     uint16_t value_offset;
 } ENTRY_HEADER;
 
+/// The sector number that is the start of the current instance.
 static int current_base_sector = -1;
+/// The number of entry records that are used.
 static int current_entries_used = 0;
+/// The start of the empty portion of the data area, where new data can be written.
 static int current_free_data_offset = 0;
+/// Header/status information for the currently active instance.
 static STORAGE_HEADER current_storage_header;
 
+/// returns true if we have space available for the requested size of data.
 static bool space_is_available(size_t size) {
     return (current_entries_used < current_storage_header.num_entries) &&
            (current_free_data_offset + size < (current_storage_header.num_sectors * FLASH_SECTOR_SIZE));
 }
 
+/// Load entry information from flash given the sector and location in the entry table.
 static void load_entry_header(ENTRY_HEADER *header, int sector, int entry_num) {
     flash_data_read(sector, sizeof(STORAGE_HEADER) + entry_num * sizeof(ENTRY_HEADER),
                     (uint8_t*)header, sizeof(ENTRY_HEADER));
 }
 
+/// Save entry information to flash at the provided sector and entry number.
 static void save_entry_header(ENTRY_HEADER *header, int sector, int entry_num) {
     flash_data_write(sector, sizeof(STORAGE_HEADER) + entry_num * sizeof(ENTRY_HEADER),
                     (uint8_t*)header, sizeof(ENTRY_HEADER));
 }
 
+/// Load the provided sector's header information.
 static bool load_storage_header(STORAGE_HEADER *header, int sector) {
     flash_data_read(sector, 0, (uint8_t*)header, sizeof(STORAGE_HEADER));
     return (header->magic == KV_SECTOR_MAGIC);
 }
 
-void save_storage_header(const STORAGE_HEADER *header, int sector) {
+/// Save header information to the provided sector.
+static void save_storage_header(const STORAGE_HEADER *header, int sector) {
     flash_data_write(sector, 0, (uint8_t*)header, sizeof(STORAGE_HEADER));
 }
 
+/// Find a key in the storage area. Returns true if it was found.
 static bool find_key(const char* key, ENTRY_HEADER *entry, int sector, int used_entries, int* index) {
 
     // Scan through entries to see if we have a match for this key.
@@ -245,8 +265,8 @@ static void move_and_clean(void) {
     current_base_sector = new_sector_base;
 }
 
-/// Load and check flash data, initializing RAM data from flash state. If there
-/// is no data on flash, set it up as new flash storage.
+// Load and check flash data, initializing RAM data from flash state. If there
+// is no data on flash, set it up as new flash storage.
 bool flash_kv_init(void) {
 
     STORAGE_HEADER header;
