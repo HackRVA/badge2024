@@ -1,10 +1,11 @@
 #include "achievements.h"
+#include "key_value_storage.h"
 
 static unsigned short achievements[ACHIEVEMENT_COUNT] = { 0 };
 
 static void save_achievements_to_flash(void)
 {
-	/* TODO: implement this. */
+    flash_kv_store_binary("achievements", &achievements, sizeof(achievements));
 }
 
 void maybe_load_achievements_from_flash(void)
@@ -14,7 +15,7 @@ void maybe_load_achievements_from_flash(void)
 	if (loaded_achievements_from_flash)
 		return;
 
-	/* TODO: implement this */
+    flash_kv_get_binary("achievements", &achievements, sizeof(achievements));
 
 	loaded_achievements_from_flash = 1;
 }

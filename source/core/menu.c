@@ -523,6 +523,7 @@ void rvasec_splash_cb(){
 
     if (wait == 0) {
         load_bar = 10;
+        S6B33_rect(0, 0, LCD_XSIZE, LCD_YSIZE);
         S6B33_color(0);
         FbSwapBuffers();
         led_pwm_enable(BADGE_LED_RGB_GREEN, 50 * 255/100);

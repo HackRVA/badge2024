@@ -6,6 +6,7 @@
 #include "button.h"
 #include "badge.h"
 #include "framebuffer.h"
+#include "key_value_storage.h"
 
 /* username is a global externally visible */
 #define NAMESIZE 10
@@ -15,30 +16,20 @@ char username[NAMESIZE] = { 0 };
  * in RAM to which the data should be stored. The user name is length
  * characters, not necessarily NULL terminated.
  */
-void restore_username_from_flash(char *uname, int length)
-{
-   int i;
-   for (i=0; i < length; i++)
-	username[i] = uname[i];
+void restore_username_from_flash(char *uname, int length) {
+    if (length > (int)sizeof(badge_system_data()->name)) {
+        length = sizeof(badge_system_data()->name);
+    }
+    memcpy(uname, badge_system_data()->name, length);
 }
 
 /* Restore username from flash.  uname is a pointer to the memory
  * in RAM to which the data should be stored. The user name is length
  * characters, not necessarily NULL terminated.
  */
-void save_username_to_flash(char *uname, int length)
-{
-   int i;
-   for (i=0; i < length; i++)
-	badge_system_data()->name[i] = uname[i];
-
-   /*
-	valuekey can be anything, buts its address is unique, so...
-	int flashWriteKeyValue(unsigned int valuekey, char *value, unsigned int valuelen);
-   */
-
-   // TODO Implement key value store
-   //flashWriteKeyValue((intptr_t)&G_sysData, (char *)&G_sysData, sizeof(struct sysData_t));
+void save_username_to_flash(char *uname, int length) {
+   memcpy(badge_system_data()->name, uname, length);
+   flash_kv_store_binary("sysdata", badge_system_data(), length);
 }
 
 #define INIT_APP_STATE 0

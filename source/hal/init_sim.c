@@ -13,6 +13,7 @@
 #include "button.h"
 #include "ir.h"
 #include "rtc.h"
+#include "flash_storage.h"
 
 #define UNUSED __attribute__((unused))
 
@@ -47,14 +48,14 @@ int hal_run_main(int (*main_func)(int, char**), int argc, char** argv) {
     pthread_t app_thread;
     pthread_create(&app_thread, NULL, main_in_thread, main_func);
 
+    // Should not return until GTK exits.
     hal_start_gtk(&argc, &argv);
 
-    // If we get here, GTK has exited
-    pthread_kill(app_thread, SIGKILL);
     return 0;
 }
 
 void hal_deinit(void) {
+    flash_deinit();
     printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
 }
 

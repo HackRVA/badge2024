@@ -17,10 +17,9 @@ extern struct menu_t rotate_m[];
 extern struct menu_t LEDlight_m[];
 extern struct menu_t buzzer_m[];
 extern struct menu_t screen_lock_m[];
-void screen_save_lock_cb(struct menu_t *h);
-void rotate_cb(struct menu_t *h);
-void setRotate(int yes);
-int getRotate(void);
+
+// Use badge system data to init settings menu position.
+void setup_settings_menus(void);
 
 
 #ifdef	__cplusplus

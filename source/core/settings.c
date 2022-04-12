@@ -7,9 +7,14 @@
 #include "delay.h"
 #include "led_pwm.h"
 #include "display_s6b33.h"
+#include "key_value_storage.h"
 
 #define PING_REQUEST      0x1000
 #define PING_RESPONSE     0x2000
+
+static void save_settings(void) {
+    flash_kv_store_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
+}
 
 void ping_cb(){
     static unsigned char num_pinged = 0;
@@ -101,7 +106,7 @@ void backlight_cb(__attribute__((unused)) struct menu_t *h) {
 
    badge_system_data()->backlight = selectedMenu->attrib & 0x1FF;
    led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, badge_system_data()->backlight);
-   //flashWriteKeyValue((unsigned int)&G_sysData, (char *)&G_sysData, sizeof(struct sysData_t));
+   save_settings();
 
    returnToMenus();
 }
@@ -124,41 +129,34 @@ struct menu_t backlight_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
 
-int getRotate(void)
-{
-	return S6B33_get_rotation();
-}
-
-void setRotate(int yes)
-{
-    S6B33_set_rotation(yes);
-}
-
 /*
    rotate screen
 */
 void rotate_cb(__attribute__((unused)) struct menu_t *h) {
-    unsigned char rotated=0;
     struct menu_t *selectedMenu;
     selectedMenu = getSelectedMenu();
 
-    rotated = selectedMenu->attrib & 0x1FF;
+    badge_system_data()->display_rotated = !badge_system_data()->display_rotated;
 
-    setRotate(rotated);
+    S6B33_set_rotation(badge_system_data()->display_rotated);
+    save_settings();
 
     returnToMenus();
 };
 
-extern void S6B33_set_display_mode_inverted(void);
-extern void S6B33_set_display_mode_noninverted(void);
-
 static void invert_cb(__attribute__((unused)) struct menu_t *h) {
-	static int inverted = 0;
-	inverted = !inverted;
-	if (inverted)
-		S6B33_set_display_mode_inverted();
-	else
-		S6B33_set_display_mode_noninverted();
+
+    SYSTEM_DATA *system_data = badge_system_data();
+    bool inverted = !system_data->display_inverted;
+    system_data->display_inverted = inverted;
+
+	if (inverted) {
+        S6B33_set_display_mode_inverted();
+    } else {
+        S6B33_set_display_mode_noninverted();
+    }
+
+    save_settings();
 	returnToMenus();
 }
 
@@ -182,33 +180,23 @@ void LEDlight_cb(__attribute__((unused)) struct menu_t *h) {
 
     strcpy(dstMenu->name, selectedMenu->name);
 
-    badge_system_data()->ledBrightness = selectedMenu->attrib & 0x7;
-    //flashWriteKeyValue((unsigned int)&G_sysData, (char *)&G_sysData, sizeof(struct sysData_t));
+    badge_system_data()->ledBrightness = selectedMenu->attrib & 0xFF;
+    led_pwm_set_scale(badge_system_data()->ledBrightness);
 
-    /* because of calcs done on pwm, 
-       have to reload the values for
-       it to take effect. because of division, 
-       info is lost in this process
-    */
-
-    // Sam: this used to point to set some global variables; perhaps this was config? TODO check this out.
-    led_pwm_enable(BADGE_LED_RGB_RED, 127);
-    led_pwm_enable(BADGE_LED_RGB_GREEN, 127);
-    led_pwm_enable(BADGE_LED_RGB_BLUE, 127);
-
+    save_settings();
     returnToMenus();
 }
 
 
 const struct menu_t LEDlightList_m[] = {
 //    {"       ", 7|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"      -", 6|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"     --", 5|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"    ---", 4|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"   ----", 3|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"  -----", 2|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {" ------", 1|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
-    {"-------", 0|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"      -", 0|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"     --", 30|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"    ---", 75|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"   ----", 100|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"  -----", 150|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {" ------", 200|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
+    {"-------", 255|VERT_ITEM, FUNCTION, {(struct menu_t *)LEDlight_cb} },
     {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL} },
 };
 
@@ -227,8 +215,8 @@ void buzzer_config_cb()
     strcpy(dstMenu->name, selectedMenu->name);
 
     badge_system_data()->mute = selectedMenu->attrib & 0x1; /* low order bits of attrib can store values */
-    //flashWriteKeyValue((unsigned int)&G_sysData, (char *)&G_sysData, sizeof(struct sysData_t));
 
+    save_settings();
     returnToMenus();
 }
 
@@ -246,18 +234,16 @@ struct menu_t buzzer_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
 
-extern unsigned char screen_save_lockout;
-extern unsigned char screensaver_inverted;
-
 void screen_save_lock_cb(__attribute__((unused)) struct menu_t *h) {
     struct menu_t *selectedMenu;
     selectedMenu = getSelectedMenu();
-    screen_save_lockout = selectedMenu->attrib & 0x1FF;
+    badge_system_data()->screensaver_disabled = selectedMenu->attrib & 0x1FF;
     returnToMenus(); 
 }
 
 void screen_save_invert_cb() {
-    screensaver_inverted = !screensaver_inverted;
+    SYSTEM_DATA *system_data = badge_system_data();
+    system_data->screensaver_inverted = !system_data->screensaver_inverted;
     returnToMenus();
 }
 
@@ -269,3 +255,30 @@ const struct menu_t screen_lock_m[] = {
 };
 
 
+
+void setup_settings_menus(void) {
+    SYSTEM_DATA *systemData = badge_system_data();
+
+    // Set up backlight brightness menu. Match the current setting to a menu option.
+    for (size_t i = 0; i < (sizeof(backlightList_m) / sizeof(backlightList_m[0])-1); i++) {
+        if (systemData->backlight <= (backlightList_m[i].attrib & 0xFF)) {
+            memcpy(backlight_m[0].name, backlightList_m[i].name, sizeof(backlight_m[0].name));
+            break;
+        }
+    }
+
+    // Set up LED brightness menu in a similar way.
+    for (size_t i = 0; i < (sizeof(LEDlightList_m) / sizeof(LEDlightList_m[0])-1); i++) {
+        if (systemData->ledBrightness <= (LEDlightList_m[i].attrib & 0xFF)) {
+            memcpy(LEDlight_m[0].name, LEDlightList_m[i].name, sizeof(LEDlight_m[0].name));
+            break;
+        }
+    }
+
+    // Set up buzzer on/off menu
+    if (systemData->mute) {
+        memcpy(buzzer_m[0].name, buzzer_config_m[1].name, sizeof(buzzer_m[0].name));
+    } else {
+        memcpy(buzzer_m[0].name, buzzer_config_m[0].name, sizeof(buzzer_m[0].name));
+    }
+}
