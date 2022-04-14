@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 3.12)
 
 # For simplicity of setup, just set defaults here. Can be overridden in IDE project settings or CLI
 set(PICO_SDK_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK from Git. Default on.")
+set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git. Default on.")
 set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
 
 if (${TARGET} STREQUAL "PICO")
     # Pull in SDK (must be before project).
     # Also does toolchain setup - configures us to use arm-none-eabi-gcc
     include(pico_sdk_import.cmake)
+    include(pico_extras_import.cmake)
 endif()
 
 project(badge2022_c C CXX ASM)
