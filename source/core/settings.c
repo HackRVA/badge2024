@@ -133,8 +133,6 @@ struct menu_t backlight_m[] = {
    rotate screen
 */
 void rotate_cb(__attribute__((unused)) struct menu_t *h) {
-    struct menu_t *selectedMenu;
-    selectedMenu = getSelectedMenu();
 
     badge_system_data()->display_rotated = !badge_system_data()->display_rotated;
 
