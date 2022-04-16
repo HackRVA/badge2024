@@ -31,7 +31,7 @@ SYSTEM_DATA G_sysData = {
 	.badgeId=0, 
 	.sekrits={ 0 }, 
 	.achievements={ 0 },
-	.ledBrightness=0,
+	.ledBrightness=255,
 	.backlight=255,
 	.mute=0
 };
