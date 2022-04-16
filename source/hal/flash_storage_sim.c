@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <errno.h>
 
 const char *flash_filename = "simulator_flash_storage.bin";
 static unsigned char flash_data[NUM_DATA_SECTORS][FLASH_SECTOR_SIZE];
@@ -20,6 +21,21 @@ void save_flash(void) {
         printf("error opening flash file to save: %s\n", flash_filename);
         return;
     }
+
+    const size_t flash_size = sizeof(flash_data);
+    size_t written_bytes = 0;
+    unsigned char *flash_addr =  (unsigned char*)flash_data;
+    while (written_bytes < flash_size) {
+        written_bytes += fwrite(flash_addr+written_bytes, 1, flash_size-written_bytes, f);
+
+        int error = ferror(f);
+        // EINTR is a transient error, and should be retried
+        if (error && error != EINTR) {
+            fprintf(stderr, "Error encountered while writing flash file: %s\n", strerror(error));
+            break;
+        }
+    }
+
     fwrite(flash_data, 1, sizeof(flash_data), f);
     fclose(f);
     printf("Saved flash data at %s\n", flash_filename);
@@ -32,10 +48,31 @@ static void load_flash(void) {
     if (!f) {
         return;
     }
-    size_t loaded = fread(flash_data, 1, sizeof(flash_data), f);
-    fclose(f);
 
-    printf("Loaded %zu bytes of flash data from %s\n", loaded, flash_filename);
+    const size_t desired_bytes = sizeof(flash_data);
+    size_t read_bytes = 0;
+    unsigned char *flash_addr = (unsigned char*)flash_data;
+    while (read_bytes < desired_bytes) {
+        read_bytes += fread(flash_addr+read_bytes, 1, desired_bytes-read_bytes, f);
+
+
+        int error = ferror(f);
+        // EINTR is a transient error, and should be retried
+        if (error && error != EINTR) {
+            fprintf(stderr, "Error encountered while reading flash file: %s\n", strerror(error));
+            break;
+        }
+
+        if (feof(f)) {
+            if (read_bytes < desired_bytes) {
+                printf("Flash file had %zu bytes, but wanted %zu bytes\n", read_bytes, desired_bytes);
+            }
+            break;
+        }
+    }
+
+    fclose(f);
+    printf("Loaded %zu bytes of flash data from %s\n", read_bytes, flash_filename);
 }
 
 size_t flash_data_read(uint8_t sector, uint16_t offset, uint8_t *buf, size_t len) {
