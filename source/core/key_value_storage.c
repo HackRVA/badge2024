@@ -394,8 +394,7 @@ bool flash_kv_store_string(const char *key, const char* value) {
 }
 
 bool flash_kv_store_int(const char* key, int value) {
-    size_t value_len = sizeof(int);
-    return flash_kv_store_binary(key, &value, value_len);
+    return flash_kv_store_binary(key, &value, sizeof(value));
 }
 
 bool flash_kv_delete(const char* key) {
