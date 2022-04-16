@@ -76,14 +76,14 @@ const int KV_MAX_ENTRIES = 128;
 
 /// Sector states. Note that a sector begins in UNINIT state after erase, and
 /// can only progress down the enum until the next time it is erased.
-typedef enum {
+enum SectorState {
     SECTOR_STATE_UNINIT = 0xFF,    /// Sector hasn't yet been set up.
     SECTOR_STATE_ACTIVE = 0x7F,    /// Sector is set up and is currently being used.
     SECTOR_STATE_INACTIVE = 0x3F,  /// Sector was used in the past, but has old data.
-} SECTOR_STATE;
+};
 
 /// 8 bytes of flash data that gets stored at the beginning of a storage instance.
-typedef struct {
+struct StorageHeader {
     /// set to KV_SECTOR_MAGIC as part of setup.
     uint16_t magic;
     /// set to a SECTOR_STATE value.
@@ -94,12 +94,12 @@ typedef struct {
     uint16_t num_sectors;
     /// Maximum number of entries allowed. This dictates the size of the entry table.
     uint16_t num_entries;
-} STORAGE_HEADER;
+};
 
 
 /// Entry states. Note that a sector begins in UNINIT state after erase, and
 /// can only progress down the enum until the next time it is erased.
-enum {
+enum EntryState {
     ENTRY_STATE_UNINIT = 0xFF,
     // Used to mark an entry as "currently being written". So in case of
     // reset or power failure, we detect this don't use the value, and don't
@@ -107,10 +107,10 @@ enum {
     ENTRY_STATE_ALLOC = 0x7F,
     ENTRY_STATE_WRITTEN = 0x3F,
     ENTRY_STATE_DELETED = 0x1F,
-} ENTRY_STATE;
+};
 
 /// 8 bytes of data corresponding to where entry data can be found.
-typedef struct {
+struct EntryHeader {
     /// set to an ENTRY_STATE value.
     uint8_t state;
     /// Length of key string (not including null-termination).
@@ -121,7 +121,7 @@ typedef struct {
     uint16_t key_offset;
     /// Physical offset of teh value from the start of the instance.
     uint16_t value_offset;
-} ENTRY_HEADER;
+};
 
 /// The sector number that is the start of the current instance.
 static int current_base_sector = -1;
@@ -130,7 +130,7 @@ static int current_entries_used = 0;
 /// The start of the empty portion of the data area, where new data can be written.
 static int current_free_data_offset = 0;
 /// Header/status information for the currently active instance.
-static STORAGE_HEADER current_storage_header;
+static struct StorageHeader current_storage_header;
 
 /// returns true if we have space available for the requested size of data.
 static bool space_is_available(size_t size) {
@@ -139,30 +139,30 @@ static bool space_is_available(size_t size) {
 }
 
 /// Load entry information from flash given the sector and location in the entry table.
-static void load_entry_header(ENTRY_HEADER *header, int sector, int entry_num) {
-    flash_data_read(sector, sizeof(STORAGE_HEADER) + entry_num * sizeof(ENTRY_HEADER),
-                    (uint8_t*)header, sizeof(ENTRY_HEADER));
+static void load_entry_header(struct EntryHeader *header, int sector, int entry_num) {
+    flash_data_read(sector, sizeof(struct StorageHeader) + entry_num * sizeof(struct EntryHeader),
+                    (uint8_t*)header, sizeof(struct EntryHeader));
 }
 
 /// Save entry information to flash at the provided sector and entry number.
-static void save_entry_header(ENTRY_HEADER *header, int sector, int entry_num) {
-    flash_data_write(sector, sizeof(STORAGE_HEADER) + entry_num * sizeof(ENTRY_HEADER),
-                    (uint8_t*)header, sizeof(ENTRY_HEADER));
+static void save_entry_header(struct EntryHeader *header, int sector, int entry_num) {
+    flash_data_write(sector, sizeof(struct StorageHeader) + entry_num * sizeof(struct EntryHeader),
+                    (uint8_t*)header, sizeof(struct EntryHeader));
 }
 
 /// Load the provided sector's header information.
-static bool load_storage_header(STORAGE_HEADER *header, int sector) {
-    flash_data_read(sector, 0, (uint8_t*)header, sizeof(STORAGE_HEADER));
+static bool load_storage_header(struct StorageHeader *header, int sector) {
+    flash_data_read(sector, 0, (uint8_t*)header, sizeof(struct StorageHeader));
     return (header->magic == KV_SECTOR_MAGIC);
 }
 
 /// Save header information to the provided sector.
-static void save_storage_header(const STORAGE_HEADER *header, int sector) {
-    flash_data_write(sector, 0, (uint8_t*)header, sizeof(STORAGE_HEADER));
+static void save_storage_header(const struct StorageHeader *header, int sector) {
+    flash_data_write(sector, 0, (uint8_t*)header, sizeof(struct StorageHeader));
 }
 
 /// Find a key in the storage area. Returns true if it was found.
-static bool find_key(const char* key, ENTRY_HEADER *entry, int sector, int used_entries, int* index) {
+static bool find_key(const char* key, struct EntryHeader *entry, int sector, int used_entries, int* index) {
 
     // Scan through entries to see if we have a match for this key.
     for (int i=used_entries-1; i>=0; i--) {
@@ -202,10 +202,10 @@ static void move_and_clean(void) {
     }
 
     int new_entries_used = 0;
-    int new_free_data_offset = sizeof(STORAGE_HEADER) + KV_MAX_ENTRIES * sizeof(ENTRY_HEADER);
+    int new_free_data_offset = sizeof(struct StorageHeader) + KV_MAX_ENTRIES * sizeof(struct EntryHeader);
 
     for (int i=current_entries_used; i>=0; i--) {
-        ENTRY_HEADER entry_header;
+        struct EntryHeader entry_header;
         load_entry_header(&entry_header, current_base_sector, i);
         if (entry_header.state == ENTRY_STATE_WRITTEN) {
             char key[MAX_KEY_LENGTH];
@@ -213,13 +213,13 @@ static void move_and_clean(void) {
             key[entry_header.key_len] = '\0';
 
             // Migrate if and only if key doesn't exist already in the new area.
-            ENTRY_HEADER dummy;
+            struct EntryHeader dummy;
             if (find_key(key, &dummy, new_sector_base, new_entries_used, NULL)) {
                 continue;
             }
 
             // Create new header
-            ENTRY_HEADER new_entry = {
+            struct EntryHeader new_entry = {
                 .key_len = entry_header.key_len,
                 .value_len = entry_header.value_len,
                 .key_offset = new_free_data_offset,
@@ -246,17 +246,17 @@ static void move_and_clean(void) {
     }
 
     // Finalize - mark new area as ready and invalidate old one
-    STORAGE_HEADER new_storage_header = {
+    struct StorageHeader new_storage_header = {
             .magic = KV_SECTOR_MAGIC,
             .state = SECTOR_STATE_ACTIVE,
             .version = 1,
             .num_entries = KV_MAX_ENTRIES,
             .num_sectors = KV_SECTORS_PER_INSTANCE,
     };
-    flash_data_write(new_sector_base, 0, (uint8_t*)&new_storage_header, sizeof(STORAGE_HEADER));
+    flash_data_write(new_sector_base, 0, (uint8_t*)&new_storage_header, sizeof(struct StorageHeader));
 
     current_storage_header.state = SECTOR_STATE_INACTIVE;
-    flash_data_write(current_base_sector, 0, (uint8_t*)&current_storage_header, sizeof(STORAGE_HEADER));
+    flash_data_write(current_base_sector, 0, (uint8_t*)&current_storage_header, sizeof(struct StorageHeader));
 
     // Update static variables to point to new data.
     current_storage_header = new_storage_header;
@@ -269,7 +269,7 @@ static void move_and_clean(void) {
 // is no data on flash, set it up as new flash storage.
 bool flash_kv_init(void) {
 
-    STORAGE_HEADER header;
+    struct StorageHeader header;
     bool found = false;
 
     for (int i=0; i<KV_INSTANCES*KV_SECTORS_PER_INSTANCE; i+=KV_SECTORS_PER_INSTANCE) {
@@ -283,7 +283,7 @@ bool flash_kv_init(void) {
             // Scan backward until we find used entry slots.
             current_entries_used = 0;
             current_free_data_offset = 0;
-            ENTRY_HEADER entry_header;
+            struct EntryHeader entry_header;
             for (int j=header.num_entries-1; j>=0; j--) {
 
                 load_entry_header(&entry_header, current_base_sector, j);
@@ -312,7 +312,7 @@ bool flash_kv_init(void) {
 
     // If we didn't find any entries, then we should start writing at the start of the data area
     if (!current_free_data_offset) {
-        current_free_data_offset = (int)(header.num_entries * sizeof(ENTRY_HEADER) + sizeof(STORAGE_HEADER));
+        current_free_data_offset = (int)(header.num_entries * sizeof(struct EntryHeader) + sizeof(struct StorageHeader));
     }
 
     return found;
@@ -331,7 +331,7 @@ bool flash_kv_clear(void) {
     save_storage_header(&current_storage_header, KV_BASE_SECTOR);
     current_base_sector = 0;
     current_entries_used = 0;
-    current_free_data_offset = sizeof(STORAGE_HEADER) + KV_MAX_ENTRIES * sizeof(ENTRY_HEADER);
+    current_free_data_offset = sizeof(struct StorageHeader) + KV_MAX_ENTRIES * sizeof(struct EntryHeader);
     return true;
 }
 
@@ -345,8 +345,8 @@ bool flash_kv_store_binary(const char *key, const void* value, size_t len) {
         return false;
     }
 
-    ENTRY_HEADER new;
-    ENTRY_HEADER existing; // need to see if there was old data so we can mark it as deleted.
+    struct EntryHeader new;
+    struct EntryHeader existing; // need to see if there was old data so we can mark it as deleted.
     int existing_index = -1;
     bool write_key = false;
     if (find_key(key, &existing, current_base_sector, current_entries_used, &existing_index)) {
@@ -399,7 +399,7 @@ bool flash_kv_store_int(const char* key, int value) {
 }
 
 bool flash_kv_delete(const char* key) {
-    ENTRY_HEADER entry_header;
+    struct EntryHeader entry_header;
     int index;
     if (find_key(key, &entry_header, current_base_sector, current_entries_used, &index)) {
         entry_header.state = ENTRY_STATE_DELETED;
@@ -413,7 +413,7 @@ size_t flash_kv_get_binary(const char* key, void* value, size_t max_len) {
     if (current_base_sector < KV_BASE_SECTOR) {
         return 0;
     }
-    ENTRY_HEADER entry;
+    struct EntryHeader entry;
     if (find_key(key, &entry, current_base_sector, current_entries_used, NULL)) {
         if (max_len >= entry.value_len) {
             max_len = entry.value_len;
