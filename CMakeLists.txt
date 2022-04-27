@@ -13,6 +13,7 @@ endif()
 project(badge2022_c C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
+enable_testing()
 
 # Initialize the SDK
 if (${TARGET} STREQUAL "PICO")
@@ -21,7 +22,6 @@ if (${TARGET} STREQUAL "PICO")
 elseif(${TARGET} STREQUAL "SIMULATOR")
     add_compile_definitions(TARGET_SIMULATOR)
 endif()
-
 
 add_compile_options(-Wall -Wextra)
 

@@ -76,6 +76,17 @@ or, if that's too hard to type or remember:
 After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
 program is called `build_sim/source/badge2022_c`, which you can run.
 
+## Off-Target Unit Tests
+
+Off-target unit tests are run using CTest (part of CMake). The `test_key_value_storage` executable provides a template
+that can be used.
+
+## Generating Documentation
+
+The code has doxygen-style comments that can be pulled out to an HTML site (or the other formats doxygen supports).
+To generate it locally, you'll need `doxygen` and `graphviz` to be installed in your local environment. Once you do,
+running `doxygen` in the `source` folder will create a folder called `docs` with the documentation output.
+
 ## Adding Your Own Apps
 
 Apps are mostly contained within a single .c/.h file in the apps folder. Take a look at the comments inside the
@@ -115,10 +126,12 @@ Here's a list of major functional blocks and their current availability in softw
 
 Basic Bringup:
 * Add audio driver
-* Enhance GPIO driver for rotary encoder
+* Port app how-to from old repository
+* Add IR to simulator
 
 Other Extensions:
-* Add a unit test framework
+* Add a unit test framework (perhaps for mocks?)
 * Add a Rust build?
 * MicroPython setup for badge hardware?
 * Improve documentation for beginners
+* GitHub Actions integration (build firmware/run tests/build docs)

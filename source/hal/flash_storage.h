@@ -44,4 +44,7 @@ void flash_erase(uint8_t page);
 /** @brief Wipe out the entire data region. */
 void flash_erase_all(void);
 
+/** @brief Finalize / commit any flash changes. */
+void flash_deinit(void);
+
 #endif //badge2022_c_FLASH_STORAGE_H

@@ -7,6 +7,8 @@
 #include "hardware/pwm.h"
 #include <stdio.h>
 
+static uint8_t scale = 0xFF;
+
 static const int _gpio_map[BADGE_LED_MAX] = {
     BADGE_GPIO_LED_RED,
     BADGE_GPIO_LED_GREEN,
@@ -30,6 +32,9 @@ void led_pwm_enable(BADGE_LED led, uint8_t duty) {
     if (BADGE_LED_DISPLAY_BACKLIGHT == led) {
         // LED backlight has opposite pin polarity (active high)
         duty = ~duty;
+    } else {
+        // 3 color LED - apply scale.
+        duty = (duty * scale) >> 8;
     }
 
     uint slice = pwm_gpio_to_slice_num(_gpio_map[led]);
@@ -77,4 +82,8 @@ void led_pwm_disable(BADGE_LED led) {
         pwm_set_enabled(slice, false);
     }
 
+}
+
+void led_pwm_set_scale(uint8_t new_scale) {
+    scale = new_scale;
 }

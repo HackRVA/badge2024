@@ -8,6 +8,7 @@
 
 int lcd_brightness = 255;
 GdkColor led_color;
+static uint8_t scale = 255;
 
 void led_pwm_init_gpio() {
 
@@ -16,13 +17,14 @@ void led_pwm_init_gpio() {
 void led_pwm_enable(BADGE_LED led, uint8_t duty) {
     switch(led) {
         case BADGE_LED_RGB_BLUE:
-            led_color.blue = duty * 256;
+            // Max RGB values are 16-bit in the simulator
+            led_color.blue = duty * scale;
             break;
         case BADGE_LED_RGB_GREEN:
-            led_color.green = duty * 256;
+            led_color.green = duty * scale;
             break;
         case BADGE_LED_RGB_RED:
-            led_color.red = duty * 256;
+            led_color.red = duty * scale;
             break;
         case BADGE_LED_DISPLAY_BACKLIGHT:
             lcd_brightness = duty;
@@ -49,4 +51,9 @@ void led_pwm_disable(BADGE_LED led) {
         default:
             break;
     }
+}
+
+
+void led_pwm_set_scale(uint8_t new_scale) {
+    scale = new_scale;
 }
