@@ -53,6 +53,10 @@ Pico will boot your new firmware immediately.
 
 You can use Ninja, if you like, as well. \(Specify `-G Ninja` instead of Makefiles in the `cmake` command.\)
 
+If using VS Code with CMake Tools, you be able to use the Pico Variant (alongside the Kit for
+your the ARM GCC cross compiler, which you will need to install and make sure CMake Tools detects it). 
+Make sure to pick both the Kit and Variant that correspond with each other!
+
 ## Building the Simulator
 
 The simulator is intended to run on a Posix-y (that is, Linux or Mac) environment. Windows can build and run it, but
@@ -72,6 +76,9 @@ or, if that's too hard to type or remember:
 
 After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
 program is called `build_sim/source/badge2022_c`, which you can run.
+
+If using VS Code with CMake Tools, you be able to use the Simulator Variant (alongside the Kit for
+your local computer's compiler). Make sure to pick both the Kit and Variant that correspond with each other!
 
 ## Adding Your Own Apps
 
