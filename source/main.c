@@ -19,6 +19,11 @@
 #include "delay.h"
 #include "init.h"
 
+#include "pico/sleep.h"
+#include "hardware/clocks.h"
+#include "hardware/rosc.h"
+#include "hardware/structs/scb.h"
+
 int exit_process(__attribute__((unused)) char *args) {
     return -1;
 }
@@ -45,6 +50,22 @@ CLI_COMMAND help_command = {
     .help = "Prints out the list of commands.",
     .process = help_process,
 };
+
+void recover_from_sleep(uint scb_orig, uint clock0_orig, uint clock1_orig){
+
+    //Re-enable ring Oscillator control
+    rosc_write(&rosc_hw->ctrl, ROSC_CTRL_ENABLE_BITS);
+
+    //reset procs back to default
+    scb_hw->scr = scb_orig;
+    clocks_hw->sleep_en0 = clock0_orig;
+    clocks_hw->sleep_en1 = clock1_orig;
+
+    //reset clocks
+    clocks_init();
+
+    return;
+}
 
 int badge_main(__attribute__((unused)) int argc, __attribute__((unused)) char** argv) {
 
@@ -85,7 +106,21 @@ int badge_main(__attribute__((unused)) int argc, __attribute__((unused)) char** 
         }
 
         frame_time = frame_period_us + frame_time;
-        sleep_us(frame_time - current_time);
+
+        //save values for later
+        uint scb_orig = scb_hw->scr;
+        uint clock0_orig = clocks_hw->sleep_en0;
+        uint clock1_orig = clocks_hw->sleep_en1;
+
+        if (!usb_is_connected()) {
+            //sleep_run_from_xosc();
+            sleep_us(frame_time - current_time);
+            //recover_from_sleep(scb_orig, clock0_orig, clock1_orig);
+        }
+
+        else {
+            sleep_us(frame_time - current_time);
+        }
     }
 
     return 0;
