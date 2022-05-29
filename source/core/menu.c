@@ -45,7 +45,7 @@ extern const struct menu_t schedule_m[];
 
 #define NOTEDUR 100
 
-//#define QC
+#define QC
 
 #ifdef QC
  void (*runningApp)() = QC_cb;

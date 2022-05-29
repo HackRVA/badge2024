@@ -7,6 +7,7 @@
 #include "nec_receive.h"
 #include "pinout_rp2040.h"
 #include "hardware/irq.h"
+#include "delay.h"
 
 #define IR_MAX_HANDLERS_PER_ID (3)
 
@@ -166,13 +167,17 @@ bool ir_transmitting(void) {
 }
 
 static void ir_send_start_packet(const IR_DATA *data) {
+
     uint16_t packet_data = START_BIT;
     packet_data |= (data->recipient_address << START_RECIPIENT_ADDRESS_SHIFT) & START_RECIPIENT_ADDRESS_MASK;
     packet_data |= (data->app_address) & START_APP_ID_MASK;
     pio_sm_put_blocking(IR_PIO, tx_sm, get_raw_nec_data(packet_data));
+
 }
 
 static void ir_send_data_packet(const IR_DATA *data, int index) {
+
+
     uint16_t packet_data = 0;
     if (index < data->data_length-1) {
         // More data coming
@@ -181,10 +186,16 @@ static void ir_send_data_packet(const IR_DATA *data, int index) {
     packet_data |= (index << DATA_SEQUENCE_NUM_SHIFT) & DATA_SEQUENCE_NUM_MASK;
     packet_data |= (data->data[index]);
     pio_sm_put_blocking(IR_PIO, tx_sm, get_raw_nec_data(packet_data));
+
 }
 
 void ir_send_complete_message(const IR_DATA *data) {
 
+    irq_set_enabled(PIO0_IRQ_1, false);
+    enum pio_interrupt_source irq_source = pis_sm0_rx_fifo_not_empty + rx_sm;
+    pio_set_irq1_source_enabled(IR_PIO, irq_source, false);
+    // Pause receive while transmitting
+    pio_sm_set_enabled(IR_PIO, rx_sm, false);
     // not sure why, but sometimes the first packet received after idle time is basically garbage. Sending something
     // we can discard helps
     pio_sm_put_blocking(IR_PIO, tx_sm, 0xa55aa55a);
@@ -193,6 +204,17 @@ void ir_send_complete_message(const IR_DATA *data) {
     for (int i=0; i<data->data_length; i++) {
         ir_send_data_packet(data, i);
     }
+
+    // todo: do this perhaps instead on a FIFO empty interrupt?
+    while (ir_transmitting()) {
+        sleep_ms(1);
+    }
+    sleep_ms(200);
+
+    pio_sm_clear_fifos(IR_PIO, rx_sm);
+    irq_set_enabled(PIO0_IRQ_1, true);
+    pio_set_irq1_source_enabled(IR_PIO, irq_source, true);
+    pio_sm_set_enabled(IR_PIO, rx_sm, true);
 }
 
 uint8_t ir_send_partial_message(const IR_DATA *data, uint8_t starting_sequence_num) {

@@ -5,6 +5,7 @@
 #include "menu.h"
 #include "audio.h"
 #include "led_pwm.h"
+#include "delay.h"
 
 // TODO write an IR callback that sets this variable!
 unsigned char QC_IR;
@@ -13,6 +14,11 @@ enum {
     INIT,
     RUN
 };
+
+void ir_callback(const IR_DATA * ir_data) {
+    QC_IR = ir_data->data[0];
+}
+
 
 static void led(int red, int green, int blue) {
     led_pwm_enable(BADGE_LED_RGB_RED, red*255/100);
@@ -57,6 +63,7 @@ void QC_cb()
 //            redraw = 1;
 //        }
         case INIT:
+            ir_add_callback(ir_callback, IR_APP0);
             FbTransparentIndex(0);
             FbColor(GREEN);
             FbClear();
@@ -75,7 +82,7 @@ void QC_cb()
         case RUN:
             // Received a QC ping
             if(QC_IR == 1){
-                audio_out_beep(800, 400);
+                audio_out_beep(698 * 2, 400);
                 FbMove(10, 40);
                 FbColor(GREEN);
                 //FbFilledRectangle(20, 20);
@@ -88,7 +95,7 @@ void QC_cb()
             }
                 // Received a QC ping
             else if(QC_IR == 2){
-                audio_out_beep(600, 200);
+                audio_out_beep(698 * 4, 200);
                 FbMove(10, 50);
                 FbColor(YELLOW);
                 //FbFilledRectangle(20, 20);
@@ -119,9 +126,13 @@ void QC_cb()
                 redraw = 1;
             }
 
-            if(button_hold_count > 200){
+            if(button_hold_count > 20){
+
+                ir_remove_callback(ir_callback, IR_APP0);
+                QC_state = INIT;
                 FbMove(16, 26);
                 FbWriteLine("EXITING");
+                sleep_ms(1000);
                 FbSwapBuffers();
                 led(0,0,0);
                 QC_state = 0;
@@ -154,6 +165,13 @@ void QC_cb()
                 audio_out_beep(932, 100);
                 //print_to_com1("RIGHT");
                 redraw = 1;
+            }
+
+            int rotation = button_get_rotation();
+            if (rotation < 0) {
+                audio_out_beep(440, 100);
+            } else if (rotation > 0) {
+                audio_out_beep(880, 100);
             }
 
             if(redraw){
