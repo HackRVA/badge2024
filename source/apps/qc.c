@@ -3,7 +3,7 @@
 #include "colors.h"
 #include "framebuffer.h"
 #include "menu.h"
-#include "audio_output.h"
+#include "audio.h"
 #include "led_pwm.h"
 
 // TODO write an IR callback that sets this variable!
@@ -75,7 +75,7 @@ void QC_cb()
         case RUN:
             // Received a QC ping
             if(QC_IR == 1){
-                audio_set_note(80, 4096);
+                audio_out_beep(800, 400);
                 FbMove(10, 40);
                 FbColor(GREEN);
                 //FbFilledRectangle(20, 20);
@@ -88,7 +88,7 @@ void QC_cb()
             }
                 // Received a QC ping
             else if(QC_IR == 2){
-                audio_set_note(60, 2048);
+                audio_out_beep(600, 200);
                 FbMove(10, 50);
                 FbColor(YELLOW);
                 //FbFilledRectangle(20, 20);
@@ -102,7 +102,7 @@ void QC_cb()
             if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)){
                 data = 1;
                 ir_send_complete_message(&ir_packet);
-                audio_set_note(50, 1024);
+                audio_out_beep(698, 100);
                 FbMove(16, 16);
                 FbWriteLine("BTN");
                 led(LED_LVL, 0, LED_LVL);
@@ -113,7 +113,7 @@ void QC_cb()
             if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)){
                 FbMove(16, 16);
                 FbWriteLine("DOWN");
-                audio_set_note(55, 1024);
+                audio_out_beep(740, 100);
                 led(0, LED_LVL, 0);
                 //print_to_com1("DOWN\n\r");
                 redraw = 1;
@@ -132,7 +132,7 @@ void QC_cb()
             if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)){
                 FbMove(16, 16);
                 FbWriteLine("UP");
-                audio_set_note(60, 1024);
+                audio_out_beep(1046, 100);
                 led(LED_LVL, LED_LVL, LED_LVL);
                 //print_to_com1("UP\n\r");
                 redraw = 1;
@@ -141,7 +141,7 @@ void QC_cb()
             if(BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)){
                 FbMove(16, 16);
                 FbWriteLine("LEFT");
-                audio_set_note(45, 1024);
+                audio_out_beep(784, 100);
                 led(LED_LVL, 0, 0);
                 //print_to_com1("LEFT\n\r");
                 redraw = 1;
@@ -151,7 +151,7 @@ void QC_cb()
                 FbMove(16, 16);
                 FbWriteLine("RIGHT");
                 led(0, 0, LED_LVL);
-                audio_set_note(20, 1024);
+                audio_out_beep(932, 100);
                 //print_to_com1("RIGHT");
                 redraw = 1;
             }

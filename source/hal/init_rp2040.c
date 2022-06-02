@@ -14,6 +14,7 @@
 #include "button.h"
 #include "ir.h"
 #include "rtc.h"
+#include "audio.h"
 
 _Noreturn void core1_procedure(void) {
     // For now, nothing for core 1 to do except allow lockout and sleep forever.
@@ -30,31 +31,7 @@ static void _init_gpios(void) {
     S6B33_init_gpio();
     led_pwm_init_gpio();
     button_init_gpio();
-
-    gpio_init(BADGE_GPIO_AUDIO_INPUT);
-    gpio_init(BADGE_GPIO_AUDIO_PWM);
-    gpio_init(BADGE_GPIO_AUDIO_STANDBY);
-
-    // audio standby should be always driven, start off
-    gpio_set_dir(BADGE_GPIO_AUDIO_STANDBY, true);
-    gpio_put(BADGE_GPIO_AUDIO_STANDBY, 0);
-
-    // Temporary test of audio output
-    gpio_put(BADGE_GPIO_AUDIO_STANDBY, 1);
-    uint slice = pwm_gpio_to_slice_num(BADGE_GPIO_AUDIO_PWM);
-    uint channel = pwm_gpio_to_channel(BADGE_GPIO_AUDIO_PWM);
-
-    gpio_set_function(BADGE_GPIO_AUDIO_PWM, GPIO_FUNC_PWM);
-    pwm_set_enabled(slice, false);
-    pwm_set_clkdiv_mode(slice, PWM_DIV_FREE_RUNNING);
-    pwm_set_clkdiv(slice, 200.0f);
-    pwm_set_wrap(slice, 650);
-    pwm_set_chan_level(slice, channel, 325);
-    pwm_set_enabled(slice, true);
-    sleep_ms(1000);
-    pwm_set_enabled(slice, 0);
-    gpio_put(BADGE_GPIO_AUDIO_STANDBY, 0);
-
+    audio_init_gpio();
 }
 
 void hal_init(void) {
@@ -65,6 +42,7 @@ void hal_init(void) {
     ir_init();
     S6B33_reset();
     rtc_init_badge(0);
+    audio_init();
 
     // allow suspend from other core, if we have it run something that needs to do that
     multicore_lockout_victim_init();

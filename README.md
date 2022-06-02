@@ -25,8 +25,30 @@ This may be available in your package manager, or [here](https://developer.arm.c
 If downloaded from the ARM site, you will need to take steps to add it to your `$PATH` or equivalent environment
 variable. (If it works, when you open a new terminal window, the `arm-none-eabi-gcc` program can be run).
 
-There are various editor plugins you can add to better support CMake ([example](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cmake-tools)),
-but running just from CLI, you can run:
+### Visual Studio Code Setup
+
+There are various editors and plugins you can add to better support CMake. A common setup is using Visual Studio Code
+with its CMake Tools plugin. (When you open the project folder with VS Code, it will suggest installing this plugin
+automatically, which you should do.)
+
+CMake Tools has a couple of additional concepts: Kits that define compilers it can find, 
+and Variants that define build parameters. If you've installed the ARM Embedded GCC compiler, 
+the plugin should be able to scan for kits and automatically find your cross-compiler (you'll see one named `arm-none-eabi`).
+
+If using VS Code with CMake Tools, you'll be able to use the Pico Variant (alongside the Kit for
+the embedded compiler). Make sure to pick both the Kit and Variant that correspond with each other! 
+To switch Variants, you can click on the information icon in the blue bar the bottom of the VS code window. 
+To switch Kits, you can click on the wrench icon in the same bar. 
+Find more information on CMake Tools [here](https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md)
+
+You will likely want to change the target from `[all]` in the same bar at the bottom to `[badge2022_c]`.
+
+The build folder will be named `build-pico` if using the VS Code variants.
+
+
+### Command Line Build
+
+If not using an IDE or VS code, you can use the following command to set up the build:
 
 `cmake -S . -B build/ -G "Unix Makefiles"`
 
@@ -64,6 +86,16 @@ using Windows Subsystem for Linux if your Linux subsystem has a desktop environm
 But to build the simulator, you will need a C compiler for your computer, in addition to GTK2. The best way to install
 GTK2 is probably through a package manager.
 
+### Visual Studio Code Setup
+
+If you're using VS Code with CMake Tools, you should be able to pick the Simulator Variant (alongside the Kit for
+your local computer's compiler to build the simluator). Make sure to pick both the Kit and Variant that correspond 
+ with each other!
+
+The build folder will be named `build-simulator` if using the VS Code variants.
+
+### Command Line Build
+
 In a similar way to the hardware target, you can generate makefiles via CMake. Note that to make the simulator, there is
 an extra flag that gets passed in:
 
@@ -75,6 +107,7 @@ or, if that's too hard to type or remember:
 
 After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
 program is called `build_sim/source/badge2022_c`, which you can run.
+
 
 ## Off-Target Unit Tests
 

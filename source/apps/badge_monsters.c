@@ -17,7 +17,7 @@ Dustin Firebaugh <dafirebaugh@gmail.com>
 #include "button.h"
 #include "ir.h"
 #include "framebuffer.h"
-#include "audio_output.h"
+#include "audio.h"
 #include "menu.h"
 #include "badge.h"
 #include "init.h"
@@ -207,7 +207,7 @@ static void enable_monster(int monster_id)
         return;
 
     monsters[monster_id].status = 1;
-    audio_set_note(90, 4000);
+    audio_out_beep(900, 200);
     #ifdef __linux__
         printf("enabling monster: %d\n", monster_id);
     #endif
@@ -416,7 +416,7 @@ static void trade_monsters(void)
 	if ((counter % 10) == 0) { /* transmit our monster IR packet */
 		build_and_send_packet(BADGE_IR_GAME_ADDRESS, BADGE_IR_BROADCAST_ID,
 			(OPCODE_XMIT_MONSTER << 12) | (initial_mon & 0x01ff));
-	    audio_set_note(50, 100);
+	    audio_out_beep(500, 100);
 	}
 	if (!trading_monsters_enabled) {
 		FbClear();

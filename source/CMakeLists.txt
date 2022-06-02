@@ -12,6 +12,7 @@ if (${TARGET} STREQUAL "PICO")
     target_link_libraries(badge2022_c
             pico_stdlib
             pico_multicore
+            hardware_adc
             hardware_dma
             hardware_flash
             hardware_pio
