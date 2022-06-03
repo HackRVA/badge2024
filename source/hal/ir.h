@@ -70,6 +70,7 @@ bool ir_add_callback(ir_data_callback data_cb, IR_APP_ID app_id);
 bool ir_remove_callback(ir_data_callback data_cb, IR_APP_ID app_id);
 
 bool ir_transmitting(void);
+bool ir_listening(void);
 
 // Note that sending > 3 data bytes at the start will block; to prevent this, use ir_send_partial message and check the
 // return value to see how far it got.

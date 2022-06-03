@@ -189,6 +189,10 @@ uint64_t ProcessIO(void)
     
     if(dormant() && !is_dormant && !screen_save_lockout) {
         is_dormant = 1;
+        // Turn off LED to allow sleep modes
+        led_pwm_disable(BADGE_LED_RGB_RED);
+        led_pwm_disable(BADGE_LED_RGB_BLUE);
+        led_pwm_disable(BADGE_LED_RGB_GREEN);
         FbClear();
         FbColor(BLACK);
         FbSwapBuffers();

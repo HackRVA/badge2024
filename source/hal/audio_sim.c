@@ -2,6 +2,8 @@
 // Created by Samuel Jones on 2/21/22.
 //
 
+#include <stdint.h>
+#include <stdbool.h>
 #include "audio.h"
 
 void audio_init_gpio()
@@ -21,5 +23,5 @@ int audio_out_beep(uint16_t freq, uint16_t duration)
 
 void audio_stby_ctl(bool enabled)
 {
-    return 0;
+    return;
 }

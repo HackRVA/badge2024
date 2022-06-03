@@ -44,4 +44,7 @@ void button_reset_last_input_timestamp(void);
 // Positive indicates CW, negative indicates CCW.
 int button_get_rotation(void);
 
+/** @brief Signal if we're busy debouncing a button input. */
+bool button_debouncing(void);
+
 #endif //BADGE2022_C_BUTTON_H

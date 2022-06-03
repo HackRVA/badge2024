@@ -33,6 +33,8 @@
 
 static unsigned slice;
 static unsigned chan;
+static volatile bool audio_running = false;
+
 static enum audio_out_mode_ {
     AUDIO_OUT_MODE_OFF = 0,
     AUDIO_OUT_MODE_BEEP,
@@ -174,9 +176,11 @@ static int64_t audio_out_beep_alarm(__attribute__((unused)) alarm_id_t id,
     {
         return 0;
     }
-    
+
+    audio_out_mode = AUDIO_OUT_MODE_OFF;
     pwm_set_enabled(slice, false);
     audio_stby_ctl(true);
+    audio_running = false;
 
     return 0;
 }
@@ -196,6 +200,7 @@ int audio_out_beep(uint16_t freqHz, uint16_t durMs)
     {
         alarm_pool_cancel_alarm(alarm_pool_get_default(), prev_alarm);
     }
+    audio_running = true;
     audio_out_mode = AUDIO_OUT_MODE_BEEP;
     audio_stby_ctl(false);
     pwm_set_enabled(slice, false);
@@ -209,6 +214,10 @@ int audio_out_beep(uint16_t freqHz, uint16_t durMs)
                                             NULL,
                                             true);
     return 0;
+}
+
+bool audio_is_playing(void) {
+    return audio_running;
 }
 
 /*! @} */ // BADGE2022_AUDIO
