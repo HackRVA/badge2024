@@ -17,6 +17,7 @@ extern struct menu_t rotate_m[];
 extern struct menu_t LEDlight_m[];
 extern struct menu_t buzzer_m[];
 extern struct menu_t screen_lock_m[];
+extern struct menu_t myBadgeid_m[];
 
 // Use badge system data to init settings menu position.
 void setup_settings_menus(void);
