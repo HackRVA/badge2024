@@ -128,9 +128,37 @@ void FbImage(const struct asset* asset, unsigned char seqNum)
             FbImage8bit(asset, seqNum);
             break;
 
+        case PICTURE16BIT:
+            FbImage16bit(asset, seqNum);
+            break;
         default:
             break;
     }
+}
+
+void FbImage16bit(const struct asset* asset, unsigned char seqNum) {
+
+    unsigned char y, yEnd, x;
+    unsigned short *pixdata;
+    unsigned short pixel;
+
+    /* clip to end of LCD buffer */
+    yEnd = G_Fb.pos.y + asset->y;
+    if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
+
+    for (y = G_Fb.pos.y; y < yEnd; y++) {
+        pixdata = (unsigned short*) &(asset->pixdata[ (y - G_Fb.pos.y) * asset->x * 2 + seqNum * asset->x * asset->y * 2]);
+
+        for (x = 0; x < asset->x; x++) {
+            if ((x + G_Fb.pos.x) >= LCD_XSIZE) continue; /* clip x */
+            pixel = *pixdata; /* 1 pixel per byte */
+            fb_mark_row_changed(x + G_Fb.pos.x, y);
+            BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            pixdata++;
+        }
+    }
+    G_Fb.changed = 1;
+
 }
 
 void FbImage8bit(const struct asset* asset, unsigned char seqNum)

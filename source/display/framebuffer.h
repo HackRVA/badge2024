@@ -70,6 +70,7 @@ void FbWriteString(const char *string);
 void FbRectangle(unsigned char width, unsigned char height);
 
 void FbImage(const struct asset* asset, unsigned char seqNum);
+void FbImage16bit(const struct asset* asset, unsigned char seqNum);
 void FbImage8bit(const struct asset* asset, unsigned char seqNum);
 void FbImage4bit(const struct asset* asset, unsigned char seqNum);
 void FbImage2bit(const struct asset* asset, unsigned char seqNum);
