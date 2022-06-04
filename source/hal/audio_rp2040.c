@@ -23,6 +23,7 @@
 #include <hardware/clocks.h>
 
 #include "pinout_rp2040.h"
+#include "badge.h"
 
 #include "audio.h"
 
@@ -155,7 +156,7 @@ void audio_init()
 void audio_stby_ctl(bool enable)
 {
     /* Always take the opamp out of standby if requested */
-    if (!enable)
+    if (!enable && !badge_system_data()->mute)
     {
         gpio_set_dir(BADGE_GPIO_AUDIO_STANDBY, false);
     }
