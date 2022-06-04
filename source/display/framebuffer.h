@@ -1,6 +1,8 @@
 #ifndef fb_h
 #define fb_h
 
+#include "assetList.h"
+
 /*
    Frame buffer
 */
@@ -67,11 +69,11 @@ void FbWriteLine(const char *string);
 void FbWriteString(const char *string);
 void FbRectangle(unsigned char width, unsigned char height);
 
-void FbImage(unsigned char assetId, unsigned char seqNum);
-void FbImage8bit(unsigned char assetId, unsigned char seqNum);
-void FbImage4bit(unsigned char assetId, unsigned char seqNum);
-void FbImage2bit(unsigned char assetId, unsigned char seqNum);
-void FbImage1bit(unsigned char assetId, unsigned char seqNum);
+void FbImage(const struct asset* asset, unsigned char seqNum);
+void FbImage8bit(const struct asset* asset, unsigned char seqNum);
+void FbImage4bit(const struct asset* asset, unsigned char seqNum);
+void FbImage2bit(const struct asset* asset, unsigned char seqNum);
+void FbImage1bit(const struct asset* asset, unsigned char seqNum);
 /* FbDrawObject() draws an object at x, y.  The coordinates of drawing[] should be centered at
  * (0, 0).  The coordinates in drawing[] are multiplied by scale, then divided by 1024 (via a shift)
  * so for 1:1 size, use scale of 1024.  Smaller values will scale the object down. This is different

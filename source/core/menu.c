@@ -535,7 +535,7 @@ void rvasec_splash_cb(){
         //PowerSaveIdle();
     } else if(wait < 80){
         FbMove(0, 2);
-        FbImage2bit(RVASEC2016, 0);
+        FbImage2bit(&assetList[RVASEC2016], 0);
         FbMove(10,SPLASH_SHIFT_DOWN);
 
         FbColor(WHITE);
@@ -560,7 +560,7 @@ void rvasec_splash_cb(){
 
     } else if(wait <160){
         FbMove(0, 2);
-        FbImage2bit(RVASEC2016, 0);
+        FbImage2bit(&assetList[RVASEC2016], 0);
         FbMove(10,SPLASH_SHIFT_DOWN);
         FbColor(GREEN);
         FbLine(0,60,132,60);
