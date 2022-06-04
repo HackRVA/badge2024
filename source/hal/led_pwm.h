@@ -22,6 +22,7 @@ void led_pwm_enable(BADGE_LED led, uint8_t duty);
 
 void led_pwm_disable(BADGE_LED led);
 
+/** @brief Tell us if the provided LED is on. */
 bool led_pwm_is_on(BADGE_LED led);
 
 // Sets LED scaling (range 0-255) on the 3-color LED.

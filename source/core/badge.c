@@ -71,7 +71,7 @@ void UserInit(void)
 // dormant returns 1 if touch/buttons are dormant for 2 minutes, otherwise returns 0
 unsigned char dormant(void) {
     uint32_t timestamp = (uint32_t)rtc_get_ms_since_boot();
-    if (timestamp >= (button_last_input_timestamp() + 1000 * 120)){
+    if (timestamp >= (button_last_input_timestamp() + 1000 * 2 * 60)){
         if(!ir_messages_seen(false)){
             return 1;
         }

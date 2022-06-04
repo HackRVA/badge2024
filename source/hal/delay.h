@@ -11,7 +11,11 @@ void sleep_ms(uint32_t time);
 
 void sleep_us(uint64_t time);
 
-// Wrapper to disable/re-enable clocks when not being used.
+/**
+ * Go to sleep for the provided time, using lower power sleep modes and clocks as
+ * appropriate.
+ */
 void lp_sleep_us(uint64_t time);
+
 
 #endif //badge2022_c_DELAY_H

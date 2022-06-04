@@ -72,7 +72,7 @@ int S6B33_get_rotation(void);
 void S6B33_set_rotation(int yes);
 void S6B33_color(unsigned short pixel);
 
-/** Signal if we're busy sending data to the display */
+/** @brief Tell us if we're busy sending data to the display */
 bool S6B33_busy(void);
 
 #endif //BADGE2022_C_DISPLAY_SB633_H
