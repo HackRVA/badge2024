@@ -1,0 +1,23 @@
+      
+target:
+  default: pico
+  choices:
+    pico:
+      short: Badge HW
+      long: Build badge firmware.
+      settings:
+        TARGET: PICO
+        CMAKE_BINARY_DIR: build
+    simulator:
+      short: Badge Simulator
+      long: Build local badge simulator.
+      settings:
+        TARGET: SIMULATOR
+        CMAKE_BINARY_DIR: ./build_sim/
+buildType:
+  default: debug
+  choices:
+    debug:
+      short: Debug
+      long: Build with debugging information
+      buildType: Debug
