@@ -48,7 +48,7 @@ void FbInit() {
     G_Fb.color = 255;
     G_Fb.BGcolor = 0;
     G_Fb.transMask = 0;
-    G_Fb.transIndex = 0;
+    G_Fb.transIndex = 255;
     G_Fb.changed = 0;
 }
 
