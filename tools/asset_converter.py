@@ -98,9 +98,13 @@ for asset in image_yaml["images"]:
     image_path = input_path.joinpath(asset["filename"])
 
     with Image.open(image_path) as im:
-        # we don't have alpha on the image renderer, so eliminate that from the image
-        rgb_image = Image.new("RGB", im.size, (255, 255, 255))
-        rgb_image.paste(im, mask=im.split()[3])  # 3 is the alpha channel
+
+        if len(im.split()) > 3:
+            # we don't have alpha on the image renderer, so eliminate that from the image
+            rgb_image = Image.new("RGB", im.size, (255, 255, 255))
+            rgb_image.paste(im, mask=im.split()[3])  # 3 is the alpha channel
+        else:
+            rgb_image = im
 
         palette_image = None
         if asset["bits"] in (1, 2, 4, 8):
