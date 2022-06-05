@@ -44,7 +44,7 @@ void lp_sleep_us(uint64_t us_to_sleep) {
     uint64_t time_at_call = rtc_get_us_since_boot();
 
     if (usb_is_connected()) {
-        // No need to go low power, and it disabling clocks with USB connected
+        // No need to go low power, and disabling clocks with USB connected
         // is probably a bad idea anyway
         sleep_us(us_to_sleep);
         return;
