@@ -111,6 +111,9 @@ void FbBackgroundColor(unsigned short color)
 
 void FbImage(const struct asset* asset, unsigned char seqNum)
 {
+    // 1 bit images use the current color and bgcolor to draw.
+    // 2, 4, and 8 bit images use the color map in the asset (using transparent index as appropriate).
+    // 16 bit images just use the raw values.
     switch (asset->type) {
         case PICTURE1BIT:
             FbImage1bit(asset, seqNum);
