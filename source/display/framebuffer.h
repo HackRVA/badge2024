@@ -69,12 +69,22 @@ void FbWriteLine(const char *string);
 void FbWriteString(const char *string);
 void FbRectangle(unsigned char width, unsigned char height);
 
+/** @brief Render the asset with its upper left corner at the current frame buffer location.
+ *
+ * Images can be generated using the tools/asset_converter.py script. */
 void FbImage(const struct asset* asset, unsigned char seqNum);
+
+/** @brief Render the provided raw 16-bit color asset. */
 void FbImage16bit(const struct asset* asset, unsigned char seqNum);
+/** @brief Render the provided 8-bit color asset, using its color palette table (and optional FbTransparentIndex). */
 void FbImage8bit(const struct asset* asset, unsigned char seqNum);
+/** @brief Render the provided 4-bit color asset, using its color palette table (and optional FbTransparentIndex). */
 void FbImage4bit(const struct asset* asset, unsigned char seqNum);
+/** @brief Render the provided 2-bit color asset, using its color palette table (and optional FbTransparentIndex). */
 void FbImage2bit(const struct asset* asset, unsigned char seqNum);
+/** @brief Render the provided 1-bit color asset, using the colors set by FbColor and FbBackgroundColor. */
 void FbImage1bit(const struct asset* asset, unsigned char seqNum);
+
 /* FbDrawObject() draws an object at x, y.  The coordinates of drawing[] should be centered at
  * (0, 0).  The coordinates in drawing[] are multiplied by scale, then divided by 1024 (via a shift)
  * so for 1:1 size, use scale of 1024.  Smaller values will scale the object down. This is different
