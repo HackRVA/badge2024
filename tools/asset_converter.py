@@ -45,22 +45,22 @@ target_sources(badge2022_c PUBLIC
 
 """)
 
-def bytes_for_color_image(rgb_image, num_bits):
 
+def bytes_for_color_image(rgb_image, num_bits):
     width, height = rgb_image.size
     image_bytes = b""
     for x in range(0, width):
         for y in range(0, height):
             pix = rgb_image.getpixel((x, y))
             if num_bits == 8:
-                pix_bitstr = bitstring.BitString(uint=int(pix[0]/32), length=3)
-                pix_bitstr.append(bitstring.Bits(uint=int(pix[1]/32), length=3))
-                pix_bitstr.append(bitstring.Bits(uint=int(pix[2]/64), length=2))
+                pix_bitstr = bitstring.BitString(uint=int(pix[0] / 32), length=3)
+                pix_bitstr.append(bitstring.Bits(uint=int(pix[1] / 32), length=3))
+                pix_bitstr.append(bitstring.Bits(uint=int(pix[2] / 64), length=2))
                 image_bytes += pix_bitstr.bytes
             else:
-                pix_bitstr = bitstring.BitString(uint=int(pix[0]/8), length=5)
-                pix_bitstr.append(bitstring.Bits(uint=int(pix[1]/4), length=6))
-                pix_bitstr.append(bitstring.Bits(uint=int(pix[2]/8), length=5))
+                pix_bitstr = bitstring.BitString(uint=int(pix[0] / 8), length=5)
+                pix_bitstr.append(bitstring.Bits(uint=int(pix[1] / 4), length=6))
+                pix_bitstr.append(bitstring.Bits(uint=int(pix[2] / 8), length=5))
                 # little-endian
                 image_bytes += bytes(reversed(pix_bitstr.bytes))
 
@@ -84,10 +84,10 @@ def bytes_for_palette_image(palette_image, num_bits):
 def colormap_for_palette_image(colormap):
     c_array = ""
     inverted_map = {v: k for k, v in colormap.items()}
-    for i in range(0, len(inverted_map)-1): # one too many colors, last one is always black
+    for i in range(0, len(inverted_map) - 1):  # one too many colors, last one is always black
         color_tuple = inverted_map[i]
-        c_array += (f"{{{color_tuple[0]}, {color_tuple[1]}, {color_tuple[2]}}},\n")
-    return len(inverted_map)-1, c_array
+        c_array += f"{{{color_tuple[0]}, {color_tuple[1]}, {color_tuple[2]}}},\n"
+    return len(inverted_map) - 1, c_array
 
 
 for asset in image_yaml["images"]:
@@ -109,7 +109,7 @@ for asset in image_yaml["images"]:
         palette_image = None
         if asset["bits"] in (1, 2, 4, 8):
             # 8, 4, 2, and 1 bit images: Create a palette.
-            palette_image = rgb_image.convert("P", palette=Image.Palette.ADAPTIVE, colors=2 ** asset["bits"])
+            palette_image = rgb_image.convert("P", palette=Image.ADAPTIVE, colors=2 ** asset["bits"])
 
         if palette_image:
             array_len, image_bytes = bytes_for_palette_image(palette_image, asset["bits"])
@@ -137,7 +137,7 @@ for asset in image_yaml["images"]:
         image_f.write(f"    .type = PICTURE{asset['bits']}BIT,\n")
         image_f.write(f"    .seqNum = {asset['y_sprite_count']},\n")
         image_f.write(f"    .x = {rgb_image.size[0]},\n")
-        image_f.write(f"    .y = {int(rgb_image.size[1]/asset['y_sprite_count'])},\n")
+        image_f.write(f"    .y = {int(rgb_image.size[1] / asset['y_sprite_count'])},\n")
         if palette_image:
             image_f.write(f"    .data_cmap = (const char*) {struct_name}_cmap,\n")
         image_f.write(f"    .pixdata = (const char*) {struct_name}_data,\n")
@@ -162,4 +162,3 @@ target_include_directories(badge2022_c PUBLIC .)
 """)
 
 asset_cmakelists.close()
-
