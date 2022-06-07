@@ -13,18 +13,12 @@
 #include "rtc.h"
 #include "key_value_storage.h"
 #include "settings.h"
+#include "uid.h"
 
 /*
   inital system data, will be save/restored from flash
 */
 const char hextab[16]={"0123456789ABCDEF"};
-
-#ifndef INITIAL_BADGE_ID
-#define INITIAL_BADGE_ID (0xADDE)
-#endif
-
-/* use only for final script has to be CONST to be found in hex */
-const unsigned short finalBadgeId = INITIAL_BADGE_ID; 
 
 SYSTEM_DATA G_sysData = {
 	.name={"               "}, 
@@ -49,10 +43,9 @@ void UserInit(void)
     FbInit();
     FbClear();
 
-    /* if not in flash, use the default assigned by make */
-    G_sysData.badgeId = finalBadgeId;
-
     flash_kv_get_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
+    
+    G_sysData.badgeId = uid_get();
 
     led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, G_sysData.backlight);
     if (G_sysData.backlight < 5) {

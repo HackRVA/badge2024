@@ -63,7 +63,7 @@ static state_to_function_map_fn_type state_to_function_map[] = {
 };
 
 #define TOTAL_BADGES 300
-#define BADGE_ID G_sysData.badgeId
+#define BADGE_ID badge_system_data()->badgeId
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
 
 /* These need to be protected from interrupts. */
@@ -712,7 +712,7 @@ static void app_init(void)
     smiley_y = LCD_XSIZE / 2;
     nmonsters = ARRAYSIZE(monsters);
     nvendor_monsters = ARRAYSIZE(vendor_monsters);
-    initial_mon = badge_system_data()->badgeId % nmonsters;
+    initial_mon = BADGE_ID % nmonsters;
     current_monster = initial_mon;
     enable_monster(initial_mon);
     load_from_flash();

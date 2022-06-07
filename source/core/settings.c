@@ -70,23 +70,25 @@ const struct menu_t ping_m[] = {
     set badge Id
 */
 void myBadgeid_cb(__attribute__((unused)) struct menu_t *h) {
-   struct menu_t *selectedMenu;
+    struct menu_t *selectedMenu;
 
-   //dstMenu = getSelectedMenuStack(1);
-   selectedMenu = getSelectedMenu();
+    //dstMenu = getSelectedMenuStack(1);
+    selectedMenu = getSelectedMenu();
 
-   uint16_t badge_id = badge_system_data()->badgeId;
+    uint64_t badge_id = badge_system_data()->badgeId;
 
-   selectedMenu->name[0] = hextab[((badge_id >> 12) & 0xF)];
-   selectedMenu->name[1] = hextab[((badge_id >>  8) & 0xF)];
-   selectedMenu->name[2] = hextab[((badge_id >>  4) & 0xF)];
-   selectedMenu->name[3] = hextab[((badge_id      ) & 0xF)];
-   selectedMenu->name[4] = 0;
-   //strcpy(dstMenu->name, selectedMenu->name);
-   returnToMenus();
+    size_t i = 15;
+    selectedMenu->name[15] = 0;
+    for(; i > 0; i--)
+    {
+        selectedMenu->name[15-i] = hextab[(badge_id >> 4 * (i - 1)) & 0xF];
+    }
+
+    //strcpy(dstMenu->name, selectedMenu->name);
+    returnToMenus();
 }
 
-const struct menu_t myBadgeid_m[] = {
+struct menu_t myBadgeid_m[] = {
     {"check",   VERT_ITEM, FUNCTION, {(struct menu_t *)myBadgeid_cb} },
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
@@ -219,8 +221,8 @@ void buzzer_config_cb()
 }
 
 const struct menu_t buzzer_config_m[] = {
-    {"Buzzer: On",   0|VERT_ITEM,     FUNCTION, {(struct menu_t *)buzzer_config_cb} },
-    {"Buzzer: Off",  1|VERT_ITEM,     FUNCTION, {(struct menu_t *)buzzer_config_cb} },
+    {"Audio: On",   0|VERT_ITEM,     FUNCTION, {(struct menu_t *)buzzer_config_cb} },
+    {"Audio: Off",  1|VERT_ITEM,     FUNCTION, {(struct menu_t *)buzzer_config_cb} },
     {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL} },
 };
 
@@ -228,7 +230,7 @@ const struct menu_t buzzer_config_m[] = {
   not const menu_t ...  because the config status is stored in buzzer_m[0].name[]
 */
 struct menu_t buzzer_m[] = {
-    {"Buzzer: On",   VERT_ITEM,     MENU, {buzzer_config_m} },
+    {"Audio: On",   VERT_ITEM,     MENU, {buzzer_config_m} },
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
 

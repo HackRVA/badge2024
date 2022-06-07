@@ -475,19 +475,20 @@ const struct menu_t games_m[] = {
 };
 
 const struct menu_t settings_m[] = {
-   {"Backlight",VERT_ITEM, MENU, {(struct menu_t *)backlight_m}},
-   {"Led",    VERT_ITEM, MENU, {(struct menu_t *)LEDlight_m}},  /* coerce/cast to a menu_t data pointer */
-   {"Buzzer",    VERT_ITEM|DEFAULT_ITEM, MENU, {(struct menu_t *)buzzer_m}},
-   {"Rotate",   VERT_ITEM, MENU, {(struct menu_t *)rotate_m}},
-   {"User Name",VERT_ITEM, FUNCTION, {(struct menu_t *)username_cb} },
+   {"Backlight", VERT_ITEM, MENU, {(struct menu_t *)backlight_m}},
+   {"Led", VERT_ITEM, MENU, {(struct menu_t *)LEDlight_m}},  /* coerce/cast to a menu_t data pointer */
+   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, {(struct menu_t *)buzzer_m}},
+   {"Rotate", VERT_ITEM, MENU, {(struct menu_t *)rotate_m}},
+   {"User Name", VERT_ITEM, FUNCTION, {(struct menu_t *)username_cb} },
    {"Screensaver", VERT_ITEM, MENU, {(struct menu_t *)screen_lock_m} },
-   {"Back",    VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"ID", VERT_ITEM, MENU, {(struct menu_t *)myBadgeid_m}},
+   {"QC",  VERT_ITEM, FUNCTION, {(struct menu_t *)QC_cb}},
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 
 const struct menu_t main_m[] = {
    {"Schedule",    VERT_ITEM, MENU, {schedule_m}},
    {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, {games_m}},
-   {"QC",          VERT_ITEM, FUNCTION, {(struct menu_t *)QC_cb}},
    {"Settings",    VERT_ITEM, MENU, {settings_m}},
    {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, {(struct menu_t *) about_badge_cb}},
 } ;

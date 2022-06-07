@@ -6,7 +6,7 @@
 
 typedef struct {
     char name[16];
-    unsigned short badgeId; /* 2 bytes == our badge Id */
+    uint64_t badgeId;
     char sekrits[8];
     char achievements[8];
 
@@ -15,7 +15,7 @@ typedef struct {
     */
     unsigned char ledBrightness;  /* 1 byte */
     unsigned char backlight;      /* 1 byte */
-    unsigned char mute;      /* buzzer 1 byte */
+    bool mute;
     bool display_inverted;
     bool display_rotated;
     bool screensaver_inverted;
