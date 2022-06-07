@@ -12,6 +12,7 @@ if (${TARGET} STREQUAL "PICO")
             ${CMAKE_CURRENT_LIST_DIR}/audio_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/rtc_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/random_rp2040.c
+            ${CMAKE_CURRENT_LIST_DIR}/uid_rp2040.c
             )
 
     add_subdirectory(ir_library)
@@ -30,6 +31,7 @@ if (${TARGET} STREQUAL "SIMULATOR")
             ${CMAKE_CURRENT_LIST_DIR}/audio_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/rtc_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/random_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/uid_sim.c
             )
 
     cmake_policy(SET CMP0079 NEW)

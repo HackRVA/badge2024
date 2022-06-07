@@ -1,5 +1,3 @@
-#include <string.h>
-
 #include "colors.h"
 #include "assetList.h"
 #include "menu.h"
@@ -15,7 +13,7 @@
 #include "rtc.h"
 #include "key_value_storage.h"
 #include "settings.h"
-#include "pico/unique_id.h"
+#include "uid.h"
 
 /*
   inital system data, will be save/restored from flash
@@ -46,11 +44,8 @@ void UserInit(void)
     FbClear();
 
     flash_kv_get_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
-
-    pico_unique_board_id_t id;
-    pico_get_unique_board_id(&id);
-    memcpy(&G_sysData.badgeId, &id, sizeof(id));
-    G_sysData.badgeId = __builtin_bswap64(G_sysData.badgeId);
+    
+    G_sysData.badgeId = uid_get();
 
     led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, G_sysData.backlight);
     led_pwm_set_scale(G_sysData.ledBrightness);
