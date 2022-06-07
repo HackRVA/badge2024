@@ -9,6 +9,7 @@
  * 
  */
 
+
 #ifndef BADGE2022_C_AUDIO_H
 #define BADGE2022_C_AUDIO_H
 
@@ -51,6 +52,11 @@ int audio_out_beep(uint16_t freq, uint16_t duration);
  *  @param  enable  Request the standby mode be enabled
  */
 void audio_stby_ctl(bool enable);
+
+/*!
+ * @brief Tell us Signal if the audio is on or not.
+ */
+bool audio_is_playing(void);
 
 /*! @} */ // BADGE2022_AUDIO
 

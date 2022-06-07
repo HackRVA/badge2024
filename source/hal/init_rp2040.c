@@ -21,7 +21,7 @@ _Noreturn void core1_procedure(void) {
     multicore_lockout_victim_init();
 
     while(1) {
-        busy_wait_ms(1000);
+        sleep_ms(100000);
     }
 }
 

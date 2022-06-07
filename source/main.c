@@ -85,7 +85,7 @@ int badge_main(__attribute__((unused)) int argc, __attribute__((unused)) char** 
         }
 
         frame_time = frame_period_us + frame_time;
-        sleep_us(frame_time - current_time);
+        lp_sleep_us(frame_time-current_time);
     }
 
     return 0;

@@ -16,6 +16,8 @@ static const int _gpio_map[BADGE_LED_MAX] = {
     BADGE_GPIO_DISPLAY_BACKLIGHT,
 };
 
+static bool led_is_on[BADGE_LED_MAX];
+
 void led_pwm_init_gpio() {
     for (int i=0; i<BADGE_LED_MAX; i++) {
         gpio_init(_gpio_map[i]);
@@ -47,6 +49,7 @@ void led_pwm_enable(BADGE_LED led, uint8_t duty) {
     pwm_set_chan_level(slice, channel, duty);
     pwm_set_output_polarity(slice, true, true);
     pwm_set_enabled(slice, true);
+    led_is_on[led] = true;
 }
 
 void led_pwm_disable(BADGE_LED led) {
@@ -82,6 +85,16 @@ void led_pwm_disable(BADGE_LED led) {
         pwm_set_enabled(slice, false);
     }
 
+    led_is_on[led] = false;
+}
+
+bool led_pwm_is_on(BADGE_LED led) {
+
+    if (led >= BADGE_LED_MAX) {
+        return false;
+    }
+
+    return led_is_on[led];
 }
 
 void led_pwm_set_scale(uint8_t new_scale) {

@@ -32,6 +32,8 @@
 
 #define CONTINUATION_MASK (1<<14)
 
+static int active_callbacks = 0;
+
 static uint8_t current_rx_data[MAX_IR_MESSAGE_SIZE];
 static IR_DATA current_rx_message = {
     .data = current_rx_data,
@@ -140,6 +142,7 @@ bool ir_add_callback(ir_data_callback data_cb, IR_APP_ID app_id) {
             return true; // already registered
         } else if (cb[app_id][i] == NULL) {
             cb[app_id][i] = data_cb;
+            active_callbacks++;
             return true;
         }
     }
@@ -156,6 +159,9 @@ bool ir_remove_callback(ir_data_callback data_cb, IR_APP_ID app_id) {
             } else {
                 cb[app_id][i] = NULL;
             }
+            if (active_callbacks) {
+                active_callbacks--;
+            }
             removed = true;
         }
     }
@@ -164,6 +170,10 @@ bool ir_remove_callback(ir_data_callback data_cb, IR_APP_ID app_id) {
 
 bool ir_transmitting(void) {
     return pio_sm_is_tx_fifo_empty(IR_PIO, tx_sm);
+}
+
+bool ir_listening(void) {
+    return (bool) active_callbacks;
 }
 
 static void ir_send_start_packet(const IR_DATA *data) {

@@ -53,6 +53,7 @@ static void wait_until_ready() {
         dma_transfer_started = false;
         sleep_us(10);
     }
+    while (spi_is_busy(spi0));
 }
 
 void S6B33_send_command(unsigned char data) {
@@ -329,4 +330,8 @@ void S6B33_color(unsigned short pixel) {
     for (i=0; i<132; i++)
         for (j=0; j<132; j++)
             S6B33_pixel(pixel);
+}
+
+bool S6B33_busy(void) {
+    return spi_is_busy(spi0);
 }
