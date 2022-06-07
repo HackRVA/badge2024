@@ -55,6 +55,9 @@ void UserInit(void)
     flash_kv_get_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
 
     led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, G_sysData.backlight);
+    if (G_sysData.backlight < 5) {
+        G_sysData.backlight = 5;
+    }
     led_pwm_set_scale(G_sysData.ledBrightness);
     S6B33_set_rotation(G_sysData.display_rotated);
     if (G_sysData.display_inverted) {
@@ -68,7 +71,7 @@ void UserInit(void)
 // dormant returns 1 if touch/buttons are dormant for 2 minutes, otherwise returns 0
 unsigned char dormant(void) {
     uint32_t timestamp = (uint32_t)rtc_get_ms_since_boot();
-    if (timestamp >= (button_last_input_timestamp() + 1000 * 60 * 2)){
+    if (timestamp >= (button_last_input_timestamp() + 1000 * 2 * 60)){
         if(!ir_messages_seen(false)){
             return 1;
         }
@@ -186,6 +189,10 @@ uint64_t ProcessIO(void)
     
     if(dormant() && !is_dormant && !screen_save_lockout) {
         is_dormant = 1;
+        // Turn off LED to allow sleep modes
+        led_pwm_disable(BADGE_LED_RGB_RED);
+        led_pwm_disable(BADGE_LED_RGB_BLUE);
+        led_pwm_disable(BADGE_LED_RGB_GREEN);
         FbClear();
         FbColor(BLACK);
         FbSwapBuffers();

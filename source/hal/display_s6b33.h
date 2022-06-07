@@ -5,6 +5,8 @@
 #ifndef BADGE2022_C_DISPLAY_SB633_H
 #define BADGE2022_C_DISPLAY_SB633_H
 
+#include <stdbool.h>
+
 /* controller commands- S6B33B2 */
 #define NOP                  0x00
 #define OSCILLATION_MODE     0x02
@@ -70,5 +72,7 @@ int S6B33_get_rotation(void);
 void S6B33_set_rotation(int yes);
 void S6B33_color(unsigned short pixel);
 
+/** @brief Tell us if we're busy sending data to the display */
+bool S6B33_busy(void);
 
 #endif //BADGE2022_C_DISPLAY_SB633_H

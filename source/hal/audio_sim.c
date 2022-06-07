@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 2/21/22.
 //
 
-#include <stdbool.h>
 #include <stdint.h>
+#include <stdbool.h>
 #include "audio.h"
 
 void audio_init_gpio()

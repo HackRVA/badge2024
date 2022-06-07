@@ -12,3 +12,7 @@ void sleep_ms(uint32_t time) {
 void sleep_us(uint64_t time) {
     usleep(time);
 }
+
+void lp_sleep_us(uint64_t time) {
+    usleep(time);
+}

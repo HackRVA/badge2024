@@ -25,6 +25,7 @@ static const int8_t button_gpios[BADGE_BUTTON_MAX] = {
 };
 
 static critical_section_t critical_section;
+static volatile uint8_t debounce_alarm_count;
 
 // bitmask of reported debounced pin states
 static uint32_t gpio_states;
@@ -70,6 +71,10 @@ int64_t alarm_callback(__attribute__((unused)) alarm_id_t id, void* user_data) {
         last_change = rtc_get_ms_since_boot();
     }
 
+    if (debounce_alarm_count) {
+        debounce_alarm_count--;
+    }
+
     gpio_set_irq_enabled_with_callback(gpio,
                                        GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE,
                                        true,
@@ -83,6 +88,7 @@ void gpio_callback(uint gpio, __attribute__((unused)) uint32_t events) {
         if (gpio_pin == gpio) {
             gpio_set_irq_enabled(gpio, GPIO_IRQ_EDGE_FALL | GPIO_IRQ_EDGE_RISE, false);
             // After time delay, check for bounce being done.
+            debounce_alarm_count++;
             alarm_pool_add_alarm_in_ms(alarm_pool_get_default(),
                                        DEBOUNCE_DELAY_MS,
                                        alarm_callback,
@@ -163,4 +169,9 @@ int button_get_rotation(void) {
     rotation_count = 0;
     critical_section_exit(&critical_section);
     return count;
+}
+
+
+bool button_debouncing(void) {
+    return (bool) debounce_alarm_count;
 }
