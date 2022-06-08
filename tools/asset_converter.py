@@ -76,6 +76,12 @@ def bytes_for_palette_image(palette_image, num_bits):
         for x in range(0, width):
             pix = palette_image.getpixel((x, y))
             image_bitstr.append(bitstring.Bits(uint=pix, length=num_bits))
+
+        padding = 8 - (len(image_bitstr) % 8)
+        if padding == 8:
+            padding = 0
+        image_bitstr += bitstring.Bits([0] * padding)
+
     image_bitstr_bytes = image_bitstr.bytes
     c_array = ", ".join([hex(byte) for byte in image_bitstr_bytes])
     return len(image_bitstr_bytes), c_array
