@@ -49,8 +49,8 @@ target_sources(badge2022_c PUBLIC
 def bytes_for_color_image(rgb_image, num_bits):
     width, height = rgb_image.size
     image_bytes = b""
-    for x in range(0, width):
-        for y in range(0, height):
+    for y in range(0, height):
+        for x in range(0, width):
             pix = rgb_image.getpixel((x, y))
             if num_bits == 8:
                 pix_bitstr = bitstring.BitString(uint=int(pix[0] / 32), length=3)
@@ -72,8 +72,8 @@ def bytes_for_color_image(rgb_image, num_bits):
 def bytes_for_palette_image(palette_image, num_bits):
     image_bitstr = bitstring.BitArray()
     width, height = palette_image.size
-    for x in range(0, width):
-        for y in range(0, height):
+    for y in range(0, height):
+        for x in range(0, width):
             pix = palette_image.getpixel((x, y))
             image_bitstr.append(bitstring.Bits(uint=pix, length=num_bits))
     image_bitstr_bytes = image_bitstr.bytes
@@ -109,7 +109,7 @@ for asset in image_yaml["images"]:
         palette_image = None
         if asset["bits"] in (1, 2, 4, 8):
             # 8, 4, 2, and 1 bit images: Create a palette.
-            palette_image = rgb_image.convert("P", palette=Image.ADAPTIVE, colors=2 ** asset["bits"])
+            palette_image = rgb_image.convert("P", palette=Image.Palette.ADAPTIVE, colors=2 ** asset["bits"])
 
         if palette_image:
             array_len, image_bytes = bytes_for_palette_image(palette_image, asset["bits"])
