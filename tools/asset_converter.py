@@ -82,6 +82,14 @@ def bytes_for_palette_image(palette_image, num_bits):
             padding = 0
         image_bitstr += bitstring.Bits([0] * padding)
 
+    # only 1 bit images have bit order reversed in byte
+    if num_bits == 1:
+        corrected_image_bitstr = bitstring.BitArray()
+        for bitstr_byte in [image_bitstr[i:i+8] for i in range(0, len(image_bitstr), 8)]:
+            bitstr_byte.reverse()
+            corrected_image_bitstr += bitstr_byte
+        image_bitstr = corrected_image_bitstr
+
     image_bitstr_bytes = image_bitstr.bytes
     c_array = ", ".join([hex(byte) for byte in image_bitstr_bytes])
     return len(image_bitstr_bytes), c_array
