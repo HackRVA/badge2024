@@ -217,7 +217,9 @@ void FbImage4bit(const struct asset* asset, unsigned char seqNum)
     if (yEnd >= LCD_YSIZE) yEnd = LCD_YSIZE-1;
 
     for (y = G_Fb.pos.y; y < yEnd; y++) {
-        pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * (asset->x >> 1) + seqNum * (asset->x >> 1) * asset->y]));
+        int row_padding = asset->x % 2;
+        pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * ((asset->x >> 1) + row_padding) +
+                                          seqNum * ((asset->x >> 1) + row_padding) * asset->y]));
 
         for (x = 0; x < (asset->x); /* manual inc */ ) {
             pixbyte = *pixdata++; /* 2 pixels per byte */
@@ -245,6 +247,9 @@ void FbImage4bit(const struct asset* asset, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
 
             /* 2nd pixel */
             if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
@@ -269,6 +274,9 @@ void FbImage4bit(const struct asset* asset, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
         }
     }
     G_Fb.changed = 1;
@@ -285,7 +293,9 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
     if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
 
     for (y = G_Fb.pos.y; y < yEnd; y++) {
-        pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * (asset->x >> 2) + seqNum * (asset->x >> 2) * asset->y]));
+        int row_padding = asset->x % 4 ? 1 : 0;
+        pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * ((asset->x >> 2) + row_padding) +
+                                          seqNum * ((asset->x >> 2) + row_padding) * asset->y]));
 
         for (x = 0; x < (asset->x); /* manual inc */) {
             pixbyte = *pixdata++; /* 4 pixels per byte */
@@ -313,6 +323,9 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
 
             /* ----------- 2nd pixel ----------- */
             if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
@@ -337,6 +350,9 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
 
             /* ----------- 3rd pixel ----------- */
             if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
@@ -361,6 +377,9 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
 
             /* ----------- 4th pixel ----------- */
             if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
@@ -385,6 +404,9 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
         }
     }
     G_Fb.changed = 1;
@@ -401,7 +423,9 @@ void FbImage1bit(const struct asset *asset, unsigned char seqNum)
     if (yEnd >= LCD_YSIZE) yEnd = LCD_YSIZE-1;
 
     for (y=G_Fb.pos.y; y < yEnd; y++) {
-        pixdata = uCHAR(&(asset->pixdata[ seqNum * (asset->x >> 3) * asset->y + (y - G_Fb.pos.y) * (asset->x >> 3)]));
+        int row_padding = asset->x % 8 ? 1 : 0;
+        pixdata = uCHAR(&(asset->pixdata[ seqNum * ((asset->x >> 3) + row_padding) * asset->y +
+                                          (y - G_Fb.pos.y) * ((asset->x >> 3) + row_padding)]));
 
         for (x=0; x < (asset->x); x += 8) {
             unsigned char bit;
@@ -410,6 +434,9 @@ void FbImage1bit(const struct asset *asset, unsigned char seqNum)
 
             for (bit=0; bit < 8; bit++) { /* 8 pixels per byte */
                 if ((bit + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
+                if (x + bit >= asset->x) {
+                    break;
+                }
 
                 ci = ((pixbyte >> bit) & 0x1); /* ci = color index */
                 if (ci != G_Fb.transIndex) { // transparent?
