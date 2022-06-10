@@ -48,7 +48,7 @@ void FbInit() {
     G_Fb.color = 255;
     G_Fb.BGcolor = 0;
     G_Fb.transMask = 0;
-    G_Fb.transIndex = 0;
+    G_Fb.transIndex = 255;
     G_Fb.changed = 0;
 }
 
@@ -109,51 +109,82 @@ void FbBackgroundColor(unsigned short color)
     G_Fb.BGcolor = color;
 }
 
-void FbImage(unsigned char assetId, unsigned char seqNum)
+void FbImage(const struct asset* asset, unsigned char seqNum)
 {
-    switch (assetList[assetId].type) {
+    // 1 bit images use the current color and bgcolor to draw.
+    // 2, 4, and 8 bit images use the color map in the asset (using transparent index as appropriate).
+    // 16 bit images just use the raw values.
+    switch (asset->type) {
         case PICTURE1BIT:
-            FbImage1bit(assetId, seqNum);
+            FbImage1bit(asset, seqNum);
             break;
 
         case PICTURE2BIT:
-            FbImage2bit(assetId, seqNum);
+            FbImage2bit(asset, seqNum);
             break;
 
         case PICTURE4BIT:
-            FbImage4bit(assetId, seqNum);
+            FbImage4bit(asset, seqNum);
             break;
 
         case PICTURE8BIT:
-            FbImage8bit(assetId, seqNum);
+            FbImage8bit(asset, seqNum);
             break;
 
+        case PICTURE16BIT:
+            FbImage16bit(asset, seqNum);
+            break;
         default:
             break;
     }
 }
 
-void FbImage8bit(unsigned char assetId, unsigned char seqNum)
+void FbImage16bit(const struct asset* asset, unsigned char seqNum) {
+
+    unsigned char y, yEnd, x;
+    unsigned short *pixdata;
+    unsigned short pixel;
+
+    /* clip to end of LCD buffer */
+    yEnd = G_Fb.pos.y + asset->y;
+    if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
+
+    for (y = G_Fb.pos.y; y < yEnd; y++) {
+        pixdata = (unsigned short*) &(asset->pixdata[ (y - G_Fb.pos.y) * asset->x * 2 + seqNum * asset->x * asset->y * 2]);
+
+        for (x = 0; x < asset->x; x++) {
+            if ((x + G_Fb.pos.x) >= LCD_XSIZE) continue; /* clip x */
+            pixel = *pixdata; /* 1 pixel per byte */
+            fb_mark_row_changed(x + G_Fb.pos.x, y);
+            BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            pixdata++;
+        }
+    }
+    G_Fb.changed = 1;
+
+}
+
+void FbImage8bit(const struct asset* asset, unsigned char seqNum)
 {
     unsigned char y, yEnd, x;
     unsigned char *pixdata, pixbyte, ci, *cmap, r, g, b;
     unsigned short pixel;
 
     /* clip to end of LCD buffer */
-    yEnd = G_Fb.pos.y + assetList[assetId].y;
+    yEnd = G_Fb.pos.y + asset->y;
     if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
 
     for (y = G_Fb.pos.y; y < yEnd; y++) {
-        pixdata = uCHAR(&(assetList[assetId].pixdata[ (y - G_Fb.pos.y) * assetList[assetId].x + seqNum * assetList[assetId].x * assetList[assetId].y]));
+        pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * asset->x + seqNum * asset->x * asset->y]));
 
-        for (x = 0; x < assetList[assetId].x; x++) {
+        for (x = 0; x < asset->x; x++) {
             if ((x + G_Fb.pos.x) >= LCD_XSIZE) continue; /* clip x */
 
             pixbyte = *pixdata; /* 1 pixel per byte */
 
             ci = pixbyte;
             if (ci != G_Fb.transIndex) { /* transparent? */
-                cmap = uCHAR(&(assetList[assetId].data_cmap[ci * 3]));
+                cmap = uCHAR(&(asset->data_cmap[ci * 3]));
 
                 r = cmap[0];
                 g = cmap[1];
@@ -175,20 +206,22 @@ void FbImage8bit(unsigned char assetId, unsigned char seqNum)
     G_Fb.changed = 1;
 }
 
-void FbImage4bit(unsigned char assetId, unsigned char seqNum)
+void FbImage4bit(const struct asset* asset, unsigned char seqNum)
 {
     unsigned char y, yEnd, x;
     unsigned char *pixdata, pixbyte, ci, *cmap, r, g, b;
     unsigned short pixel;
 
     /* clip to end of LCD buffer */
-    yEnd = G_Fb.pos.y + assetList[assetId].y;
+    yEnd = G_Fb.pos.y + asset->y;
     if (yEnd >= LCD_YSIZE) yEnd = LCD_YSIZE-1;
 
     for (y = G_Fb.pos.y; y < yEnd; y++) {
-        pixdata = uCHAR(&(assetList[assetId].pixdata[ (y - G_Fb.pos.y) * (assetList[assetId].x >> 1) + seqNum * (assetList[assetId].x >> 1) * assetList[assetId].y]));
+        int row_padding = asset->x % 2;
+        pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * ((asset->x >> 1) + row_padding) +
+                                          seqNum * ((asset->x >> 1) + row_padding) * asset->y]));
 
-        for (x = 0; x < (assetList[assetId].x); /* manual inc */ ) {
+        for (x = 0; x < (asset->x); /* manual inc */ ) {
             pixbyte = *pixdata++; /* 2 pixels per byte */
 
             /* 1st pixel */
@@ -196,7 +229,7 @@ void FbImage4bit(unsigned char assetId, unsigned char seqNum)
 
             ci = ((pixbyte >> 4) & 0xF);
             if (ci != G_Fb.transIndex) { /* transparent? */
-                cmap = uCHAR(&(assetList[assetId].data_cmap[ci * 3]));
+                cmap = uCHAR(&(asset->data_cmap[ci * 3]));
 
                 r = cmap[0];
                 g = cmap[1];
@@ -214,13 +247,16 @@ void FbImage4bit(unsigned char assetId, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
 
             /* 2nd pixel */
             if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
 
             ci = pixbyte & 0xF;
             if (ci != G_Fb.transIndex) { /* transparent? */
-                cmap = uCHAR(&(assetList[assetId].data_cmap[ci * 3]));
+                cmap = uCHAR(&(asset->data_cmap[ci * 3]));
 
                 r = cmap[0];
                 g = cmap[1];
@@ -238,25 +274,30 @@ void FbImage4bit(unsigned char assetId, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
         }
     }
     G_Fb.changed = 1;
 }
 
-void FbImage2bit(unsigned char assetId, unsigned char seqNum)
+void FbImage2bit(const struct asset* asset, unsigned char seqNum)
 {
     unsigned char y, yEnd, x;
     unsigned char *pixdata, pixbyte, ci, *cmap, r, g, b;
     unsigned short pixel;
 
     /* clip to end of LCD buffer */
-    yEnd = G_Fb.pos.y + assetList[assetId].y;
+    yEnd = G_Fb.pos.y + asset->y;
     if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
 
     for (y = G_Fb.pos.y; y < yEnd; y++) {
-        pixdata = uCHAR(&(assetList[assetId].pixdata[ (y - G_Fb.pos.y) * (assetList[assetId].x >> 2) + seqNum * (assetList[assetId].x >> 2) * assetList[assetId].y]));
+        int row_padding = asset->x % 4 ? 1 : 0;
+        pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * ((asset->x >> 2) + row_padding) +
+                                          seqNum * ((asset->x >> 2) + row_padding) * asset->y]));
 
-        for (x = 0; x < (assetList[assetId].x); /* manual inc */) {
+        for (x = 0; x < (asset->x); /* manual inc */) {
             pixbyte = *pixdata++; /* 4 pixels per byte */
 
             /* ----------- 1st pixel ----------- */
@@ -264,7 +305,7 @@ void FbImage2bit(unsigned char assetId, unsigned char seqNum)
 
             ci = ((pixbyte >> 6) & 0x3);
             if (ci != G_Fb.transIndex) { /* transparent? */
-                cmap = uCHAR(&(assetList[assetId].data_cmap[ci * 3]));
+                cmap = uCHAR(&(asset->data_cmap[ci * 3]));
 
                 r = cmap[0];
                 g = cmap[1];
@@ -282,13 +323,16 @@ void FbImage2bit(unsigned char assetId, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
 
             /* ----------- 2nd pixel ----------- */
             if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
 
             ci = ((pixbyte >> 4) & 0x3);
             if (ci != G_Fb.transIndex) { /* transparent? */
-                cmap = uCHAR(&(assetList[assetId].data_cmap[ci * 3]));
+                cmap = uCHAR(&(asset->data_cmap[ci * 3]));
 
                 r = cmap[0];
                 g = cmap[1];
@@ -306,13 +350,16 @@ void FbImage2bit(unsigned char assetId, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
 
             /* ----------- 3rd pixel ----------- */
             if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
 
             ci = ((pixbyte >> 2) & 0x3);
             if (ci != G_Fb.transIndex) { /* transparent? */
-                cmap = uCHAR(&(assetList[assetId].data_cmap[ci * 3]));
+                cmap = uCHAR(&(asset->data_cmap[ci * 3]));
 
                 r = cmap[0];
                 g = cmap[1];
@@ -330,13 +377,16 @@ void FbImage2bit(unsigned char assetId, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
 
             /* ----------- 4th pixel ----------- */
             if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
 
             ci = ((pixbyte) & 0x3);
             if (ci != G_Fb.transIndex) { /* transparent? */
-                cmap = uCHAR(&(assetList[assetId].data_cmap[ci * 3]));
+                cmap = uCHAR(&(asset->data_cmap[ci * 3]));
 
                 r = cmap[0];
                 g = cmap[1];
@@ -354,31 +404,39 @@ void FbImage2bit(unsigned char assetId, unsigned char seqNum)
                     BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             }
             x++;
+            if (x >= asset->x) {
+                break;
+            }
         }
     }
     G_Fb.changed = 1;
 }
 
-void FbImage1bit(unsigned char assetId, unsigned char seqNum)
+void FbImage1bit(const struct asset *asset, unsigned char seqNum)
 {
     unsigned char y, yEnd, x;
     unsigned char *pixdata, pixbyte, ci; // , *cmap, r, g, b;
     //unsigned short pixel;
 
-    yEnd = G_Fb.pos.y + assetList[assetId].y;
+    yEnd = G_Fb.pos.y + asset->y;
     /* clip to end of LCD buffer */
     if (yEnd >= LCD_YSIZE) yEnd = LCD_YSIZE-1;
 
     for (y=G_Fb.pos.y; y < yEnd; y++) {
-        pixdata = uCHAR(&(assetList[assetId].pixdata[ seqNum * (assetList[assetId].x >> 3) * assetList[assetId].y + (y - G_Fb.pos.y) * (assetList[assetId].x >> 3)]));
+        int row_padding = asset->x % 8 ? 1 : 0;
+        pixdata = uCHAR(&(asset->pixdata[ seqNum * ((asset->x >> 3) + row_padding) * asset->y +
+                                          (y - G_Fb.pos.y) * ((asset->x >> 3) + row_padding)]));
 
-        for (x=0; x < (assetList[assetId].x); x += 8) {
+        for (x=0; x < (asset->x); x += 8) {
             unsigned char bit;
 
             pixbyte = *pixdata++;
 
             for (bit=0; bit < 8; bit++) { /* 8 pixels per byte */
                 if ((bit + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
+                if (x + bit >= asset->x) {
+                    break;
+                }
 
                 ci = ((pixbyte >> bit) & 0x1); /* ci = color index */
                 if (ci != G_Fb.transIndex) { // transparent?
@@ -401,6 +459,8 @@ void FbImage1bit(unsigned char assetId, unsigned char seqNum)
     G_Fb.changed = 1;
 }
 
+
+
 /*
    FbTransparentIndex, also sometimes called key/chromakey color AKA bluescreen/greenscreen
    using this Index in an image means to use what is already in the scanline[] buffer
@@ -417,7 +477,7 @@ void FbCharacter(unsigned char charin)
     if ((charin < 32) | (charin > 126)) charin = 32;
 
     charin -= 32;
-    FbImage1bit(G_Fb.font, charin);
+    FbImage1bit(&assetList[G_Fb.font], charin);
 
     /* advance x pos, but not y */
     // FbMove(G_Fb.pos.x + assetList[G_Fb.font].x, G_Fb.pos.y);

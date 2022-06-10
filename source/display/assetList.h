@@ -24,6 +24,7 @@ enum {
     PICTURE2BIT,
     PICTURE4BIT,
     PICTURE8BIT,
+    PICTURE16BIT,
 };
 
 struct asset {

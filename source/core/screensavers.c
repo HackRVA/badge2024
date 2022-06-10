@@ -44,12 +44,12 @@ void disp_asset_saver(){
     switch(imgnum){
         case 0:
             FbMove(0,0);
-            FbImage(HACKRVA4, 0);
+            FbImage(&assetList[HACKRVA4], 0);
             break;
 
         case 1:
             FbMove(0,20);
-            FbImage2bit(RVASEC2016, 0);
+            FbImage2bit(&assetList[RVASEC2016], 0);
             break;
 
         case 2:

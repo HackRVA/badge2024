@@ -16,12 +16,12 @@ void audio_init()
     return;
 }
 
-int audio_out_beep(uint16_t freq, uint16_t duration)
+int audio_out_beep(__attribute__((__unused__)) uint16_t freq,  __attribute__((__unused__)) uint16_t duration)
 {
     return 0;
 }
 
-void audio_stby_ctl(bool enabled)
+void audio_stby_ctl( __attribute__((__unused__)) bool enabled)
 {
     return;
 }
