@@ -94,7 +94,7 @@ static int reel_add_offset(size_t reel, int offset)
 
 static void reel_advance(size_t reel)
 {
-	reel_position[reel] = reel_add_offset(reel, 1);
+	reel_position[reel] = reel_add_offset(reel, -1);
 }
 
 static enum Symbol symbol_in_pos(size_t reel, int offset)
