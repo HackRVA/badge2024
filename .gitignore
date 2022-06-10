@@ -57,6 +57,8 @@ dkms.conf
 # Build artifacts
 build/
 build_sim/
+build-pico/
+build-simulator/
 docs/html/*
 
 # Mac clutter
@@ -65,3 +67,6 @@ docs/html/*
 # Visual Studio Code project files
 .vscode/
 *.code-workspace
+
+# Simulator flash storage
+simulator_flash_storage.bin
