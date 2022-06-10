@@ -587,17 +587,23 @@ static void render_reels()
 	size_t reel_width = (LCD_XSIZE - (REND_PADDING * (REEL_COUNT + 1)))/ REEL_COUNT;
 	size_t reel_height = 80;
 	int symbol_spacing = (reel_height - (2 * padding)) / 3;
-	FbColor(RENDER_REELS_OUTLINE_COLOR);
 	for (size_t reel = 0; reel < REEL_COUNT; reel++)
 	{
 		size_t left = padding * (reel + 1) + reel_width * reel;
-		FbMove(left, padding);
-		FbRectangle(reel_width, reel_height);
-		for (int offset = -1; offset < 2; offset++)
+		for (int offset = -2; offset < 3; offset++)
 		{
 			FbMove(left + reel_width / 2, padding + (reel_height / 2) + (symbol_spacing * offset));
 			render_symbol(reel, offset);
 		}
+		FbColor(BLACK);
+		FbMove(left,0);
+		FbFilledRectangle(reel_width, padding);
+		FbMove(left,padding + reel_height);
+		FbFilledRectangle(reel_width, padding);
+		/* Draw frame */
+		FbColor(RENDER_REELS_OUTLINE_COLOR);
+		FbMove(left, padding);
+		FbRectangle(reel_width, reel_height);
 	}
 	FbColor(YELLOW);
 	FbLine(padding, padding + reel_height / 2, 
