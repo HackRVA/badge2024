@@ -11,7 +11,7 @@
 #include "audio.h"
 #include "led_pwm.h"
 #include "assetList.h"
-
+#include "key_value_storage.h"
 
 /* Program states.  Initial state is MYPROGRAM_INIT */
 static enum slot_machine_state_t
@@ -26,7 +26,9 @@ static enum slot_machine_state_t
 bool bonus_active;
 
 /*- Finance ------------------------------------------------------------------*/
-static int16_t credits = 100;
+#define SLOT_MACHINE_CREDITS_START 100
+
+static int16_t credits;
 static int bet = 1;
 static int win;
 
@@ -667,6 +669,11 @@ static void slot_machine_init(void)
 	FbInit();
 	FbClear();
 	slot_machine_state = SLOT_MACHINE_BET;
+	size_t br = flash_kv_get_binary("casino/credits", &credits, sizeof(credits));
+	if (br != sizeof(credits))
+	{
+		credits = SLOT_MACHINE_CREDITS_START;
+	}
 	render();
 }
 
@@ -767,6 +774,7 @@ static void slot_machine_payout()
 	last_payout = payout_get();
 	win = last_payout * bet;
 	credits += win;
+	flash_kv_store_binary("casino/credits", &credits, sizeof(credits));
 	
 	slot_machine_state = SLOT_MACHINE_BET;
 	if (last_payout >= JACKPOT_THRESHOLD)
