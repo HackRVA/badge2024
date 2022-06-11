@@ -129,13 +129,18 @@ enum Payout
 };
 
 static enum Payout last_payout;
-static const enum Payout JACKPOT_THRESHOLD = PAY_BAR3_2; // use to determine jackpot celebration
 
 struct Payscale
 {
 	char* description;
 	int multiplier;
 	enum Payout (*evaluation)();
+	struct 
+	{
+		uint16_t freq;
+		uint16_t duration;
+	} beep;
+	uint8_t led_duty[3];
 };
 
 static enum Payout eval_cherry()
@@ -279,16 +284,16 @@ static bool eval_bonus()
 
 static const struct Payscale PAYSCALE[] =
 {
-	{"None", 0, NULL},
-	{"Cherry anywhere", 1, eval_cherry},
-	{"Any 2 BAR", 2, eval_bar_any2},
-	{"Any 3 BAR", 3, eval_bar_any3},
-	{"Two BAR2", 5, eval_bar2_2},
-	{"Three BAR2", 10, eval_bar2_3},
-	{"Two BAR3", 20, eval_bar3_2},
-	{"Three BAR3", 35, eval_bar3_3},
-	{"Two sevens", 50, eval_seven_2},
-	{"Three sevens", 100, eval_seven_3}
+	{"None", 0, NULL, {200, 50}, {0}},
+	{"Cherry anywhere", 1, eval_cherry, {1500, 100}, {50, 0, 0}},
+	{"Any 2 BAR", 2, eval_bar_any2, {1600, 200}, {50, 40, 0}},
+	{"Any 3 BAR", 3, eval_bar_any3, {1650, 250}, {50, 40, 0}},
+	{"Two BAR2", 5, eval_bar2_2, {1700, 350}, {50, 40, 0}},
+	{"Three BAR2", 10, eval_bar2_3, {1750, 600}, {50, 40, 0}},
+	{"Two BAR3", 20, eval_bar3_2, {1800, 1000}, {100, 80, 0}},
+	{"Three BAR3", 35, eval_bar3_3, {1900, 2000}, {100, 80, 0}},
+	{"Two sevens", 50, eval_seven_2, {2000, 3000}, {100, 100, 100}},
+	{"Three sevens", 100, eval_seven_3, {2200, 4000}, {100, 100, 100}}
 };
 
 #define FORCE_PAYOUT
@@ -805,39 +810,26 @@ static void slot_machine_spin()
 static void slot_machine_payout()
 {
 	last_payout = payout_get();
-	int multiplier = PAYSCALE[last_payout].multiplier;
-	win = multiplier * bet;
+	const struct Payscale *payscale = PAYSCALE+last_payout;
+	win = payscale->multiplier * bet;
 	credits += win;
 	flash_kv_store_binary("casino/credits", &credits, sizeof(credits));
 	
 	slot_machine_state = SLOT_MACHINE_BET;
-	if (last_payout >= JACKPOT_THRESHOLD)
-	{
-		/* TODO add jackpot celebration; consider using LED */
-		/* wait for any button */
-	}
 	
-	if (PAY_CHERRY == last_payout)
+	audio_out_beep(payscale->beep.freq, payscale->beep.duration);
+	for (size_t rgb = BADGE_LED_RGB_RED; rgb < 3; rgb++)
 	{
-		audio_out_beep(1500,100);
-		led_pwm_enable(BADGE_LED_RGB_RED, 50);
-		led_pwm_disable(BADGE_LED_RGB_GREEN);
-		led_pwm_disable(BADGE_LED_RGB_BLUE);
+		uint8_t duty = payscale->led_duty[rgb];
+		if (duty)
+		{
+			led_pwm_enable(rgb, duty);
+		}
+		else
+		{
+			led_pwm_disable(rgb);
+		}
 	}
-	
-	else if (last_payout != PAY_NONE)
-	{
-		audio_out_beep(1600 + 10 * multiplier,100 + 50 * multiplier);
-		led_pwm_enable(BADGE_LED_RGB_RED, 100);
-		led_pwm_enable(BADGE_LED_RGB_GREEN, 80);
-		led_pwm_disable(BADGE_LED_RGB_BLUE);
-	}
-	else
-	{
-		audio_out_beep(200,50);
-		led_rgb_off();
-	}
-	
 
 	if (eval_bonus())
 	{
