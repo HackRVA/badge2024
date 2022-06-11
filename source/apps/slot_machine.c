@@ -649,7 +649,7 @@ static void render_bonus()
 
 static void render()
 {
-	FbClear(); // FIXME only render what has changed
+	FbClear();
 	render_reels();
 	render_credits();
 	render_bet();
@@ -667,6 +667,7 @@ static void slot_machine_init(void)
 	FbInit();
 	FbClear();
 	slot_machine_state = SLOT_MACHINE_BET;
+	render();
 }
 
 static void spin()
@@ -703,10 +704,12 @@ static void slot_machine_bet()
 	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
 	{
 		bet_increase();
+		render();
 	}
 	else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
 	{
 		bet_decrease();
+		render();
 	}
 	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
 	{
@@ -719,8 +722,8 @@ static void slot_machine_bet()
 	else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 	{
 		pull_handle();
+		render();
 	}
-	render();
 }
 
 static void slot_machine_spin()
@@ -797,7 +800,6 @@ static void slot_machine_exit()
 	returnToMenus();
 }
 
-/* You will need to rename myprogram_cb() something else. */
 void slot_machine_cb(void)
 {
 	switch (slot_machine_state) {
