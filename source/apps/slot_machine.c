@@ -783,10 +783,12 @@ static void slot_machine_bet()
 
 static void slot_machine_spin()
 {
+	static positions_spun = 0;
 	size_t reel;
 	for (reel = 0; reel < REEL_COUNT; reel++)
 	{
-		if (reel_position[reel] != target_position[reel])
+		if ((reel_position[reel] != target_position[reel])
+			|| (positions_spun < REEL_SIZE-1))
 		{
 			break;
 		}
@@ -794,9 +796,11 @@ static void slot_machine_spin()
 	if (REEL_COUNT == reel)
 	{
 		slot_machine_state = SLOT_MACHINE_PAYOUT;
+		positions_spun = 0;
 	}
 	else
 	{
+		positions_spun++;
 		for(; reel < REEL_COUNT; reel++)
 		{
 			reel_advance(reel);
