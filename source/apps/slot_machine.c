@@ -291,8 +291,38 @@ static const struct Payscale PAYSCALE[] =
 	{"Three sevens", 100, eval_seven_3}
 };
 
+#define FORCE_PAYOUT
+
 static enum Payout payout_get()
 {
+#ifdef FORCE_PAYOUT
+	int b = button_down_latches();
+	switch(b)
+	{
+		case BUTTON_PRESSED(BADGE_BUTTON_DOWN, 0xff):
+			return PAY_NONE;
+		case BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
+			return PAY_CHERRY;
+		case BUTTON_PRESSED(BADGE_BUTTON_LEFT, 0xff):
+			return PAY_BAR_ANY2;
+		case BUTTON_PRESSED(BADGE_BUTTON_LEFT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff):
+			return PAY_BAR_ANY3;
+		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff):
+			return PAY_BAR2_2;
+		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff):
+			return PAY_BAR2_3;
+		case BUTTON_PRESSED(BADGE_BUTTON_LEFT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
+			return PAY_BAR3_2;
+		case BUTTON_PRESSED(BADGE_BUTTON_LEFT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
+			return PAY_BAR3_3;
+		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
+			return PAY_SEVEN_2;
+		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
+			return PAY_SEVEN_3;	
+		default:
+			break;
+	}
+#endif
 	size_t i;
 	enum Payout payout;
 	for (i = PAY_COUNT - 1; i > 0; i--)
@@ -775,7 +805,8 @@ static void slot_machine_spin()
 static void slot_machine_payout()
 {
 	last_payout = payout_get();
-	win = last_payout * bet;
+	int multiplier = PAYSCALE[last_payout].multiplier;
+	win = multiplier * bet;
 	credits += win;
 	flash_kv_store_binary("casino/credits", &credits, sizeof(credits));
 	
@@ -796,7 +827,6 @@ static void slot_machine_payout()
 	
 	else if (last_payout != PAY_NONE)
 	{
-		int multiplier = PAYSCALE[last_payout].multiplier;
 		audio_out_beep(1600 + 10 * multiplier,100 + 50 * multiplier);
 		led_pwm_enable(BADGE_LED_RGB_RED, 100);
 		led_pwm_enable(BADGE_LED_RGB_GREEN, 80);
