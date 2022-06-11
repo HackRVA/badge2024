@@ -24,6 +24,7 @@ static enum slot_machine_state_t
 } slot_machine_state = SLOT_MACHINE_INIT;
 
 bool bonus_active;
+uint32_t outcome;
 
 /*- Finance ------------------------------------------------------------------*/
 #define SLOT_MACHINE_CREDITS_START 100
@@ -60,7 +61,8 @@ static void bet_take()
 
 /*- Reels --------------------------------------------------------------------*/
 #define REEL_COUNT	(3)
-#define REEL_SIZE	(10)
+#define REEL_BITS	(4)
+#define REEL_SIZE	(1 << REEL_BITS)
 
 enum Symbol
 {
@@ -674,19 +676,18 @@ static void slot_machine_init(void)
 	{
 		credits = SLOT_MACHINE_CREDITS_START;
 	}
+	random_insecure_bytes((void *) &outcome, sizeof(outcome));
 	render();
 }
 
 static void spin()
 {
-	size_t outcome;
-	random_insecure_bytes((void *) &outcome, sizeof(outcome));
+	outcome = random_insecure_u32_congruence(outcome);
 	for (size_t reel = 0; reel < REEL_COUNT; reel++)
 	{
-		size_t divisor = REEL_SIZE * (reel + 1);
-		target_position[reel] = (outcome % divisor) / (divisor / REEL_SIZE);
+		target_position[reel] = (outcome >> (REEL_BITS * reel)) % REEL_SIZE;
 	}
-	slot_machine_state = SLOT_MACHINE_SPIN;
+	slot_machine_state = SLOT_MACHINE_SPIN;	
 }
 
 static void pull_handle()
@@ -707,12 +708,12 @@ static void led_rgb_off()
 
 static void audio_play_jingle()
 {
-	char offset;
-	random_insecure_bytes((void *) &offset, sizeof(offset));
-	audio_out_beep(1000 + offset, 1000 / 60 + 10);
-	led_pwm_enable(BADGE_LED_RGB_RED, offset & 0x3f);
-	led_pwm_enable(BADGE_LED_RGB_GREEN, offset & 0x7e);
-	led_pwm_enable(BADGE_LED_RGB_BLUE, offset & 0xfa);
+	char offset[4];
+	random_insecure_bytes((void *) offset, sizeof(offset));
+	audio_out_beep(1000 + offset[0], 1000 / 60 + 10);
+	led_pwm_enable(BADGE_LED_RGB_RED, offset[1]);
+	led_pwm_enable(BADGE_LED_RGB_GREEN, offset[2]);
+	led_pwm_enable(BADGE_LED_RGB_BLUE, offset[3]);
 }
 
 static void slot_machine_bet()
@@ -795,8 +796,8 @@ static void slot_machine_payout()
 	{
 		int multiplier = PAYSCALE[last_payout].multiplier;
 		audio_out_beep(1600 + 10 * multiplier,100 + 50 * multiplier);
-		led_pwm_enable(BADGE_LED_RGB_RED, 75);
-		led_pwm_enable(BADGE_LED_RGB_GREEN, 50);
+		led_pwm_enable(BADGE_LED_RGB_RED, 100);
+		led_pwm_enable(BADGE_LED_RGB_GREEN, 80);
 		led_pwm_disable(BADGE_LED_RGB_BLUE);
 	}
 	else
@@ -811,6 +812,9 @@ static void slot_machine_payout()
 		/* free spin if on pay line */
 		bonus_active = true;
 		audio_out_beep(4000, 100);
+		led_pwm_enable(BADGE_LED_RGB_BLUE, 50);
+		led_pwm_disable(BADGE_LED_RGB_RED);
+		led_pwm_disable(BADGE_LED_RGB_GREEN);
 	}
 	else
 	{
