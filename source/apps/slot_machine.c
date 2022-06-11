@@ -691,11 +691,21 @@ static void pull_handle()
 	spin();
 }
 
+static void led_rgb_off()
+{
+	led_pwm_disable(BADGE_LED_RGB_RED);
+	led_pwm_disable(BADGE_LED_RGB_GREEN);
+	led_pwm_disable(BADGE_LED_RGB_BLUE);
+}
+
 static void audio_play_jingle()
 {
 	char offset;
 	random_insecure_bytes((void *) &offset, sizeof(offset));
 	audio_out_beep(1000 + offset, 1000 / 60 + 10);
+	led_pwm_enable(BADGE_LED_RGB_RED, offset & 0x3f);
+	led_pwm_enable(BADGE_LED_RGB_GREEN, offset & 0x7e);
+	led_pwm_enable(BADGE_LED_RGB_BLUE, offset & 0xfa);
 }
 
 static void slot_machine_bet()
@@ -768,16 +778,23 @@ static void slot_machine_payout()
 	if (PAY_CHERRY == last_payout)
 	{
 		audio_out_beep(1500,100);
+		led_pwm_enable(BADGE_LED_RGB_RED, 50);
+		led_pwm_disable(BADGE_LED_RGB_GREEN);
+		led_pwm_disable(BADGE_LED_RGB_BLUE);
 	}
 	
 	else if (last_payout != PAY_NONE)
 	{
 		int multiplier = PAYSCALE[last_payout].multiplier;
 		audio_out_beep(1600 + 10 * multiplier,100 + 50 * multiplier);
+		led_pwm_enable(BADGE_LED_RGB_RED, 75);
+		led_pwm_enable(BADGE_LED_RGB_GREEN, 50);
+		led_pwm_disable(BADGE_LED_RGB_BLUE);
 	}
 	else
 	{
 		audio_out_beep(200,50);
+		led_rgb_off();
 	}
 	
 
@@ -797,6 +814,7 @@ static void slot_machine_payout()
 static void slot_machine_exit()
 {
 	slot_machine_state = SLOT_MACHINE_INIT;
+	led_rgb_off();
 	returnToMenus();
 }
 
