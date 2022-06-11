@@ -647,8 +647,10 @@ static void render_bonus()
 {
 	const char s[] = "BONUS!";
 	FbColor(YELLOW);
+	FbBackgroundColor(PACKRGB(9, 7, 53));
 	FbMove(42, LCD_YSIZE / 2);
 	FbWriteLine(s);
+	FbBackgroundColor(BLACK);
 }
 
 static void render()
@@ -711,9 +713,9 @@ static void audio_play_jingle()
 	char offset[4];
 	random_insecure_bytes((void *) offset, sizeof(offset));
 	audio_out_beep(1000 + offset[0], 1000 / 60 + 10);
-	led_pwm_enable(BADGE_LED_RGB_RED, offset[1]);
-	led_pwm_enable(BADGE_LED_RGB_GREEN, offset[2]);
-	led_pwm_enable(BADGE_LED_RGB_BLUE, offset[3]);
+	led_pwm_enable(BADGE_LED_RGB_RED, offset[1]/8);
+	led_pwm_enable(BADGE_LED_RGB_GREEN, offset[2]/8);
+	led_pwm_enable(BADGE_LED_RGB_BLUE, offset[3]/8);
 }
 
 static void slot_machine_bet()
@@ -812,9 +814,9 @@ static void slot_machine_payout()
 		/* free spin if on pay line */
 		bonus_active = true;
 		audio_out_beep(4000, 100);
-		led_pwm_enable(BADGE_LED_RGB_BLUE, 50);
-		led_pwm_disable(BADGE_LED_RGB_RED);
-		led_pwm_disable(BADGE_LED_RGB_GREEN);
+		led_pwm_enable(BADGE_LED_RGB_RED, 5);
+		led_pwm_enable(BADGE_LED_RGB_GREEN, 4);
+		led_pwm_enable(BADGE_LED_RGB_BLUE, 40);		
 	}
 	else
 	{
