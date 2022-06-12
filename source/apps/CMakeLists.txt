@@ -12,7 +12,6 @@ target_sources(badge2022_c PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/maze.c
         ${CMAKE_CURRENT_LIST_DIR}/qc.c
         ${CMAKE_CURRENT_LIST_DIR}/smashout.c
-        ${CMAKE_CURRENT_LIST_DIR}/spacetripper.c
         ${CMAKE_CURRENT_LIST_DIR}/username.c
         ${CMAKE_CURRENT_LIST_DIR}/slot_machine.c
         )

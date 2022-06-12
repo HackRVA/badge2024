@@ -467,7 +467,6 @@ const struct menu_t games_m[] = {
    {"Conductor",     VERT_ITEM, FUNCTION, {(struct menu_t *)conductor_cb}}, // Tell other badges to play notes
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, {(struct menu_t *)lunarlander_cb} },
    {"Badge Monsters",VERT_ITEM, FUNCTION, {(struct menu_t *)badge_monsters_cb} },
-   {"Space Tripper", VERT_ITEM, FUNCTION, {(struct menu_t *)spacetripper_cb} },
    {"Smashout",      VERT_ITEM, FUNCTION, {(struct menu_t *)smashout_cb} },
    {"Hacking Sim",   VERT_ITEM, FUNCTION, {(struct menu_t *)hacking_simulator_cb} },
    {"Spinning Cube", VERT_ITEM, FUNCTION, {(struct menu_t *)cube_cb} },
