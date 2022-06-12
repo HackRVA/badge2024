@@ -373,6 +373,7 @@ static enum Payout payout_get()
 
 #define REND_CHAR_WIDTH (8)
 #define REND_PADDING (10)
+#define REND_REEL_HEIGHT (80)
 #define RENDER_REELS_OUTLINE_COLOR WHITE
 #define REND_BAR_V2 1
 
@@ -677,12 +678,19 @@ static void render_reels()
 		   LCD_XSIZE - padding-REEL_COUNT, padding + reel_height / 2);
 }
 
+static void render_instructions()
+{
+	FbColor(GREY16);
+	FbMove(REND_PADDING, LCD_YSIZE - REND_PADDING - REND_CHAR_WIDTH);
+	FbWriteString("<Exit  ^/v");
+}
+
 static void render_credits()
 {
 	char s[16] = {0};
 	snprintf(s, sizeof(s), "Credit\n%-6d", credits);
 	FbColor(WHITE);
-	FbMove(REND_PADDING, LCD_YSIZE - REND_PADDING - REND_CHAR_WIDTH * 2);
+	FbMove(REND_PADDING, REND_PADDING + REND_REEL_HEIGHT + REND_CHAR_WIDTH / 2);
 	FbWriteString(s);
 }
 
@@ -692,7 +700,7 @@ static void render_bet()
 	snprintf(s, sizeof(s), "Bet\n%2d", bet);
 	FbColor(WHITE);
 	FbMove(LCD_XSIZE / 2, 
-		   LCD_YSIZE - REND_PADDING - REND_CHAR_WIDTH * 2);
+		   REND_PADDING + REND_REEL_HEIGHT + REND_CHAR_WIDTH / 2);
 	FbWriteString(s);
 }
 
@@ -702,7 +710,7 @@ static void render_win()
 	snprintf(s, sizeof(s), "Win\n%3d", win);
 	FbColor(WHITE);
 	FbMove(LCD_XSIZE - REND_PADDING - REND_CHAR_WIDTH * 3, 
-		   LCD_YSIZE - REND_PADDING - REND_CHAR_WIDTH * 2);
+		   REND_PADDING + REND_REEL_HEIGHT + REND_CHAR_WIDTH / 2);
 	FbWriteString(s);
 }
 
@@ -720,6 +728,7 @@ static void render()
 {
 	FbClear();
 	render_reels();
+	render_instructions();
 	render_credits();
 	render_bet();
 	render_win();
