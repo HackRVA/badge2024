@@ -78,9 +78,37 @@ enum Symbol
 
 static const enum Symbol REEL[REEL_COUNT][REEL_SIZE] = 
 {
-	{SYM_NONE, SYM_BAR1, SYM_BAR2, SYM_BAR3, SYM_NONE, SYM_SEVEN, SYM_BAR1, SYM_NONE, SYM_CHERRY, SYM_BAR1},
-	{SYM_BAR3, SYM_SEVEN, SYM_BAR2, SYM_BAR1, SYM_NONE, SYM_NONE, SYM_BAR1, SYM_NONE, SYM_CHERRY, SYM_BAR2},
-	{SYM_BONUS, SYM_NONE, SYM_BAR3, SYM_BAR2, SYM_BAR1, SYM_NONE, SYM_NONE, SYM_SEVEN, SYM_NONE, SYM_BAR1},
+	/*
+	 *  The first reel is required to win. Therefore it is an ideal place to
+	 *  put cherries close ot other symbols to lessen the tendency for cherries
+	 *  to offset all losses by allowing them to be overriden by other wins.
+	 */
+	{SYM_NONE, SYM_BAR1, SYM_BAR2, SYM_BAR3, 
+	 SYM_SEVEN, SYM_NONE, SYM_NONE, SYM_BAR1,
+	 SYM_CHERRY, SYM_BAR2, SYM_NONE, SYM_NONE,
+	 SYM_BAR3, SYM_SEVEN, SYM_BAR1, SYM_NONE},
+
+	 /*
+	  *  The second reel must be appropriately stingy to prevent excessive 
+	  *  payouts for payscales which require only the first to symbols. 
+	  */
+	{SYM_BAR3, SYM_SEVEN, SYM_BAR2, SYM_BAR1,
+	 SYM_NONE, SYM_NONE, SYM_BAR1, SYM_NONE,
+	 SYM_CHERRY, SYM_NONE, SYM_BAR2, SYM_BAR3,
+	 SYM_NONE, SYM_BAR1, SYM_NONE, SYM_NONE},
+
+	/*
+	 *	The third reel is all about the suspense. It's the "make or break" reel.
+	 *  To that effect, it should always feel like you missed the payout by 
+	 *  "that much". This can be accomplished by having a very spread out
+	 *  and relatively rich set of symbols on the reel. It's also the best place
+	 *  to put the "BONUS!" free spin symbol, as it helps to fill the reel and
+	 *  enhance the feeling of having another go.
+	 */
+	{SYM_BONUS, SYM_NONE, SYM_BAR3, SYM_BAR2,
+	 SYM_BAR1, SYM_NONE, SYM_NONE, SYM_SEVEN,
+	 SYM_NONE, SYM_BAR1, SYM_BAR2, SYM_NONE,
+	 SYM_SEVEN, SYM_BAR1, SYM_BAR2, SYM_NONE},
 };
 
 static int reel_position[REEL_COUNT];
@@ -286,14 +314,14 @@ static const struct Payscale PAYSCALE[] =
 {
 	{"None", 0, NULL, {200, 50}, {0}},
 	{"Cherry anywhere", 1, eval_cherry, {1500, 100}, {50, 0, 0}},
-	{"Any 2 BAR", 2, eval_bar_any2, {1600, 200}, {50, 40, 0}},
-	{"Any 3 BAR", 3, eval_bar_any3, {1650, 250}, {50, 40, 0}},
-	{"Two BAR2", 5, eval_bar2_2, {1700, 350}, {50, 40, 0}},
-	{"Three BAR2", 10, eval_bar2_3, {1750, 600}, {50, 40, 0}},
-	{"Two BAR3", 20, eval_bar3_2, {1800, 1000}, {100, 80, 0}},
-	{"Three BAR3", 35, eval_bar3_3, {1900, 2000}, {100, 80, 0}},
-	{"Two sevens", 50, eval_seven_2, {2000, 3000}, {100, 100, 100}},
-	{"Three sevens", 100, eval_seven_3, {2200, 4000}, {100, 100, 100}}
+	{"Any 2 BAR", 5, eval_bar_any2, {1600, 200}, {50, 40, 0}},
+	{"Any 3 BAR", 10, eval_bar_any3, {1650, 250}, {50, 40, 0}},
+	{"Two BAR2", 50, eval_bar2_2, {1700, 350}, {50, 40, 0}},
+	{"Three BAR2", 250, eval_bar2_3, {1750, 600}, {50, 40, 0}},
+	{"Two BAR3", 100, eval_bar3_2, {1800, 1000}, {100, 80, 0}},
+	{"Three BAR3", 500, eval_bar3_3, {1900, 2000}, {100, 80, 0}},
+	{"Two sevens", 200, eval_seven_2, {2000, 3000}, {100, 100, 100}},
+	{"Three sevens", 1000, eval_seven_3, {2200, 4000}, {100, 100, 100}}
 };
 
 #define FORCE_PAYOUT
