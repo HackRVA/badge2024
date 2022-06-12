@@ -9,5 +9,6 @@
 #define BADGE2022_C_RANDOM_H
 
 void random_insecure_bytes(uint8_t *bytes, size_t len);
+uint32_t random_insecure_u32_congruence(uint32_t last);
 
 #endif //BADGE2022_C_RANDOM_H

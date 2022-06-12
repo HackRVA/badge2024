@@ -29,6 +29,7 @@
 #include "spacetripper.h"
 #include "smashout.h"
 #include "username.h"
+#include "slot_machine.h"
 
 
 
@@ -471,6 +472,7 @@ const struct menu_t games_m[] = {
    {"Hacking Sim",   VERT_ITEM, FUNCTION, {(struct menu_t *)hacking_simulator_cb} },
    {"Spinning Cube", VERT_ITEM, FUNCTION, {(struct menu_t *)cube_cb} },
    {"Game of Life", VERT_ITEM, FUNCTION, {(struct menu_t *)game_of_life_cb} },
+   {"Slot Machine", VERT_ITEM, FUNCTION, {(struct menu_t *)slot_machine_cb}},
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 

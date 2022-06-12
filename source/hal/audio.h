@@ -23,7 +23,7 @@
 #define AUDIO_BEEP_FREQ_HZ_MIN  (120)
 #define AUDIO_BEEP_FREQ_HZ_MAX  (10000)
 #define AUDIO_BEEP_DUR_MS_MIN   (1)
-#define AUDIO_BEEP_DUR_MS_MAX   (5000)
+#define AUDIO_BEEP_DUR_MS_MAX   (30000)
 
 /*!
  *  @brief  Initialize and configure audio gpio
