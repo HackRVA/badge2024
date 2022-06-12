@@ -106,7 +106,7 @@ static const enum Symbol REEL[REEL_COUNT][REEL_SIZE] =
 	 *  enhance the feeling of having another go.
 	 */
 	{SYM_BONUS, SYM_NONE, SYM_BAR3, SYM_BAR2,
-	 SYM_BAR1, SYM_NONE, SYM_NONE, SYM_SEVEN,
+	 SYM_BAR1, SYM_NONE, SYM_SEVEN, SYM_CHERRY,
 	 SYM_NONE, SYM_BAR1, SYM_BAR2, SYM_NONE,
 	 SYM_SEVEN, SYM_BAR1, SYM_BAR2, SYM_NONE},
 };
@@ -147,12 +147,10 @@ enum Payout
 	PAY_CHERRY,
 	PAY_BAR_ANY2,
 	PAY_BAR_ANY3,
-	PAY_BAR2_2,
 	PAY_BAR2_3,
-	PAY_BAR3_2,
 	PAY_BAR3_3,
-	PAY_SEVEN_2,
 	PAY_SEVEN_3,
+	PAY_CHERRY_3,
 	PAY_COUNT,
 };
 
@@ -214,20 +212,6 @@ static enum Payout eval_bar_any3()
 	}
 }
 
-static enum Payout eval_bar2_2()
-{
-	if ((SYM_BAR2 == (symbol_in_pos(0, 0)))
-	    && (SYM_BAR2 == (symbol_in_pos(1, 0)))
-		&& (SYM_BAR2 != symbol_in_pos(2, 0)))
-	{
-		return PAY_BAR2_2;
-	}
-	else
-	{
-		return PAY_NONE;
-	}
-}
-
 static enum Payout eval_bar2_3()
 {
 	if ((SYM_BAR2 == (symbol_in_pos(0, 0)))
@@ -235,20 +219,6 @@ static enum Payout eval_bar2_3()
 		&& (SYM_BAR2 == symbol_in_pos(2, 0)))
 	{
 		return PAY_BAR2_3;
-	}
-	else
-	{
-		return PAY_NONE;
-	}
-}
-
-static enum Payout eval_bar3_2()
-{
-	if ((SYM_BAR3 == (symbol_in_pos(0, 0)))
-	    && (SYM_BAR3 == (symbol_in_pos(1, 0)))
-		&& (SYM_BAR3 != symbol_in_pos(2, 0)))
-	{
-		return PAY_BAR3_2;
 	}
 	else
 	{
@@ -270,20 +240,6 @@ static enum Payout eval_bar3_3()
 	}
 }
 
-static enum Payout eval_seven_2()
-{
-	if ((SYM_SEVEN == (symbol_in_pos(0, 0)))
-	    && (SYM_SEVEN == (symbol_in_pos(1, 0)))
-		&& (SYM_SEVEN != symbol_in_pos(2, 0)))
-	{
-		return PAY_SEVEN_2;
-	}
-	else
-	{
-		return PAY_NONE;
-	}
-}
-
 static enum Payout eval_seven_3()
 {
 	if ((SYM_SEVEN == (symbol_in_pos(0, 0)))
@@ -291,6 +247,20 @@ static enum Payout eval_seven_3()
 		&& (SYM_SEVEN == symbol_in_pos(2, 0)))
 	{
 		return PAY_SEVEN_3;
+	}
+	else
+	{
+		return PAY_NONE;
+	}
+}
+
+static enum Payout eval_cherry_3()
+{
+	if ((SYM_CHERRY == (symbol_in_pos(0, 0)))
+	    && (SYM_CHERRY == (symbol_in_pos(1, 0)))
+		&& (SYM_CHERRY == symbol_in_pos(2, 0)))
+	{
+		return PAY_CHERRY_3;
 	}
 	else
 	{
@@ -314,17 +284,15 @@ static const struct Payscale PAYSCALE[] =
 {
 	{"None", 0, NULL, {200, 50}, {0}},
 	{"Cherry anywhere", 1, eval_cherry, {1500, 100}, {50, 0, 0}},
-	{"Any 2 BAR", 5, eval_bar_any2, {1600, 200}, {50, 40, 0}},
-	{"Any 3 BAR", 10, eval_bar_any3, {1650, 250}, {50, 40, 0}},
-	{"Two BAR2", 50, eval_bar2_2, {1700, 350}, {50, 40, 0}},
-	{"Three BAR2", 250, eval_bar2_3, {1750, 600}, {50, 40, 0}},
-	{"Two BAR3", 100, eval_bar3_2, {1800, 1000}, {100, 80, 0}},
-	{"Three BAR3", 500, eval_bar3_3, {1900, 2000}, {100, 80, 0}},
-	{"Two sevens", 200, eval_seven_2, {2000, 3000}, {100, 100, 100}},
-	{"Three sevens", 1000, eval_seven_3, {2200, 4000}, {100, 100, 100}}
+	{"Any 2 BAR", 10, eval_bar_any2, {1600, 200}, {50, 40, 0}},
+	{"Any 3 BAR", 20, eval_bar_any3, {1650, 250}, {50, 40, 0}},
+	{"Three BAR2", 500, eval_bar2_3, {1750, 600}, {50, 40, 0}},
+	{"Three BAR3", 750, eval_bar3_3, {1900, 2000}, {100, 80, 0}},
+	{"Three sevens", 1000, eval_seven_3, {2000, 3000}, {100, 100, 100}},
+	{"Three cherries", 4000, eval_cherry_3, {2100, 4000}, {100, 0, 0}},
 };
 
-#define FORCE_PAYOUT
+//#define FORCE_PAYOUT
 
 static enum Payout payout_get()
 {
@@ -341,17 +309,13 @@ static enum Payout payout_get()
 		case BUTTON_PRESSED(BADGE_BUTTON_LEFT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff):
 			return PAY_BAR_ANY3;
 		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff):
-			return PAY_BAR2_2;
-		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff):
 			return PAY_BAR2_3;
-		case BUTTON_PRESSED(BADGE_BUTTON_LEFT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
-			return PAY_BAR3_2;
-		case BUTTON_PRESSED(BADGE_BUTTON_LEFT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
+		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff):
 			return PAY_BAR3_3;
-		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
-			return PAY_SEVEN_2;
 		case BUTTON_PRESSED(BADGE_BUTTON_RIGHT, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff):
 			return PAY_SEVEN_3;	
+		case BUTTON_PRESSED(BADGE_BUTTON_SW, 0xff) | BUTTON_PRESSED(BADGE_BUTTON_UP, 0xff):
+			return PAY_CHERRY_3;
 		default:
 			break;
 	}
@@ -820,7 +784,7 @@ static void slot_machine_bet()
 
 static void slot_machine_spin()
 {
-	static positions_spun = 0;
+	static size_t positions_spun = 0;
 	size_t reel;
 	for (reel = 0; reel < REEL_COUNT; reel++)
 	{
