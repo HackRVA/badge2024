@@ -1,0 +1,21 @@
+{
+  "name": "RVAsec 2022 Badge",
+  "subtitle": "",
+  "description": "",
+  "footer": "built by hackrva",
+  "url": "https://hackrva.github.io/badge2022/",
+  "githubUrl": "https://github.com/hackrva/badge2022",
+  "githubBranch": "main",
+  "navigationStyle": "vertical",
+  "emoji": "💥",
+  "enableSearch": false,
+  "enableDarkMode": true,
+  "enableEditButton": false,
+  "enableDatestamp": true,
+  "enableGithubLink": true,
+  "enableContact": false,
+  "enableNetlifyCMS": false,
+  "enableComments": false,
+  "enableEncryption": false,
+  "enablePageNavigation": true
+}

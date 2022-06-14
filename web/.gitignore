@@ -1,0 +1,10 @@
+_site/
+_tmp/
+.cache/
+node_modules/
+package-lock.json
+.idea
+.vscode
+*~
+
+docs
