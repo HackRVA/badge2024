@@ -168,3 +168,5 @@ Other Extensions:
 * MicroPython setup for badge hardware?
 * Improve documentation for beginners
 * GitHub Actions integration (build firmware/run tests/build docs)
+
+[//]: # (MetaCTF{stop_asking_about_badge_problems})
