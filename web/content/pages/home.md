@@ -13,7 +13,7 @@ eleventyNavigation:
   }
 </style>
 
-Here you will find some documentation about your electronic 2021 RVAsec badge. Your badge is hand made and programmed by members of HackRVA, Richmond's member-run and non-profit makerspace.
+Here you will find some documentation about your electronic 2022 RVAsec badge. Your badge is hand made and programmed by members of HackRVA, Richmond's member-run and non-profit makerspace.
 
 
 ![badges](images/badges.jpg)
