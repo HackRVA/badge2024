@@ -520,8 +520,8 @@ void FbHorizontalLine(unsigned char x1, unsigned char y1, unsigned char x2, __at
     unsigned char x;
 
     FbMove(x1, y1);
-    for (x=x1; x<x2; x++) FbPoint(x, y1);
-
+    for (x = x1; x <= x2; x++)
+	FbPoint(x, y1);
     G_Fb.changed = 1;
 }
 
@@ -530,7 +530,8 @@ void FbVerticalLine(unsigned char x1, unsigned char y1, __attribute__((unused)) 
     unsigned char y;
 
     FbMove(x1, y1);
-    for (y=y1; y<y2; y++) FbPoint(x1, y);
+    for (y = y1; y <= y2; y++)
+	FbPoint(x1, y);
     G_Fb.changed = 1;
 }
 
