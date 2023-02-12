@@ -62,5 +62,5 @@ Wild Cherry style slot machine.
 ## Making your own Badge Apps
 If you know C, making your own badge apps is not that difficult. You can test out your app withot having to flash the firmware using our handy dandy linux badge emulator. Once you're satisfied, you can build the firmware and flash the pico over a USB-A to USB-B micro cable. Customize your badge and stretch those creative muscles!
 
-To get started, start with the repository [README.md](https://github.com/HackRVA/badge2022/blob/main/README.md).
+To get started, start with the repository [README.md](https://github.com/HackRVA/badge2023/blob/main/README.md).
 

@@ -1,4 +1,4 @@
-# Badge2022 Documentation
+# badge2023 Documentation
 This is a place to store public facing documentation.
 This uses a static site generator [eleventy](https://www.11ty.dev/) that builds a documentation site to gh-pages.
 
@@ -25,8 +25,8 @@ Hello, World!
 ```
 
 ### Images
-Add images to the `web/content/pages/images/` dir.
-Files in this directory get passed through to this directory in the build: `/badge2022/images/`
+Add images to the `web/user_docs/content/pages/images/` dir.
+Files in this directory get passed through to this directory in the build: `/badge2023/images/`
 
 in the markdown files, reference the images from a relative path.
 > e.g. `images/someImage.jpg`
@@ -44,15 +44,4 @@ https://github.com/nvm-sh/nvm#install--update-script
 You should now be able to run node and npm.
 ```
 npm -v
-```
-
-### run the site locally:
-```
-sh run_local.sh
-```
-the site should be served up on `http://localhost:8080`
-
-### deploy to gh-pages
-```
-sh deploy_to_gh-pages.sh
 ```

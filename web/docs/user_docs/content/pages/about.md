@@ -14,7 +14,7 @@ eleventyNavigation:
 </style>
 ## Technical Details
 
-![tech-specs](images/badge2022_datasheet.png)
+![tech-specs](images/datasheet.png)
 
 ## HackRVA
 

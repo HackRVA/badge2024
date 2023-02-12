@@ -25,7 +25,7 @@ module.exports = function(eleventyConfig) {
     let metadata = await Image(src, {
       widths: [400, 600, 800, 1000, 1200, 1400, 1600, 1900],
       formats: ['webp', 'jpeg', 'png'],
-      urlPath: "/badge2022/content/pages/images/",
+      urlPath: "/badge2023/content/pages/images/",
       outputDir: "./_site/content/images/"
     });
 
@@ -190,7 +190,7 @@ module.exports = function(eleventyConfig) {
     // Leading or trailing slashes are all normalized away, so don’t worry about it.
     // If you don’t have a subdirectory, use "" or "/" (they do the same thing)
     // This is only used for URLs (it does not affect your file structure)
-    pathPrefix: "/badge2022/",
+    pathPrefix: "/badge2023/",
     markdownTemplateEngine: "liquid",
     htmlTemplateEngine: "njk",
     dataTemplateEngine: "njk",
