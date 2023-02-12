@@ -13,6 +13,9 @@ build-user-docs:
 serve-user-docs:
 	bash ./scripts/serve_user_docs.sh
 
+deploy-docs:
+	bash ./scripts/deploy_to_gh-pages.sh
+
 clean:
 	rm -rf .bin
 	rm -rf .dist

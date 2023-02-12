@@ -1,9 +1,16 @@
 #!/bin/sh
 
-source ./install_node_modules.sh
-
+source ./scripts/download-mdbook.sh
 source ./build_badgeappdev_docs.sh
 source ./build_user_docs.sh
 
-# npm run build --prefix=docs/user_docs
-# npm run deploy --prefix=docs/user_docs
+GIT_REPO_URL=$(git config --get remote.origin.url)
+
+cd .dist
+git init .
+git remote add github $GIT_REPO_URL
+git checkout -b gh-pages
+git add .
+git commit -am "Static site deploy"
+git push github gh-pages --force
+cd ../..
