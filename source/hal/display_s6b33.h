@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 12/21/21.
 //
 
-#ifndef BADGE2022_C_DISPLAY_SB633_H
-#define BADGE2022_C_DISPLAY_SB633_H
+#ifndef BADGE_C_DISPLAY_SB633_H
+#define BADGE_C_DISPLAY_SB633_H
 
 #include <stdbool.h>
 
@@ -75,4 +75,4 @@ void S6B33_color(unsigned short pixel);
 /** @brief Tell us if we're busy sending data to the display */
 bool S6B33_busy(void);
 
-#endif //BADGE2022_C_DISPLAY_SB633_H
+#endif //BADGE_C_DISPLAY_SB633_H

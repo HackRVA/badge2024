@@ -16,8 +16,8 @@
  *
  */
 
-#ifndef BADGE2022_C_KEY_VALUE_STORAGE_H
-#define BADGE2022_C_KEY_VALUE_STORAGE_H
+#ifndef BADGE_C_KEY_VALUE_STORAGE_H
+#define BADGE_C_KEY_VALUE_STORAGE_H
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -74,4 +74,4 @@ bool flash_kv_get_string(const char* key, char* value, size_t max_len);
  */
 bool flash_kv_get_int(const char* key, int* value);
 
-#endif //BADGE2022_C_KEY_VALUE_STORAGE_H
+#endif //BADGE_C_KEY_VALUE_STORAGE_H

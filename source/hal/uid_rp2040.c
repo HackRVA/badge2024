@@ -2,11 +2,11 @@
  *  @file   uid_rp2040.c
  *  @author Peter Maxwell Warasila
  *  @date   June 6, 2022
- *  
- *  @brief  RVASec 2022 Badge Unique ID RP2040 implementation
+ *
+ *  @brief  RVASec 2023 Badge Unique ID RP2040 implementation
  *
  *------------------------------------------------------------------------------
- * 
+ *
  */
 
 #include <stdint.h>

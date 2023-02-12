@@ -2,18 +2,18 @@
  *  @file   audio.h
  *  @author Peter Maxwell Warasila
  *  @date   May 28, 2022
- *  
- *  @brief  RVASec 2022 Badge Audio Driver
+ *
+ *  @brief  RVASec 2023 Badge Audio Driver
  *
  *------------------------------------------------------------------------------
- * 
+ *
  */
 
 
-#ifndef BADGE2022_C_AUDIO_H
-#define BADGE2022_C_AUDIO_H
+#ifndef BADGE_C_AUDIO_H
+#define BADGE_C_AUDIO_H
 
-/*! @defgroup   BADGE2022_AUDIO Audio Driver
+/*! @defgroup   BADGE_AUDIO Audio Driver
  *  @{
  */
 
@@ -27,9 +27,9 @@
 
 /*!
  *  @brief  Initialize and configure audio gpio
- *  
+ *
  *  @subsection Input
- *  The input is configured 
+ *  The input is configured
  */
 void audio_init_gpio();
 
@@ -40,7 +40,7 @@ void audio_init();
 
 /*!
  *  @brief  Play an old fashioned beep on the speaker.
- *  
+ *
  *  @param  frequency   Frequency in Hertz
  *  @param  duration    Duration in milliseconds
  */
@@ -48,7 +48,7 @@ int audio_out_beep(uint16_t freq, uint16_t duration);
 
 /*!
  *  @brief  Request the opamp standby pin take a certain state.
- *  
+ *
  *  @param  enable  Request the standby mode be enabled
  */
 void audio_stby_ctl(bool enable);
@@ -58,6 +58,6 @@ void audio_stby_ctl(bool enable);
  */
 bool audio_is_playing(void);
 
-/*! @} */ // BADGE2022_AUDIO
+/*! @} */ // BADGE_AUDIO
 
-#endif /* BADGE2022_C_AUDIO_H */
+#endif /* BADGE_C_AUDIO_H */

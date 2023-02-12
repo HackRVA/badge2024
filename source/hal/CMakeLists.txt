@@ -1,6 +1,6 @@
 
 if (${TARGET} STREQUAL "PICO")
-    target_sources(badge2022_c PUBLIC
+    target_sources(badge2023_c PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/delay_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/flash_storage_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/init_rp2040.c
@@ -19,7 +19,7 @@ if (${TARGET} STREQUAL "PICO")
 endif()
 
 if (${TARGET} STREQUAL "SIMULATOR")
-    target_sources(badge2022_c PUBLIC
+    target_sources(badge2023_c PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/delay_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/flash_storage_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/init_sim.c
@@ -36,18 +36,18 @@ if (${TARGET} STREQUAL "SIMULATOR")
 
     cmake_policy(SET CMP0079 NEW)
     find_package(GTK2 2.6 REQUIRED gtk)
-    target_include_directories(badge2022_c PRIVATE ${GTK2_INCLUDE_DIRS})
-    target_link_directories(badge2022_c PRIVATE ${GTK2_LIBRARY_DIRS})
-    target_link_libraries(badge2022_c ${GTK2_LIBRARIES})
+    target_include_directories(badge2023_c PRIVATE ${GTK2_INCLUDE_DIRS})
+    target_link_directories(badge2023_c PRIVATE ${GTK2_LIBRARY_DIRS})
+    target_link_libraries(badge2023_c ${GTK2_LIBRARIES})
     # Add other flags to the compiler
-    target_compile_definitions(badge2022_c PRIVATE ${GTK2_CFLAGS_OTHER})
+    target_compile_definitions(badge2023_c PRIVATE ${GTK2_CFLAGS_OTHER})
 
     find_package(Threads REQUIRED)
-    target_link_libraries(badge2022_c Threads::Threads)
+    target_link_libraries(badge2023_c Threads::Threads)
 endif()
 
 if (${TARGET} STREQUAL "SDL_SIMULATOR")
-    target_sources(badge2022_c PUBLIC
+    target_sources(badge2023_c PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/delay_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/flash_storage_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/init_sdl_sim.c
@@ -64,14 +64,14 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
 
     cmake_policy(SET CMP0079 NEW)
     find_package(SDL2 REQUIRED)
-    target_include_directories(badge2022_c PRIVATE ${SDL2_INCLUDE_DIRS})
-    target_link_directories(badge2022_c PRIVATE ${SDL2_LIBRARY_DIRS})
-    target_link_libraries(badge2022_c ${SDL2_LIBRARIES})
+    target_include_directories(badge2023_c PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_directories(badge2023_c PRIVATE ${SDL2_LIBRARY_DIRS})
+    target_link_libraries(badge2023_c ${SDL2_LIBRARIES})
     # Add other flags to the compiler
-    target_compile_definitions(badge2022_c PRIVATE ${SDL2_CFLAGS_OTHER})
+    target_compile_definitions(badge2023_c PRIVATE ${SDL2_CFLAGS_OTHER})
     
     find_package(Threads REQUIRED)
-    target_link_libraries(badge2022_c Threads::Threads)
+    target_link_libraries(badge2023_c Threads::Threads)
 endif()
 
-target_include_directories(badge2022_c PUBLIC .)
+target_include_directories(badge2023_c PUBLIC .)

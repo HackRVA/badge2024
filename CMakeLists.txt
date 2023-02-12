@@ -12,7 +12,7 @@ if (${TARGET} STREQUAL "PICO")
     include(pico_extras_import.cmake)
 endif()
 
-project(badge2022_c C CXX ASM)
+project(badge2023_c C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 enable_testing()

@@ -4,8 +4,8 @@
 
 #include <stdint.h>
 
-#ifndef badge2022_c_DELAY_H
-#define badge2022_c_DELAY_H
+#ifndef badge_c_DELAY_H
+#define badge_c_DELAY_H
 
 void sleep_ms(uint32_t time);
 
@@ -18,4 +18,4 @@ void sleep_us(uint64_t time);
 void lp_sleep_us(uint64_t time);
 
 
-#endif //badge2022_c_DELAY_H
+#endif //badge_c_DELAY_H

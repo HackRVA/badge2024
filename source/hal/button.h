@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 1/29/22.
 //
 
-#ifndef BADGE2022_C_BUTTON_H
-#define BADGE2022_C_BUTTON_H
+#ifndef BADGE_C_BUTTON_H
+#define BADGE_C_BUTTON_H
 
 #include <stdbool.h>
 
@@ -47,4 +47,4 @@ int button_get_rotation(void);
 /**  Tell us if we're busy debouncing a button input. */
 bool button_debouncing(void);
 
-#endif //BADGE2022_C_BUTTON_H
+#endif //BADGE_C_BUTTON_H

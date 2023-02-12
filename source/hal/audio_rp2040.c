@@ -2,13 +2,13 @@
  *  @file   audio_rp2040.c
  *  @author Peter Maxwell Warasila
  *  @date   May 28, 2022
- *  
- *  @brief  RVASec 2022 Badge Audio Implementation
+ *
+ *  @brief  RVASec 2023 Badge Audio Implementation
  *
  *------------------------------------------------------------------------------
- * 
+ *
  *  @note   Only basic output beep implemented!
- * 
+ *
  */
 
 #include <stdint.h>
@@ -27,7 +27,7 @@
 
 #include "audio.h"
 
-/*! @addtogroup BADGE2022_AUDIO Audio Driver
+/*! @addtogroup BADGE2023_AUDIO Audio Driver
  *  @{
  */
 
@@ -40,7 +40,7 @@ static volatile enum audio_out_mode_ {
     AUDIO_OUT_MODE_BEEP,
 } audio_out_mode;
 
-static uint16_t test_wave[] = 
+static uint16_t test_wave[] =
 {
     127,133,140,146,152,158,163,169,173,177,181,184,187,189,190,
     190,190,189,188,186,183,179,175,171,166,161,155,149,143,136,
@@ -62,7 +62,7 @@ static void audio_out_pwm_irq_handler()
             /* this irq shouldn't be here anyway */
             pwm_set_irq_enabled(slice, false);
             return;
-            
+
         default:
             return;
     }
@@ -73,7 +73,7 @@ static void audio_out_pwm_irq_handler()
     // sample /= 16;
     // sample += 128; // add bias
     pwm_set_chan_level(slice, chan, sample);
-    if (test_pos >= (sizeof(test_wave)*1/sizeof(test_wave[0]))) test_pos = 0; 
+    if (test_pos >= (sizeof(test_wave)*1/sizeof(test_wave[0]))) test_pos = 0;
 #endif
 }
 
@@ -98,7 +98,7 @@ void audio_init_gpio()
     gpio_set_drive_strength(BADGE_GPIO_AUDIO_PWM, GPIO_DRIVE_STRENGTH_2MA);
     slice = pwm_gpio_to_slice_num(BADGE_GPIO_AUDIO_PWM);
     chan = pwm_gpio_to_channel(BADGE_GPIO_AUDIO_PWM);
-    
+
     /* Configure audio standby as open-drain, intially drain */
     gpio_init(BADGE_GPIO_AUDIO_STANDBY);
     gpio_disable_pulls(BADGE_GPIO_AUDIO_STANDBY);
@@ -114,7 +114,7 @@ static void audio_in_init()
     adc_select_input(2);
     adc_fifo_setup(true, false, 1, false, true);
     adc_set_clkdiv(1000.0f); // 48 MHz / 1000 = 48kHz
-    
+
     adc_irq_set_enabled(true);
     irq_set_exclusive_handler(ADC_IRQ_FIFO, &audio_in_iqr_handler);
     irq_set_enabled(ADC_IRQ_FIFO, true);
@@ -218,4 +218,4 @@ bool audio_is_playing(void) {
     return audio_out_mode == AUDIO_OUT_MODE_BEEP;
 }
 
-/*! @} */ // BADGE2022_AUDIO
+/*! @} */ // BADGE2023_AUDIO
