@@ -599,6 +599,8 @@ void FbRectangle(unsigned char width, unsigned char height)
 
     x = G_Fb.pos.x;
     y = G_Fb.pos.y;
+    width--; /* If you want something n wide, you draw from x to x + n - 1, not to x + n */
+    height--; /* Same for height. */
     FbVerticalLine(x,	 y, x,	 y + height);
     FbVerticalLine(x + width, y, x + width, y + height);
 
