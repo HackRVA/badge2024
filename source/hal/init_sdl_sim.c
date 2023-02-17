@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <pthread.h>
+#include <SDL.h>
 #include "framebuffer.h"
 #include "display_s6b33.h"
 #include "led_pwm.h"
@@ -75,13 +76,14 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
 }
 
 
-// static GtkWidget *vbox, *window, *drawing_area;
+// static GtkWidget *vbox, *drawing_area;
+static SDL_Window *window;
 #define SCALE_FACTOR 6
 #define EXTRA_WIDTH 200
-#define GTK_SCREEN_WIDTH (LCD_XSIZE * SCALE_FACTOR + EXTRA_WIDTH)
-#define GTK_SCREEN_HEIGHT (LCD_YSIZE * SCALE_FACTOR)
-static int real_screen_width = GTK_SCREEN_WIDTH;
-static int real_screen_height = GTK_SCREEN_HEIGHT;
+#define SIM_SCREEN_WIDTH (LCD_XSIZE * SCALE_FACTOR + EXTRA_WIDTH)
+#define SIM_SCREEN_HEIGHT (LCD_YSIZE * SCALE_FACTOR)
+static int real_screen_width = SIM_SCREEN_WIDTH;
+static int real_screen_height = SIM_SCREEN_HEIGHT;
 // static GdkGC *gc = NULL;               /* our graphics context. */
 // static GdkPixbuf *pix_buf;
 static int screen_offset_x = 0;
@@ -163,7 +165,7 @@ static void setup_window_geometry(/* GtkWidget *window */)
 {
     /* clamp window aspect ratio to constant */
     GdkGeometry geom;
-    geom.min_aspect = (gdouble) GTK_SCREEN_WIDTH / (gdouble) GTK_SCREEN_HEIGHT;
+    geom.min_aspect = (gdouble) SIM_SCREEN_WIDTH / (gdouble) SIM_SCREEN_HEIGHT;
     geom.max_aspect = geom.min_aspect;
     gtk_window_set_geometry_hints(GTK_WINDOW(window), NULL, &geom, GDK_HINT_ASPECT);
 }
@@ -186,9 +188,10 @@ static void destroy(UNUSED GtkWidget *widget, UNUSED gpointer data)
 {
     gtk_main_quit();
 }
+#endif
 
-static int draw_window(GtkWidget *widget, UNUSED GdkEvent *event, UNUSED gpointer p) {
-
+static int draw_window(void) {
+#if 0
     if (time_to_quit) {
         gtk_main_quit();
         return 1;
@@ -224,21 +227,50 @@ static int draw_window(GtkWidget *widget, UNUSED GdkEvent *event, UNUSED gpointe
     gdk_draw_rectangle(widget->window, gc, 0 /* not filled */, x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2);
 
     return 0;
+#endif
 }
+
+#if 0
 
 static gboolean draw_window_timer_callback(void* params) {
     GtkWidget *widget = (GtkWidget*)params;
     return (draw_window(widget, NULL, NULL) == 0) ? gtk_true() : gtk_false();
 }
+#endif
 
-
-
-static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vbox, GtkWidget **drawing_area)
+static int start_sdl(void)
 {
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        fprintf(stderr, "Unable to initialize SDL (Video):  %s\n", SDL_GetError());
+        return 1;
+    }
+    if (SDL_Init(SDL_INIT_EVENTS) != 0) {
+        fprintf(stderr, "Unable to initialize SDL (Events):  %s\n", SDL_GetError());
+        return 1;
+    }
+    atexit(SDL_Quit);
+    return 0;
+}
+
+static void setup_window_and_drawing_area(SDL_Window **window /*, GtkWidget **vbox, GtkWidget **drawing_area*/ )
+{
+#if 0
     GdkRectangle cliprect;
+#endif
     char window_title[1024];
 
-    *window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    snprintf(window_title, sizeof(window_title), "HackRVA Badge Emulator - %s", program_title);
+    free(program_title);
+    *window = SDL_CreateWindow(window_title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                               0, 0, SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
+    if (!*window) {
+        fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
+        exit(1);
+    }
+    SDL_SetWindowSize(*window, SIM_SCREEN_WIDTH, SIM_SCREEN_HEIGHT);
+    SDL_ShowWindow(*window);
+
+#if 0
     setup_window_geometry(*window);
     gtk_container_set_border_width(GTK_CONTAINER(*window), 0);
     *vbox = gtk_vbox_new(FALSE, 0);
@@ -267,8 +299,6 @@ static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vb
     gtk_container_add(GTK_CONTAINER(*window), *vbox);
     gtk_box_pack_start(GTK_BOX(*vbox), *drawing_area, TRUE /* expand */, TRUE /* fill */, 0);
     gtk_window_set_default_size(GTK_WINDOW(*window), real_screen_width, real_screen_height);
-    snprintf(window_title, sizeof(window_title), "HackRVA Badge Emulator - %s", program_title);
-    free(program_title);
     gtk_window_set_title(GTK_WINDOW(*window), window_title);
 
 
@@ -286,17 +316,73 @@ static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vb
     cliprect.width = real_screen_width;
     cliprect.height = real_screen_height;
     gdk_gc_set_clip_rectangle(gc, &cliprect);
+#endif
 }
-#endif
 
+static void process_events(void)
+{
+    SDL_Event event;
 
-void hal_start_sdl(int *argc, char ***argv) {
+    while (SDL_PollEvent(&event)) {
+        switch (event.type) {
+        case SDL_KEYDOWN:
+            // key_press_cb(window, &event.key.keysym);
+            break;
+        case SDL_KEYUP:
+            // key_release_cb(&event.key.keysym);
+            break;
+        case SDL_QUIT:
+            /* Handle quit requests (like Ctrl-c). */
+            time_to_quit = 1;
+            break;
+        case SDL_WINDOWEVENT:
+            break;
+        case SDL_MOUSEBUTTONDOWN:
+            break;
+        case SDL_MOUSEBUTTONUP:
+            break;
+        case SDL_MOUSEMOTION:
+            break;
+        case SDL_MOUSEWHEEL:
+            break;
+        }
+    }
+}
+
+static void wait_until_next_frame(void)
+{
+    static uint32_t next_frame = 0;
+
+    if (next_frame == 0)
+        next_frame = SDL_GetTicks() + 33;  /* 30 Hz */
+    uint32_t now = SDL_GetTicks();
+    if (now < next_frame)
+        SDL_Delay(next_frame - now);
+    next_frame += 33; /* 30 Hz */
+}
+
+void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
+{
     program_title = strdup((*argv)[0]);
-#if 0
-    gtk_set_locale();
-    gtk_init(argc, argv);
-    setup_gtk_window_and_drawing_area(&window, &vbox, &drawing_area);
-#endif
+    if (start_sdl())
+	exit(1);
+    setup_window_and_drawing_area(&window /* , &vbox, &drawing_area */);
     flareled(0, 0, 0);
 
+    while (!time_to_quit) {
+	draw_window();
+	process_events();
+	wait_until_next_frame();
+    }
+
+    SDL_DestroyWindow(window);
+    SDL_QuitSubSystem(SDL_INIT_EVENTS);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    SDL_Quit();
+
+    printf("\n\n\n\n\n\n\n\n\n\n\n");
+    printf("If you seak leak sanitizer complaining about memory and _XlcDefaultMapModifiers\n");
+    printf("it's because SDL is programmed by monkeys.\n");
+    printf("\n\n\n\n\n\n\n\n\n\n\n");
+    exit(0);
 }

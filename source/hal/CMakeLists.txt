@@ -63,12 +63,12 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
             )
 
     cmake_policy(SET CMP0079 NEW)
-    # find_package(GTK2 2.6 REQUIRED gtk)
-    # target_include_directories(badge2022_c PRIVATE ${GTK2_INCLUDE_DIRS})
-    # target_link_directories(badge2022_c PRIVATE ${GTK2_LIBRARY_DIRS})
-    # target_link_libraries(badge2022_c ${GTK2_LIBRARIES})
+    find_package(SDL2 REQUIRED)
+    target_include_directories(badge2022_c PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_directories(badge2022_c PRIVATE ${SDL2_LIBRARY_DIRS})
+    target_link_libraries(badge2022_c ${SDL2_LIBRARIES})
     # Add other flags to the compiler
-    # target_compile_definitions(badge2022_c PRIVATE ${GTK2_CFLAGS_OTHER})
+    target_compile_definitions(badge2022_c PRIVATE ${SDL2_CFLAGS_OTHER})
     
     find_package(Threads REQUIRED)
     target_link_libraries(badge2022_c Threads::Threads)
