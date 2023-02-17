@@ -87,8 +87,6 @@ static SDL_Renderer *renderer;
 static int real_screen_width = SIM_SCREEN_WIDTH;
 static int real_screen_height = SIM_SCREEN_HEIGHT;
 static SDL_Texture *pix_buf;
-static int screen_offset_x = 0;
-static int screen_offset_y = 0;
 static char *program_title;
 extern int lcd_brightness;
 
@@ -118,33 +116,6 @@ static void draw_led_text(SDL_Renderer *renderer, int x, int y)
     SDL_RenderDrawLine(renderer, x + 8, y, x + 10, y - 5);
 }
 
-#if 0
-static gint drawing_area_configure(GtkWidget *w, UNUSED GdkEventConfigure *event)
-{
-    GdkRectangle cliprect;
-
-    /* first time through, gc is null, because gc can't be set without */
-    /* a window, but, the window isn't there yet until it's shown, but */
-    /* the show generates a configure... chicken and egg.  And we can't */
-    /* proceed without gc != NULL...  but, it's ok, because 1st time thru */
-    /* we already sort of know the drawing area/window size. */
-
-    if (gc == NULL)
-        return TRUE;
-
-    real_screen_width =  w->allocation.width;
-    real_screen_height =  w->allocation.height;
-
-    gdk_gc_set_clip_origin(gc, 0, 0);
-    cliprect.x = 0;
-    cliprect.y = 0;
-    cliprect.width = real_screen_width;
-    cliprect.height = real_screen_height;
-    gdk_gc_set_clip_rectangle(gc, &cliprect);
-    return TRUE;
-}
-#endif
-
 void flareled(unsigned char r, unsigned char g, unsigned char b)
 {
     led_color.red = r;
@@ -152,35 +123,6 @@ void flareled(unsigned char r, unsigned char g, unsigned char b)
     led_color.blue = b;
 }
 
-#if 0
-static void setup_window_geometry(/* GtkWidget *window */)
-{
-    /* clamp window aspect ratio to constant */
-    GdkGeometry geom;
-    geom.min_aspect = (gdouble) SIM_SCREEN_WIDTH / (gdouble) SIM_SCREEN_HEIGHT;
-    geom.max_aspect = geom.min_aspect;
-    gtk_window_set_geometry_hints(GTK_WINDOW(window), NULL, &geom, GDK_HINT_ASPECT);
-}
-
-static gboolean delete_event(UNUSED GtkWidget *widget,
-                             UNUSED GdkEvent *event, UNUSED gpointer data)
-{
-    /* If you return FALSE in the "delete_event" signal handler,
-     * GTK will emit the "destroy" signal. Returning TRUE means
-     * you don't want the window to be destroyed.
-     * This is useful for popping up 'are you sure you want to quit?'
-     * type dialogs. */
-
-    /* Change TRUE to FALSE and the main window will be destroyed with
-     * a "delete_event". */
-    return FALSE;
-}
-
-static void destroy(UNUSED GtkWidget *widget, UNUSED gpointer data)
-{
-    gtk_main_quit();
-}
-#endif
 
 /* TODO: I should not need display_array_with_alpha[] but SDL_PIXELFORMAT_RGB888 seems
  * to require alpha despite the name, or... there's some missing piece of the puzzle
@@ -278,9 +220,6 @@ static int start_sdl(void)
 
 static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **texture)
 {
-#if 0
-    GdkRectangle cliprect;
-#endif
     char window_title[1024];
 
     snprintf(window_title, sizeof(window_title), "HackRVA Badge Emulator - %s", program_title);
@@ -307,54 +246,6 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
     SDL_ShowWindow(*window);
     SDL_RenderClear(*renderer);
     SDL_RenderPresent(*renderer);
-
-#if 0
-    setup_window_geometry(*window);
-    gtk_container_set_border_width(GTK_CONTAINER(*window), 0);
-    *vbox = gtk_vbox_new(FALSE, 0);
-
-    extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
-
-    pix_buf = gdk_pixbuf_new_from_data((const guchar*) display_array, GDK_COLORSPACE_RGB, gtk_false(),
-                                        8, 132, 132, 132*3, NULL, NULL);
-
-    gtk_window_move(GTK_WINDOW(*window), screen_offset_x, screen_offset_y);
-    *drawing_area = gtk_drawing_area_new();
-    g_signal_connect(G_OBJECT(*window), "delete_event",
-                     G_CALLBACK(delete_event), NULL);
-    g_signal_connect(G_OBJECT(*window), "destroy",
-                     G_CALLBACK(destroy), NULL);
-    g_signal_connect(G_OBJECT(*window), "key_press_event",
-                     G_CALLBACK(key_press_cb), "window");
-    g_signal_connect(G_OBJECT(*window), "key_release_event",
-                     G_CALLBACK(key_release_cb), "window");
-    g_signal_connect(G_OBJECT(*drawing_area), "expose_event",
-                     G_CALLBACK(draw_window), NULL);
-    g_signal_connect(G_OBJECT(*drawing_area), "configure_event",
-                     G_CALLBACK(drawing_area_configure), NULL);
-    g_timeout_add(16, draw_window_timer_callback, G_OBJECT(*drawing_area));
-
-    gtk_container_add(GTK_CONTAINER(*window), *vbox);
-    gtk_box_pack_start(GTK_BOX(*vbox), *drawing_area, TRUE /* expand */, TRUE /* fill */, 0);
-    gtk_window_set_default_size(GTK_WINDOW(*window), real_screen_width, real_screen_height);
-    gtk_window_set_title(GTK_WINDOW(*window), window_title);
-
-
-    gtk_widget_modify_bg(*drawing_area, GTK_STATE_NORMAL, &black);
-    gtk_widget_show(*vbox);
-    gtk_widget_show(*drawing_area);
-    gtk_widget_show(*window);
-    gc = gdk_gc_new(GTK_WIDGET(*drawing_area)->window);
-
-    gdk_gc_set_rgb_fg_color(gc, &white);
-
-    gdk_gc_set_clip_origin(gc, 0, 0);
-    cliprect.x = 0;
-    cliprect.y = 0;
-    cliprect.width = real_screen_width;
-    cliprect.height = real_screen_height;
-    gdk_gc_set_clip_rectangle(gc, &cliprect);
-#endif
 }
 
 static void process_events(void)
