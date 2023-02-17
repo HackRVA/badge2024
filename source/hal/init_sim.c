@@ -11,6 +11,7 @@
 #include "display_s6b33.h"
 #include "led_pwm.h"
 #include "button.h"
+#include "button_ui.h"
 #include "ir.h"
 #include "rtc.h"
 #include "flash_storage.h"
@@ -85,7 +86,6 @@ static GdkGC *gc = NULL;               /* our graphics context. */
 static GdkPixbuf *pix_buf;
 static int screen_offset_x = 0;
 static int screen_offset_y = 0;
-extern int time_to_quit;
 static char *program_title;
 
 extern int lcd_brightness;
@@ -230,9 +230,6 @@ static gboolean draw_window_timer_callback(void* params) {
 
 static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vbox, GtkWidget **drawing_area)
 {
-    extern gint key_release_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointer data);
-    extern gint key_press_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointer data);
-
     GdkRectangle cliprect;
     char window_title[1024];
 
