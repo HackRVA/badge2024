@@ -161,9 +161,10 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
 
     for (int y = 0; y < LCD_YSIZE; y++) {
         for (int x = 0; x < LCD_XSIZE; x++) {
-            display_array_with_alpha[y][x][0] = display_array[y][x][0];
+            /* SDL texture seems to want data in BGRA order */
+            display_array_with_alpha[y][x][2] = display_array[y][x][0];
             display_array_with_alpha[y][x][1] = display_array[y][x][1];
-            display_array_with_alpha[y][x][2] = display_array[y][x][2];
+            display_array_with_alpha[y][x][0] = display_array[y][x][2];
 	    /* We can try to implement lcd brightness via alpha channel, but it doesn't seem to work */
             display_array_with_alpha[y][x][3] = 255 - lcd_brightness;
         }
