@@ -1,7 +1,7 @@
 //
 // Created by Samuel Jones on 2/21/22.
 //
-
+#include <SDL.h>
 #include "button.h"
 #include "rtc.h"
 
@@ -15,41 +15,40 @@ static int rotation_count = 0;
 static uint64_t last_change = 0;
 static user_gpio_callback callback = NULL;
 
-int key_press_cb()
+int key_press_cb(SDL_Keysym *keysym)
 {
-#if 0
     BADGE_BUTTON button = BADGE_BUTTON_MAX;
-    switch (event->keyval) {
-        case GDK_w:
-        case GDK_KEY_Up:
+    switch (keysym->sym) {
+        case SDLK_w:
+        case SDLK_UP:
             button = BADGE_BUTTON_UP;
         break;
-        case GDK_s:
-        case GDK_KEY_Down:
+        case SDLK_s:
+        case SDLK_DOWN:
             button = BADGE_BUTTON_DOWN;
         break;
-        case GDK_a:
-        case GDK_KEY_Left:
+        case SDLK_a:
+        case SDLK_LEFT:
             button = BADGE_BUTTON_LEFT;
         break;
-        case GDK_d:
-        case GDK_KEY_Right:
+        case SDLK_d:
+        case SDLK_RIGHT:
             button = BADGE_BUTTON_RIGHT;
         break;
-        case GDK_space:
-        case GDK_KEY_Return:
+        case SDLK_SPACE:
+        case SDLK_RETURN:
             button = BADGE_BUTTON_SW;
         break;
-        case GDK_q:
-        case GDK_KEY_Escape:
+        case SDLK_q:
+        case SDLK_ESCAPE:
             time_to_quit = 1;
         break;
-        case GDK_comma:
-        case GDK_less:
+        case SDLK_COMMA:
+        case SDLK_LESS:
             rotation_count -= 1;
         break;
-        case GDK_period:
-        case GDK_greater:
+        case SDLK_PERIOD:
+        case SDLK_GREATER:
             rotation_count += 1;
         break;
         default:
@@ -63,39 +62,35 @@ int key_press_cb()
         }
         last_change = rtc_get_ms_since_boot();
     }
-    return TRUE;
-#endif
+    return 1;
 }
 
-
-int key_release_cb()
+int key_release_cb(SDL_Keysym *keysym)
 {
-#if 0
-
     BADGE_BUTTON button = BADGE_BUTTON_MAX;
-    switch (event->keyval) {
-        case GDK_w:
-        case GDK_KEY_Up:
+    switch (keysym->sym) {
+        case SDLK_w:
+        case SDLK_UP:
             button = BADGE_BUTTON_UP;
             break;
-        case GDK_s:
-        case GDK_KEY_Down:
+        case SDLK_s:
+        case SDLK_DOWN:
             button = BADGE_BUTTON_DOWN;
             break;
-        case GDK_a:
-        case GDK_KEY_Left:
+        case SDLK_a:
+        case SDLK_LEFT:
             button = BADGE_BUTTON_LEFT;
             break;
-        case GDK_d:
-        case GDK_KEY_Right:
+        case SDLK_d:
+        case SDLK_RIGHT:
             button = BADGE_BUTTON_RIGHT;
             break;
-        case GDK_space:
-        case GDK_KEY_Return:
+        case SDLK_SPACE:
+        case SDLK_RETURN:
             button = BADGE_BUTTON_SW;
             break;
-        case GDK_q:
-        case GDK_KEY_Escape:
+        case SDLK_q:
+        case SDLK_ESCAPE:
             time_to_quit = 1;
         default:
             break;
@@ -108,8 +103,7 @@ int key_release_cb()
         }
         last_change = rtc_get_ms_since_boot();
     }
-    return TRUE;
-#endif
+    return 1;
 }
 
 

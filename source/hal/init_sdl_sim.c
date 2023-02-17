@@ -364,10 +364,10 @@ static void process_events(void)
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
         case SDL_KEYDOWN:
-            // key_press_cb(window, &event.key.keysym);
+            key_press_cb(&event.key.keysym);
             break;
         case SDL_KEYUP:
-            // key_release_cb(&event.key.keysym);
+            key_release_cb(&event.key.keysym);
             break;
         case SDL_QUIT:
             /* Handle quit requests (like Ctrl-c). */
