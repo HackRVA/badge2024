@@ -4,8 +4,6 @@
 
 #include "button.h"
 #include "rtc.h"
-#include <gtk/gtk.h>
-#include <gdk/gdkkeysyms.h>
 
 #define UNUSED __attribute__((unused))
 
@@ -17,7 +15,9 @@ static int rotation_count = 0;
 static uint64_t last_change = 0;
 static user_gpio_callback callback = NULL;
 
-gint key_press_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointer data) {
+int key_press_cb()
+{
+#if 0
     BADGE_BUTTON button = BADGE_BUTTON_MAX;
     switch (event->keyval) {
         case GDK_w:
@@ -64,10 +64,13 @@ gint key_press_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointer 
         last_change = rtc_get_ms_since_boot();
     }
     return TRUE;
+#endif
 }
 
 
-gint key_release_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointer data) {
+int key_release_cb()
+{
+#if 0
 
     BADGE_BUTTON button = BADGE_BUTTON_MAX;
     switch (event->keyval) {
@@ -106,6 +109,7 @@ gint key_release_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointe
         last_change = rtc_get_ms_since_boot();
     }
     return TRUE;
+#endif
 }
 
 

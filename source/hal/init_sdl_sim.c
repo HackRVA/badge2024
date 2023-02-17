@@ -5,7 +5,7 @@
 #include "init.h"
 #include <stdlib.h>
 #include <stdio.h>
-#include <gtk/gtk.h>
+#include <string.h>
 #include <pthread.h>
 #include "framebuffer.h"
 #include "display_s6b33.h"
@@ -22,7 +22,7 @@ static int sim_argc;
 static char** sim_argv;
 
 // Forward declaration
-void hal_start_gtk(int *argc, char ***argv);
+void hal_start_sdl(int *argc, char ***argv);
 
 // Do hardware-specific initialization.
 void hal_init(void) {
@@ -50,7 +50,7 @@ int hal_run_main(int (*main_func)(int, char**), int argc, char** argv) {
     pthread_create(&app_thread, NULL, main_in_thread, main_func);
 
     // Should not return until GTK exits.
-    hal_start_gtk(&argc, &argv);
+    hal_start_sdl(&argc, &argv);
 
     return 0;
 }
@@ -75,29 +75,30 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
 }
 
 
-static GtkWidget *vbox, *window, *drawing_area;
+// static GtkWidget *vbox, *window, *drawing_area;
 #define SCALE_FACTOR 6
 #define EXTRA_WIDTH 200
 #define GTK_SCREEN_WIDTH (LCD_XSIZE * SCALE_FACTOR + EXTRA_WIDTH)
 #define GTK_SCREEN_HEIGHT (LCD_YSIZE * SCALE_FACTOR)
 static int real_screen_width = GTK_SCREEN_WIDTH;
 static int real_screen_height = GTK_SCREEN_HEIGHT;
-static GdkGC *gc = NULL;               /* our graphics context. */
-static GdkPixbuf *pix_buf;
+// static GdkGC *gc = NULL;               /* our graphics context. */
+// static GdkPixbuf *pix_buf;
 static int screen_offset_x = 0;
 static int screen_offset_y = 0;
 static char *program_title;
 
 extern int lcd_brightness;
-extern GdkColor led_color;
+// extern GdkColor led_color;
 
-const GdkColor white = {.blue = 65535, .green = 65535, .red = 65535};
-const GdkColor black = {};
+// const GdkColor white = {.blue = 65535, .green = 65535, .red = 65535};
+// const GdkColor black = {};
 
 
 
-static void draw_led_text(GtkWidget *widget, int x, int y)
+static void draw_led_text(/* GtkWidget *widget, */ int x, int y)
 {
+#if 0
 #define LETTER_SPACING 12
     /* Literally draws L E D */
     /* Draw L */
@@ -120,8 +121,10 @@ static void draw_led_text(GtkWidget *widget, int x, int y)
     gdk_draw_line(widget->window, gc, x, y - 10, x + 8, y - 10);
     gdk_draw_line(widget->window, gc, x + 8, y - 10, x + 10, y - 5);
     gdk_draw_line(widget->window, gc, x + 8, y, x + 10, y - 5);
+#endif
 }
 
+#if 0
 static gint drawing_area_configure(GtkWidget *w, UNUSED GdkEventConfigure *event)
 {
     GdkRectangle cliprect;
@@ -146,15 +149,17 @@ static gint drawing_area_configure(GtkWidget *w, UNUSED GdkEventConfigure *event
     gdk_gc_set_clip_rectangle(gc, &cliprect);
     return TRUE;
 }
+#endif
 
 void flareled(unsigned char r, unsigned char g, unsigned char b)
 {
-    led_color.red = r * 256;
-    led_color.green = g * 256;
-    led_color.blue = b * 256;
+    // led_color.red = r * 256;
+    // led_color.green = g * 256;
+    // led_color.blue = b * 256;
 }
 
-static void setup_window_geometry(GtkWidget *window)
+#if 0
+static void setup_window_geometry(/* GtkWidget *window */)
 {
     /* clamp window aspect ratio to constant */
     GdkGeometry geom;
@@ -282,22 +287,16 @@ static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vb
     cliprect.height = real_screen_height;
     gdk_gc_set_clip_rectangle(gc, &cliprect);
 }
+#endif
 
 
-void hal_start_gtk(int *argc, char ***argv) {
+void hal_start_sdl(int *argc, char ***argv) {
     program_title = strdup((*argv)[0]);
+#if 0
     gtk_set_locale();
     gtk_init(argc, argv);
     setup_gtk_window_and_drawing_area(&window, &vbox, &drawing_area);
+#endif
     flareled(0, 0, 0);
 
-#if 0
-    /* Apparently (some versions of?) portaudio calls g_thread_init(). */
-    /* It may only be called once, and subsequent calls abort, so */
-    /* only call it if the thread system is not already initialized. */
-    if (!g_thread_supported ())
-        g_thread_init(NULL);
-#endif
-    gdk_threads_init();
-    gtk_main();
 }
