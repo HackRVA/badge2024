@@ -16,6 +16,7 @@
 #include "ir.h"
 #include "rtc.h"
 #include "flash_storage.h"
+#include "led_pwm_sdl.h"
 
 #define UNUSED __attribute__((unused))
 
@@ -78,52 +79,43 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
 
 // static GtkWidget *vbox, *drawing_area;
 static SDL_Window *window;
+static SDL_Renderer *renderer;
 #define SCALE_FACTOR 6
 #define EXTRA_WIDTH 200
 #define SIM_SCREEN_WIDTH (LCD_XSIZE * SCALE_FACTOR + EXTRA_WIDTH)
 #define SIM_SCREEN_HEIGHT (LCD_YSIZE * SCALE_FACTOR)
 static int real_screen_width = SIM_SCREEN_WIDTH;
 static int real_screen_height = SIM_SCREEN_HEIGHT;
-// static GdkGC *gc = NULL;               /* our graphics context. */
-// static GdkPixbuf *pix_buf;
+static SDL_Texture *pix_buf;
 static int screen_offset_x = 0;
 static int screen_offset_y = 0;
 static char *program_title;
-
 extern int lcd_brightness;
-// extern GdkColor led_color;
 
-// const GdkColor white = {.blue = 65535, .green = 65535, .red = 65535};
-// const GdkColor black = {};
-
-
-
-static void draw_led_text(/* GtkWidget *widget, */ int x, int y)
+static void draw_led_text(SDL_Renderer *renderer, int x, int y)
 {
-#if 0
 #define LETTER_SPACING 12
     /* Literally draws L E D */
     /* Draw L */
-    gdk_draw_line(widget->window, gc, x, y, x, y - 10);
-    gdk_draw_line(widget->window, gc, x, y, x + 8, y);
+    SDL_RenderDrawLine(renderer, x, y, x, y - 10);
+    SDL_RenderDrawLine(renderer, x, y, x + 8, y);
 
     x += LETTER_SPACING;
 
     /* Draw E */
-    gdk_draw_line(widget->window, gc, x, y, x, y - 10);
-    gdk_draw_line(widget->window, gc, x, y, x + 8, y);
-    gdk_draw_line(widget->window, gc, x, y - 5, x + 5, y - 5);
-    gdk_draw_line(widget->window, gc, x, y - 10, x + 8, y - 10);
+    SDL_RenderDrawLine(renderer, x, y, x, y - 10);
+    SDL_RenderDrawLine(renderer, x, y, x + 8, y);
+    SDL_RenderDrawLine(renderer, x, y - 5, x + 5, y - 5);
+    SDL_RenderDrawLine(renderer, x, y - 10, x + 8, y - 10);
 
     x += LETTER_SPACING;
 
     /* Draw D */
-    gdk_draw_line(widget->window, gc, x, y, x, y - 10);
-    gdk_draw_line(widget->window, gc, x, y, x + 8, y);
-    gdk_draw_line(widget->window, gc, x, y - 10, x + 8, y - 10);
-    gdk_draw_line(widget->window, gc, x + 8, y - 10, x + 10, y - 5);
-    gdk_draw_line(widget->window, gc, x + 8, y, x + 10, y - 5);
-#endif
+    SDL_RenderDrawLine(renderer, x, y, x, y - 10);
+    SDL_RenderDrawLine(renderer, x, y, x + 8, y);
+    SDL_RenderDrawLine(renderer, x, y - 10, x + 8, y - 10);
+    SDL_RenderDrawLine(renderer, x + 8, y - 10, x + 10, y - 5);
+    SDL_RenderDrawLine(renderer, x + 8, y, x + 10, y - 5);
 }
 
 #if 0
@@ -155,9 +147,9 @@ static gint drawing_area_configure(GtkWidget *w, UNUSED GdkEventConfigure *event
 
 void flareled(unsigned char r, unsigned char g, unsigned char b)
 {
-    // led_color.red = r * 256;
-    // led_color.green = g * 256;
-    // led_color.blue = b * 256;
+    led_color.red = r;
+    led_color.green = g;
+    led_color.blue = b;
 }
 
 #if 0
@@ -190,20 +182,60 @@ static void destroy(UNUSED GtkWidget *widget, UNUSED gpointer data)
 }
 #endif
 
-static int draw_window(void) {
-#if 0
-    if (time_to_quit) {
-        gtk_main_quit();
-        return 1;
-    }
+/* TODO: I should not need display_array_with_alpha[] but SDL_PIXELFORMAT_RGB888 seems
+ * to require alpha despite the name, or... there's some missing piece of the puzzle
+ * that remains to be found.
+ */
 
-    cairo_t * cr = gdk_cairo_create(widget->window);
-    cairo_scale(cr, SCALE_FACTOR, SCALE_FACTOR);
-    gdk_cairo_set_source_pixbuf(cr,pix_buf,0,0);
-    cairo_set_antialias(cr, CAIRO_ANTIALIAS_NONE);
-    cairo_paint_with_alpha(cr, (double)lcd_brightness/255.0);
-    cairo_fill(cr);
-    cairo_destroy(cr);
+static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
+{
+    extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
+
+
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    /* Draw the pixels of the screen */
+
+
+    /* This:
+     *
+     *    SDL_UpdateTexture(texture, NULL, display_array, LCD_XSIZE * 3);
+     *
+     * doesn't work right for some reason I don't quite understand, having to do with
+     * the alpha channel even though I tried to tell it we don't have an alpha channel.
+     * I think what may be happening is that the SDL_PIXELFORMAT_RGB888
+     * may be referring to the format of the texture (after it's copied)
+     * rather than the format of the data you're copying in?
+     *
+     * In any case, for now, we can copy display_array inserting the
+     * alpha channel that SDL_RenderCopy seems to expect. Modern
+     * computers can do this copy in microseconds, so it's not a big deal.
+     */
+
+    /* Copy display_array[] but add on an alpha channel. SDL_RenderCopy() seems to need it.
+     * Plus we try to use it to implement LCD brightness. */
+    static uint8_t display_array_with_alpha[LCD_YSIZE][LCD_XSIZE][4];
+
+    for (int y = 0; y < LCD_YSIZE; y++) {
+        for (int x = 0; x < LCD_XSIZE; x++) {
+            display_array_with_alpha[y][x][0] = display_array[y][x][0];
+            display_array_with_alpha[y][x][1] = display_array[y][x][1];
+            display_array_with_alpha[y][x][2] = display_array[y][x][2];
+	    /* We can try to implement lcd brightness via alpha channel, but it doesn't seem to work */
+            display_array_with_alpha[y][x][3] = 255 - lcd_brightness;
+        }
+    }
+    SDL_UpdateTexture(texture, NULL, display_array_with_alpha, LCD_XSIZE * 4);
+    SDL_RenderCopy(renderer, texture, &(SDL_Rect) { 0, 0, LCD_XSIZE, LCD_YSIZE },
+                                      &(SDL_Rect) { 0, 0, LCD_XSIZE * SCALE_FACTOR, LCD_YSIZE * SCALE_FACTOR});
+
+#if 0
+    /* Another attempt to implement LCD brightness by alpha blending a black rectangle over
+     * the "screen", which also doesn't actually work, probably for the same reason. */
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255 - lcd_brightness);
+    SDL_RenderFillRect(renderer, &(SDL_Rect) { 0, 0, SCALE_FACTOR * LCD_XSIZE, SCALE_FACTOR * LCD_YSIZE });
+#endif
 
     int x, y, w, h;
     w = (real_screen_width - EXTRA_WIDTH) / LCD_XSIZE;
@@ -213,30 +245,22 @@ static int draw_window(void) {
     if (h < 1)
         h = 1;
 
-    /* Draw a vertical line demarcating the right edge of the screen */
-    gdk_gc_set_rgb_fg_color(gc, &white);
-    gdk_draw_line(widget->window, gc, LCD_XSIZE * w + 1, 0, LCD_XSIZE * w + 1, real_screen_height - 1);
+    /* Draw a white vertical line demarcating the right edge of the screen */
+    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+    SDL_RenderDrawLine(renderer, LCD_XSIZE * w + 1, 0, LCD_XSIZE * w + 1, real_screen_height - 1);
 
     /* Draw simulated flare LED */
     x = LCD_XSIZE * w + EXTRA_WIDTH / 4;
     y = (LCD_YSIZE * h) / 2 - EXTRA_WIDTH / 4;
-    draw_led_text(widget, LCD_XSIZE * w + EXTRA_WIDTH / 2 - 20, y - 10);
-    gdk_gc_set_rgb_fg_color(gc, &led_color);
-    gdk_draw_rectangle(widget->window, gc, 1 /* filled */, x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2);
-    gdk_gc_set_rgb_fg_color(gc, &white);
-    gdk_draw_rectangle(widget->window, gc, 0 /* not filled */, x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2);
+    draw_led_text(renderer, LCD_XSIZE * w + EXTRA_WIDTH / 2 - 20, y - 10);
+    SDL_SetRenderDrawColor(renderer, led_color.red, led_color.blue, led_color.green, 0xff);
+    SDL_RenderFillRect(renderer, &(SDL_Rect) { x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2} );
+    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+    SDL_RenderDrawRect(renderer, &(SDL_Rect) { x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2} );
 
+    SDL_RenderPresent(renderer);
     return 0;
-#endif
 }
-
-#if 0
-
-static gboolean draw_window_timer_callback(void* params) {
-    GtkWidget *widget = (GtkWidget*)params;
-    return (draw_window(widget, NULL, NULL) == 0) ? gtk_true() : gtk_false();
-}
-#endif
 
 static int start_sdl(void)
 {
@@ -252,7 +276,7 @@ static int start_sdl(void)
     return 0;
 }
 
-static void setup_window_and_drawing_area(SDL_Window **window /*, GtkWidget **vbox, GtkWidget **drawing_area*/ )
+static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **texture)
 {
 #if 0
     GdkRectangle cliprect;
@@ -268,7 +292,21 @@ static void setup_window_and_drawing_area(SDL_Window **window /*, GtkWidget **vb
         exit(1);
     }
     SDL_SetWindowSize(*window, SIM_SCREEN_WIDTH, SIM_SCREEN_HEIGHT);
+    *renderer = SDL_CreateRenderer(*window, -1, 0);
+    if (!*renderer) {
+        fprintf(stderr, "Could not create renderer: %s\n", SDL_GetError());
+        exit(1);
+    }
+
+    *texture = SDL_CreateTexture(*renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, LCD_XSIZE, LCD_YSIZE);
+    if (!*texture) { 
+        fprintf(stderr, "Could not create texture: %s\n", SDL_GetError());
+        exit(1);
+    }
+    SDL_SetTextureBlendMode(*texture, SDL_BLENDMODE_BLEND);
     SDL_ShowWindow(*window);
+    SDL_RenderClear(*renderer);
+    SDL_RenderPresent(*renderer);
 
 #if 0
     setup_window_geometry(*window);
@@ -366,11 +404,11 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
     program_title = strdup((*argv)[0]);
     if (start_sdl())
 	exit(1);
-    setup_window_and_drawing_area(&window /* , &vbox, &drawing_area */);
+    setup_window_and_renderer(&window, &renderer, &pix_buf);
     flareled(0, 0, 0);
 
     while (!time_to_quit) {
-	draw_window();
+	draw_window(renderer, pix_buf);
 	process_events();
 	wait_until_next_frame();
     }
