@@ -21,7 +21,7 @@ enable_testing()
 if (${TARGET} STREQUAL "PICO")
     add_compile_definitions(TARGET_PICO)
     pico_sdk_init()
-elseif(${TARGET} STREQUAL "SIMULATOR")
+elseif(${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
     add_compile_definitions(TARGET_SIMULATOR)
 endif()
 
@@ -35,7 +35,7 @@ if (${TARGET} STREQUAL "PICO")
     )
 endif()
 
-if (${TARGET} STREQUAL "SIMULATOR")
+if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
     # Suppress GTK deprecated declarations
     add_compile_options(-Wno-deprecated-declarations -fsanitize=address)
     add_link_options(-fsanitize=address)
