@@ -124,11 +124,6 @@ void flareled(unsigned char r, unsigned char g, unsigned char b)
 }
 
 
-/* TODO: I should not need display_array_with_alpha[] but SDL_PIXELFORMAT_RGB888 seems
- * to require alpha despite the name, or... there's some missing piece of the puzzle
- * that remains to be found.
- */
-
 static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
 {
     extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
@@ -144,11 +139,8 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
      *
      *    SDL_UpdateTexture(texture, NULL, display_array, LCD_XSIZE * 3);
      *
-     * doesn't work right for some reason I don't quite understand, having to do with
-     * the alpha channel even though I tried to tell it we don't have an alpha channel.
-     * I think what may be happening is that the SDL_PIXELFORMAT_RGB888
-     * may be referring to the format of the texture (after it's copied)
-     * rather than the format of the data you're copying in?
+     * doesn't work right for some reason I don't quite.  The texture apparently
+     * wants the data in BGRA order.
      *
      * In any case, for now, we can copy display_array inserting the
      * alpha channel that SDL_RenderCopy seems to expect. Modern
@@ -159,26 +151,22 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
      * Plus we try to use it to implement LCD brightness. */
     static uint8_t display_array_with_alpha[LCD_YSIZE][LCD_XSIZE][4];
 
+    float level = (float) lcd_brightness / 255.0f;
     for (int y = 0; y < LCD_YSIZE; y++) {
         for (int x = 0; x < LCD_XSIZE; x++) {
-            /* SDL texture seems to want data in BGRA order */
-            display_array_with_alpha[y][x][2] = display_array[y][x][0];
-            display_array_with_alpha[y][x][1] = display_array[y][x][1];
-            display_array_with_alpha[y][x][0] = display_array[y][x][2];
-	    /* We can try to implement lcd brightness via alpha channel, but it doesn't seem to work */
-            display_array_with_alpha[y][x][3] = 255 - lcd_brightness;
+            /* SDL texture seems to want data in BGRA order, and since we're copying
+             * anyway, we can emulate LCD brightness here too. */
+            display_array_with_alpha[y][x][2] = (uint8_t) (level * display_array[y][x][0]);
+            display_array_with_alpha[y][x][1] = (uint8_t) (level * display_array[y][x][1]);
+            display_array_with_alpha[y][x][0] = (uint8_t) (level * display_array[y][x][2]);
+	    /* I tried to implement lcd brightness via alpha channel, but it doesn't seem to work */
+            /* display_array_with_alpha[y][x][3] = 255 - lcd_brightness; */
+            display_array_with_alpha[y][x][3] = 255;
         }
     }
     SDL_UpdateTexture(texture, NULL, display_array_with_alpha, LCD_XSIZE * 4);
     SDL_RenderCopy(renderer, texture, &(SDL_Rect) { 0, 0, LCD_XSIZE, LCD_YSIZE },
                                       &(SDL_Rect) { 0, 0, LCD_XSIZE * SCALE_FACTOR, LCD_YSIZE * SCALE_FACTOR});
-
-#if 0
-    /* Another attempt to implement LCD brightness by alpha blending a black rectangle over
-     * the "screen", which also doesn't actually work, probably for the same reason. */
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255 - lcd_brightness);
-    SDL_RenderFillRect(renderer, &(SDL_Rect) { 0, 0, SCALE_FACTOR * LCD_XSIZE, SCALE_FACTOR * LCD_YSIZE });
-#endif
 
     int x, y, w, h;
     w = (real_screen_width - EXTRA_WIDTH) / LCD_XSIZE;
