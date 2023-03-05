@@ -3,6 +3,7 @@ target_sources(badge2022_c PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/achievements.c
         ${CMAKE_CURRENT_LIST_DIR}/badge.c
         ${CMAKE_CURRENT_LIST_DIR}/dynmenu.c
+	${CMAKE_CURRENT_LIST_DIR}/fxp_sqrt.c
         ${CMAKE_CURRENT_LIST_DIR}/key_value_storage.c
         ${CMAKE_CURRENT_LIST_DIR}/menu.c
         ${CMAKE_CURRENT_LIST_DIR}/schedule.c
