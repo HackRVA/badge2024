@@ -5,7 +5,6 @@ if (${TARGET} STREQUAL "PICO")
             ${CMAKE_CURRENT_LIST_DIR}/flash_storage_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/init_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/usb_rp2040.c
-            ${CMAKE_CURRENT_LIST_DIR}/display_s6b33_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/led_pwm_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/button_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/ir_rp2040.c
@@ -14,6 +13,17 @@ if (${TARGET} STREQUAL "PICO")
             ${CMAKE_CURRENT_LIST_DIR}/random_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/uid_rp2040.c
             )
+
+    # The 2023 badge uses a new display!
+    if (DEFINED COMPAT_BADGE_2022)
+        target_sources(badge2022_c PUBLIC
+                ${CMAKE_CURRENT_LIST_DIR}/display_s6b33_rp2040.c
+                )
+    else()
+        target_sources(badge2022_c PUBLIC
+                ${CMAKE_CURRENT_LIST_DIR}/display_st7735s_rp2040.c
+                )
+    endif ()
 
     add_subdirectory(ir_library)
 endif()

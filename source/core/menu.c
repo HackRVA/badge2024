@@ -11,7 +11,7 @@
 #include "assetList.h"
 #include "button.h"
 #include "framebuffer.h"
-#include "display_s6b33.h"
+#include "display.h"
 #include "audio.h"
 #include "led_pwm.h"
 #include "assets.h"
@@ -531,8 +531,8 @@ void rvasec_splash_cb(){
 
     if (wait == 0) {
         load_bar = 10;
-        S6B33_rect(0, 0, LCD_XSIZE, LCD_YSIZE);
-        S6B33_color(0);
+        display_rect(0, 0, LCD_XSIZE, LCD_YSIZE);
+        display_color(0);
         FbSwapBuffers();
         led_pwm_enable(BADGE_LED_RGB_GREEN, 50 * 255/100);
         //if(buzzer)

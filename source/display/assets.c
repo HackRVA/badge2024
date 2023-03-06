@@ -1,6 +1,6 @@
 #include "assets.h"
 #include "assetList.h"
-#include "display_s6b33.h"
+#include "display.h"
 
 /**
     simple asset management and display lib
@@ -29,8 +29,8 @@ void drawLCD1(unsigned char assetId, __attribute__((unused)) int frame)
     const char *cmap, *pixdata;
     unsigned short pixel ;
 
-    // S6B33_rect(0, 0, assetList[assetId].x - 1, assetList[assetId].y - 1);
-    S6B33_rect(0, 0, assetList[assetId].y - 1, assetList[assetId].x - 1);
+    // display_rect(0, 0, assetList[assetId].x - 1, assetList[assetId].y - 1);
+    display_rect(0, 0, assetList[assetId].y - 1, assetList[assetId].x - 1);
 
     pixdata = &(assetList[assetId].pixdata[0]);
     for (i=0; i < assetList[assetId].y; i++) {
@@ -49,7 +49,7 @@ void drawLCD1(unsigned char assetId, __attribute__((unused)) int frame)
                           ( ((g >> 3) & 0b11111) <<  6 ) |
                           ( ((b >> 3) & 0b11111)       )) ;
 
-                S6B33_pixel(pixel);
+                display_pixel(pixel);
             }
         }
     }
@@ -61,7 +61,7 @@ void drawLCD2(unsigned char assetId, __attribute__((unused)) int frame)
     const char *cmap, *pixdata;
     unsigned short pixel ;
 
-    S6B33_rect(0, 0, assetList[assetId].x - 1, assetList[assetId].y - 1);
+    display_rect(0, 0, assetList[assetId].x - 1, assetList[assetId].y - 1);
 
     pixdata = &(assetList[assetId].pixdata[0]);
     for (i=0; i < assetList[assetId].y; i++) {
@@ -78,7 +78,7 @@ void drawLCD2(unsigned char assetId, __attribute__((unused)) int frame)
                       ( ((g >> 3) & 0b11111) <<  6 ) |
                       ( ((b >> 3) & 0b11111)       )) ;
 
-            S6B33_pixel(pixel);
+            display_pixel(pixel);
 
             // 2nd pixel
             cmap = &(assetList[assetId].data_cmap[(unsigned short)((pixbyte>>4) & 0x3) * 3]);
@@ -90,7 +90,7 @@ void drawLCD2(unsigned char assetId, __attribute__((unused)) int frame)
                       ( ((g >> 3) & 0b11111) <<  6 ) |
                       ( ((b >> 3) & 0b11111)       )) ;
 
-            S6B33_pixel(pixel);
+            display_pixel(pixel);
 
             // 3rd pixel
             cmap = &(assetList[assetId].data_cmap[(unsigned short)((pixbyte>>2) & 0x3) * 3]);
@@ -102,7 +102,7 @@ void drawLCD2(unsigned char assetId, __attribute__((unused)) int frame)
                       ( ((g >> 3) & 0b11111) <<  6 ) |
                       ( ((b >> 3) & 0b11111)       )) ;
 
-            S6B33_pixel(pixel);
+            display_pixel(pixel);
 
             // 2nd pixel
             cmap = &(assetList[assetId].data_cmap[(unsigned short)(pixbyte & 0x3) * 3]);
@@ -114,7 +114,7 @@ void drawLCD2(unsigned char assetId, __attribute__((unused)) int frame)
                       ( ((g >> 3) & 0b11111) <<  6 ) |
                       ( ((b >> 3) & 0b11111)       )) ;
 
-            S6B33_pixel(pixel);
+            display_pixel(pixel);
         }
     }
 }
@@ -125,7 +125,7 @@ void drawLCD4(unsigned char assetId, __attribute__((unused)) int frame)
     const char *cmap, *pixdata;
     unsigned short pixel ;
 
-    S6B33_rect(0, 0, assetList[assetId].x - 1, assetList[assetId].y - 1);
+    display_rect(0, 0, assetList[assetId].x - 1, assetList[assetId].y - 1);
 
     pixdata = &(assetList[assetId].pixdata[0]);
     for (i=0; i < assetList[assetId].y; i++) {
@@ -142,7 +142,7 @@ void drawLCD4(unsigned char assetId, __attribute__((unused)) int frame)
                       ( ((g >> 3) & 0b11111) <<  6 ) |
                       ( ((b >> 3) & 0b11111)       )) ;
 
-            S6B33_pixel(pixel);
+            display_pixel(pixel);
 
             // 2nd pixel
             cmap = &(assetList[assetId].data_cmap[(unsigned short)(pixbyte & 0xF) * 3]);
@@ -154,7 +154,7 @@ void drawLCD4(unsigned char assetId, __attribute__((unused)) int frame)
                       ( ((g >> 3) & 0b11111) <<  6 ) |
                       ( ((b >> 3) & 0b11111)       )) ;
 
-            S6B33_pixel(pixel);
+            display_pixel(pixel);
         }
     }
 }
@@ -165,7 +165,7 @@ void drawLCD8(unsigned char assetId, __attribute__((unused)) int frame)
     const char *cmap;
     unsigned short pixel;
 
-    S6B33_rect(0, 0, assetList[assetId].x - 1, assetList[assetId].y - 1);
+    display_rect(0, 0, assetList[assetId].x - 1, assetList[assetId].y - 1);
 
     for (i=0; i < assetList[assetId].y; i++) {
         for (j=0; j < assetList[assetId].x; j++) {
@@ -179,7 +179,7 @@ void drawLCD8(unsigned char assetId, __attribute__((unused)) int frame)
                       ( ((g >> 3) & 0b11111) <<  6 ) |
                       ( ((b >> 3) & 0b11111)       )) ;
 
-            S6B33_pixel(pixel);
+            display_pixel(pixel);
         }
     }
 }

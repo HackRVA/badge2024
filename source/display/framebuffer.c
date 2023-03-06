@@ -2,7 +2,7 @@
 #include <string.h>
 
 #include "framebuffer.h"
-#include "display_s6b33.h"
+#include "display.h"
 #include "assetList.h"
 #include "colors.h"
 
@@ -10,7 +10,7 @@
 struct framebuffer_t G_Fb;
 
 /*
-    memory map frame buffer for 16 bit S6B33 type LCD's
+    memory map frame buffer for 16 bit display type LCD's
 
     Author: Paul Bruggeman
     paul@killercats.com
@@ -614,8 +614,8 @@ void FbSwapBuffers()
 {
     if (G_Fb.changed == 0) return;
 
-    S6B33_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
-    S6B33_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
+    display_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
+    display_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
 
     if (G_Fb.buffer == LCDbufferA) {
         G_Fb.buffer = LCDbufferB;
@@ -637,7 +637,7 @@ void FbSwapBuffers()
 void FbPaintNewRows(void)
 {
     unsigned int i;
-    int rotated = S6B33_get_rotation();
+    int rotated = display_get_rotation();
 
     if (G_Fb.changed == 0)
         return;
@@ -649,10 +649,10 @@ void FbPaintNewRows(void)
         /* Copy changed rows to screen and to old[] buffer */
         int num_pixels = max_changed_x[i] - min_changed_x[i] + 1;
         if (!rotated)
-            S6B33_rect(i, min_changed_x[i], 1, num_pixels);
+            display_rect(i, min_changed_x[i], 1, num_pixels);
         else
-            S6B33_rect(min_changed_x[i], i, num_pixels, 1);
-        S6B33_pixels(&G_Fb.buffer[i*LCD_XSIZE+min_changed_x[i]], num_pixels);
+            display_rect(min_changed_x[i], i, num_pixels, 1);
+        display_pixels(&G_Fb.buffer[i*LCD_XSIZE+min_changed_x[i]], num_pixels);
         MARK_ROW_UNCHANGED(i);
     }
     G_Fb.changed = 0;
@@ -668,8 +668,8 @@ void FbPushBuffer()
     //debug("FbWriteLine");
 
     if (G_Fb.changed == 0) return;
-    S6B33_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
-    S6B33_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
+    display_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
+    display_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
     G_Fb.changed = 0;
 
 }

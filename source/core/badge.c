@@ -8,7 +8,7 @@
 #include "badge.h"
 #include "random.h"
 #include "led_pwm.h"
-#include "display_s6b33.h"
+#include "display.h"
 #include "ir.h"
 #include "rtc.h"
 #include "key_value_storage.h"
@@ -52,9 +52,9 @@ void UserInit(void)
         G_sysData.backlight = 5;
     }
     led_pwm_set_scale(G_sysData.ledBrightness);
-    S6B33_set_rotation(G_sysData.display_rotated);
+    display_set_rotation(G_sysData.display_rotated);
     if (G_sysData.display_inverted) {
-        S6B33_set_display_mode_inverted();
+        display_set_display_mode_inverted();
     }
 
     setup_settings_menus();
@@ -190,11 +190,11 @@ uint64_t ProcessIO(void)
         FbColor(BLACK);
         FbSwapBuffers();
         if(!screensaver_inverted) {
-            if(S6B33_get_display_mode() == DISPLAY_MODE_NORMAL) {
-                S6B33_set_display_mode_inverted();
+            if(display_get_display_mode() == DISPLAY_MODE_NORMAL) {
+                display_set_display_mode_inverted();
             }
             else {
-                S6B33_set_display_mode_noninverted();    
+                display_set_display_mode_noninverted();
             }
         }
     }
@@ -214,11 +214,11 @@ uint64_t ProcessIO(void)
             button_reset_last_input_timestamp();
             
             if(!screensaver_inverted) {
-                if(S6B33_get_display_mode() == DISPLAY_MODE_NORMAL) {
-                    S6B33_set_display_mode_inverted();
+                if(display_get_display_mode() == DISPLAY_MODE_NORMAL) {
+                    display_set_display_mode_inverted();
                 }
                 else {
-                    S6B33_set_display_mode_noninverted();    
+                    display_set_display_mode_noninverted();
                 }
             }
             

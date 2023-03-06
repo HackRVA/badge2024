@@ -21,12 +21,9 @@ enum {
 #define LCD_YSIZE 160
 #else
 #define LCD_XSIZE 132
-#define LCD_YSIZE 132
-/* Leaving this at 132x132 for now in case people want to run on old badge hardware
- * before new hardware is available.  When we get the new hardware working, we will change
- * these to the correct values. A warning will be issued (see core/menu.c).
- */
-#endif
+
+// TODO make this compile-time configurable and test simulator targets before merge
+#define LCD_YSIZE 162
 
 /* the output buffer */
 #define FBSIZE (LCD_XSIZE * LCD_YSIZE)

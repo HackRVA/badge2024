@@ -9,7 +9,7 @@
 #include "hardware/sync.h"
 #include "hardware/pwm.h"
 #include "pinout_rp2040.h"
-#include "display_s6b33.h"
+#include "display.h"
 #include "led_pwm.h"
 #include "button.h"
 #include "ir.h"
@@ -27,7 +27,7 @@ _Noreturn void core1_procedure(void) {
 
 static void _init_gpios(void) {
 
-    S6B33_init_gpio();
+    display_init_gpio();
     led_pwm_init_gpio();
     button_init_gpio();
     audio_init_gpio();
@@ -39,7 +39,7 @@ void hal_init(void) {
     _init_gpios();
 
     ir_init();
-    S6B33_reset();
+    display_reset();
     rtc_init_badge(0);
     audio_init();
 

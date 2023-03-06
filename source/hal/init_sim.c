@@ -14,7 +14,7 @@
 #include <gtk/gtk.h>
 #include <pthread.h>
 #include "framebuffer.h"
-#include "display_s6b33.h"
+#include "display.h"
 #include "led_pwm.h"
 #include "button.h"
 #include "button_ui.h"
@@ -33,11 +33,11 @@ void hal_start_gtk(int *argc, char ***argv);
 // Do hardware-specific initialization.
 void hal_init(void) {
 
-    S6B33_init_gpio();
+    display_init_gpio();
     led_pwm_init_gpio();
     button_init_gpio();
     ir_init();
-    S6B33_reset();
+    display_reset();
     rtc_init_badge(0);
 }
 

@@ -1,5 +1,5 @@
 
-#include "display_s6b33.h"
+#include "display.h"
 #include "framebuffer.h"
 #include "colors.h"
 #include <stdbool.h>
@@ -20,19 +20,19 @@ static uint8_t max_y = 0;
 static int16_t cur_x;
 static int16_t cur_y;
 
-void S6B33_init_device(void) {
+void display_init_device(void) {
 
 }
 
-void S6B33_init_gpio(void) {
+void display_init_gpio(void) {
 
 }
 
-void S6B33_reset(void) {
+void display_reset(void) {
     memset(display_array, 0, sizeof(display_array));
 }
 
-void S6B33_rect(int x, int y, int width, int height) {
+void display_rect(int x, int y, int width, int height) {
     rect_x = x;
     rect_y = y;
     max_x = x+width;
@@ -49,7 +49,7 @@ void S6B33_rect(int x, int y, int width, int height) {
     }
 }
 
-void S6B33_pixel(unsigned short pixel) {
+void display_pixel(unsigned short pixel) {
 
     if (cur_x > max_x || cur_y > max_y) {
         return;
@@ -81,31 +81,31 @@ void S6B33_pixel(unsigned short pixel) {
 }
 
 /** Updates a consecutive sequence of pixels. */
-void S6B33_pixels(unsigned short *pixel, int number) {
+void display_pixels(unsigned short *pixel, int number) {
     for (int i=0; i<number; i++) {
-        S6B33_pixel(pixel[i]);
+        display_pixel(pixel[i]);
     }
 }
 
 /** invert display */
-void S6B33_set_display_mode_inverted(void) {
+void display_set_display_mode_inverted(void) {
     flipped = true;
     rotated = false;
 }
 /** uninvert display */
-void S6B33_set_display_mode_noninverted(void) {
+void display_set_display_mode_noninverted(void) {
     flipped = false;
 }
 /** get current display mode variable setting */
-unsigned char S6B33_get_display_mode(void) {
+unsigned char display_get_display_mode(void) {
     return flipped ? DISPLAY_MODE_INVERTED : DISPLAY_MODE_NORMAL;
 }
 
-int S6B33_get_rotation(void) {
+int display_get_rotation(void) {
 
     return rotated ? 0 : 1;
 }
-void S6B33_set_rotation(int yes) {
+void display_set_rotation(int yes) {
     if (yes) {
         flipped = false;
         rotated = true;
@@ -114,10 +114,10 @@ void S6B33_set_rotation(int yes) {
     }
 }
 
-void S6B33_color(unsigned short pixel) {
+void display_color(unsigned short pixel) {
     for (int i=0; i<LCD_XSIZE; i++) {
         for (int j=0; j<LCD_YSIZE; j++) {
-            S6B33_pixel(pixel);
+            display_pixel(pixel);
         }
     }
 }

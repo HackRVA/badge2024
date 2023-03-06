@@ -13,7 +13,7 @@
 
 #include "usb.h"
 #include "rtc.h"
-#include "display_s6b33.h"
+#include "display.h"
 #include "audio.h"
 #include "ir.h"
 #include "button.h"
@@ -50,7 +50,7 @@ void lp_sleep_us(uint64_t us_to_sleep) {
         return;
     }
 
-    while (((S6B33_busy() || audio_is_playing() || button_debouncing() || ir_listening()) ||
+    while (((display_busy() || audio_is_playing() || button_debouncing() || ir_listening()) ||
              led_pwm_is_on(BADGE_LED_RGB_RED) || led_pwm_is_on(BADGE_LED_RGB_BLUE) ||
              led_pwm_is_on(BADGE_LED_RGB_GREEN)) &&
             (rtc_get_us_since_boot() < time_at_call+us_to_sleep)) {

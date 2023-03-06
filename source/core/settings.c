@@ -6,7 +6,7 @@
 #include "framebuffer.h"
 #include "delay.h"
 #include "led_pwm.h"
-#include "display_s6b33.h"
+#include "display.h"
 #include "key_value_storage.h"
 
 #define PING_REQUEST      0x1000
@@ -138,7 +138,7 @@ void rotate_cb(__attribute__((unused)) struct menu_t *h) {
 
     badge_system_data()->display_rotated = !badge_system_data()->display_rotated;
 
-    S6B33_set_rotation(badge_system_data()->display_rotated);
+    display_set_rotation(badge_system_data()->display_rotated);
     save_settings();
 
     returnToMenus();
@@ -151,9 +151,9 @@ static void invert_cb(__attribute__((unused)) struct menu_t *h) {
     system_data->display_inverted = inverted;
 
 	if (inverted) {
-        S6B33_set_display_mode_inverted();
+        display_set_display_mode_inverted();
     } else {
-        S6B33_set_display_mode_noninverted();
+        display_set_display_mode_noninverted();
     }
 
     save_settings();
