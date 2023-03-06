@@ -1,6 +1,7 @@
 
 target_sources(badge2022_c PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/achievements.c
+        ${CMAKE_CURRENT_LIST_DIR}/a_star.c
         ${CMAKE_CURRENT_LIST_DIR}/badge.c
         ${CMAKE_CURRENT_LIST_DIR}/dynmenu.c
 	${CMAKE_CURRENT_LIST_DIR}/fxp_sqrt.c
@@ -14,7 +15,8 @@ target_sources(badge2022_c PUBLIC
         )
 
 
-# Define a test executable for the off-target key-value storage test.
+# Define a test executable for the off-target key-value storage test
+# and a_star.
 
 if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
 	add_executable(test_key_value_storage
@@ -27,6 +29,11 @@ if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
 		)
 
 	add_test(NAME KeyValueStorageTest COMMAND test_key_value_storage)
+
+	add_executable(test_a_star
+		${CMAKE_CURRENT_LIST_DIR}/a_star.c
+		${CMAKE_CURRENT_LIST_DIR}/test_a_star.c
+		)
 endif()
 
 target_include_directories(badge2022_c PUBLIC .)
