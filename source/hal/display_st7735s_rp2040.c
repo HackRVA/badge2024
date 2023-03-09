@@ -957,6 +957,7 @@ void display_init_device(void) {
     lcd_initialize();
 
 }
+
 /** set GPIO configuration for the LCD display */
 void display_init_gpio(void) {
 
@@ -988,6 +989,8 @@ void display_init_gpio(void) {
     channel_config_set_write_increment(&config, false);
     channel_config_set_dreq(&config, spi_get_dreq(spi0, true));
     dma_channel_configure(dma_channel,  &config, &spi_get_hw(spi0)->dr, NULL, 0, false);
+
+    display_init_device();
 }
 
 /** Perform init sequence on display */
