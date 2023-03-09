@@ -955,7 +955,14 @@ void display_init_device(void) {
 
     lcd_setSettingsActive(&lcd);
     lcd_initialize();
-
+    lcd_setSleepMode(LCD_SLEEP_OUT);
+    lcd_setMemoryAccessControl(LCD_MADCTL_DEFAULT);
+    lcd_setInterfacePixelFormat(LCD_PIXEL_FORMAT_565);
+    lcd_setGammaPredefined(LCD_GAMMA_PREDEFINED_3);
+    lcd_setDisplayInversion(LCD_INVERSION_OFF);
+    lcd_setTearingEffectLine(LCD_TEARING_OFF);
+    lcd_setDisplayMode(LCD_DISPLAY_ON);
+    lcd_activateMemoryWrite();
 }
 
 /** set GPIO configuration for the LCD display */
@@ -989,18 +996,19 @@ void display_init_gpio(void) {
     channel_config_set_write_increment(&config, false);
     channel_config_set_dreq(&config, spi_get_dreq(spi0, true));
     dma_channel_configure(dma_channel,  &config, &spi_get_hw(spi0)->dr, NULL, 0, false);
-
-    display_init_device();
 }
 
 /** Perform init sequence on display */
 void display_reset(void) {
     lcd_hardwareReset();
     lcd_softwareReset();
+
+    display_init_device();
 }
 /** sets the current display region for calls to display_pixel() */
 void display_rect(int x, int y, int width, int height) {
     lcd_setWindowPosition(x, y, width+x-1, height+y-1);
+    lcd_activateMemoryWrite();
 }
 /** updates current pixel to the data in `pixel`. */
 void display_pixel(unsigned short pixel) {
