@@ -949,7 +949,7 @@ void display_init_device(void) {
         .interface_pixel_format = LCD_PIXEL_FORMAT_565,
         .dataMode_activeState = 1,
         .pin_communicationMode = BADGE_GPIO_DISPLAY_DC,
-        .reset_activeState = 1,
+        .reset_activeState = 0,
         .flag_madctl_mv = FLAG_MADCTL_MV_DEFAULT,
     };
 
