@@ -16,13 +16,7 @@ target_sources(badge2022_c PUBLIC
 
 # Define a test executable for the off-target key-value storage test.
 
-# FIXME: this stuff breaks the pico build.
-# I don't know cmake well enough to know what to do
-# to make this conditionally compile only for the simulator
-# build. -- steve
-#
-
-if (${TARGET} STREQUAL "SIMULATOR")
+if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
 	add_executable(test_key_value_storage
 		${CMAKE_CURRENT_LIST_DIR}/key_value_storage_test.c
 		${CMAKE_CURRENT_LIST_DIR}/key_value_storage.c
