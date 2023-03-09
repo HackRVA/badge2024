@@ -920,10 +920,10 @@ void lcd_spiWrite(unsigned char* buffer, size_t length) {
         // sending in byte arrays for pixel data in user code.
         spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
         if (length >= 16) {
-            dma_channel_transfer_from_buffer_now(dma_channel, (uint16_t*)buffer, length);
+            dma_channel_transfer_from_buffer_now(dma_channel, (uint16_t*)buffer, length/2);
             dma_transfer_started = true;
         } else {
-            spi_write16_blocking(spi0, (uint16_t*)buffer, length);
+            spi_write16_blocking(spi0, (uint16_t*)buffer, length/2);
         }
     }
 }
