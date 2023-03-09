@@ -21,9 +21,8 @@ enum {
 #define LCD_YSIZE 160
 #else
 #define LCD_XSIZE 132
-
-// TODO make this compile-time configurable and test simulator targets before merge
-#define LCD_YSIZE 162
+#define LCD_YSIZE 132
+#endif
 
 /* the output buffer */
 #define FBSIZE (LCD_XSIZE * LCD_YSIZE)

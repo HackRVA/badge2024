@@ -664,14 +664,11 @@ void FbPaintNewRows(void)
 // - Useful for making incremental changes to a consistent scene
 void FbPushBuffer()
 {
-
-    //debug("FbWriteLine");
-
-    if (G_Fb.changed == 0) return;
+    if (G_Fb.changed == 0)
+        return;
     display_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
     display_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
     G_Fb.changed = 0;
-
 }
 
 void FbDrawVectors(short points[][2],

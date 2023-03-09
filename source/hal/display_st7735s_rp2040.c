@@ -900,32 +900,14 @@ void lcd_digitalWrite(unsigned short int pin, unsigned char value) {
 }
 
 void lcd_spiWrite(unsigned char* buffer, size_t length) {
-
     if (!lcd_settings) {
         return;
     }
 
-    bool command = true;
-    if (gpio_get(lcd_settings->pin_communicationMode) == lcd_settings->dataMode_activeState) {
-        command = false;
-    }
+    spi_set_format(spi0, 8, 0, 0, SPI_MSB_FIRST);
+    spi_write_blocking(spi0, buffer, length);
 
-    wait_until_ready();
-    if (command) {
-        spi_set_format(spi0, 8, 0, 0, SPI_MSB_FIRST);
-        spi_write_blocking(spi0, buffer, length);
-    } else {
-        // data - pixel data is stored as uint16_ts that we need to send accordingly.
-        // We'll need to assume the buffer is 16-bit values. Be careful about byte alignment and
-        // sending in byte arrays for pixel data in user code.
-        spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
-        if (length >= 16) {
-            dma_channel_transfer_from_buffer_now(dma_channel, (uint16_t*)buffer, length/2);
-            dma_transfer_started = true;
-        } else {
-            spi_write16_blocking(spi0, (uint16_t*)buffer, length/2);
-        }
-    }
+    return;
 }
 
 
@@ -954,6 +936,7 @@ void display_init_device(void) {
     };
 
     lcd_setSettingsActive(&lcd);
+    lcd_hardwareReset();
     lcd_initialize();
     lcd_setSleepMode(LCD_SLEEP_OUT);
     lcd_setMemoryAccessControl(LCD_MADCTL_DEFAULT);
@@ -962,7 +945,13 @@ void display_init_device(void) {
     lcd_setDisplayInversion(LCD_INVERSION_OFF);
     lcd_setTearingEffectLine(LCD_TEARING_OFF);
     lcd_setDisplayMode(LCD_DISPLAY_ON);
+    
+    lcd_setWindowPosition(0,0,49,49);
     lcd_activateMemoryWrite();
+    uint16_t test_buffer[50*50];
+    memset(test_buffer, 0xF41FF41F, sizeof(test_buffer));
+    lcd_writeData((void *) test_buffer, sizeof(test_buffer));
+    while(1);
 }
 
 /** set GPIO configuration for the LCD display */
