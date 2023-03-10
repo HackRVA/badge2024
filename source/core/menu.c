@@ -31,7 +31,15 @@
 #include "username.h"
 #include "slot_machine.h"
 
-
+/* TODO: remove this warning once we get new 134x162 display hardware working. */
+#if (LCD_XSIZE == 132 && LCD_YSIZE == 132)
+#warning "Using old display size of 132x132, badge apps designed for new 134x162 display will likely crash."
+ /* Adding a warning here so that if people write badge apps for the new display
+  * size and try to run them on an old badge, they'll have a big fat clue why it's
+  * likely crashing.  The warning is here instead of in display/framebuffer.h
+  * so that it appears only once during compilation.
+ */
+#endif
 
 #define MAIN_MENU_BKG_COLOR GREY2
 

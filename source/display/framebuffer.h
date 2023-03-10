@@ -15,8 +15,18 @@ enum {
     FB_MOVE, 			/* (x 8bit, y 8bit) where the next stuff goes */
 };
 
+/* TODO: When Peter and Sam get the hardware display working, remove this ifdef */
+#ifdef TARGET_SIMULATOR
+#define LCD_XSIZE 134
+#define LCD_YSIZE 162
+#else
 #define LCD_XSIZE 132
 #define LCD_YSIZE 132
+/* Leaving this at 132x132 for now in case people want to run on old badge hardware
+ * before new hardware is available.  When we get the new hardware working, we will change
+ * these to the correct values. A warning will be issued (see core/menu.c).
+ */
+#endif
 
 /* the output buffer */
 #define FBSIZE (LCD_XSIZE * LCD_YSIZE)
