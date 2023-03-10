@@ -75,7 +75,7 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
 }
 
 
-static GtkWidget *vbox, *window, *drawing_area;
+static GtkWidget *vbox, *window, *drawing_area, *deprecation_label, *deprecation_label2;
 #define SCALE_FACTOR 6
 #define EXTRA_WIDTH 200
 #define GTK_SCREEN_WIDTH (LCD_XSIZE * SCALE_FACTOR + EXTRA_WIDTH)
@@ -259,8 +259,13 @@ static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vb
                      G_CALLBACK(drawing_area_configure), NULL);
     g_timeout_add(16, draw_window_timer_callback, G_OBJECT(*drawing_area));
 
+    deprecation_label = gtk_label_new("The GTK badge simulator is deprecated. Use the SDL simulator instead.");
+    deprecation_label2 = gtk_label_new("The GTK badge simulator is deprecated. Use the SDL simulator instead.");
+
     gtk_container_add(GTK_CONTAINER(*window), *vbox);
+    gtk_box_pack_start(GTK_BOX(*vbox), deprecation_label, FALSE /* expand */, TRUE /* fill */, 0);
     gtk_box_pack_start(GTK_BOX(*vbox), *drawing_area, TRUE /* expand */, TRUE /* fill */, 0);
+    gtk_box_pack_start(GTK_BOX(*vbox), deprecation_label2, FALSE /* expand */, TRUE /* fill */, 0);
     gtk_window_set_default_size(GTK_WINDOW(*window), real_screen_width, real_screen_height);
     snprintf(window_title, sizeof(window_title), "HackRVA Badge Emulator - %s", program_title);
     free(program_title);
@@ -270,6 +275,8 @@ static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vb
     gtk_widget_modify_bg(*drawing_area, GTK_STATE_NORMAL, &black);
     gtk_widget_show(*vbox);
     gtk_widget_show(*drawing_area);
+    gtk_widget_show(deprecation_label);
+    gtk_widget_show(deprecation_label2);
     gtk_widget_show(*window);
     gc = gdk_gc_new(GTK_WIDGET(*drawing_area)->window);
 
