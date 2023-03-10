@@ -241,7 +241,7 @@ static void setup_gtk_window_and_drawing_area(GtkWidget **window, GtkWidget **vb
     extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
 
     pix_buf = gdk_pixbuf_new_from_data((const guchar*) display_array, GDK_COLORSPACE_RGB, gtk_false(),
-                                        8, 132, 132, 132*3, NULL, NULL);
+                                        8, LCD_XSIZE, LCD_YSIZE, LCD_XSIZE * 3, NULL, NULL);
 
     gtk_window_move(GTK_WINDOW(*window), screen_offset_x, screen_offset_y);
     *drawing_area = gtk_drawing_area_new();
