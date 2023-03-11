@@ -81,7 +81,7 @@ static void init_bricks(void)
 
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < 16; j++) {
-			brick[i * 16 + j].x = j * BRICK_WIDTH;
+			brick[i * 16 + j].x = 3 + j * BRICK_WIDTH;
 			brick[i * 16 + j].y = SPACE_ABOVE_BRICKS + i * BRICK_HEIGHT;
 			brick[i * 16 + j].alive = 1;
 		}
@@ -349,7 +349,7 @@ static void smashout_move_ball()
 	if (ball.y > 8 * SPACE_ABOVE_BRICKS && ball.y < 8 * (SPACE_ABOVE_BRICKS + 4 * BRICK_HEIGHT)) {
 		/* Figure out which brick we are intersecting */
 		int col = ball.x / (BRICK_WIDTH * 8);
-		int row = (ball.y - 8 * SPACE_ABOVE_BRICKS) / (8 * BRICK_HEIGHT);
+		int row = ((ball.y - 3) - 8 * SPACE_ABOVE_BRICKS) / (8 * BRICK_HEIGHT);
 		if (col >= 0 && col <= 15 && row >= 0 && row <= 3) {
 			struct smashout_brick *b = &brick[row * 16 + col];
 			if (b->alive) {
