@@ -41,7 +41,7 @@ asset_cmakelists.write("""
 
 # THIS CMakeLists.txt AUTOMATICALLY GENERATED
 
-target_sources(badge2022_c PUBLIC
+target_sources(badge2023_c PUBLIC
 
 """)
 
@@ -171,7 +171,7 @@ asset_header.close()
 asset_cmakelists.write("""
 )
 
-target_include_directories(badge2022_c PUBLIC .)
+target_include_directories(badge2023_c PUBLIC .)
 
 """)
 

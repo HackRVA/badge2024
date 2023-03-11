@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 12/21/21.
 //
 
-#ifndef BADGE2022_C_PINOUT_RP2040_H
-#define BADGE2022_C_PINOUT_RP2040_H
+#ifndef BADGE_C_PINOUT_RP2040_H
+#define BADGE_C_PINOUT_RP2040_H
 
 #include "hardware/gpio.h"
 
@@ -36,4 +36,4 @@
 #define BADGE_GPIO_LED_BLUE (7)
 
 
-#endif //BADGE2022_C_PINOUT_RP2040_H
+#endif //BADGE_C_PINOUT_RP2040_H

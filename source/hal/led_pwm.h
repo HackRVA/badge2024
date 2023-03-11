@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 12/27/21.
 //
 
-#ifndef BADGE2022_C_LED_PWM_H
-#define BADGE2022_C_LED_PWM_H
+#ifndef BADGE_C_LED_PWM_H
+#define BADGE_C_LED_PWM_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -28,4 +28,4 @@ bool led_pwm_is_on(BADGE_LED led);
 // Sets LED scaling (range 0-255) on the 3-color LED.
 void led_pwm_set_scale(uint8_t scale);
 
-#endif //BADGE2022_C_LED_PWM_H
+#endif //BADGE_C_LED_PWM_H

@@ -7,8 +7,8 @@
 
 #include "flash_storage_config.h"
 
-#ifndef badge2022_c_FLASH_STORAGE_H
-#define badge2022_c_FLASH_STORAGE_H
+#ifndef badge_c_FLASH_STORAGE_H
+#define badge_c_FLASH_STORAGE_H
 
 /** @brief Read data from the flash storage region into RAM.
  *
@@ -47,4 +47,4 @@ void flash_erase_all(void);
 /** @brief Finalize / commit any flash changes. */
 void flash_deinit(void);
 
-#endif //badge2022_c_FLASH_STORAGE_H
+#endif //badge_c_FLASH_STORAGE_H

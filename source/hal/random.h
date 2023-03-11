@@ -5,10 +5,10 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#ifndef BADGE2022_C_RANDOM_H
-#define BADGE2022_C_RANDOM_H
+#ifndef BADGE_C_RANDOM_H
+#define BADGE_C_RANDOM_H
 
 void random_insecure_bytes(uint8_t *bytes, size_t len);
 uint32_t random_insecure_u32_congruence(uint32_t last);
 
-#endif //BADGE2022_C_RANDOM_H
+#endif //BADGE_C_RANDOM_H

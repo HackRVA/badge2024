@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 11/6/21.
 //
 
-#ifndef badge2022_c_FLASH_STORAGE_CONFIG_H
-#define badge2022_c_FLASH_STORAGE_CONFIG_H
+#ifndef badge_c_FLASH_STORAGE_CONFIG_H
+#define badge_c_FLASH_STORAGE_CONFIG_H
 
 
 // Number of flash sectors reserved for data area,
@@ -31,4 +31,4 @@
 #define STORAGE_BASE (NOR_FLASH_SIZE - (NUM_DATA_SECTORS * FLASH_SECTOR_SIZE))
 
 
-#endif //badge2022_c_FLASH_STORAGE_CONFIG_H
+#endif //badge_c_FLASH_STORAGE_CONFIG_H

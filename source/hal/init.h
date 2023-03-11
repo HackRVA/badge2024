@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 11/9/21.
 //
 
-#ifndef badge2022_c_INIT_H
-#define badge2022_c_INIT_H
+#ifndef badge_c_INIT_H
+#define badge_c_INIT_H
 
 #include <stdint.h>
 
@@ -23,4 +23,4 @@ void hal_reboot(void);
 uint32_t hal_disable_interrupts(void);
 void hal_restore_interrupts(uint32_t state);
 
-#endif //badge2022_c_INIT_H
+#endif //badge_c_INIT_H

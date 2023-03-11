@@ -1,5 +1,5 @@
-# badge2022
-RVASec Badge 2022 Firmware
+# badge2023
+RVASec Badge 2023 Firmware
 
 # Initial Setup
 
@@ -19,7 +19,7 @@ In both cases, you will need **CMake**, which is a build system / build system g
 For more info, see the [Pico SDK README](https://github.com/raspberrypi/pico-sdk).
 
 When building the software for badge, you will need a *cross-compiler*. This takes code written on your computer and
-compiles it into machine code for the badge. The compiler used is the ARM Embedded GCC compiler. 
+compiles it into machine code for the badge. The compiler used is the ARM Embedded GCC compiler.
 
 This may be available in your package manager, or [here](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads).
 If downloaded from the ARM site, you will need to take steps to add it to your `$PATH` or equivalent environment
@@ -31,17 +31,17 @@ There are various editors and plugins you can add to better support CMake. A com
 with its CMake Tools plugin. (When you open the project folder with VS Code, it will suggest installing this plugin
 automatically, which you should do.)
 
-CMake Tools has a couple of additional concepts: Kits that define compilers it can find, 
-and Variants that define build parameters. If you've installed the ARM Embedded GCC compiler, 
+CMake Tools has a couple of additional concepts: Kits that define compilers it can find,
+and Variants that define build parameters. If you've installed the ARM Embedded GCC compiler,
 the plugin should be able to scan for kits and automatically find your cross-compiler (you'll see one named `arm-none-eabi`).
 
 If using VS Code with CMake Tools, you'll be able to use the Pico Variant (alongside the Kit for
-the embedded compiler). Make sure to pick both the Kit and Variant that correspond with each other! 
-To switch Variants, you can click on the information icon in the blue bar the bottom of the VS code window. 
-To switch Kits, you can click on the wrench icon in the same bar. 
+the embedded compiler). Make sure to pick both the Kit and Variant that correspond with each other!
+To switch Variants, you can click on the information icon in the blue bar the bottom of the VS code window.
+To switch Kits, you can click on the wrench icon in the same bar.
 Find more information on CMake Tools [here](https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md)
 
-You will likely want to change the target from `[all]` in the same bar at the bottom to `[badge2022_c]`.
+You will likely want to change the target from `[all]` in the same bar at the bottom to `[badge2023_c]`.
 
 The build folder will be named `build-pico` if using the VS Code variants.
 
@@ -60,20 +60,20 @@ to configure the build. This generates a bunch of makefiles, and
 
 `cd build && make` to build the firmware.
 
-After this, the file to flash on the device is at `build/source/badge2022_c.uf2`.
+After this, the file to flash on the device is at `build/source/badge2023_c.uf2`.
 
 You can clean the build by running `make clean`.
 
 A note for Windows users: [This link](https://community.element14.com/products/raspberry-pi/b/blog/posts/working-with-the-raspberry-pi-pico-with-windows-and-c-c)
 has a bunch of useful information for getting started and installing prerequisites. Note that you don't need to do the
-`PICO_SDK_PATH` setting portion, and when running and building this repository, you will want to use "NMake Makefiles" 
-instead of "Unix Makefiles" (unless you want to install and use `make` as well). 
+`PICO_SDK_PATH` setting portion, and when running and building this repository, you will want to use "NMake Makefiles"
+instead of "Unix Makefiles" (unless you want to install and use `make` as well).
 
 ## Flashing the Badge
 
 You can flash the Pico by holding down the button on the Pico board (not the rotary switch button)
 as you're plugging it in to USB. That will make it show up as a USB mass storage device. Then,
-you can copy the file `build/source/badge2022_c.uf2` onto the mass storage device to flash it. The
+you can copy the file `build/source/badge2023_c.uf2` onto the mass storage device to flash it. The
 Pico will boot your new firmware immediately.
 
 You can use Ninja, if you like, as well. \(Specify `-G Ninja` instead of Makefiles in the `cmake` command.\)
@@ -89,7 +89,7 @@ GTK2 is probably through a package manager.
 ### Visual Studio Code Setup
 
 If you're using VS Code with CMake Tools, you should be able to pick the Simulator Variant (alongside the Kit for
-your local computer's compiler to build the simluator). Make sure to pick both the Kit and Variant that correspond 
+your local computer's compiler to build the simluator). Make sure to pick both the Kit and Variant that correspond
  with each other!
 
 The build folder will be named `build-simulator` if using the VS Code variants.
@@ -106,7 +106,7 @@ or, if that's too hard to type or remember:
 `./run_cmake_sim.sh`
 
 After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
-program is called `build_sim/source/badge2022_c`, which you can run.
+program is called `build_sim/source/badge2023_c`, which you can run.
 
 
 ## Off-Target Unit Tests
@@ -134,7 +134,7 @@ The overall structure of the repository is:
 * Code for an interactive terminal (which may or may not be useful after the main application is running) is the
   `source/cli` folder. To run the CLI, hold the D-Pad left button down as the badge is starting. The display will
   show noise, and if you connect to the serial terminal that shows up on your computer, you can enter commands.
-* Code that depends on Pico interfaces is within `source/hal/*_rp2040.c` files, with a platform agnostic header in the 
+* Code that depends on Pico interfaces is within `source/hal/*_rp2040.c` files, with a platform agnostic header in the
   corresponding `source/hal/*.h` file. Code built for the simulator is in `source/hal/*_sim.c`.
 * Generally helpful system code (main menus, screensavers, and the like) is in the `source/core` folder.
 * Code for display buffers and drawing is in the `source/display` folder.

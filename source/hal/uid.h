@@ -2,11 +2,11 @@
  *  @file   uid.h
  *  @author Peter Maxwell Warasila
  *  @date   June 6, 2022
- *  
- *  @brief  RVASec 2022 Badge Unique ID
+ *
+ *  @brief  RVASec Badge Unique ID
  *
  *------------------------------------------------------------------------------
- * 
+ *
  */
 
 /*!

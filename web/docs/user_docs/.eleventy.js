@@ -9,7 +9,7 @@ const lazyImagesPlugin = require('eleventy-plugin-lazyimages');
 const eleventyNavigationPlugin = require("@11ty/eleventy-navigation");
 const Image = require("@11ty/eleventy-img");
 module.exports = function(eleventyConfig) {
-  eleventyConfig.addPlugin(svgContents); 
+  eleventyConfig.addPlugin(svgContents);
   eleventyConfig.addPlugin(embedEverything);
   eleventyConfig.addShortcode("version", function () {
     return String(Date.now());
@@ -75,7 +75,7 @@ module.exports = function(eleventyConfig) {
    eleventyConfig.addCollection("results", collection => {
     return [...collection.getFilteredByGlob("**/*.md")];
    });
-  
+
    // Creates custom collection "menuItems"
    eleventyConfig.addCollection("menuItems", collection =>
     collection

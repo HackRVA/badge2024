@@ -1,5 +1,4 @@
-
-target_sources(badge2022_c PUBLIC
+target_sources(badge2023_c PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/about_badge.c
         ${CMAKE_CURRENT_LIST_DIR}/badge_monsters.c
         ${CMAKE_CURRENT_LIST_DIR}/blinkenlights.c
@@ -16,4 +15,4 @@ target_sources(badge2022_c PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/slot_machine.c
         )
 
-target_include_directories(badge2022_c PUBLIC .)
+target_include_directories(badge2023_c PUBLIC .)

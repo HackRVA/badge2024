@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 2/10/22.
 //
 
-#ifndef BADGE2022_C_IR_H
-#define BADGE2022_C_IR_H
+#ifndef BADGE_C_IR_H
+#define BADGE_C_IR_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -84,4 +84,4 @@ bool ir_messages_seen(bool reset);
 int ir_message_count(void);
 
 
-#endif //BADGE2022_C_IR_H
+#endif //BADGE_C_IR_H

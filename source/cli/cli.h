@@ -2,8 +2,8 @@
 // Created by Samuel Jones on 11/9/21.
 //
 
-#ifndef badge2022_c_CLI_H
-#define badge2022_c_CLI_H
+#ifndef badge_c_CLI_H
+#define badge_c_CLI_H
 
 #include <stddef.h>
 
@@ -19,4 +19,4 @@ int cli_get_line(const char *prompt, char* line, size_t len);
 char* cli_get_token(char** line);
 int cli_process_line(const CLI_COMMAND *parent, const CLI_COMMAND *cmd, char* line);
 
-#endif //badge2022_c_CLI_H
+#endif //badge_c_CLI_H
