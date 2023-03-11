@@ -3,7 +3,7 @@
  *  @author Peter Maxwell Warasila
  *  @date   May 28, 2022
  *
- *  @brief  RVASec 2023 Badge Audio Driver
+ *  @brief  RVASec Badge Audio Driver
  *
  *------------------------------------------------------------------------------
  *

@@ -27,7 +27,7 @@
 
 #include "audio.h"
 
-/*! @addtogroup BADGE2023_AUDIO Audio Driver
+/*! @addtogroup BADGE_AUDIO Audio Driver
  *  @{
  */
 
@@ -218,4 +218,4 @@ bool audio_is_playing(void) {
     return audio_out_mode == AUDIO_OUT_MODE_BEEP;
 }
 
-/*! @} */ // BADGE2023_AUDIO
+/*! @} */ // BADGE_AUDIO
