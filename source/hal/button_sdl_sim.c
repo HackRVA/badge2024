@@ -4,6 +4,7 @@
 #include <SDL.h>
 #include "button.h"
 #include "rtc.h"
+#include "sim_lcd_params.h"
 
 #define UNUSED __attribute__((unused))
 
@@ -15,10 +16,54 @@ static int rotation_count = 0;
 static uint64_t last_change = 0;
 static user_gpio_callback callback = NULL;
 
+static void zoom(float factor)
+{
+	int cx, cy, x1, y1, x2, y2;
+
+	struct sim_lcd_params slp = get_sim_lcd_params();
+
+	cx = slp.xoffset + slp.width / 2;
+	cy = slp.yoffset + slp.height / 2;
+
+	x1 = cx - (int) (factor * (cx - slp.xoffset));
+	x2 = cx + (int) (factor * (cx - slp.xoffset));
+	y1 = cy - (int) (factor * (cy - slp.yoffset));
+	y2 = cy + (int) (factor * (cy - slp.yoffset));
+
+	if (x2 - x1 < 100) /* limit zooming out */
+		return;
+
+	if (x1 < 0 || y1 < 0) { /* limit zooming in */
+		set_sim_lcd_params_default();
+		return;
+	}
+	slp.xoffset = x1;
+	slp.yoffset = y1;
+	slp.width = x2 - x1;
+	slp.height = y2 - y1;
+	set_sim_lcd_params(&slp);
+}
+
+static void zoom_in(void)
+{
+	zoom(1.1);
+}
+
+static void zoom_out(void)
+{
+	zoom(0.9);
+}
+
 int key_press_cb(SDL_Keysym *keysym)
 {
     BADGE_BUTTON button = BADGE_BUTTON_MAX;
     switch (keysym->sym) {
+	case SDLK_EQUALS:
+		zoom_in();
+		break;
+	case SDLK_MINUS:
+		zoom_out();
+		break;
         case SDLK_w:
         case SDLK_UP:
             button = BADGE_BUTTON_UP;
