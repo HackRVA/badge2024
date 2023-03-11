@@ -8,6 +8,7 @@
 #include <string.h>
 #include <pthread.h>
 #include <SDL.h>
+#include <SDL_image.h>
 #include "framebuffer.h"
 #include "display_s6b33.h"
 #include "led_pwm.h"
@@ -18,6 +19,7 @@
 #include "flash_storage.h"
 #include "led_pwm_sdl.h"
 #include "sim_lcd_params.h"
+#include "png_utils.h"
 
 #define UNUSED __attribute__((unused))
 
@@ -77,10 +79,14 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
     printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
 }
 
+static char *badge_image_pixels, *landscape_badge_image_pixels;
+static int badge_image_width, badge_image_height;
+static int landscape_badge_image_width, landscape_badge_image_height;
+
 // static GtkWidget *vbox, *drawing_area;
 static SDL_Window *window;
 static SDL_Renderer *renderer;
-static SDL_Texture *pix_buf, *landscape_pix_buf;
+static SDL_Texture *pix_buf, *landscape_pix_buf, *badge_image, *landscape_badge_image;
 static char *program_title;
 extern int lcd_brightness;
 
@@ -117,14 +123,115 @@ void flareled(unsigned char r, unsigned char g, unsigned char b)
     led_color.blue = b;
 }
 
+static void draw_badge_image(struct sim_lcd_params *slp)
+{
+	static int created_textures = 0;
+	float x1, y1, x2, y2;
+	float bx1, by1, bx2, by2;
+	float cx1, cy1, cx2, cy2;
+	float sx1, sy1, sx2, sy2;
+	int sx, sy;
+
+	if (!created_textures) {
+		if (landscape_badge_image_pixels) {
+			landscape_badge_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
+					landscape_badge_image_width, landscape_badge_image_height);
+			SDL_UpdateTexture(landscape_badge_image, NULL, landscape_badge_image_pixels, landscape_badge_image_width * 4);
+		}
+		if (badge_image_pixels) {
+			badge_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
+							badge_image_width, badge_image_height);
+			SDL_UpdateTexture(badge_image, NULL, badge_image_pixels, badge_image_width * 4);
+		}
+		created_textures = 1;
+	}
+
+        SDL_GetWindowSize(window, &sx, &sy);
+
+	if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE) {
+		/* corners of the screen inside the badge image */
+		x1 = 82;
+		y1 = 291;
+		x2 = 670;
+		y2 = 748;
+	} else {
+		/* corners of the screen inside the badge image */
+		x1 = 282;
+		y1 = 83;
+		x2 = 731;
+		y2 = 642;
+	}
+
+	/* corners of the sim screen on the computer screen */
+	sx1 = slp->xoffset;
+	sy1 = slp->yoffset;
+	sx2 = slp->xoffset + slp->width;
+	sy2 = slp->yoffset + slp->height;
+
+	/* where corners of badge image land on screen, by similar triangles */
+	float fx = (sx2 - sx1) / (x2 - x1);
+	float fy = (sy2 - sy1) / (y2 - y1);
+	fx = fy;
+	bx1 =   sx1 - fx * x1;
+	by1 =   sy1 - fy * y1;
+	if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE) {
+		bx2 =   bx1 + fx * (landscape_badge_image_width - 1);
+		by2 =   by1 + fy * (landscape_badge_image_height - 1);
+	} else {
+		bx2 =   bx1 + fx * (badge_image_width - 1);
+		by2 =   by1 + fy * (badge_image_height - 1);
+	}
+
+	/* note, some or all of bx1, by1, bx2, by2 may be off screen. Compute clip rect */
+	if (bx1 < 0) {
+		cx1 = -bx1 / fx;
+		bx1 = 0;
+	} else {
+		cx1 = 0;
+	}
+	if (by1 < 0) {
+		cy1 = -by1 / fy;
+		by1 = 0;
+	} else {
+		cy1 = 0;
+	}
+	if (bx2 >= sx) {
+		cx2 = (sx - bx1) / fx;
+		bx2 = sx - 1;
+	} else {
+		if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
+			cx2 = landscape_badge_image_width - 1;
+		else
+			cx2 = badge_image_width - 1;
+	}
+	if (by2 >= sy) {
+		cy2 = (sy - by1) / fy;
+		by2 = sy - 1;
+	} else {
+		if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
+			cy2 = landscape_badge_image_height - 1;
+		else
+			cy2 = badge_image_height - 1;
+	}
+
+	SDL_Rect from_rect = { (int) cx1, (int) cy1, (int) (cx2 - cx1), (int) (cy2 - cy1) };
+	SDL_Rect to_rect = { (int) bx1, (int) by1, (int) (bx2 - bx1), (int) (by2 - by1) };
+	if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
+		SDL_RenderCopy(renderer, landscape_badge_image, &from_rect, &to_rect);
+	else
+		SDL_RenderCopy(renderer, badge_image, &from_rect, &to_rect);
+}
+
 
 static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture *landscape_texture)
 {
     extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
     struct sim_lcd_params slp = get_sim_lcd_params();
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
     SDL_RenderClear(renderer);
+
+    draw_badge_image(&slp);
 
     /* Draw the pixels of the screen */
 
@@ -250,11 +357,36 @@ static int start_sdl(void)
     return 0;
 }
 
+static void load_badge_images(void)
+{
+	int w = 0, h = 0, a = 0;
+	char whynot[1024];
+
+	badge_image_pixels = png_utils_read_png_image("../images/badge-image-1024.png",
+		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
+	if (!badge_image_pixels)
+		fprintf(stderr, "Failed to load badge image: %s\n", whynot);
+	badge_image_width = w;
+	badge_image_height = h;
+
+        whynot[0] = '\0';
+	w = 0;
+	h = 0;
+	a = 0;
+	landscape_badge_image_pixels = png_utils_read_png_image("../images/badge-image-vert-1024.png",
+		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
+	if (!landscape_badge_image_pixels)
+		fprintf(stderr, "Failed to load landscape badge image: %s\n", whynot);
+	landscape_badge_image_width = w;
+	landscape_badge_image_height = h;
+}
+
 static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **renderer,
 				SDL_Texture **texture, SDL_Texture **landscape_texture)
 {
     char window_title[1024];
 
+    load_badge_images();
     snprintf(window_title, sizeof(window_title), "HackRVA Badge Emulator - %s", program_title);
     free(program_title);
     *window = SDL_CreateWindow(window_title, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -284,6 +416,7 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
         exit(1);
     }
     SDL_SetTextureBlendMode(*landscape_texture, SDL_BLENDMODE_BLEND);
+
     SDL_ShowWindow(*window);
     SDL_RenderClear(*renderer);
     SDL_RenderPresent(*renderer);
@@ -359,7 +492,10 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
     SDL_DestroyWindow(window);
     SDL_QuitSubSystem(SDL_INIT_EVENTS);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    free(badge_image_pixels);
+    free(landscape_badge_image_pixels);
     SDL_Quit();
+
 
     printf("\n\n\n\n\n\n\n\n\n\n\n");
     printf("If you seak leak sanitizer complaining about memory and _XlcDefaultMapModifiers\n");

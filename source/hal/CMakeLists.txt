@@ -61,6 +61,7 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
             ${CMAKE_CURRENT_LIST_DIR}/random_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/sim_lcd_params.c
             ${CMAKE_CURRENT_LIST_DIR}/uid_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/png_utils.c
             )
 
     cmake_policy(SET CMP0079 NEW)
@@ -71,6 +72,11 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
     # Add other flags to the compiler
     target_compile_definitions(badge2023_c PRIVATE ${SDL2_CFLAGS_OTHER})
     
+    find_package(PNG REQUIRED)
+    target_include_directories(badge2023_c PRIVATE ${PNG_INCLUDE_DIRS})
+    target_link_libraries(badge2023_c ${PNG_LIBRARIES})
+    target_compile_definitions(badge2023_c PRIVATE ${PNG_CFLAGS_OTHER})
+
     find_package(Threads REQUIRED)
     target_link_libraries(badge2023_c Threads::Threads)
 endif()

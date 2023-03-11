@@ -10,16 +10,16 @@ static const struct sim_lcd_params initial_default_sim_lcd_params = {
 	 */
 	.xoffset = 1,
 	.yoffset = 1,
-	.width = LCD_XSIZE * 6,
-	.height = LCD_YSIZE * 6,
+	.width = LCD_XSIZE * 3,
+	.height = LCD_YSIZE * 3,
 };
 
 static const struct sim_lcd_params initial_default_landscape_sim_lcd_params = {
 	.orientation = SIM_LCD_ORIENTATION_LANDSCAPE, /* LCD screen orientation */
 	.xoffset = 1,
 	.yoffset = 1,
-	.width = LCD_YSIZE * 6,
-	.height = LCD_XSIZE * 6,
+	.width = LCD_YSIZE * 3,
+	.height = LCD_XSIZE * 3,
 };
 
 static struct sim_lcd_params default_sim_lcd_params = initial_default_sim_lcd_params;
@@ -45,7 +45,7 @@ void adjust_sim_lcd_params_defaults(int sdl_window_width, int sdl_window_height)
 {
 	if (default_sim_lcd_params.width < sdl_window_width) {
 		int extra = sdl_window_width - default_sim_lcd_params.width;
-		default_sim_lcd_params.xoffset = 75 * (extra / 2) / 100;
+		default_sim_lcd_params.xoffset = (extra / 2);
 	}
 
 	if (default_sim_lcd_params.height < sdl_window_height) {
@@ -55,7 +55,7 @@ void adjust_sim_lcd_params_defaults(int sdl_window_width, int sdl_window_height)
 
 	if (default_landscape_sim_lcd_params.width < sdl_window_width) {
 		int extra = sdl_window_width - default_landscape_sim_lcd_params.width;
-		default_landscape_sim_lcd_params.xoffset = 75 * (extra / 2) / 100;
+		default_landscape_sim_lcd_params.xoffset = (extra / 2);
 	}
 
 	if (default_landscape_sim_lcd_params.height < sdl_window_height) {
