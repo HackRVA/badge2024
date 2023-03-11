@@ -80,12 +80,6 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
 // static GtkWidget *vbox, *drawing_area;
 static SDL_Window *window;
 static SDL_Renderer *renderer;
-#define SCALE_FACTOR 6
-#define EXTRA_WIDTH 200
-#define SIM_SCREEN_WIDTH (LCD_XSIZE * SCALE_FACTOR + EXTRA_WIDTH)
-#define SIM_SCREEN_HEIGHT (LCD_YSIZE * SCALE_FACTOR)
-static int real_screen_width = SIM_SCREEN_WIDTH;
-static int real_screen_height = SIM_SCREEN_HEIGHT;
 static SDL_Texture *pix_buf;
 static char *program_title;
 extern int lcd_brightness;
@@ -170,33 +164,60 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
     SDL_Rect to_rect = { slp.xoffset, slp.yoffset, slp.width, slp.height };
     SDL_RenderCopy(renderer, texture, &from_rect, &to_rect);
 
-    int x, y, w, h;
-    w = (real_screen_width - EXTRA_WIDTH) / LCD_XSIZE;
-    if (w < 1)
-        w = 1;
-    h = real_screen_height / LCD_YSIZE;
-    if (h < 1)
-        h = 1;
+    int x, y;
 
-    /* Draw a white vertical line demarcating the right edge of the screen */
+    /* Draw a border around the simulated screen */
     SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
-    SDL_RenderDrawLine(renderer, slp.xoffset + slp.width + 1, 0, slp.xoffset + slp.width + 1, real_screen_height - 1);
+    SDL_RenderDrawLine(renderer, slp.xoffset - 1, slp.yoffset - 1., slp.xoffset + slp.width + 1, slp.yoffset - 1); /* top */
+    SDL_RenderDrawLine(renderer, slp.xoffset - 1, slp.yoffset - 1., slp.xoffset - 1, slp.yoffset + slp.height + 1); /* left */
+    SDL_RenderDrawLine(renderer, slp.xoffset - 1, slp.yoffset + slp.height + 1, slp.xoffset + slp.width + 1, slp.yoffset + slp.height + 1); /* bottom */
+    SDL_RenderDrawLine(renderer, slp.xoffset + slp.width + 1, slp.yoffset - 1, slp.xoffset + slp.width + 1, slp.yoffset + slp.height + 1); /* right */
 
     /* Draw simulated flare LED */
-    x = LCD_XSIZE * w + EXTRA_WIDTH / 4;
-    y = (LCD_YSIZE * h) / 2 - EXTRA_WIDTH / 4;
-    draw_led_text(renderer, LCD_XSIZE * w + EXTRA_WIDTH / 2 - 20, y - 10);
+    x = slp.xoffset + slp.width + 20;
+    y = slp.yoffset + (slp.height / 2) - 20;
+    draw_led_text(renderer, x, y);
     SDL_SetRenderDrawColor(renderer, led_color.red, led_color.blue, led_color.green, 0xff);
-    SDL_RenderFillRect(renderer, &(SDL_Rect) { x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2} );
+    SDL_RenderFillRect(renderer, &(SDL_Rect) { x, y + 20, 51, 51} );
     SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
-    SDL_RenderDrawRect(renderer, &(SDL_Rect) { x, y, EXTRA_WIDTH / 2, EXTRA_WIDTH / 2} );
+    SDL_RenderDrawRect(renderer, &(SDL_Rect) { x, y + 20, 50, 50} );
 
     SDL_RenderPresent(renderer);
     return 0;
 }
 
+static void enable_sdl_fullscreen_sanity(void)
+{
+	/* If SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS isn't set to zero,
+	 * fullscreen window behavior is *insane* by default.
+	 *
+	 * Alt-tab and Alt-left-arrow and Alt-right-arrow will *minimize*
+	 * the window, pushing it to the bottom of the stack, so when you
+	 * alt-tab again, and expect the window to re-appear, it doesn't.
+	 * Instead, a different window appears, and you have to alt-tab a
+	 * zillion times through all your windows until you finally get to
+	 * the bottom where your minimized fullscreen window sits, idiotically.
+	 *
+	 * Let's make sanity the default.  The last parameter of setenv()
+	 * says do not overwrite the value if it is already set. This will
+	 * allow for any completely insane individuals who somehow prefer
+	 * this idiotc behavior to still have it.  But they will not get
+	 * it by default.
+	 */
+
+	char *v = getenv("SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS");
+	if (v && strncmp(v, "1", 1) == 0) {
+		fprintf(stderr, "You have SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS set to 1!\n");
+		fprintf(stderr, "I highly recommend you set it to zero. But it's your sanity\n");
+		fprintf(stderr, "at stake, not mine, so whatever. Let's proceed anyway.\n");
+	}
+	setenv("SDL_VIDEO_MINIMIZE_ON_FOCUS_LOSS", "0", 0);	/* Final 0 means don't override user's prefs */
+								/* I am Very tempted to set it to 1. */
+}
+
 static int start_sdl(void)
 {
+    enable_sdl_fullscreen_sanity();
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         fprintf(stderr, "Unable to initialize SDL (Video):  %s\n", SDL_GetError());
         return 1;
@@ -221,7 +242,9 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
         fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
         exit(1);
     }
-    SDL_SetWindowSize(*window, SIM_SCREEN_WIDTH, SIM_SCREEN_HEIGHT);
+    // SDL_SetWindowSize(*window, SIM_SCREEN_WIDTH, SIM_SCREEN_HEIGHT);
+    SDL_SetWindowFullscreen(*window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+
     *renderer = SDL_CreateRenderer(*window, -1, 0);
     if (!*renderer) {
         fprintf(stderr, "Could not create renderer: %s\n", SDL_GetError());
@@ -283,6 +306,8 @@ static void wait_until_next_frame(void)
 
 void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
 {
+    int first_time = 1;
+
     program_title = strdup((*argv)[0]);
     if (start_sdl())
 	exit(1);
@@ -291,6 +316,15 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
 
     while (!time_to_quit) {
 	draw_window(renderer, pix_buf);
+
+	if (first_time) {
+            int sx, sy;
+            SDL_GetWindowSize(window, &sx, &sy);
+            adjust_sim_lcd_params_defaults(sx, sy);
+            set_sim_lcd_params_default();
+            first_time = 0;
+        }
+
 	process_events();
 	wait_until_next_frame();
     }

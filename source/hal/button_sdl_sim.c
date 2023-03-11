@@ -33,7 +33,7 @@ static void zoom(float factor)
 	if (x2 - x1 < 100) /* limit zooming out */
 		return;
 
-	if (x1 < 0 || y1 < 0) { /* limit zooming in */
+	if (x1 < 1 || y1 < 1) { /* limit zooming in */
 		set_sim_lcd_params_default();
 		return;
 	}
