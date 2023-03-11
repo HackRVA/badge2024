@@ -54,10 +54,23 @@ static void zoom_out(void)
 	zoom(0.9);
 }
 
+static void rotate_simulator(void)
+{
+	struct sim_lcd_params slp = get_sim_lcd_params();
+	if (slp.orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
+		set_sim_lcd_params_portrait();
+	else
+		set_sim_lcd_params_landscape();
+}
+
 int key_press_cb(SDL_Keysym *keysym)
 {
+    struct sim_lcd_params slp = get_sim_lcd_params();
     BADGE_BUTTON button = BADGE_BUTTON_MAX;
     switch (keysym->sym) {
+	case SDLK_r:
+		rotate_simulator();
+		break;
 	case SDLK_EQUALS:
 		zoom_in();
 		break;
@@ -66,19 +79,31 @@ int key_press_cb(SDL_Keysym *keysym)
 		break;
         case SDLK_w:
         case SDLK_UP:
-            button = BADGE_BUTTON_UP;
+	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT)
+                button = BADGE_BUTTON_UP;
+            else
+                button = BADGE_BUTTON_LEFT;
         break;
         case SDLK_s:
         case SDLK_DOWN:
-            button = BADGE_BUTTON_DOWN;
+	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT)
+                button = BADGE_BUTTON_DOWN;
+            else
+                button = BADGE_BUTTON_RIGHT;
         break;
         case SDLK_a:
         case SDLK_LEFT:
-            button = BADGE_BUTTON_LEFT;
+	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT)
+                button = BADGE_BUTTON_LEFT;
+            else
+                button = BADGE_BUTTON_DOWN;
         break;
         case SDLK_d:
         case SDLK_RIGHT:
-            button = BADGE_BUTTON_RIGHT;
+	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT)
+                button = BADGE_BUTTON_RIGHT;
+            else
+                button = BADGE_BUTTON_UP;
         break;
         case SDLK_SPACE:
         case SDLK_RETURN:

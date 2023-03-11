@@ -80,7 +80,7 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
 // static GtkWidget *vbox, *drawing_area;
 static SDL_Window *window;
 static SDL_Renderer *renderer;
-static SDL_Texture *pix_buf;
+static SDL_Texture *pix_buf, *landscape_pix_buf;
 static char *program_title;
 extern int lcd_brightness;
 
@@ -118,10 +118,10 @@ void flareled(unsigned char r, unsigned char g, unsigned char b)
 }
 
 
-static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
+static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture *landscape_texture)
 {
     extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
-
+    struct sim_lcd_params slp = get_sim_lcd_params();
 
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -144,25 +144,45 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
     /* Copy display_array[] but add on an alpha channel. SDL_RenderCopy() seems to need it.
      * Plus we try to use it to implement LCD brightness. */
     static uint8_t display_array_with_alpha[LCD_YSIZE][LCD_XSIZE][4];
+    static uint8_t landscape_display_array_with_alpha[LCD_XSIZE][LCD_YSIZE][4];
 
-    float level = (float) lcd_brightness / 255.0f;
-    for (int y = 0; y < LCD_YSIZE; y++) {
-        for (int x = 0; x < LCD_XSIZE; x++) {
-            /* SDL texture seems to want data in BGRA order, and since we're copying
-             * anyway, we can emulate LCD brightness here too. */
-            display_array_with_alpha[y][x][2] = (uint8_t) (level * display_array[y][x][0]);
-            display_array_with_alpha[y][x][1] = (uint8_t) (level * display_array[y][x][1]);
-            display_array_with_alpha[y][x][0] = (uint8_t) (level * display_array[y][x][2]);
-	    /* I tried to implement lcd brightness via alpha channel, but it doesn't seem to work */
-            /* display_array_with_alpha[y][x][3] = 255 - lcd_brightness; */
-            display_array_with_alpha[y][x][3] = 255;
+    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT) { /* LCD screen orientation */
+        float level = (float) lcd_brightness / 255.0f;
+        for (int y = 0; y < LCD_YSIZE; y++) {
+            for (int x = 0; x < LCD_XSIZE; x++) {
+                /* SDL texture seems to want data in BGRA order, and since we're copying
+                 * anyway, we can emulate LCD brightness here too. */
+                display_array_with_alpha[y][x][2] = (uint8_t) (level * display_array[y][x][0]);
+                display_array_with_alpha[y][x][1] = (uint8_t) (level * display_array[y][x][1]);
+                display_array_with_alpha[y][x][0] = (uint8_t) (level * display_array[y][x][2]);
+	        /* I tried to implement lcd brightness via alpha channel, but it doesn't seem to work */
+                /* display_array_with_alpha[y][x][3] = 255 - lcd_brightness; */
+                display_array_with_alpha[y][x][3] = 255;
+            }
         }
+        SDL_UpdateTexture(texture, NULL, display_array_with_alpha, LCD_XSIZE * 4);
+        SDL_Rect from_rect = { 0, 0, LCD_XSIZE, LCD_YSIZE };
+        SDL_Rect to_rect = { slp.xoffset, slp.yoffset, slp.width, slp.height };
+        SDL_RenderCopy(renderer, texture, &from_rect, &to_rect);
+    } else { /* landscape */
+        float level = (float) lcd_brightness / 255.0f;
+        for (int x = 0; x < LCD_XSIZE; x++) {
+            for (int y = 0; y < LCD_YSIZE; y++) {
+                /* SDL texture seems to want data in BGRA order, and since we're copying
+                 * anyway, we can emulate LCD brightness here too. */
+                landscape_display_array_with_alpha[LCD_XSIZE - x - 1][y][2] = (uint8_t) (level * display_array[y][x][0]);
+                landscape_display_array_with_alpha[LCD_XSIZE - x - 1][y][1] = (uint8_t) (level * display_array[y][x][1]);
+                landscape_display_array_with_alpha[LCD_XSIZE - x - 1][y][0] = (uint8_t) (level * display_array[y][x][2]);
+	        /* I tried to implement lcd brightness via alpha channel, but it doesn't seem to work */
+                /* display_array_with_alpha[y][x][3] = 255 - lcd_brightness; */
+                landscape_display_array_with_alpha[x][y][3] = 255;
+            }
+        }
+        SDL_UpdateTexture(landscape_texture, NULL, landscape_display_array_with_alpha, LCD_YSIZE * 4);
+        SDL_Rect from_rect = { 0, 0, LCD_YSIZE, LCD_XSIZE };
+        SDL_Rect to_rect = { slp.xoffset, slp.yoffset, slp.width, slp.height };
+        SDL_RenderCopy(renderer, landscape_texture, &from_rect, &to_rect);
     }
-    SDL_UpdateTexture(texture, NULL, display_array_with_alpha, LCD_XSIZE * 4);
-    struct sim_lcd_params slp = get_sim_lcd_params();
-    SDL_Rect from_rect = { 0, 0, LCD_XSIZE, LCD_YSIZE };
-    SDL_Rect to_rect = { slp.xoffset, slp.yoffset, slp.width, slp.height };
-    SDL_RenderCopy(renderer, texture, &from_rect, &to_rect);
 
     int x, y;
 
@@ -230,7 +250,8 @@ static int start_sdl(void)
     return 0;
 }
 
-static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **renderer, SDL_Texture **texture)
+static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **renderer,
+				SDL_Texture **texture, SDL_Texture **landscape_texture)
 {
     char window_title[1024];
 
@@ -257,6 +278,12 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
         exit(1);
     }
     SDL_SetTextureBlendMode(*texture, SDL_BLENDMODE_BLEND);
+    *landscape_texture = SDL_CreateTexture(*renderer, SDL_PIXELFORMAT_RGB888, SDL_TEXTUREACCESS_STATIC, LCD_YSIZE, LCD_XSIZE);
+    if (!*landscape_texture) { 
+        fprintf(stderr, "Could not create landscape texture: %s\n", SDL_GetError());
+        exit(1);
+    }
+    SDL_SetTextureBlendMode(*landscape_texture, SDL_BLENDMODE_BLEND);
     SDL_ShowWindow(*window);
     SDL_RenderClear(*renderer);
     SDL_RenderPresent(*renderer);
@@ -311,11 +338,11 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
     program_title = strdup((*argv)[0]);
     if (start_sdl())
 	exit(1);
-    setup_window_and_renderer(&window, &renderer, &pix_buf);
+    setup_window_and_renderer(&window, &renderer, &pix_buf, &landscape_pix_buf);
     flareled(0, 0, 0);
 
     while (!time_to_quit) {
-	draw_window(renderer, pix_buf);
+	draw_window(renderer, pix_buf, landscape_pix_buf);
 
 	if (first_time) {
             int sx, sy;
