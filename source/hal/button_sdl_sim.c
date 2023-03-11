@@ -5,6 +5,7 @@
 #include "button.h"
 #include "rtc.h"
 #include "sim_lcd_params.h"
+#include "button_sdl_ui.h"
 
 #define UNUSED __attribute__((unused))
 
@@ -12,9 +13,46 @@ int time_to_quit = 0;
 static int down_latches = 0;
 static int up_latches = 0;
 static int button_states = 0;
-static int rotation_count = 0;
+static int rotation_count[2] = { 0 };
+static int rotary_angle[2] = { 0 };
 static uint64_t last_change = 0;
 static user_gpio_callback callback = NULL;
+
+static struct sim_button_status sim_button_status = { 0 };
+#define BUTTON_DISPLAY_DURATION 15 /* frames */
+
+struct sim_button_status get_sim_button_status(void)
+{
+	return sim_button_status;
+}
+
+static void countdown_to_zero(int *x)
+{
+	if (*x > 0)
+		(*x)--;
+}
+
+static void rotary_angle_delta(int which_rotary, int amount)
+{
+	int new_angle = rotary_angle[which_rotary] + amount * 8;
+	if (new_angle < 0)
+		new_angle += 128;
+	if (new_angle > 127)
+		new_angle -= 128;
+	rotary_angle[which_rotary] = new_angle;
+}
+
+void sim_button_status_countdown(void)
+{
+	countdown_to_zero(&sim_button_status.button_a);
+	countdown_to_zero(&sim_button_status.button_b);
+	countdown_to_zero(&sim_button_status.left_rotary_button);
+	countdown_to_zero(&sim_button_status.right_rotary_button);
+	countdown_to_zero(&sim_button_status.dpad_up);
+	countdown_to_zero(&sim_button_status.dpad_down);
+	countdown_to_zero(&sim_button_status.dpad_right);
+	countdown_to_zero(&sim_button_status.dpad_left);
+}
 
 static void zoom(float factor)
 {
@@ -79,35 +117,48 @@ int key_press_cb(SDL_Keysym *keysym)
 		break;
         case SDLK_w:
         case SDLK_UP:
-	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT)
+	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT) {
                 button = BADGE_BUTTON_UP;
-            else
-                button = BADGE_BUTTON_LEFT;
+                sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
+            } else {
+                button = BADGE_BUTTON_RIGHT;
+                sim_button_status.dpad_right = BUTTON_DISPLAY_DURATION;
+            }
         break;
         case SDLK_s:
         case SDLK_DOWN:
-	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT)
+	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT) {
                 button = BADGE_BUTTON_DOWN;
-            else
-                button = BADGE_BUTTON_RIGHT;
+                sim_button_status.dpad_down = BUTTON_DISPLAY_DURATION;
+            } else {
+                button = BADGE_BUTTON_LEFT;
+                sim_button_status.dpad_left = BUTTON_DISPLAY_DURATION;
+            }
         break;
         case SDLK_a:
         case SDLK_LEFT:
-	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT)
+	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT) {
                 button = BADGE_BUTTON_LEFT;
-            else
-                button = BADGE_BUTTON_DOWN;
+                sim_button_status.dpad_left = BUTTON_DISPLAY_DURATION;
+            } else {
+                button = BADGE_BUTTON_UP;
+                sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
+            }
         break;
         case SDLK_d:
         case SDLK_RIGHT:
-	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT)
+	    if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT) {
                 button = BADGE_BUTTON_RIGHT;
-            else
-                button = BADGE_BUTTON_UP;
+                sim_button_status.dpad_right = BUTTON_DISPLAY_DURATION;
+            } else {
+                button = BADGE_BUTTON_DOWN;
+                sim_button_status.dpad_down = BUTTON_DISPLAY_DURATION;
+            }
         break;
         case SDLK_SPACE:
         case SDLK_RETURN:
             button = BADGE_BUTTON_SW;
+            sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
         break;
         case SDLK_q:
         case SDLK_ESCAPE:
@@ -115,11 +166,21 @@ int key_press_cb(SDL_Keysym *keysym)
         break;
         case SDLK_COMMA:
         case SDLK_LESS:
-            rotation_count -= 1;
+            rotation_count[0] -= 1;
+            rotary_angle_delta(0, -1);
         break;
         case SDLK_PERIOD:
         case SDLK_GREATER:
-            rotation_count += 1;
+            rotation_count[0] += 1;
+            rotary_angle_delta(0, 1);
+        break;
+	case SDLK_z:
+            rotation_count[1] -= 1;
+            rotary_angle_delta(1, -1);
+        break;
+	case SDLK_x:
+            rotation_count[1] += 1;
+            rotary_angle_delta(1, 1);
         break;
         default:
             break;
@@ -222,9 +283,13 @@ void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
 }
 
-/* TODO: make this work with multiple rotary switches */
-int button_get_rotation(__attribute__((unused)) int which_rotary) {
-    int count = rotation_count;
-    rotation_count = 0;
+int button_get_rotation(int which_rotary) {
+    int count = rotation_count[which_rotary];
+    rotation_count[which_rotary] = 0;
     return count;
+}
+
+int sim_get_rotary_angle(int which_rotary)
+{
+	return rotary_angle[which_rotary];
 }

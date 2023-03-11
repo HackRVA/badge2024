@@ -13,6 +13,7 @@
 #include "display_s6b33.h"
 #include "led_pwm.h"
 #include "button.h"
+#include "button_coords.h"
 #include "button_sdl_ui.h"
 #include "ir.h"
 #include "rtc.h"
@@ -20,6 +21,7 @@
 #include "led_pwm_sdl.h"
 #include "sim_lcd_params.h"
 #include "png_utils.h"
+#include "trig.h"
 
 #define UNUSED __attribute__((unused))
 
@@ -214,6 +216,62 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 		SDL_RenderCopy(renderer, badge_image, &from_rect, &to_rect);
 }
 
+static void draw_button_press(struct button_coord *b)
+{
+    SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 0xff);
+    SDL_RenderFillRect(renderer, &(SDL_Rect) { b->x - 20, b->y - 20, 40, 40} );
+    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+    SDL_RenderFillRect(renderer, &(SDL_Rect) { b->x - 10, b->y - 10, 20, 20} );
+}
+
+static void draw_rotary_button_position(struct button_coord *button, int which_rotary)
+{
+	float x, y;
+	int angle = sim_get_rotary_angle(which_rotary);
+
+	x = (cosine(angle) * 40) >> 8;
+	y = (sine(angle) * 40) >> 8;
+
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
+	SDL_RenderDrawLine(renderer, button->x, button->y, button->x + x, button->y + y);
+}
+
+static void draw_button_inputs(struct sim_lcd_params *slp)
+{
+	struct sim_button_status button_status;
+	int w, h;
+
+	if (slp->orientation == SIM_LCD_ORIENTATION_PORTRAIT) {
+		w = badge_image_width;
+		h = badge_image_height;
+	} else {
+		w = landscape_badge_image_width;
+		h = landscape_badge_image_height;
+	}
+	struct button_coord_list bcl = get_button_coords(slp, w, h);
+	button_status = get_sim_button_status();
+
+	/* TODO: now there are 4 buttons, A, B, and the two rotary switches */
+	if (button_status.button_a)
+		draw_button_press(&bcl.a_button);
+	if (button_status.button_b)
+		draw_button_press(&bcl.b_button);
+	if (button_status.dpad_right)
+		draw_button_press(&bcl.dpad_right);
+	if (button_status.dpad_left)
+		draw_button_press(&bcl.dpad_left);
+	if (button_status.dpad_up)
+		draw_button_press(&bcl.dpad_up);
+	if (button_status.dpad_down)
+		draw_button_press(&bcl.dpad_down);
+	if (button_status.left_rotary_button)
+		draw_button_press(&bcl.left_rotary);
+	if (button_status.right_rotary_button)
+		draw_button_press(&bcl.right_rotary);
+	draw_rotary_button_position(&bcl.right_rotary, 0);
+	draw_rotary_button_position(&bcl.left_rotary, 1);
+	sim_button_status_countdown();
+}
 
 static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture *landscape_texture)
 {
@@ -224,6 +282,7 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
     SDL_RenderClear(renderer);
 
     draw_badge_image(&slp);
+    draw_button_inputs(&slp);
 
     /* Draw the pixels of the screen */
 
