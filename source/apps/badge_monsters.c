@@ -471,7 +471,7 @@ static void check_the_buttons(void)
 {
     int something_changed = 0;
     int down_latches = button_down_latches();
-    int rotary = button_get_rotation();
+    int rotary = button_get_rotation(0);
 
     /* If we are trading monsters, stop trading monsters on a button press */
     if (trading_monsters_enabled) {

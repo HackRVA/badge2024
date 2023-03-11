@@ -167,7 +167,7 @@ void QC_cb()
                 redraw = 1;
             }
 
-            int rotation = button_get_rotation();
+            int rotation = button_get_rotation(0);
             if (rotation < 0) {
                 audio_out_beep(440, 100);
             } else if (rotation > 0) {

@@ -163,7 +163,8 @@ void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
 }
 
-int button_get_rotation(void) {
+/* TODO: make this work with multiple rotary switches */
+int button_get_rotation(__attribute__((unused)) int which_rotary) {
     critical_section_enter_blocking(&critical_section);
     int count = rotation_count;
     rotation_count = 0;

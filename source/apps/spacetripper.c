@@ -1023,7 +1023,7 @@ static void show_energy_and_torps(void)
 static void st_choose_angle_input(void)
 {
 	int down_latches = button_down_latches();
-	int rotary = button_get_rotation();
+	int rotary = button_get_rotation(0);
 	int something_changed = 0;
 
 	gs.angle_chooser.old_angle = *gs.angle_chooser.angle;
@@ -1160,7 +1160,7 @@ static void st_choose_weapons(void)
 static void st_process_input(void)
 {
     int down_latches = button_down_latches();
-    int rotary = button_get_rotation();
+    int rotary = button_get_rotation(0);
     int something_happened = 0;
     if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
         button_pressed();
@@ -2088,7 +2088,7 @@ static void st_warp_input(void)
 	int old = gs.player.new_warp_factor;
 
 	int down_latches = button_down_latches();
-	int rotary = button_get_rotation();
+	int rotary = button_get_rotation(0);
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		gs.player.warp_factor = gs.player.new_warp_factor;
 		st_warp();
@@ -2215,7 +2215,7 @@ static void st_shield_energy_input()
 		min = -max_ship;
 
 	int down_latches = button_down_latches();
-	int rotary = button_get_rotation();
+	int rotary = button_get_rotation(0);
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		gs.player.shield_xfer = gs.player.new_shield_xfer;
 		st_program_state = ST_SHIELD_EXEC_ENERGY_XFER;
@@ -2276,7 +2276,7 @@ static void st_shield_exec_energy_xfer(void)
 static void st_phaser_power_input(void)
 {
 	int down_latches = button_down_latches();
-	int rotary = button_get_rotation();
+	int rotary = button_get_rotation(0);
 	int old = gs.player.new_phaser_power;
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {

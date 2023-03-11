@@ -275,7 +275,7 @@ void menus() {
     }
 
     int down_latches = button_down_latches();
-    int rotary = button_get_rotation();
+    int rotary = button_get_rotation(0);
     /* see if physical button has been clicked */
     if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
         // action happened that will result in menu redraw

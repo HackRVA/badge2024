@@ -42,7 +42,7 @@ void button_reset_last_input_timestamp(void);
 
 // Get rotary encoder rotations! Rotation count is automatically cleared between calls.
 // Positive indicates CW, negative indicates CCW.
-int button_get_rotation(void);
+int button_get_rotation(int which_rotary);
 
 /**  Tell us if we're busy debouncing a button input. */
 bool button_debouncing(void);

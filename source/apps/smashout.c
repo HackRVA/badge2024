@@ -109,7 +109,7 @@ static void smashout_game_init(void)
 
 static void smashout_check_buttons()
 {
-	int rotary_switch = button_get_rotation();
+	int rotary_switch = button_get_rotation(0);
 	int down_latches = button_down_latches();
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
