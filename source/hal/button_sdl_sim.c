@@ -6,6 +6,7 @@
 #include "rtc.h"
 #include "sim_lcd_params.h"
 #include "button_sdl_ui.h"
+#include "button_coords.h"
 
 #define UNUSED __attribute__((unused))
 
@@ -17,6 +18,7 @@ static int rotation_count[2] = { 0 };
 static int rotary_angle[2] = { 0 };
 static uint64_t last_change = 0;
 static user_gpio_callback callback = NULL;
+static int control_key_pressed = 0;
 
 static struct sim_button_status sim_button_status = { 0 };
 #define BUTTON_DISPLAY_DURATION 15 /* frames */
@@ -101,6 +103,93 @@ static void rotate_simulator(void)
 		set_sim_lcd_params_landscape();
 }
 
+static int mouse_close_enough(int x, int y, struct button_coord *b)
+{
+	return ((x - b->x) * (x - b->x) + (y - b->y) * (y - b->y)) < (40 * 40);
+}
+
+int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *bcl)
+{
+	int x, y;
+	BADGE_BUTTON button = BADGE_BUTTON_MAX;
+
+	if (event->button < 1 || event->button > 3)
+		return 1;
+
+#if 0
+	/* for now, all the moust buttons do the same thing */
+	switch (event->button) {
+	case 0:
+	case 1:
+	case 2:
+	default:
+	}
+#endif
+
+	x = event->x;
+	y = event->y;
+
+	if (mouse_close_enough(x, y, &bcl->a_button)) {
+            button = BADGE_BUTTON_SW;
+            sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
+	} else if (mouse_close_enough(x, y, &bcl->b_button)) {
+		/* TODO: fill this in */
+	} else if (mouse_close_enough(x, y, &bcl->left_rotary)) {
+		/* TODO: fill this in */
+	} else if (mouse_close_enough(x, y, &bcl->right_rotary)) {
+		/* TODO: fill this in */
+	} else if (mouse_close_enough(x, y, &bcl->dpad_up)) {
+                button = BADGE_BUTTON_UP;
+                sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
+	} else if (mouse_close_enough(x, y, &bcl->dpad_down)) {
+                button = BADGE_BUTTON_DOWN;
+                sim_button_status.dpad_down = BUTTON_DISPLAY_DURATION;
+	} else if (mouse_close_enough(x, y, &bcl->dpad_left)) {
+                button = BADGE_BUTTON_LEFT;
+                sim_button_status.dpad_left = BUTTON_DISPLAY_DURATION;
+	} else if (mouse_close_enough(x, y, &bcl->dpad_right)) {
+                button = BADGE_BUTTON_RIGHT;
+                sim_button_status.dpad_right = BUTTON_DISPLAY_DURATION;
+	}
+	if (button != BADGE_BUTTON_MAX) {
+		down_latches |= 1<<button;
+		button_states |= 1<<button;
+		if (callback) {
+			callback(button, true);
+		}
+		last_change = rtc_get_ms_since_boot();
+	}
+	return 1;
+}
+
+int mouse_scroll_cb(SDL_MouseWheelEvent *event, struct button_coord_list *bcl)
+{
+	int x, y, amount;
+
+	SDL_GetMouseState(&x, &y);
+	if (event->y < 0)
+		amount = 1;
+	else
+		amount = -1;
+
+	if (control_key_pressed) {
+		if (amount == 1)
+			zoom_in();
+		else
+			zoom_out();
+		return 1;
+	}
+
+	if (mouse_close_enough(x, y, &bcl->left_rotary)) {
+		rotary_angle_delta(1, amount);
+		rotation_count[1] += amount;
+	} else if (mouse_close_enough(x, y, &bcl->right_rotary)) {
+		rotary_angle_delta(0, amount);
+		rotation_count[0] += amount;
+	}
+	return 1;
+}
+
 int key_press_cb(SDL_Keysym *keysym)
 {
     struct sim_lcd_params slp = get_sim_lcd_params();
@@ -182,6 +271,10 @@ int key_press_cb(SDL_Keysym *keysym)
             rotation_count[1] += 1;
             rotary_angle_delta(1, 1);
         break;
+	case SDLK_LCTRL:
+	case SDLK_RCTRL:
+		control_key_pressed = 1;
+	break;
         default:
             break;
     }
@@ -223,6 +316,11 @@ int key_release_cb(SDL_Keysym *keysym)
         case SDLK_q:
         case SDLK_ESCAPE:
             time_to_quit = 1;
+	break;
+	case SDLK_LCTRL:
+	case SDLK_RCTRL:
+		control_key_pressed = 0;
+	break;
         default:
             break;
     }

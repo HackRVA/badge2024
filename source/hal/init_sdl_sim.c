@@ -476,6 +476,9 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
 static void process_events(void)
 {
     SDL_Event event;
+    struct button_coord_list bcl;
+    struct sim_lcd_params slp;
+    int w, h;
 
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -492,12 +495,32 @@ static void process_events(void)
         case SDL_WINDOWEVENT:
             break;
         case SDL_MOUSEBUTTONDOWN:
+            slp = get_sim_lcd_params();
+            if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT) {
+                w = badge_image_width;
+                h = badge_image_height;
+            } else {
+                w = landscape_badge_image_width;
+                h = landscape_badge_image_height;
+            }
+            bcl = get_button_coords(&slp, w, h);
+            mouse_button_down_cb(&event, &bcl);
             break;
         case SDL_MOUSEBUTTONUP:
             break;
         case SDL_MOUSEMOTION:
             break;
         case SDL_MOUSEWHEEL:
+            slp = get_sim_lcd_params();
+            if (slp.orientation == SIM_LCD_ORIENTATION_PORTRAIT) {
+                w = badge_image_width;
+                h = badge_image_height;
+            } else {
+                w = landscape_badge_image_width;
+                h = landscape_badge_image_height;
+            }
+            bcl = get_button_coords(&slp, w, h);
+            mouse_scroll_cb(&event, &bcl);
             break;
         }
     }

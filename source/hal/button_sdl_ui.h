@@ -8,6 +8,8 @@
 extern int time_to_quit;
 extern int key_press_cb();
 extern int key_release_cb();
+extern int mouse_button_down_cb();
+extern int mouse_scroll_cb();
 
 /* This is used for showing UI inputs on the badge simulator on screen.
  * They are counters that count down to zero when a button is pressed.
