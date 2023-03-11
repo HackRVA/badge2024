@@ -2,6 +2,22 @@
 #include "framebuffer.h"
 #include <stdio.h>
 
+static const struct lcd_to_circuit_board_relation landscape_lcd_mapping = {
+	/* corners of the screen inside the badge image */
+	.x1 = 82,
+	.y1 = 291,
+	.x2 = 670,
+	.y2 = 748,
+};
+
+static const struct lcd_to_circuit_board_relation portrait_lcd_mapping = {
+	/* corners of the screen inside the badge image */
+	.x1 = 282,
+	.y1 = 83,
+	.x2 = 731,
+	.y2 = 642,
+};
+
 static const struct sim_lcd_params initial_default_sim_lcd_params = {
 	.orientation = SIM_LCD_ORIENTATION_PORTRAIT,
 	/* Landscape and portrait refer to the orientation of the LCD screen, not the badge as a whole
@@ -72,5 +88,15 @@ void set_sim_lcd_params_landscape(void)
 void set_sim_lcd_params_portrait(void)
 {
 	sim_lcd_params = default_sim_lcd_params;
+}
+
+struct lcd_to_circuit_board_relation portrait_lcd_to_board(void)
+{
+	return portrait_lcd_mapping;
+}
+
+struct lcd_to_circuit_board_relation landscape_lcd_to_board(void)
+{
+	return landscape_lcd_mapping;
 }
 

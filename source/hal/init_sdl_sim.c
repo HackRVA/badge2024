@@ -126,11 +126,11 @@ void flareled(unsigned char r, unsigned char g, unsigned char b)
 static void draw_badge_image(struct sim_lcd_params *slp)
 {
 	static int created_textures = 0;
-	float x1, y1, x2, y2;
 	float bx1, by1, bx2, by2;
 	float cx1, cy1, cx2, cy2;
 	float sx1, sy1, sx2, sy2;
 	int sx, sy;
+	struct lcd_to_circuit_board_relation lcdp;
 
 	if (!created_textures) {
 		if (landscape_badge_image_pixels) {
@@ -148,19 +148,11 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 
         SDL_GetWindowSize(window, &sx, &sy);
 
-	if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE) {
-		/* corners of the screen inside the badge image */
-		x1 = 82;
-		y1 = 291;
-		x2 = 670;
-		y2 = 748;
-	} else {
-		/* corners of the screen inside the badge image */
-		x1 = 282;
-		y1 = 83;
-		x2 = 731;
-		y2 = 642;
-	}
+	/* get corners of the screen inside the badge image */
+	if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
+		lcdp = landscape_lcd_to_board();
+	else
+		lcdp = portrait_lcd_to_board();
 
 	/* corners of the sim screen on the computer screen */
 	sx1 = slp->xoffset;
@@ -169,11 +161,11 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 	sy2 = slp->yoffset + slp->height;
 
 	/* where corners of badge image land on screen, by similar triangles */
-	float fx = (sx2 - sx1) / (x2 - x1);
-	float fy = (sy2 - sy1) / (y2 - y1);
+	float fx = (sx2 - sx1) / (lcdp.x2 - lcdp.x1);
+	float fy = (sy2 - sy1) / (lcdp.y2 - lcdp.y1);
 	fx = fy;
-	bx1 =   sx1 - fx * x1;
-	by1 =   sy1 - fy * y1;
+	bx1 =   sx1 - fx * lcdp.x1;
+	by1 =   sy1 - fy * lcdp.y1;
 	if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE) {
 		bx2 =   bx1 + fx * (landscape_badge_image_width - 1);
 		by2 =   by1 + fy * (landscape_badge_image_height - 1);
