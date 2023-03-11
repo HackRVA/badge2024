@@ -1,3 +1,10 @@
+/*
+ * THIS FILE IS PART OF THE GTK BASED SIMULATOR, WHICH IS DEPRECATED
+ *
+ * You probably meant to be looking in button_sdl_sim.c instead of this file.
+ *
+ */
+
 //
 // Created by Samuel Jones on 2/21/22.
 //

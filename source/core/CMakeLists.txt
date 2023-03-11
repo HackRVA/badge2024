@@ -36,4 +36,10 @@ if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
 		)
 endif()
 
+if (${TARGET} STREQUAL "SIMULATOR")
+	add_custom_target(deprecation ALL
+		echo "The GTK based simulator is deprecated.  Use the SDL based simulator."
+	)
+endif()
+
 target_include_directories(badge2023_c PUBLIC .)

@@ -1,3 +1,9 @@
+/* THIS FILE IS PART OF THE GTK-BASED SIMULATOR WHICH IS DEPRECATED
+ *
+ * You probably meant to be looking at init_sdl_sim.c
+ *
+ */
+
 //
 // Created by Samuel Jones on 2/21/22.
 //
