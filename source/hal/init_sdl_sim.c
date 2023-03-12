@@ -27,6 +27,7 @@
 
 static int sim_argc;
 static char** sim_argv;
+static int fullscreen = 0;
 
 // Forward declaration
 void hal_start_sdl(int *argc, char ***argv);
@@ -432,6 +433,16 @@ static void load_badge_images(void)
 	landscape_badge_image_height = h;
 }
 
+void toggle_fullscreen_mode(void)
+{
+	if (fullscreen)
+		SDL_SetWindowFullscreen(window, 0);
+	else
+		SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+	fullscreen = !fullscreen;
+	/* configure event takes care of resizing window */
+}
+
 static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **renderer,
 				SDL_Texture **texture, SDL_Texture **landscape_texture)
 {
@@ -446,8 +457,8 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
         fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
         exit(1);
     }
-    // SDL_SetWindowSize(*window, SIM_SCREEN_WIDTH, SIM_SCREEN_HEIGHT);
-    SDL_SetWindowFullscreen(*window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+    SDL_SetWindowSize(*window, 1000, 800);
+    // SDL_SetWindowFullscreen(*window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     *renderer = SDL_CreateRenderer(*window, -1, 0);
     if (!*renderer) {
@@ -473,7 +484,7 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
     SDL_RenderPresent(*renderer);
 }
 
-static void process_events(void)
+static void process_events(SDL_Window *window)
 {
     SDL_Event event;
     struct button_coord_list bcl;
@@ -493,6 +504,7 @@ static void process_events(void)
             time_to_quit = 1;
             break;
         case SDL_WINDOWEVENT:
+            handle_window_event(window, event);
             break;
         case SDL_MOUSEBUTTONDOWN:
             slp = get_sim_lcd_params();
@@ -559,7 +571,7 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
             first_time = 0;
         }
 
-	process_events();
+	process_events(window);
 	wait_until_next_frame();
     }
 

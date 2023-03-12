@@ -275,6 +275,9 @@ int key_press_cb(SDL_Keysym *keysym)
 	case SDLK_RCTRL:
 		control_key_pressed = 1;
 	break;
+	case SDLK_F11:
+		toggle_fullscreen_mode();
+		break;
         default:
             break;
     }
@@ -335,6 +338,25 @@ int key_release_cb(SDL_Keysym *keysym)
     return 1;
 }
 
+void handle_window_event(SDL_Window *window, SDL_Event event)
+{
+	int width, height;
+
+	switch (event.window.event) {
+	case SDL_WINDOWEVENT_RESIZED:
+	case SDL_WINDOWEVENT_SIZE_CHANGED:
+		SDL_GetWindowSize(window, &width, &height);
+		adjust_sim_lcd_params_defaults(width, height);
+		struct sim_lcd_params slp = get_sim_lcd_params();
+		if (slp.orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
+			set_sim_lcd_params_landscape();
+		else
+			set_sim_lcd_params_portrait();
+		break;
+	default:
+		break;
+	}
+}
 
 void button_init_gpio(void) {
     last_change = rtc_get_ms_since_boot();
