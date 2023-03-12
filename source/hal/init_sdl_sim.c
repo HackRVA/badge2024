@@ -82,14 +82,15 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
     printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
 }
 
-static char *badge_image_pixels, *landscape_badge_image_pixels;
+static char *badge_image_pixels, *landscape_badge_image_pixels, *badge_background_pixels;
 static int badge_image_width, badge_image_height;
 static int landscape_badge_image_width, landscape_badge_image_height;
+static int badge_background_width, badge_background_height;
 
 // static GtkWidget *vbox, *drawing_area;
 static SDL_Window *window;
 static SDL_Renderer *renderer;
-static SDL_Texture *pix_buf, *landscape_pix_buf, *badge_image, *landscape_badge_image;
+static SDL_Texture *pix_buf, *landscape_pix_buf, *badge_image, *landscape_badge_image, *badge_background_image;
 static char *program_title;
 extern int lcd_brightness;
 
@@ -126,6 +127,11 @@ void flareled(unsigned char r, unsigned char g, unsigned char b)
     led_color.blue = b;
 }
 
+static void draw_badge_background(void)
+{
+	SDL_RenderCopy(renderer, badge_background_image, NULL, NULL);
+}
+
 static void draw_badge_image(struct sim_lcd_params *slp)
 {
 	static int created_textures = 0;
@@ -145,6 +151,11 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 			badge_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
 							badge_image_width, badge_image_height);
 			SDL_UpdateTexture(badge_image, NULL, badge_image_pixels, badge_image_width * 4);
+		}
+		if (badge_background_pixels) {
+			badge_background_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
+							badge_background_width, badge_background_height);
+			SDL_UpdateTexture(badge_background_image, NULL, badge_background_pixels, badge_background_width * 4);
 		}
 		created_textures = 1;
 	}
@@ -282,6 +293,7 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
     SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
     SDL_RenderClear(renderer);
 
+    draw_badge_background();
     draw_badge_image(&slp);
     draw_button_inputs(&slp);
 
@@ -431,6 +443,16 @@ static void load_badge_images(void)
 		fprintf(stderr, "Failed to load landscape badge image: %s\n", whynot);
 	landscape_badge_image_width = w;
 	landscape_badge_image_height = h;
+
+	w = 0;
+	h = 0;
+	a = 0;
+	badge_background_pixels = png_utils_read_png_image("../images/badge-background.png",
+		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
+	if (!badge_background_pixels)
+		fprintf(stderr, "Failed to load badge background image: %s\n", whynot);
+	badge_background_width = w;
+	badge_background_height = h;
 }
 
 void toggle_fullscreen_mode(void)
