@@ -15,6 +15,7 @@ struct button_coord_list {
 	struct button_coord dpad_down;
 	struct button_coord dpad_left;
 	struct button_coord dpad_right;
+	struct button_coord led;
 };
 
 struct button_coord_list get_button_coords(struct sim_lcd_params *slp, int badge_image_width, int badge_image_height);

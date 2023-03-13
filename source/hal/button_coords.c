@@ -13,20 +13,9 @@ static const struct button_coord_list portrait_button_coords = {
 	.dpad_down = PORTRAITXY(140, 650),
 	.dpad_left = PORTRAITXY(45, 555),
 	.dpad_right = PORTRAITXY(235, 555),
+	.led = PORTRAITXY(809, 331),
 };
 
-#if 0
-static const struct button_coord_list landscape_button_coords = {
-	.a_button = LANDSCAPEXY(630, 176),
-	.b_button = LANDSCAPEXY(565, 70),
-	.left_rotary = LANDSCAPEXY(89, 940),
-	.right_rotary = LANDSCAPEXY(86, 130),
-	.dpad_right = LANDSCAPEXY(600, 830),
-	.dpad_left = LANDSCAPEXY(600, 1030),
-	.dpad_down = LANDSCAPEXY(500, 930),
-	.dpad_up = LANDSCAPEXY(700, 930),
-};
-#endif
 static const struct button_coord_list landscape_button_coords = {
 	.a_button = LANDSCAPEXY(630, 176),
 	.b_button = LANDSCAPEXY(565, 70),
@@ -36,6 +25,7 @@ static const struct button_coord_list landscape_button_coords = {
 	.dpad_left = LANDSCAPEXY(600, 1030),
 	.dpad_up = LANDSCAPEXY(500, 930),
 	.dpad_down = LANDSCAPEXY(700, 930),
+	.led = LANDSCAPEXY(360, 200),
 };
 
 static struct button_coord_list current_button_coords;
@@ -80,6 +70,7 @@ struct button_coord_list get_button_coords(struct sim_lcd_params *slp, int badge
 	adjust_button_coords(&current_button_coords.dpad_down, bx1, by1, f, badge_image_width, badge_image_height);
 	adjust_button_coords(&current_button_coords.dpad_left, bx1, by1, f, badge_image_width, badge_image_height);
 	adjust_button_coords(&current_button_coords.dpad_right, bx1, by1, f, badge_image_width, badge_image_height);
+	adjust_button_coords(&current_button_coords.led, bx1, by1, f, badge_image_width, badge_image_height);
 	return current_button_coords;
 }
 

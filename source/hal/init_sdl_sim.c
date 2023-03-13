@@ -83,14 +83,17 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
 }
 
 static char *badge_image_pixels, *landscape_badge_image_pixels, *badge_background_pixels;
+static char *led_pixels;
 static int badge_image_width, badge_image_height;
 static int landscape_badge_image_width, landscape_badge_image_height;
 static int badge_background_width, badge_background_height;
+static int led_width, led_height;
 
 // static GtkWidget *vbox, *drawing_area;
 static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *pix_buf, *landscape_pix_buf, *badge_image, *landscape_badge_image, *badge_background_image;
+static SDL_Texture *led_image;
 static char *program_title;
 extern int lcd_brightness;
 
@@ -156,6 +159,12 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 			badge_background_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
 							badge_background_width, badge_background_height);
 			SDL_UpdateTexture(badge_background_image, NULL, badge_background_pixels, badge_background_width * 4);
+		}
+		if (led_pixels) {
+			led_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
+							led_width, led_height);
+			SDL_SetTextureBlendMode(led_image, SDL_BLENDMODE_BLEND);
+			SDL_UpdateTexture(led_image, NULL, led_pixels, led_width * 4);
 		}
 		created_textures = 1;
 	}
@@ -285,6 +294,50 @@ static void draw_button_inputs(struct sim_lcd_params *slp)
 	sim_button_status_countdown();
 }
 
+static void draw_flare_led(struct sim_lcd_params *slp)
+{
+	int w, h, x, y, i, j;
+	char *p;
+
+	/* Draw simulated flare LED */
+	SDL_GetWindowSize(window, &x, &y);
+	x = x - 100;
+	y = 50;
+	draw_led_text(renderer, x, y);
+	SDL_SetRenderDrawColor(renderer, led_color.red, led_color.blue, led_color.green, 0xff);
+	SDL_RenderFillRect(renderer, &(SDL_Rect) { x, y + 20, 51, 51} );
+	SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
+	SDL_RenderDrawRect(renderer, &(SDL_Rect) { x, y + 20, 50, 50} );
+
+	/* If LED is too dim, don't draw it. */
+	if (led_color.red < 75 && led_color.green < 75 && led_color.blue < 75)
+		return;
+
+	if (slp->orientation == SIM_LCD_ORIENTATION_PORTRAIT) {
+		w = badge_image_width;
+		h = badge_image_height;
+	} else {
+		w = landscape_badge_image_width;
+		h = landscape_badge_image_height;
+	}
+	struct button_coord_list bcl = get_button_coords(slp, w, h);
+	x = bcl.led.x - led_width / 2;
+	y = bcl.led.y - led_height / 2;
+	p = led_pixels;
+	for (i = 0; i < led_height; i++) {
+		for (j = 0; j < led_width; j++) {
+			p = &led_pixels[i * led_width * 4 + j * 4];
+			p[0] = (char) led_color.red;
+			p[1] = (char) led_color.green;
+			p[2] = (char) led_color.blue;
+		}
+	}
+	SDL_SetTextureBlendMode(led_image, SDL_BLENDMODE_BLEND);
+	SDL_UpdateTexture(led_image, NULL, led_pixels, led_width * 4);
+	SDL_RenderCopy(renderer, led_image, NULL, &(SDL_Rect) { x, y, led_width, led_height});
+
+}
+
 static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture *landscape_texture)
 {
     extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
@@ -355,7 +408,6 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
         SDL_RenderCopy(renderer, landscape_texture, &from_rect, &to_rect);
     }
 
-    int x, y;
 
     /* Draw a border around the simulated screen */
     SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
@@ -364,14 +416,7 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
     SDL_RenderDrawLine(renderer, slp.xoffset - 1, slp.yoffset + slp.height + 1, slp.xoffset + slp.width + 1, slp.yoffset + slp.height + 1); /* bottom */
     SDL_RenderDrawLine(renderer, slp.xoffset + slp.width + 1, slp.yoffset - 1, slp.xoffset + slp.width + 1, slp.yoffset + slp.height + 1); /* right */
 
-    /* Draw simulated flare LED */
-    x = slp.xoffset + slp.width + 20;
-    y = slp.yoffset + (slp.height / 2) - 20;
-    draw_led_text(renderer, x, y);
-    SDL_SetRenderDrawColor(renderer, led_color.red, led_color.blue, led_color.green, 0xff);
-    SDL_RenderFillRect(renderer, &(SDL_Rect) { x, y + 20, 51, 51} );
-    SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
-    SDL_RenderDrawRect(renderer, &(SDL_Rect) { x, y + 20, 50, 50} );
+    draw_flare_led(&slp);
 
     SDL_RenderPresent(renderer);
     return 0;
@@ -453,6 +498,16 @@ static void load_badge_images(void)
 		fprintf(stderr, "Failed to load badge background image: %s\n", whynot);
 	badge_background_width = w;
 	badge_background_height = h;
+
+	w = 0;
+	h = 0;
+	a = 0;
+	led_pixels = png_utils_read_png_image("/home/scameron/badge-led.png",
+		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
+	if (!badge_background_pixels)
+		fprintf(stderr, "Failed to load badge LED image: %s\n", whynot);
+	led_width = w;
+	led_height = h;
 }
 
 void toggle_fullscreen_mode(void)
