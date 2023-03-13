@@ -59,6 +59,7 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
             ${CMAKE_CURRENT_LIST_DIR}/audio_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/rtc_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/random_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/sim_lcd_params.c
             ${CMAKE_CURRENT_LIST_DIR}/uid_sim.c
             )
 

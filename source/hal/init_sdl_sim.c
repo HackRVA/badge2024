@@ -17,6 +17,7 @@
 #include "rtc.h"
 #include "flash_storage.h"
 #include "led_pwm_sdl.h"
+#include "sim_lcd_params.h"
 
 #define UNUSED __attribute__((unused))
 
@@ -75,7 +76,6 @@ uint32_t hal_disable_interrupts(void) {
 void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
     printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
 }
-
 
 // static GtkWidget *vbox, *drawing_area;
 static SDL_Window *window;
@@ -165,8 +165,10 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
         }
     }
     SDL_UpdateTexture(texture, NULL, display_array_with_alpha, LCD_XSIZE * 4);
-    SDL_RenderCopy(renderer, texture, &(SDL_Rect) { 0, 0, LCD_XSIZE, LCD_YSIZE },
-                                      &(SDL_Rect) { 0, 0, LCD_XSIZE * SCALE_FACTOR, LCD_YSIZE * SCALE_FACTOR});
+    struct sim_lcd_params slp = get_sim_lcd_params();
+    SDL_Rect from_rect = { 0, 0, LCD_XSIZE, LCD_YSIZE };
+    SDL_Rect to_rect = { slp.xoffset, slp.yoffset, slp.width, slp.height };
+    SDL_RenderCopy(renderer, texture, &from_rect, &to_rect);
 
     int x, y, w, h;
     w = (real_screen_width - EXTRA_WIDTH) / LCD_XSIZE;
@@ -178,7 +180,7 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture)
 
     /* Draw a white vertical line demarcating the right edge of the screen */
     SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, 0xff);
-    SDL_RenderDrawLine(renderer, LCD_XSIZE * w + 1, 0, LCD_XSIZE * w + 1, real_screen_height - 1);
+    SDL_RenderDrawLine(renderer, slp.xoffset + slp.width + 1, 0, slp.xoffset + slp.width + 1, real_screen_height - 1);
 
     /* Draw simulated flare LED */
     x = LCD_XSIZE * w + EXTRA_WIDTH / 4;
