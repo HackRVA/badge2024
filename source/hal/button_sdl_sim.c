@@ -442,6 +442,19 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 			}
 		}
 		break;
+	case SDL_JOYBUTTONUP: {
+			SDL_JoyButtonEvent e = event.jbutton;
+			if (e.button == 0) {
+				sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_SW;
+				down_latches &= ~(1 << BADGE_BUTTON_SW);
+				button_states &= ~(1 << BADGE_BUTTON_SW);
+				button_pressed = 1;
+			} else if (e.button == 1) {
+				/* TODO: fill this in */
+			}
+		}
+		break;
 	case SDL_JOYBUTTONDOWN: {
 			SDL_JoyButtonEvent e = event.jbutton;
 			if (e.button == 0) {
@@ -472,6 +485,7 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 				sim_button_status.dpad_left = BUTTON_DISPLAY_DURATION;
 				button |= BADGE_BUTTON_LEFT;
 				down_latches |= (1 << BADGE_BUTTON_LEFT);
+				button_states |= (1 << BADGE_BUTTON_LEFT);
 				button_pressed = 1;
 				break;
 			case SDL_HAT_CENTERED:
