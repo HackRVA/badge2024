@@ -88,6 +88,7 @@ static int badge_image_width, badge_image_height;
 static int landscape_badge_image_width, landscape_badge_image_height;
 static int badge_background_width, badge_background_height;
 static int led_width, led_height;
+static SDL_Joystick *joystick = NULL;
 
 // static GtkWidget *vbox, *drawing_area;
 static SDL_Window *window;
@@ -454,10 +455,12 @@ static void enable_sdl_fullscreen_sanity(void)
 static int start_sdl(void)
 {
     enable_sdl_fullscreen_sanity();
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) != 0) {
         fprintf(stderr, "Unable to initialize SDL (Video):  %s\n", SDL_GetError());
         return 1;
     }
+    if (SDL_NumJoysticks() >= 1)
+        joystick = SDL_JoystickOpen(0);
     if (SDL_Init(SDL_INIT_EVENTS) != 0) {
         fprintf(stderr, "Unable to initialize SDL (Events):  %s\n", SDL_GetError());
         return 1;
@@ -610,6 +613,13 @@ static void process_events(SDL_Window *window)
             }
             bcl = get_button_coords(&slp, w, h);
             mouse_scroll_cb(&event, &bcl);
+            break;
+        case SDL_JOYAXISMOTION:
+        case SDL_JOYBALLMOTION:
+        case SDL_JOYBUTTONDOWN:
+        case SDL_JOYBUTTONUP:
+        case SDL_JOYHATMOTION:
+            joystick_event_cb(window, event);
             break;
         }
     }

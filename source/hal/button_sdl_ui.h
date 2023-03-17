@@ -12,6 +12,7 @@ extern int key_release_cb();
 extern int mouse_button_down_cb();
 extern int mouse_scroll_cb();
 extern void handle_window_event();
+extern int joystick_event_cb();
 
 /* This is used for showing UI inputs on the badge simulator on screen.
  * They are counters that count down to zero when a button is pressed.

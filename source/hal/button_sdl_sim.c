@@ -338,6 +338,180 @@ int key_release_cb(SDL_Keysym *keysym)
     return 1;
 }
 
+int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event event)
+{
+	/* This is a bit janky... need to figure something better to throttle axis inputs */
+	static int axistimer[10] = { 0 };
+
+	for (int i = 0; i < 10; i++) {
+		if (axistimer[i] > 0)
+			axistimer[i]--;
+	}
+#if 0
+	/* Print out what the joystick is doing. */
+	switch (event.type) {
+	case SDL_JOYAXISMOTION: {
+			SDL_JoyAxisEvent e = event.jaxis;
+			fprintf(stderr, "js:%02d axis: %02d value: %06d\n",
+					e.which, e.axis, e.value);
+			break;
+		}
+	case SDL_JOYBALLMOTION: {
+			SDL_JoyBallEvent e = event.jball;
+			fprintf(stderr, "JS:%02d Ball: %02d x,y: %06d,%06d\n",
+				e.which, e.ball, e.xrel, e.yrel);
+			break;
+		}
+	case SDL_JOYBUTTONDOWN:
+	case SDL_JOYBUTTONUP: {
+			SDL_JoyButtonEvent e = event.jbutton;
+			fprintf(stderr, "JS:%02d Button: %02d %s\n", e.which, e.button,
+				e.state == SDL_PRESSED ? "PRESSED" : "RELEASED");
+			break;
+		}
+	case SDL_JOYHATMOTION: {
+			SDL_JoyHatEvent e = event.jhat;
+			fprintf(stderr, "JS:%02d Hat: %02d ", e.which, e.hat);
+			switch(e.value) {
+			case SDL_HAT_LEFTUP:
+				fprintf(stderr, "Left-Up\n");
+				break;
+			case SDL_HAT_UP:
+				fprintf(stderr, "Up\n");
+				break;
+			case SDL_HAT_RIGHTUP:
+				fprintf(stderr, "Right-Up\n");
+				break;
+			case SDL_HAT_LEFT:
+				fprintf(stderr, "Left\n");
+				break;
+			case SDL_HAT_CENTERED:
+				fprintf(stderr, "Centered\n");
+				break;
+			case SDL_HAT_RIGHT:
+				fprintf(stderr, "Right\n");
+				break;
+			case SDL_HAT_LEFTDOWN:
+				fprintf(stderr, "Left-Down\n");
+				break;
+			case SDL_HAT_DOWN:
+				fprintf(stderr, "Down\n");
+				break;
+			case SDL_HAT_RIGHTDOWN:
+				fprintf(stderr, "Right-Down\n");
+				break;
+			}
+		}
+		break;
+	}
+#endif
+
+	/* For now, just arrange thing suitably for XBox-360 controllers
+	 * since that is what I have.
+	 */
+	BADGE_BUTTON button = BADGE_BUTTON_MAX;
+	int button_pressed = 0;
+	switch (event.type) {
+	case SDL_JOYAXISMOTION: {
+			SDL_JoyAxisEvent e = event.jaxis;
+			if (e.axis == 0 && axistimer[0] == 0) {
+				if (e.value < -20000) {
+					axistimer[0] = 5;
+					rotation_count[1] -= 1;
+					rotary_angle_delta(1, -1);
+				} else {
+					if (e.value > 20000)  {
+						axistimer[0] = 5;
+						rotation_count[1] += 1;
+						rotary_angle_delta(1, +1);
+					}
+				}
+			}
+			if (e.axis == 3 && axistimer[3] == 0) {
+				if (e.value < -20000) {
+					axistimer[3] = 5;
+					rotation_count[0] -= 1;
+					rotary_angle_delta(0, -1);
+				} else {
+					if (e.value > 20000)  {
+						axistimer[3] = 5;
+						rotation_count[0] += 1;
+						rotary_angle_delta(0, +1);
+					}
+				}
+			}
+		}
+		break;
+	case SDL_JOYBUTTONDOWN: {
+			SDL_JoyButtonEvent e = event.jbutton;
+			if (e.button == 0) {
+				sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_SW;
+				down_latches |= (1 << BADGE_BUTTON_SW);
+				button_states |= (1 << BADGE_BUTTON_SW);
+				button_pressed = 1;
+			} else if (e.button == 1) {
+				/* TODO: fill this in */
+			}
+		}
+		break;
+	case SDL_JOYHATMOTION: {
+			SDL_JoyHatEvent e = event.jhat;
+			switch(e.value) {
+			case SDL_HAT_LEFTUP:
+			case SDL_HAT_RIGHTUP:
+			case SDL_HAT_UP:
+				sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_UP;
+				down_latches |= (1 << BADGE_BUTTON_UP);
+				button_states |= (1 << BADGE_BUTTON_UP);
+				button_pressed = 1;
+				break;
+			case SDL_HAT_LEFTDOWN:
+			case SDL_HAT_LEFT:
+				sim_button_status.dpad_left = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_LEFT;
+				down_latches |= (1 << BADGE_BUTTON_LEFT);
+				button_pressed = 1;
+				break;
+			case SDL_HAT_CENTERED:
+				down_latches &= ~((1 << BADGE_BUTTON_LEFT) |
+							(1 << BADGE_BUTTON_RIGHT) |
+							(1 << BADGE_BUTTON_UP) |
+							(1 << BADGE_BUTTON_DOWN));
+				button_states &= ~((1 << BADGE_BUTTON_LEFT) |
+							(1 << BADGE_BUTTON_RIGHT) |
+							(1 << BADGE_BUTTON_UP) |
+							(1 << BADGE_BUTTON_DOWN));
+				button_pressed = 0;
+				break;
+			case SDL_HAT_RIGHT:
+				sim_button_status.dpad_right = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_RIGHT;
+				down_latches |= (1 << BADGE_BUTTON_RIGHT);
+				button_states |= (1 << BADGE_BUTTON_RIGHT);
+				button_pressed = 1;
+				break;
+			case SDL_HAT_RIGHTDOWN:
+			case SDL_HAT_DOWN:
+				sim_button_status.dpad_down = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_DOWN;
+				down_latches |= (1 << BADGE_BUTTON_DOWN);
+				button_states |= (1 << BADGE_BUTTON_DOWN);
+				button_pressed = 1;
+				break;
+			}
+			if (button_pressed) {
+				if (callback) {
+					callback(button, true);
+				}
+				last_change = rtc_get_ms_since_boot();
+			}
+		}
+	}
+	return 1;
+}
+
 void handle_window_event(SDL_Window *window, SDL_Event event)
 {
 	int width, height;
