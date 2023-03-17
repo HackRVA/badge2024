@@ -472,7 +472,21 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 			SDL_JoyHatEvent e = event.jhat;
 			switch(e.value) {
 			case SDL_HAT_LEFTUP:
+				sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
+				sim_button_status.dpad_left = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_UP | BADGE_BUTTON_LEFT;
+				down_latches |= (1 << BADGE_BUTTON_UP) | (1 << BADGE_BUTTON_LEFT);
+				button_states |= (1 << BADGE_BUTTON_UP) | (1 << BADGE_BUTTON_LEFT);
+				button_pressed = 1;
+				break;
 			case SDL_HAT_RIGHTUP:
+				sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
+				sim_button_status.dpad_right = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_UP | BADGE_BUTTON_RIGHT;
+				down_latches |= (1 << BADGE_BUTTON_UP) | (1 << BADGE_BUTTON_RIGHT);
+				button_states |= (1 << BADGE_BUTTON_UP) | (1 << BADGE_BUTTON_RIGHT);
+				button_pressed = 1;
+				break;
 			case SDL_HAT_UP:
 				sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
 				button |= BADGE_BUTTON_UP;
@@ -481,6 +495,13 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 				button_pressed = 1;
 				break;
 			case SDL_HAT_LEFTDOWN:
+				sim_button_status.dpad_down = BUTTON_DISPLAY_DURATION;
+				sim_button_status.dpad_left = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_DOWN | BADGE_BUTTON_LEFT;
+				down_latches |= (1 << BADGE_BUTTON_DOWN) | (1 << BADGE_BUTTON_LEFT);
+				button_states |= (1 << BADGE_BUTTON_DOWN) | (1 << BADGE_BUTTON_LEFT);
+				button_pressed = 1;
+				break;
 			case SDL_HAT_LEFT:
 				sim_button_status.dpad_left = BUTTON_DISPLAY_DURATION;
 				button |= BADGE_BUTTON_LEFT;
@@ -507,6 +528,13 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 				button_pressed = 1;
 				break;
 			case SDL_HAT_RIGHTDOWN:
+				sim_button_status.dpad_down = BUTTON_DISPLAY_DURATION;
+				sim_button_status.dpad_right = BUTTON_DISPLAY_DURATION;
+				button |= BADGE_BUTTON_DOWN | BADGE_BUTTON_RIGHT;
+				down_latches |= (1 << BADGE_BUTTON_DOWN) | (1 << BADGE_BUTTON_RIGHT);
+				button_states |= (1 << BADGE_BUTTON_DOWN) | (1 << BADGE_BUTTON_RIGHT);
+				button_pressed = 1;
+				break;
 			case SDL_HAT_DOWN:
 				sim_button_status.dpad_down = BUTTON_DISPLAY_DURATION;
 				button |= BADGE_BUTTON_DOWN;
