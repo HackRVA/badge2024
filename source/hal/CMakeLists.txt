@@ -20,7 +20,7 @@ if (${TARGET} STREQUAL "PICO")
                 ${CMAKE_CURRENT_LIST_DIR}/display_s6b33_rp2040.c
                 )
     else()
-        target_sources(badge2022_c PUBLIC
+        target_sources(badge2023_c PUBLIC
                 ${CMAKE_CURRENT_LIST_DIR}/display_st7735s_rp2040.c
                 )
     endif ()
