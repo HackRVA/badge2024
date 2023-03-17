@@ -1,3 +1,6 @@
 {
-    "cmake.buildDirectory" : "${workspaceRoot}/build-${variant:target}"
+    "cmake.buildDirectory": "${workspaceRoot}/build-${variant:target}",
+    "files.associations": {
+        "stdlib.h": "c"
+    }
 }

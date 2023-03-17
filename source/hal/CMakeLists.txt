@@ -12,19 +12,12 @@ if (${TARGET} STREQUAL "PICO")
             ${CMAKE_CURRENT_LIST_DIR}/rtc_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/random_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/uid_rp2040.c
+            ${CMAKE_CURRENT_LIST_DIR}/display_st7735s_rp2040.c
+            ${CMAKE_CURRENT_LIST_DIR}/driver-ST7735S/source/st7735s.c
             )
 
-    # The 2023 badge uses a new display!
-    if (DEFINED COMPAT_BADGE_2022)
-        target_sources(badge2022_c PUBLIC
-                ${CMAKE_CURRENT_LIST_DIR}/display_s6b33_rp2040.c
-                )
-    else()
-        target_sources(badge2023_c PUBLIC
-                ${CMAKE_CURRENT_LIST_DIR}/display_st7735s_rp2040.c
-                )
-    endif ()
-
+    target_include_directories(badge2023_c PUBLIC ./driver-ST7735S/source)
+    
     add_subdirectory(ir_library)
 endif()
 

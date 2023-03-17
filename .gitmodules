@@ -1,0 +1,3 @@
+[submodule "source/hal/driver-ST7735S"]
+	path = source/hal/driver-ST7735S
+	url = git@github.com:michal037/driver-ST7735S.git
