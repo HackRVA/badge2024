@@ -946,10 +946,14 @@ void display_init_device(void) {
     lcd_setTearingEffectLine(LCD_TEARING_OFF);
     lcd_setDisplayMode(LCD_DISPLAY_ON);
     
-    lcd_setWindowPosition(0,0,49,49);
+    lcd_setWindowPosition(0,0,63,63);
     lcd_activateMemoryWrite();
-    uint16_t test_buffer[50*50];
-    memset(test_buffer, 0xF41FF41F, sizeof(test_buffer));
+    uint16_t test_buffer[64*64];
+    for (uint16_t i = 0; i < sizeof(test_buffer) / sizeof(test_buffer[0]); i++) {
+        test_buffer[i] = __builtin_bswap16(i < (64*22) ? 0xf800 :
+                                           i < (64*44) ? 0x07e0 : 
+                                           0x001f);
+    }
     lcd_writeData((void *) test_buffer, sizeof(test_buffer));
     while(1);
 }
