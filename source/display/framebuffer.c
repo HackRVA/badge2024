@@ -301,7 +301,8 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
             pixbyte = *pixdata++; /* 4 pixels per byte */
 
             /* ----------- 1st pixel ----------- */
-            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1))
+                break; /* clip x */
 
             ci = ((pixbyte >> 6) & 0x3);
             if (ci != G_Fb.transIndex) { /* transparent? */
