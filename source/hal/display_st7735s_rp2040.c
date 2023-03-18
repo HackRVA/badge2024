@@ -11,6 +11,7 @@
 /*- ST7735S Driver Glue ------------------------------------------------------*/
 static bool dma_transfer_started = true;
 static int dma_channel = -1;
+static bool writing_pixels;
 
 static void wait_until_ready() {
     if (dma_transfer_started) {
@@ -33,10 +34,25 @@ void lcd_digitalWrite(unsigned short int pin, unsigned char value) {
 }
 
 void lcd_spiWrite(unsigned char* buffer, size_t length) {
-    spi_set_format(spi0, 8, 0, 0, SPI_MSB_FIRST);
-    spi_write_blocking(spi0, buffer, length);
+    wait_until_ready();
 
-    return;
+    if (writing_pixels)
+    {
+        /* 
+         *  We always respect the LCD API's length as 'bytes' to write, but the
+         *  DMA API expects the number of transfers (in our case, pixels).
+         */
+        length /= 2;
+
+        dma_transfer_started = true;
+        spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
+        dma_channel_transfer_from_buffer_now(dma_channel, buffer, length);
+    }
+    else
+    {
+        spi_set_format(spi0, 8, 0, 0, SPI_MSB_FIRST);
+        spi_write_blocking(spi0, buffer, length);
+    }
 }
 
 /** set important internal registers for the LCD display */
@@ -60,7 +76,7 @@ void display_init_device(void) {
     lcd_hardwareReset();
     lcd_initialize();
     lcd_setSleepMode(LCD_SLEEP_OUT);
-    lcd_setMemoryAccessControl(LCD_MADCTL_DEFAULT);
+    lcd_setMemoryAccessControl(LCD_MADCTL_BGR);
     lcd_setInterfacePixelFormat(LCD_PIXEL_FORMAT_565);
     lcd_setGammaPredefined(LCD_GAMMA_PREDEFINED_3);
     lcd_setDisplayInversion(LCD_INVERSION_OFF);
@@ -115,12 +131,14 @@ void display_rect(int x, int y, int width, int height) {
 }
 /** updates current pixel to the data in `pixel`. */
 void display_pixel(unsigned short pixel) {
-    // We want to use the display function that doesn't update the boundary rect
-    lcd_writeData((uint8_t*)&pixel, 2);
+    display_pixels(&pixel, 1);
 }
 /** Updates a consecutive sequence of pixels. */
 void display_pixels(unsigned short *pixel, int number) {
-    lcd_writeData((uint8_t*)pixel, number*2);
+    writing_pixels = true;
+    /* Always respect the LCD API's length as 'bytes' to write*/
+    lcd_writeData((uint8_t*)pixel, number * 2);
+    writing_pixels = false;
 }
 /** invert display */
 static bool inverted = false;
@@ -128,7 +146,7 @@ static bool rotated = false;
 
 static void update_madctl(void) {
 
-    char flags = LCD_MADCTL_DEFAULT;
+    char flags = LCD_MADCTL_BGR;
 
     if (inverted) {
         flags |= LCD_MADCTL_MX | LCD_MADCTL_MY;
