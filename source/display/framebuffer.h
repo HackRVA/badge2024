@@ -17,8 +17,8 @@ enum {
 
 /* TODO: When Peter and Sam get the hardware display working, remove this ifdef */
 #ifdef TARGET_SIMULATOR
-#define LCD_XSIZE 134
-#define LCD_YSIZE 162
+#define LCD_XSIZE 128
+#define LCD_YSIZE 160
 #else
 #define LCD_XSIZE 132
 #define LCD_YSIZE 132
