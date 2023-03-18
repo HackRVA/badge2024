@@ -59,6 +59,7 @@ build/
 build_sim/
 build-pico/
 build-simulator/
+build_sdl_sim/
 docs/html/*
 
 # Mac clutter
