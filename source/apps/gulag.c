@@ -40,6 +40,7 @@ static struct player {
 #define CASTLE_COLS 4
 #define NUM_ROOMS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS)
 #define NUM_DESKS 30
+#define NUM_CHESTS 30
 #define GULAG_MAX_OBJS_PER_ROOM 5
 #define GULAG_MAXOBJS (CASTLE_FLOORS * CASTLE_COLS * CASTLE_ROWS * GULAG_MAX_OBJS_PER_ROOM)
 
@@ -98,6 +99,11 @@ struct gulag_chest_data {
 	uint16_t weapons:2;
 	uint16_t war_plans:1;
 	uint16_t explosives:1;
+	uint16_t vodka:1;
+	uint16_t potato:1;
+	uint16_t cabbage:1;
+	uint16_t locked:1;
+	uint16_t opened:1;
 };
 
 union gulag_type_specific_data {
@@ -214,8 +220,28 @@ static void draw_soldier(__attribute__((unused)) struct gulag_object *o)
 {
 }
 
-static void draw_chest(__attribute__((unused)) struct gulag_object *o)
+static void draw_chest(struct gulag_object *o)
 {
+	int x, y;
+
+	x = o->x >> 8;
+	y = o->y >> 8;
+
+	FbColor(YELLOW);
+	FbHorizontalLine(x + 3, y, x + 13, y);
+	FbHorizontalLine(x, y + 3, x + 15, y + 3);
+	FbLine(x + 3, y, x, y + 3);
+	FbLine(x + 13, y, x + 15, y + 3);
+	FbVerticalLine(x + 15, y + 3, x + 15, y + 7);
+	FbVerticalLine(x, y + 3, x, y + 7);
+	FbHorizontalLine(x, y + 7, x + 15, y + 7);
+
+	if (o->tsd.chest.opened) {
+		/* open lid */
+		FbVerticalLine(x + 3, y - 4, x + 3, y + 3);
+		FbVerticalLine(x + 13, y - 4, x + 13, y + 3);
+		FbHorizontalLine(x + 3, y - 4, x + 13, y - 4);
+	}
 }
 
 /* return a random int between 0 and n - 1 */
@@ -379,6 +405,38 @@ static void add_desks(struct castle *c)
 		add_desk(c);
 }
 
+static void add_chest(struct castle *c)
+{
+	int floor, col, row, room;
+
+	do {
+		floor = random_num(CASTLE_FLOORS);
+		row = random_num(CASTLE_ROWS);
+		col = random_num(CASTLE_COLS);
+		room = room_no(floor, col, row);
+	} while (room_contains_obj_of_type(c, room, TYPE_CHEST));
+
+	int x = random_num(127 - 40) + 8;
+	int y = random_num(127 - 16 - 16);
+
+	int n = add_object_to_room(c, room, TYPE_CHEST, x << 8, y << 8);
+	if (n < 0)
+		return;
+	go[n].tsd.chest.bullets = random_num(8);
+	go[n].tsd.chest.grenades = random_num(8);
+	go[n].tsd.chest.war_plans = 0;
+	go[n].tsd.chest.explosives = 0;
+	go[n].tsd.chest.weapons = 0;
+	go[n].tsd.chest.locked = (random_num(100) < 80);
+	go[n].tsd.chest.opened = 0;
+}
+
+static void add_chests(struct castle *c)
+{
+	for (int i = 0; i < NUM_CHESTS; i++)
+		add_chest(c);
+}
+
 static void add_doors(struct castle *c, int floor, int start_col, int end_col, int start_row, int end_row)
 {
 	int rows = end_row - start_row + 1;
@@ -460,6 +518,7 @@ static void init_castle(struct castle *c)
 	add_exit_room(c);
 	add_stairs(&castle);
 	add_desks(&castle);
+	add_chests(&castle);
 }
 
 #if TARGET_SIMULATOR
