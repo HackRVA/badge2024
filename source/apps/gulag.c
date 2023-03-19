@@ -35,10 +35,11 @@ static struct player {
 	unsigned char current_room;
 } player;
 
-#define CASTLE_FLOORS 6
+#define CASTLE_FLOORS 5
 #define CASTLE_ROWS 3
 #define CASTLE_COLS 4
 #define NUM_ROOMS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS)
+#define NUM_DESKS 30
 #define GULAG_MAX_OBJS_PER_ROOM 5
 #define GULAG_MAXOBJS (CASTLE_FLOORS * CASTLE_COLS * CASTLE_ROWS * GULAG_MAX_OBJS_PER_ROOM)
 
@@ -78,6 +79,8 @@ struct gulag_desk_data {
 	uint16_t keys:1;
 	uint16_t war_plans:1;
 	uint16_t bullets:3;
+	uint16_t vodka:1;
+	uint16_t locked:1;
 };
 
 struct gulag_soldier_data {
@@ -188,8 +191,23 @@ static void draw_stairs_down(struct gulag_object *o)
 	FbLine(x, y + 31, x + 7, y + 28);
 }
 
-static void draw_desk(__attribute__((unused)) struct gulag_object *o)
+static void draw_desk(struct gulag_object *o)
 {
+	int x, y;
+
+	x = o->x >> 8;
+	y = o->y >> 8;
+
+	FbHorizontalLine(x, y + 2, x + 16, y + 2);
+	FbHorizontalLine(x + 4, y, x + 12, y);
+	FbLine(x + 4, y, x, y + 2);
+	FbLine(x + 12, y, x + 16, y + 2);
+	FbVerticalLine(x + 2, y + 2, x + 2, y + 8);
+	FbVerticalLine(x + 14, y + 2, x + 14, y + 8);
+	FbVerticalLine(x + 5, y + 2, x + 5, y + 8);
+	FbVerticalLine(x + 11, y + 2, x + 11, y + 8);
+	FbHorizontalLine(x + 2, y + 8, x + 5, y + 8);
+	FbHorizontalLine(x + 11, y + 8, x + 14, y + 8);
 }
 
 static void draw_soldier(__attribute__((unused)) struct gulag_object *o)
@@ -303,6 +321,64 @@ static void add_stairs(struct castle *c)
 	}
 }
 
+static int room_contains_obj_of_type(struct castle *c, int room, int type)
+{
+	for (int i = 0; i < c->room[room].nobjs; i++) {
+		int n = c->room[room].obj[i];
+		if (go[n].type == type)
+			return 1;
+	}
+	return 0;
+}
+
+static int add_object_to_room(struct castle *c, int room, int object_type, int x, int y)
+{
+	int n = gulag_nobjs;
+	if (n >= GULAG_MAXOBJS)
+		return -1;
+	if (c->room[room].nobjs >= GULAG_MAX_OBJS_PER_ROOM)
+		return -1;
+	go[n].type = object_type;
+	go[n].room = room;
+	/* TODO: move things around so nothing collides */
+	go[n].x = x;
+	go[n].y = y;
+	gulag_nobjs++;
+	int i = c->room[room].nobjs;
+	c->room[room].obj[i] = n;
+	c->room[room].nobjs++;
+	return n;
+}
+
+static void add_desk(struct castle *c)
+{
+	int floor, col, row, room;
+
+	do {
+		floor = random_num(CASTLE_FLOORS);
+		row = random_num(CASTLE_ROWS);
+		col = random_num(CASTLE_COLS);
+		room = room_no(floor, col, row);
+	} while (room_contains_obj_of_type(c, room, TYPE_DESK));
+
+	int x = random_num(127 - 40) + 8;
+	int y = random_num(127 - 16 - 16);
+
+	int n = add_object_to_room(c, room, TYPE_DESK, x << 8, y << 8);
+	if (n < 0)
+		return;
+	go[n].tsd.desk.bullets = random_num(8);
+	go[n].tsd.desk.keys = (random_num(100) < 20);
+	go[n].tsd.desk.war_plans = 0;
+	go[n].tsd.desk.locked = (random_num(100) < 50);
+}
+
+static void add_desks(struct castle *c)
+{
+	for (int i = 0; i < NUM_DESKS; i++)
+		add_desk(c);
+}
+
 static void add_doors(struct castle *c, int floor, int start_col, int end_col, int start_row, int end_row)
 {
 	int rows = end_row - start_row + 1;
@@ -383,6 +459,7 @@ static void init_castle(struct castle *c)
 	add_start_room(c);
 	add_exit_room(c);
 	add_stairs(&castle);
+	add_desks(&castle);
 }
 
 #if TARGET_SIMULATOR
