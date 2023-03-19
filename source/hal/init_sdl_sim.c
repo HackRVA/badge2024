@@ -8,7 +8,6 @@
 #include <string.h>
 #include <pthread.h>
 #include <SDL.h>
-#include <SDL_image.h>
 #include "framebuffer.h"
 #include "display.h"
 #include "led_pwm.h"
