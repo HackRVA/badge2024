@@ -332,6 +332,18 @@ static inline void draw_figures_head1(int x, int y)
 	FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
 }
 
+static inline void draw_figures_head2(int x, int y)
+{
+	FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
+	FbHorizontalLine(x + 3, y + 2, x + 4, y + 2);
+}
+
+static inline void draw_figures_vert_body(int x, int y)
+{
+	FbVerticalLine(x + 3, y + 4, x + 3, y + 15);
+	FbVerticalLine(x + 4, y + 4, x + 4, y + 15);
+}
+
 /* x, y here are plain screen coords not fixed point 8.8. */
 static void draw_figure(int x, int y, int color, int anim_frame)
 {
@@ -357,8 +369,7 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbPoint(x + 5, y + 14);
 		break;
 	case 2:
-		FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
-		FbHorizontalLine(x + 3, y + 2, x + 4, y + 2);
+		draw_figures_head2(x, y);
 		FbHorizontalLine(x + 2, y + 4, x + 5, y + 4);
 		FbVerticalLine(x + 1, y + 5, x + 1, y + 6);
 		FbVerticalLine(x + 5, y + 5, x + 5, y + 6);
@@ -399,8 +410,7 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbPoint(x, y + 15);
 		break;
 	case 5:
-		FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
-		FbHorizontalLine(x + 3, y + 2, x + 4, y + 2);
+		draw_figures_head2(x, y);
 		FbVerticalLine(x + 2, y + 4, x + 2, y + 7);
 		FbVerticalLine(x + 3, y + 4, x + 3, y + 9);
 		FbVerticalLine(x + 4, y + 4, x + 4, y + 12);
@@ -423,6 +433,63 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbPoint(x + 1, y + 6);
 		FbPoint(x + 5, y + 3);
 		FbPoint(x + 2, y + 15);
+		break;
+	case 7:
+		draw_figures_head2(x, y);
+		draw_figures_vert_body(x, y);
+		FbLine(x + 5, y + 4, x + 7, y + 2);
+		FbPoint(x + 5, y + 3);
+		FbPoint(x + 5, y + 15);
+		break;
+	case 8:
+		draw_figures_head2(x, y);
+		draw_figures_vert_body(x, y);
+		FbHorizontalLine(x + 5, y + 4, x + 7, y + 4);
+		FbPoint(x + 5, y + 15);
+		break;
+
+		break;
+	case 9:
+		draw_figures_head2(x, y);
+		draw_figures_vert_body(x, y);
+		FbLine(x + 5, y + 6, x + 6, y + 7);
+		FbPoint(x + 5, y + 15);
+		break;
+	case 10:
+		draw_figures_head2(x, y);
+		draw_figures_vert_body(x, y);
+		FbLine(x + 2, y + 4, x + 2, y + 8);
+		FbVerticalLine(x + 5, y + 4, x + 5, y + 5);
+		FbVerticalLine(x + 6, y + 6, x + 6, y + 8);
+		FbPoint(x + 5, y + 15);
+		break;
+	case 11:
+		draw_figures_head2(x, y);
+		draw_figures_vert_body(x, y);
+		FbPoint(x + 2, y + 4);
+		FbLine(x + 2, y + 5, x, y + 7);
+		FbVerticalLine(x + 5, y + 4, x + 5, y + 8);
+		FbPoint(x + 2, y + 15);
+		break;
+	case 12:
+		draw_figures_head2(x, y);
+		draw_figures_vert_body(x, y);
+		FbHorizontalLine(x, y + 4, x + 2, y + 4);
+		FbPoint(x + 2, y + 15);
+		break;
+	case 13:
+		draw_figures_head2(x, y);
+		draw_figures_vert_body(x, y);
+		FbLine(x, y + 1, x + 2, y + 3);
+		FbPoint(x + 2, y + 4);
+		FbPoint(x + 2, y + 15);
+		break;
+	case 14:
+		draw_figures_head2(x, y);
+		draw_figures_vert_body(x, y);
+		FbLine(x + 2, y + 4, x + 2, y + 8);
+		FbVerticalLine(x + 5, y, x + 5, y + 5);
+		FbPoint(x + 5, y + 15);
 		break;
 	}
 }
