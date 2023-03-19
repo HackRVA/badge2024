@@ -1623,6 +1623,54 @@ static void check_doors(struct castle *c, struct player *p)
 	}
 }
 
+static void advance_soldier_animation(struct gulag_object *s)
+{
+	if (s->tsd.soldier.state == SOLDIER_STATE_RESTING) {
+		if (s->tsd.soldier.angle >= 32 && s->tsd.soldier.angle <= 96) /* player is facing to the right */
+			s->tsd.soldier.anim_frame = 0;
+		else
+			s->tsd.soldier.anim_frame = 6; /* left */
+		return;
+	}
+	if (s->tsd.soldier.angle >= 32 && s->tsd.soldier.angle <= 96) { /* soldier is facing to the right */
+		switch(s->tsd.soldier.anim_frame) {
+		case 0:
+			s->tsd.soldier.anim_frame = 1;
+			break;
+		case 1:
+			s->tsd.soldier.anim_frame = 3;
+			break;
+		case 2:
+			s->tsd.soldier.anim_frame = 1;
+			break;
+		case 3:
+			s->tsd.soldier.anim_frame = 2;
+			break;
+		default:
+			s->tsd.soldier.anim_frame = 0;
+			break;
+		}
+	} else { /* player is facing to the left */
+		switch(s->tsd.soldier.anim_frame) {
+		case 4:
+			s->tsd.soldier.anim_frame = 5;
+			break;
+		case 5:
+			s->tsd.soldier.anim_frame = 6;
+			break;
+		case 6:
+			s->tsd.soldier.anim_frame = 4;
+			break;
+		case 3:
+			s->tsd.soldier.anim_frame = 1;
+			break;
+		default:
+			s->tsd.soldier.anim_frame = 6;
+			break;
+		}
+	}
+}
+
 static void advance_player_animation(struct player *p)
 {
 	if (p->angle >= 32 && p->angle <= 96) { /* player is facing to the right */
@@ -2308,8 +2356,9 @@ static void move_soldier(struct gulag_object *s)
 				if (s->tsd.soldier.current_step > s->tsd.soldier.nsteps) /* paranoia, shouldn't happen */
 					s->tsd.soldier.current_step = s->tsd.soldier.nsteps;
 			}
-			screen_changed = 1;
 		}
+		advance_soldier_animation(s);
+		screen_changed = 1;
 		break;
 	case SOLDIER_STATE_CHASING:
 	case SOLDIER_STATE_FLEEING:
