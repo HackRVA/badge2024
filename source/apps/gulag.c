@@ -192,6 +192,7 @@ struct gulag_soldier_data {
 	uint16_t health:3;
 	uint16_t bullets:3;
 	uint16_t spetsnaz:1;
+#define SPETSNAZ_ARMBAND BLUE
 	uint16_t grenades:2;
 	uint16_t keys:1;
 	uint16_t weapon:2;
@@ -359,7 +360,7 @@ static inline void draw_figures_vert_body(int x, int y)
 }
 
 /* x, y here are plain screen coords not fixed point 8.8. */
-static void draw_figure(int x, int y, int color, int anim_frame)
+static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 {
 	FbColor(color);
 	switch (anim_frame) {
@@ -371,6 +372,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbVerticalLine(x + 3, y + 4, x + 3, y + 15);
 		FbVerticalLine(x + 4, y + 4, x + 4, y + 14);
 		FbPoint(x + 5, y + 14);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 1, y + 4);
+			FbPoint(x + 6, y + 4);
+		}
 		break;
 	case 1:
 		draw_figures_head1(x, y);
@@ -381,6 +387,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbVerticalLine(x + 3, y + 4, x + 3, y + 15);
 		FbVerticalLine(x + 4, y + 4, x + 4, y + 14);
 		FbPoint(x + 5, y + 14);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 1, y + 4);
+			FbPoint(x + 5, y + 4);
+		}
 		break;
 	case 2:
 		draw_figures_head2(x, y);
@@ -395,6 +406,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbVerticalLine(x + 6, y + 11, x + 6, y + 15);
 		FbPoint(x, y + 13);
 		FbPoint(x + 7, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 1, y + 5);
+			FbPoint(x + 5, y + 5);
+		}
 		break;
 	case 3:
 		draw_figures_head1(x, y);
@@ -409,6 +425,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbLine(x + 2, y + 9, x, y + 14);
 		FbLine(x + 5, y + 9, x + 7, y + 11);
 		FbVerticalLine(x + 7, y + 12, x + 7, y + 14);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 1, y + 4);
+			FbPoint(x + 6, y + 4);
+		}
 		break;
 	case 4:
 		draw_figures_head1(x, y);
@@ -422,6 +443,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbLine(x + 5, y + 9, x + 7, y + 14);
 		FbVerticalLine(x + 1, y + 10, x + 1, y + 14);
 		FbPoint(x, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 1, y + 4);
+			FbPoint(x + 6, y + 4);
+		}
 		break;
 	case 5:
 		draw_figures_head2(x, y);
@@ -437,6 +463,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbHorizontalLine(x + 4, y + 12, x + 7, y + 12);
 		FbPoint(x, y + 15);
 		FbPoint(x + 7, y + 13);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 2, y + 5);
+			FbPoint(x + 2, y + 6);
+		}
 		break;
 	case 6:
 		draw_figures_head1(x, y);
@@ -447,6 +478,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbPoint(x + 1, y + 6);
 		FbPoint(x + 5, y + 3);
 		FbPoint(x + 2, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 2, y + 4);
+			FbPoint(x + 6, y + 4);
+		}
 		break;
 	case 7:
 		draw_figures_head2(x, y);
@@ -454,20 +490,30 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbLine(x + 5, y + 4, x + 7, y + 2);
 		FbPoint(x + 5, y + 3);
 		FbPoint(x + 5, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 5, y + 4);
+		}
 		break;
 	case 8:
 		draw_figures_head2(x, y);
 		draw_figures_vert_body(x, y);
 		FbHorizontalLine(x + 5, y + 4, x + 7, y + 4);
 		FbPoint(x + 5, y + 15);
-		break;
-
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 4, y + 4);
+		}
 		break;
 	case 9:
 		draw_figures_head2(x, y);
 		draw_figures_vert_body(x, y);
 		FbLine(x + 5, y + 6, x + 6, y + 7);
 		FbPoint(x + 5, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 4, y + 5);
+		}
 		break;
 	case 10:
 		draw_figures_head2(x, y);
@@ -476,6 +522,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbVerticalLine(x + 5, y + 4, x + 5, y + 5);
 		FbVerticalLine(x + 6, y + 6, x + 6, y + 8);
 		FbPoint(x + 5, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 2, y + 5);
+			FbPoint(x + 5, y + 5);
+		}
 		break;
 	case 11:
 		draw_figures_head2(x, y);
@@ -484,12 +535,21 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbLine(x + 2, y + 5, x, y + 7);
 		FbVerticalLine(x + 5, y + 4, x + 5, y + 8);
 		FbPoint(x + 2, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 2, y + 5);
+			FbPoint(x + 5, y + 5);
+		}
 		break;
 	case 12:
 		draw_figures_head2(x, y);
 		draw_figures_vert_body(x, y);
 		FbHorizontalLine(x, y + 4, x + 2, y + 4);
 		FbPoint(x + 2, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 3, y + 4);
+		}
 		break;
 	case 13:
 		draw_figures_head2(x, y);
@@ -497,6 +557,10 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbLine(x, y + 1, x + 2, y + 3);
 		FbPoint(x + 2, y + 4);
 		FbPoint(x + 2, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 2, y + 4);
+		}
 		break;
 	case 14:
 		draw_figures_head2(x, y);
@@ -504,6 +568,11 @@ static void draw_figure(int x, int y, int color, int anim_frame)
 		FbLine(x + 2, y + 4, x + 2, y + 8);
 		FbVerticalLine(x + 5, y, x + 5, y + 5);
 		FbPoint(x + 5, y + 15);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 2, y + 5);
+			FbPoint(x + 5, y + 3);
+		}
 		break;
 	}
 }
@@ -582,7 +651,7 @@ static void draw_desk(struct gulag_object *o)
 static void draw_soldier(struct gulag_object *o)
 {
 	FbColor(GREEN);
-	draw_figure(o->x >> 8, o->y >> 8, GREEN, o->tsd.soldier.anim_frame);
+	draw_figure(o->x >> 8, o->y >> 8, GREEN, o->tsd.soldier.anim_frame, o->tsd.soldier.spetsnaz);
 #if 0
 		FbMove(o->x >> 8, o->y >> 8);
 		FbRectangle(objconst[TYPE_SOLDIER].w, objconst[TYPE_SOLDIER].h);
@@ -607,6 +676,11 @@ static void draw_corpse(struct gulag_object *o)
 		FbHorizontalLine(x + 4, y + 6, x + 6, y + 6);
 		FbColor(RED);
 		FbHorizontalLine(x + 5, y + 5, x + 10, y + 5);
+		if (o->tsd.soldier.spetsnaz) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 4, y + 2);
+			FbPoint(x + 4, y + 6); 
+		}
 	} else { /* right corpse */
 		FbHorizontalLine(x + 14, y + 3, x + 15, y + 3);
 		FbHorizontalLine(x + 14, y + 4, x + 15, y + 4);
@@ -619,6 +693,11 @@ static void draw_corpse(struct gulag_object *o)
 		FbHorizontalLine(x + 9, y + 6, x + 11, y + 6);
 		FbColor(RED);
 		FbHorizontalLine(x + 5, y + 5, x + 10, y + 5);
+		if (o->tsd.soldier.spetsnaz) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 11, y + 2);
+			FbPoint(x + 11, y + 6);
+		}
 	}
 }
 
@@ -895,7 +974,10 @@ static void add_soldier_to_room(struct castle *c, int room)
 		return;
 	go[n].tsd.soldier.health = 2 + random_num(3);
 	go[n].tsd.soldier.bullets = random_num(7);
-	go[n].tsd.soldier.spetsnaz = 0;
+	if (random_num(1000) < 100)
+		go[n].tsd.soldier.spetsnaz = 1;
+	else
+		go[n].tsd.soldier.spetsnaz = 0;
 	go[n].tsd.soldier.grenades = 0;
 	go[n].tsd.soldier.keys = 0;
 	go[n].tsd.soldier.weapon = 0;
@@ -1724,7 +1806,7 @@ static void erase_player(struct player *p)
 	x = p->oldx >> 8;
 	y = p->oldy >> 8;
 
-	draw_figure(x, y, BLACK, p->prev_frame);
+	draw_figure(x, y, BLACK, p->prev_frame, 0);
 
 	dx = ((-cosine(p->oldangle) * 16 * player_speed) >> 8) + p->oldx;
 	dy = ((sine(p->oldangle) * 16 * player_speed) >> 8) + p->oldy;
@@ -1745,7 +1827,7 @@ static void draw_player(struct player *p)
 	y = p->y >> 8;
 
 	FbColor(WHITE);
-	draw_figure(x - 4, y - 8, WHITE, p->anim_frame);
+	draw_figure(x - 4, y - 8, WHITE, p->anim_frame, 0);
 #if 0
 	/* Draw bounding box (debug) */
 	FbColor(GREEN);
