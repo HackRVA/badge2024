@@ -89,8 +89,10 @@ static void gulag_intro(void)
 		"A DARING PLAN",
 		"TO ESCAPE,",
 		"PLANT A BOMB",
-		"IN THE ARMORY",
-		"AND STEAL THE",
+		"IN THE",
+		"MUNITIONS",
+		"DEPOT AND",
+		"STEAL THE",
 		"BATTLE PLANS",
 		"OF YOUR RUSSIAN",
 		"CAPTORS.",
@@ -122,7 +124,7 @@ static void gulag_intro(void)
 
 	y = -(intro_offset) % 10;
 	y = y + 12;
-	for (int i = first_line; i < first_line + 11; i++) {
+	for (int i = first_line; i < first_line + 14; i++) {
 		if (i >= (int) ARRAYSIZE(intro_text)) {
 			i++;
 			y = y + 10;
@@ -136,10 +138,10 @@ static void gulag_intro(void)
 	}
 	FbColor(BLACK);
 	FbMove(0, 0);
-	FbFilledRectangle(127, 10);
+	FbFilledRectangle(128, 10);
 	FbColor(BLACK);
-	FbMove(0, 110);
-	FbFilledRectangle(127, 10);
+	FbMove(0, 140);
+	FbFilledRectangle(128, 10);
 	intro_offset++;
 	FbSwapBuffers();
 
@@ -150,17 +152,17 @@ static void gulag_intro(void)
 
 static void gulag_flag(void)
 {
-	if (flag_offset == 65) {
+	if (flag_offset == 80) {
 		flag_offset = 0;
 		gulag_state = GULAG_RUN;
 		return;
 	}
 	FbMove(0, 0);
 	FbColor(BLUE);
-	FbFilledRectangle(127, flag_offset);
-	FbMove(0, 127 - flag_offset);
+	FbFilledRectangle(128, flag_offset);
+	FbMove(0, 160 - flag_offset);
 	FbColor(YELLOW);
-	FbFilledRectangle(127, flag_offset);
+	FbFilledRectangle(128, flag_offset);
 	FbSwapBuffers();
 	flag_offset++;
 
