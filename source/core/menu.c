@@ -538,7 +538,7 @@ void rvasec_splash_cb(){
         //if(buzzer)
         audio_out_beep(1000, NOTEDUR);
     } else if(wait < 40){
-        drawLCD4(HACKRVA4, 0);
+        FbImage4bit(&assetList[HACKRVA4], 0);
         FbSwapBuffers();
         //PowerSaveIdle();
     } else if(wait < 80){
