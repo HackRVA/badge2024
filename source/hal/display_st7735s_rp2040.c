@@ -16,11 +16,7 @@ static bool writing_pixels;
 static void wait_until_ready() {
     if (dma_transfer_started) {
         dma_channel_wait_for_finish_blocking(dma_channel);
-        // Seems like the display requires some time between DMA transfers finishing and being properly ready. Hard to
-        // tell precisely when we need this and when we don't, partial display writes in particular get
-        // messed with
         dma_transfer_started = false;
-        sleep_us(10);
     }
     while (spi_is_busy(spi0));
 }
