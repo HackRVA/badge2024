@@ -14,7 +14,6 @@
 #include "display.h"
 #include "audio.h"
 #include "led_pwm.h"
-#include "assets.h"
 
 // Apps
 #include "about_badge.h"

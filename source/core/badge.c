@@ -2,7 +2,6 @@
 #include "assetList.h"
 #include "menu.h"
 #include "button.h"
-#include "assets.h"
 #include "screensavers.h"
 #include "framebuffer.h"
 #include "badge.h"
