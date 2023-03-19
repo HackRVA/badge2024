@@ -41,6 +41,7 @@ static struct player {
 #define NUM_ROOMS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS)
 #define NUM_DESKS 30
 #define NUM_CHESTS 30
+#define NUM_SOLDIERS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS * 2)
 #define GULAG_MAX_OBJS_PER_ROOM 5
 #define GULAG_MAXOBJS (CASTLE_FLOORS * CASTLE_COLS * CASTLE_ROWS * GULAG_MAX_OBJS_PER_ROOM)
 
@@ -216,8 +217,16 @@ static void draw_desk(struct gulag_object *o)
 	FbHorizontalLine(x + 11, y + 8, x + 14, y + 8);
 }
 
-static void draw_soldier(__attribute__((unused)) struct gulag_object *o)
+static void draw_soldier(struct gulag_object *o)
 {
+	FbColor(GREEN);
+	if (o->tsd.soldier.health != 0) {
+		FbMove(o->x >> 8, o->y >> 8);
+		FbRectangle(8, 16);
+	} else {
+		FbMove(o->x >> 8, o->y >> 8);
+		FbRectangle(16, 8);
+	}
 }
 
 static void draw_chest(struct gulag_object *o)
@@ -437,6 +446,47 @@ static void add_chests(struct castle *c)
 		add_chest(c);
 }
 
+static void add_soldier_to_room(struct castle *c, int room)
+{
+	int x, y;
+
+	x = random_num(127 - 16) + 8;
+	y = random_num(127 - 32) + 8;
+	int n = add_object_to_room(c, room, TYPE_SOLDIER, x << 8, y << 8);
+	if (n < 0)
+		return;
+	go[n].tsd.soldier.health = 2 + random_num(3);
+	go[n].tsd.soldier.bullets = random_num(7);
+	go[n].tsd.soldier.spetsnaz = 0;
+	go[n].tsd.soldier.grenades = 0;
+	go[n].tsd.soldier.keys = 0;
+	go[n].tsd.soldier.weapon = 0;
+}
+
+static void add_soldier_to_random_room(struct castle *c)
+{
+	int f = random_num(CASTLE_FLOORS);
+	int col = random_num(CASTLE_COLS);
+	int row = random_num(CASTLE_ROWS);
+	add_soldier_to_room(c, room_no(f, col, row));
+}
+
+static void add_soldiers(struct castle *c)
+{
+	int s = 0;
+	for (int f = 0; f < CASTLE_FLOORS; f++) {
+		for (int col = 0; col < CASTLE_COLS; col++) {
+			for (int row = 0; row < CASTLE_ROWS; row++) {
+				int room = room_no(f, col, row);
+				add_soldier_to_room(c, room);
+				s++;
+			}
+		}
+	}
+	for (; s < NUM_SOLDIERS; s++)
+		add_soldier_to_random_room(c);
+}
+
 static void add_doors(struct castle *c, int floor, int start_col, int end_col, int start_row, int end_row)
 {
 	int rows = end_row - start_row + 1;
@@ -519,6 +569,7 @@ static void init_castle(struct castle *c)
 	add_stairs(&castle);
 	add_desks(&castle);
 	add_chests(&castle);
+	add_soldiers(&castle);
 }
 
 #if TARGET_SIMULATOR
