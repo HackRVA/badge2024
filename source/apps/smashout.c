@@ -390,7 +390,7 @@ static void smashout_draw_screen()
 	score_inc = 0;
 	balls_inc = 0;
 	draw_score_and_balls(WHITE);
-	FbPaintNewRows();
+	FbSwapBuffers();
 }
 
 static void smashout_game_play()
