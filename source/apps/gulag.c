@@ -8,6 +8,7 @@
 #include "trig.h"
 #include "random.h"
 #include "string.h"
+#include "bline.h"
 
 /* Program states.  Initial state is GULAG_INIT */
 enum gulag_state_t {
@@ -192,6 +193,7 @@ struct gulag_soldier_data {
 	uint16_t grenades:2;
 	uint16_t keys:1;
 	uint16_t weapon:2;
+	uint16_t corpse_direction:1; /* left or right corpse variant */
 	char anim_frame;
 	char prev_frame;
 };
@@ -212,7 +214,7 @@ struct gulag_chest_data {
 union gulag_type_specific_data {
 	struct gulag_stairs_data stairs;
 	struct gulag_desk_data desk;
-	struct gulag_soldier_data soldier;
+	struct gulag_soldier_data soldier; /* also used by corpses */
 	struct gulag_chest_data chest;
 };
 
@@ -225,6 +227,7 @@ struct gulag_object {
 #define TYPE_DESK 2
 #define TYPE_SOLDIER 3
 #define TYPE_CHEST 4
+#define TYPE_CORPSE 5
 	union gulag_type_specific_data tsd;
 } go[GULAG_MAXOBJS];
 int gulag_nobjs = 0;
@@ -235,6 +238,7 @@ static void draw_stairs_up(struct gulag_object *o);
 static void draw_stairs_down(struct gulag_object *o);
 static void draw_desk(struct gulag_object *o);
 static void draw_soldier(struct gulag_object *o);
+static void draw_corpse(struct gulag_object *o);
 static void draw_chest(struct gulag_object *o);
 
 /* Check if a bounding box and a wall segment collide.
@@ -324,7 +328,11 @@ struct gulag_object_typical_data {
 	{ 16, 8, draw_desk, },
 	{ 8, 16, draw_soldier, },
 	{ 16, 8, draw_chest, },
+	{ 16, 8, draw_corpse, },
 };
+
+static const signed char muzzle_xoffset[] = { 7, 7, 6, 6, 0, 0, 0, 5, };
+static const signed char muzzle_yoffset[] = { 2, 4, 8, 9, 8, 4, 1, 0, };
 
 static inline void draw_figures_head1(int x, int y)
 {
@@ -568,15 +576,43 @@ static void draw_desk(struct gulag_object *o)
 static void draw_soldier(struct gulag_object *o)
 {
 	FbColor(GREEN);
-	if (o->tsd.soldier.health != 0) {
-		draw_figure(o->x >> 8, o->y >> 8, GREEN, o->tsd.soldier.anim_frame);
+	draw_figure(o->x >> 8, o->y >> 8, GREEN, o->tsd.soldier.anim_frame);
 #if 0
 		FbMove(o->x >> 8, o->y >> 8);
 		FbRectangle(objconst[TYPE_SOLDIER].w, objconst[TYPE_SOLDIER].h);
 #endif
-	} else {
-		FbMove(o->x >> 8, o->y >> 8);
-		FbRectangle(16, 8);
+}
+
+static void draw_corpse(struct gulag_object *o)
+{
+	int x = o->x >> 8;
+	int y = o->y >> 8;
+
+	FbColor(GREEN);
+	if (o->tsd.soldier.corpse_direction) { /* left corpse */
+		FbHorizontalLine(x, y + 3, x + 1, y + 3);
+		FbHorizontalLine(x, y + 4, x + 1, y + 4);
+		FbPoint(x + 6, y + 1);
+		FbHorizontalLine(x + 3, y + 2, x + 5, y + 2);
+		FbPoint(x + 14, y + 2);
+		FbHorizontalLine(x + 3, y + 3, x + 14, y + 3);
+		FbHorizontalLine(x + 3, y + 4, x + 15, y + 4);
+		FbPoint(x + 3, y + 5);
+		FbHorizontalLine(x + 4, y + 6, x + 6, y + 6);
+		FbColor(RED);
+		FbHorizontalLine(x + 5, y + 5, x + 10, y + 5);
+	} else { /* right corpse */
+		FbHorizontalLine(x + 14, y + 3, x + 15, y + 3);
+		FbHorizontalLine(x + 14, y + 4, x + 15, y + 4);
+		FbPoint(x + 9, y + 1);
+		FbHorizontalLine(x + 10, y + 2, x + 12, y + 2);
+		FbPoint(x + 1, y + 2);
+		FbHorizontalLine(x + 1, y + 3, x + 12, y + 3);
+		FbHorizontalLine(x, y + 4, x + 12, y + 4);
+		FbPoint(x + 12, y + 5);
+		FbHorizontalLine(x + 9, y + 6, x + 11, y + 6);
+		FbColor(RED);
+		FbHorizontalLine(x + 5, y + 5, x + 10, y + 5);
 	}
 }
 
@@ -1414,14 +1450,142 @@ static void check_player_soldier_entanglement(struct player *p, int s)
 	}
 }
 
+int shooting_frame(struct player *p)
+{
+	if (p->angle < 8 || p->angle > 119)
+		return 12;
+	if (p->angle >= 8 && p->angle < 24)
+		return 11;
+	if (p->angle >= 24 && p->angle < 40)
+		return 10;
+	if (p->angle >= 40 && p->angle < 56)
+		return 9;
+	if (p->angle >= 56 && p->angle < 72)
+		return 8;
+	if (p->angle >= 72 && p->angle < 88)
+		return 7;
+	if (p->angle >= 88 && p->angle < 104)
+		return 14;
+	/* if (p->angle >= 104 && p->angle < 120)
+		return 11; */
+	return 13;
+}
+
+static void draw_muzzle_flash(int x, int y, unsigned char angle, int length)
+{
+	int x2, y2;
+
+	x2 = ((-cosine(angle) * length) >> 8) + x;
+	y2 = ((sine(angle) * length) >> 8) + y;
+	FbColor(YELLOW);
+	if (x >= 0 && y >= 0 && x2 >= 0 && y2 >= 0)
+		FbLine(x, y, x2, y2);
+}
+
+static void draw_bullet_debris(int x, int y)
+{
+	int i, x1, y1;
+
+	FbColor(WHITE);
+	for (i = 0; i < 10; i++) {
+		x1 = x + random_num(16) - 8;
+		y1 = y + random_num(16) - 8;
+		if (x1 >= 0 && x1 <= 127 && y1 >= 0 && y1 <= 127)
+			FbPoint(x1, y1);
+	}
+}
+
+static int bullet_track(int x, int y, void *cookie)
+{
+	struct player *p = cookie;
+	int rc;
+
+	if (x < 0 || y < 0 || x > 127 || y > 111) {
+		draw_bullet_debris(x, y);
+		return -1; /* stop bline(), we've left the screen */
+	}
+	rc = bbox_interior_wall_collision(&castle, p->room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1);
+	if (random_num(100) < 20)
+		FbPoint(x, y);
+	if (rc) {
+		/* We've hit a wall */
+		draw_bullet_debris(x, y);
+		return -1;
+	}
+	/* Check for collisions with objects in room */
+	for (int i = 0; i < castle.room[p->room].nobjs; i++) {
+		int w2, h2;
+		int j = castle.room[p->room].obj[i];
+		struct gulag_object *o2 = &go[j];
+		w2 = objconst[o2->type].w;
+		h2 = objconst[o2->type].h;
+		int bb2x1 = o2->x;
+		int bb2y1 = o2->y;
+		int bb2x2 = o2->x + (w2 << 8);
+		int bb2y2 = o2->y + (h2 << 8);
+		if (bb_bb_collision(x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, bb2x1, bb2y1, bb2x2, bb2y2)) {
+			switch (go[j].type) {
+			case TYPE_STAIRS_UP:
+				return 0;
+			case TYPE_STAIRS_DOWN:
+				return 0;
+			case TYPE_DESK:
+				draw_bullet_debris(x, y);
+				break;
+			case TYPE_SOLDIER:
+				draw_bullet_debris(x, y);
+				go[j].tsd.soldier.health--;
+				if (go[j].tsd.soldier.health == 0) {
+					go[j].type = TYPE_CORPSE;
+					if ((go[j].x >> 8) > 64) {
+						go[j].tsd.soldier.corpse_direction = 1;
+						go[j].x -= (8 << 8);
+						go[j].y += (8 << 8);
+					} else {
+						go[j].tsd.soldier.corpse_direction = 0;
+						go[j].y += (8 << 8);
+					}
+				}
+				break;
+			case TYPE_CHEST:
+				draw_bullet_debris(x, y);
+				break;
+			case TYPE_CORPSE: /* bullets don't hit corpses because they are on the floor */
+				return 0;
+			default:
+				break;
+			}
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static void fire_gun(struct player *p)
+{
+	int muzzle_flash_index;
+	int x, y, tx, ty;
+
+	p->anim_frame = shooting_frame(p);
+	muzzle_flash_index = p->anim_frame - 7;
+	x = (p->x >> 8) - 4 + muzzle_xoffset[muzzle_flash_index];
+	y = (p->y >> 8) - 8 + muzzle_yoffset[muzzle_flash_index];
+	draw_muzzle_flash(x, y, p->angle, 5);
+	tx = ((-cosine(p->angle) * 400) >> 8) + x; /* 400 will put target tx,ty offscreen, guaranteed */
+	ty = ((sine(p->angle) * 400) >> 8) + y;
+	bline(x, y, tx, ty, bullet_track, p);
+}
+
 static void check_buttons()
 {
+	static int firing_timer = 0;
 	int down_latches = button_down_latches();
 	int n;
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
-		/* Pressing the button exits the program. You probably want to change this. */
-		// gulag_state = GULAG_EXIT;
+		fire_gun(&player);
+		firing_timer = 10; /* not sure this will work on pico */
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		short new_angle = player.angle + 3;
 		if (new_angle > 127)
@@ -1495,7 +1659,11 @@ static void check_buttons()
 		advance_player_animation(&player);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 	} else { /* nothing pressed */
-		if (player.anim_frame != 0 && player.anim_frame != 6) {
+		if (firing_timer > 0) {
+			if (firing_timer == 10) /* not sure this will work on pico */
+				screen_changed = 1; /* cause muzzle flash to disappear */
+			firing_timer--;
+		} else if (player.anim_frame != 0 && player.anim_frame != 6) {
 			if (player.angle >= 32 && player.angle <= 96) /* player is facing to the right */
 				player.anim_frame = 0;
 			else
