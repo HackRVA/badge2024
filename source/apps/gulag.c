@@ -86,6 +86,7 @@ enum gulag_state_t {
 static const short player_speed = 512;
 static const short soldier_speed = 512;
 static const short grenade_speed = 512;
+static const short grenade_speed_reduction = 128;
 #define GRENADE_FRAGMENTS 40
 static int game_timer = 0;
 
@@ -315,6 +316,8 @@ static struct grenade {
 	short x, y;	/* 8.8 signed fixed point */
 	short vx, vy;	/* 8.8 signed fixed point */
 	short fuse;	/* ticks until it explodes */
+#define GRENADE_FUSE_TIME 90
+#define GRENADE_FUSE_TIME_VARIANCE 20
 } grenade[MAXLIVEGRENADES];
 static int ngrenades = 0;
 
@@ -393,8 +396,10 @@ static int bbox_wall_collides(int bbx1, int bby1, int bbx2, int bby2, int wx1, i
  * Returns:
  * 0 if no collision
  * 1 if collision
+ *
+ * If wall_index is not NULL, and a collision occurs, it is filled in with the offset into the room's wall_spec
  */
-static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, int bby1, int bbx2, int bby2)
+static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, int bby1, int bbx2, int bby2, int *wall_index)
 {
 	/* Possible optimization: maybe we unpack wall_spec[n] into a list of coordinates
 	 * once when we enter a room, instead of every time we move.  On x86 it might be
@@ -407,8 +412,11 @@ static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, in
 		int y1 = wall_spec_y(ws[i]) << 8;
 		int x2 = wall_spec_x(ws[i + 1]) << 8;
 		int y2 = wall_spec_y(ws[i + 1]) << 8;
-		if (bbox_wall_collides(bbx1, bby1, bbx2, bby2, x1, y1, x2, y2))
+		if (bbox_wall_collides(bbx1, bby1, bbx2, bby2, x1, y1, x2, y2)) {
+			if (wall_index)
+				*wall_index = i;
 			return 1;
+		}
 	}
 	return 0;
 }
@@ -992,7 +1000,7 @@ static int add_object_to_room(struct castle *c, int room, int object_type, int x
 		bb1y2 = y + (h << 8);
 
 		/* Check against interior wall collisions */
-		if (bbox_interior_wall_collision(c, room, bb1x1, bb1y1, bb1x2, bb1y2)) {
+		if (bbox_interior_wall_collision(c, room, bb1x1, bb1y1, bb1x2, bb1y2, NULL)) {
 			random_location_in_room(&x, &y, w, h);
 			done = 0;
 			continue;
@@ -1356,7 +1364,7 @@ static void init_room_cost(struct castle *c, int room)
 			y1 = astary_to_8dot8y(y);
 			x2 = x1 + (8 << 8);
 			y2 = y1 + (16 << 8);
-			rc = bbox_interior_wall_collision(c, room, x1, y1, x2, y2);
+			rc = bbox_interior_wall_collision(c, room, x1, y1, x2, y2, NULL);
 			if (rc)
 				room_cost[y][x] = 255;
 			else
@@ -1906,7 +1914,7 @@ static int bullet_track(int x, int y, void *cookie)
 		screen_changed = 1;
 		return -1; /* stop bline(), we've left the screen */
 	}
-	rc = bbox_interior_wall_collision(&castle, p->room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1);
+	rc = bbox_interior_wall_collision(&castle, p->room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, NULL);
 	if (random_num(100) < 20)
 		FbPoint(x, y);
 	if (rc) {
@@ -2013,7 +2021,7 @@ static void throw_grenade(struct player *p)
 	grenade[n].y = player.y;
 	grenade[n].vx = (grenade_speed * -cosine(p->angle)) >> 8;
 	grenade[n].vy = (grenade_speed * sine(p->angle)) >> 8;
-	grenade[n].fuse = 50;
+	grenade[n].fuse = GRENADE_FUSE_TIME + random_num(GRENADE_FUSE_TIME_VARIANCE);
 	ngrenades++;
 }
 
@@ -2086,7 +2094,7 @@ static void check_buttons()
 		/* Check for interior wall collision */
 		if (bbox_interior_wall_collision(&castle, player.room,
 				newx - (4 << 8), newy - (9 << 8),
-				newx + (5 << 8), newy + (8 << 8))) {
+				newx + (5 << 8), newy + (8 << 8), NULL)) {
 			newx = player.x;
 			newy = player.y;
 		}
@@ -2341,7 +2349,7 @@ static int soldier_eyeline(int x, int y, void *cookie)
 	FbPoint(x, y);
 #endif
 
-	if (bbox_interior_wall_collision(&castle, sed->p->room, bbx1, bby1, bbx2, bby2)) {
+	if (bbox_interior_wall_collision(&castle, sed->p->room, bbx1, bby1, bbx2, bby2, NULL)) {
 		sed->seen = 0;
 		return -1;
 	}
@@ -2545,6 +2553,7 @@ static void draw_grenade(struct grenade *o)
 
 static void move_grenade(struct grenade *o)
 {
+	int collision, bbx1, bby1, bbx2, bby2, wall_index;
 	short nx, ny;
 	nx = o->x + o->vx;
 	ny = o->y + o->vy;
@@ -2552,20 +2561,43 @@ static void move_grenade(struct grenade *o)
 	/* Bounce off exterior walls */
 	if (nx < 0) {
 		nx = 1;
-		o->vx = abs(o->vx);
+		o->vx = (abs(o->vx) * grenade_speed_reduction) >> 8;
+		o->vy = (o->vy * grenade_speed_reduction) >> 8;
 	} else if (nx > (127 << 8)) {
 		nx = (127 << 8) - 1;
-		o->vx = -abs(o->vx);
+		o->vx = (-abs(o->vx) * grenade_speed_reduction) >> 8;
+		o->vy = (o->vy * grenade_speed_reduction) >> 8;
 	}
 	if (ny < 0) {
 		ny = 1;
-		o->vy = abs(o->vy);
+		o->vx = (o->vx * grenade_speed_reduction) >> 8;
+		o->vy = (abs(o->vy) * grenade_speed_reduction) >> 8;
 	} else if (ny > ((127 - 16) << 8)) {
 		ny = ((127 - 16) << 8) - 1;
-		o->vy = -abs(o->vy);
+		o->vx = (o->vx * grenade_speed_reduction) >> 8;
+		o->vy = (-abs(o->vy) * grenade_speed_reduction) >> 8;
 	}
-	o->x = nx;
-	o->y = ny;
+
+	/* Bounce off interior walls */
+	bbx1 = nx - (1 << 8);
+	bby1 = ny - (1 << 8);
+	bbx2 = nx + (1 << 8);
+	bby2 = ny + (1 << 8);
+	collision = bbox_interior_wall_collision(&castle, player.room, bbx1, bby1, bbx2, bby2, &wall_index);
+	if (collision) {
+		int n = castle.room[player.room].interior_walls;
+		const int8_t *ws = wall_spec[n];
+		if (wall_spec_x(ws[wall_index]) == wall_spec_x(ws[wall_index + 1])) { /* vertical wall */
+			o->vx = (grenade_speed_reduction * -o->vx) >> 8;
+			o->vy = (grenade_speed_reduction * o->vy) >> 8;
+		} else { /* horizontal wall */
+			o->vx = (grenade_speed_reduction * o->vx) >> 8;
+			o->vy = (grenade_speed_reduction * -o->vy) >> 8;
+		}
+	} else {
+		o->x = nx;
+		o->y = ny;
+	}
 
 	if (o->fuse > 0) {
 		o->fuse--;
