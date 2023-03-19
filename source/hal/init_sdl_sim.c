@@ -504,7 +504,7 @@ static void load_badge_images(void)
 	w = 0;
 	h = 0;
 	a = 0;
-	led_pixels = png_utils_read_png_image("/home/scameron/badge-led.png",
+	led_pixels = png_utils_read_png_image("../images/badge-led.png",
 		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
 	if (!badge_background_pixels)
 		fprintf(stderr, "Failed to load badge LED image: %s\n", whynot);
