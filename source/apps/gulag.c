@@ -7,6 +7,7 @@
 #include "framebuffer.h"
 #include "trig.h"
 #include "random.h"
+#include "string.h"
 
 /* Program states.  Initial state is GULAG_INIT */
 enum gulag_state_t {
@@ -38,6 +39,8 @@ static struct player {
 #define CASTLE_ROWS 3
 #define CASTLE_COLS 4
 #define NUM_ROOMS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS)
+#define GULAG_MAX_OBJS_PER_ROOM 5
+#define GULAG_MAXOBJS (CASTLE_FLOORS * CASTLE_COLS * CASTLE_ROWS * GULAG_MAX_OBJS_PER_ROOM)
 
 struct room_spec {
 	/* Each room has up to 4 doors (top, bottom, left, and right).
@@ -50,6 +53,8 @@ struct room_spec {
 	int doors : 2;
 #define HAS_LEFT_DOOR (1 << 0)
 #define HAS_TOP_DOOR (1 << 1)
+	int16_t obj[GULAG_MAX_OBJS_PER_ROOM]; /* indices into go[], below */
+	char nobjs;
 };
 
 static struct castle {
@@ -64,6 +69,146 @@ static enum gulag_state_t gulag_state = GULAG_INIT;
 static int screen_changed = 0;
 static int intro_offset = 0;
 static int flag_offset = 0;
+
+struct gulag_stairs_data {
+	uint16_t unused;
+};
+
+struct gulag_desk_data {
+	uint16_t keys:1;
+	uint16_t war_plans:1;
+	uint16_t bullets:3;
+};
+
+struct gulag_soldier_data {
+	uint16_t health:3;
+	uint16_t bullets:3;
+	uint16_t spetsnaz:1;
+	uint16_t grenades:2;
+	uint16_t keys:1;
+	uint16_t weapon:2;
+};
+
+struct gulag_chest_data {
+	uint16_t bullets:3;
+	uint16_t grenades:3;
+	uint16_t weapons:2;
+	uint16_t war_plans:1;
+	uint16_t explosives:1;
+};
+
+union gulag_type_specific_data {
+	struct gulag_stairs_data stairs;
+	struct gulag_desk_data desk;
+	struct gulag_soldier_data soldier;
+	struct gulag_chest_data chest;
+};
+
+struct gulag_object {
+	uint16_t room;
+	uint16_t x, y;
+	unsigned char type;
+#define TYPE_STAIRS_UP 0
+#define TYPE_STAIRS_DOWN 1
+#define TYPE_DESK 2
+#define TYPE_SOLDIER 3
+#define TYPE_CHEST 4
+	union gulag_type_specific_data tsd;
+} go[GULAG_MAXOBJS];
+int gulag_nobjs = 0;
+
+typedef void (*gulag_object_drawing_function)(struct gulag_object *o);
+
+static void draw_stairs_up(struct gulag_object *o);
+static void draw_stairs_down(struct gulag_object *o);
+static void draw_desk(struct gulag_object *o);
+static void draw_soldier(struct gulag_object *o);
+static void draw_chest(struct gulag_object *o);
+
+struct gulag_object_typical_data {
+	char w, h; /* width, height of bounding box */
+	gulag_object_drawing_function draw;
+} objconst[] = {
+	{ 32, 32, draw_stairs_up, },
+	{ 32, 32, draw_stairs_down, },
+	{ 16, 8, draw_desk, },
+	{ 8, 16, draw_soldier, },
+	{ 16, 8, draw_chest, },
+};
+
+static void draw_stairs_up(struct gulag_object *o)
+{
+	int x, y;
+
+	x = o->x >> 8;
+	y = o->y >> 8;
+
+	FbColor(WHITE);
+	FbMove(x, y);
+	FbRectangle(32, 12);
+
+	for (int i = 0; i < 5; i++) {
+		FbMove(x + 15, y + 12 + i * 4);
+		FbRectangle(16 - i, 5);
+	}
+	FbLine(x, y + 12, x + 8, y + 24);
+	FbHorizontalLine(x + 8, y + 24, x + 15, y + 24);
+}
+
+static void draw_stairs_down(struct gulag_object *o)
+{
+	int x, y;
+
+	x = o->x >> 8;
+	y = o->y >> 8;
+
+	FbColor(WHITE);
+	FbMove(x, y);
+	FbRectangle(32, 32); /* outer box */
+	FbMove(x + 4, y + 4);
+
+	FbRectangle(32 - 8, 12); /* landing */
+	FbLine(x, y, x + 4, y + 4);
+	FbLine(x + 31, y, x + 31 - 4, y + 4);
+
+	/* right hand steps */
+	for (int i = 0; i < 4; i++) {
+		FbMove(x + 16, y + 15 + i * 4);
+		FbRectangle(12 + i, 5);
+	}
+
+	/* left hand steps */
+	for (int i = 0; i < 4; i++) {
+		FbMove(x + 4 + i, y + 16 + i * 2);
+		FbRectangle(16 - 4 - i + 1, 3);
+	}
+
+	FbVerticalLine(x + 7, y + 16 + 3 * 2, x + 7, y + 28);
+	FbHorizontalLine(x + 7, y + 28, x + 16, y + 28);
+	FbLine(x, y + 31, x + 7, y + 28);
+}
+
+static void draw_desk(__attribute__((unused)) struct gulag_object *o)
+{
+}
+
+static void draw_soldier(__attribute__((unused)) struct gulag_object *o)
+{
+}
+
+static void draw_chest(__attribute__((unused)) struct gulag_object *o)
+{
+}
+
+/* return a random int between 0 and n - 1 */
+static int random_num(int n)
+{
+	int x;
+	random_insecure_bytes((uint8_t *) &x, sizeof(x));
+	if (x < 0)
+		x = -x;
+	return x % n;
+}
 
 static int room_no(int floor, int col, int row)
 {
@@ -119,16 +264,10 @@ static int has_right_door(struct castle *c, int room)
 
 static void add_start_room(struct castle *c)
 {
-	int n, row, col;
+	int row, col;
 
-	random_insecure_bytes((uint8_t *) &n, sizeof(n));
-	if (n < 0)
-		n = -n;
-	row = n % CASTLE_ROWS;
-	random_insecure_bytes((uint8_t *) &n, sizeof(n));
-	if (n < 0)
-		n = -n;
-	col = n % CASTLE_COLS;
+	row = random_num(CASTLE_ROWS);
+	col = random_num(CASTLE_COLS);
 	c->start_room = room_no(CASTLE_FLOORS - 1, col, row);
 }
 
@@ -137,9 +276,31 @@ static void add_exit_room(struct castle *c)
 	(void) c;
 }
 
+static void add_staircase(struct castle *c, int floor, int col, int row, int stair_direction)
+{
+	int i = gulag_nobjs;
+	int room = room_no(floor, col, row);
+	go[i].type = stair_direction;
+	go[i].room = room;
+	go[i].x = (127 - objconst[stair_direction].w) << 8;
+	go[i].y = 0 << 8;
+	gulag_nobjs++;
+
+	int n = c->room[room].nobjs;
+	c->room[room].obj[n] = i;
+	c->room[room].nobjs++;
+}
+
 static void add_stairs(struct castle *c)
 {
-	(void) c;
+	int row, col;
+
+	for (int i = CASTLE_FLOORS - 1; i > 0; i--) {
+		row = random_num(CASTLE_ROWS);
+		col = random_num(CASTLE_COLS);
+		add_staircase(c, i, col, row, TYPE_STAIRS_DOWN);
+		add_staircase(c, i - 1, col, row, TYPE_STAIRS_UP);
+	}
 }
 
 static void add_doors(struct castle *c, int floor, int start_col, int end_col, int start_row, int end_row)
@@ -163,10 +324,13 @@ static void add_doors(struct castle *c, int floor, int start_col, int end_col, i
 
 	if (cols >= rows) {
 		/* more columns than rows, choose a column randomly and add a door */
+		c3 = random_num((cols - 1)) + start_col + 1;
+#if 0
 		random_insecure_bytes((uint8_t *) &c3, sizeof(c3));
 		if (c3 < 0)
 			c3 = -c3;
 		c3 = c3 % (cols - 1) + start_col + 1;
+#endif
 		r3 = rows / 2 + start_row;
 		room = room_no(floor, c3, r3);
 		c->room[room].doors |= HAS_LEFT_DOOR;
@@ -183,10 +347,13 @@ static void add_doors(struct castle *c, int floor, int start_col, int end_col, i
 	}
 
 	/* more rows than columns, choose a row randomly and add a door */
+	r3 = random_num(rows - 1) + start_row + 1;
+#if 0
 	random_insecure_bytes((uint8_t *) &r3, sizeof(r3));
 	if (r3 < 0)
 		r3 = -r3;
 	r3 = r3 % (rows - 1) + start_row + 1;
+#endif
 	c3 = cols / 2 + start_col;
 	room = room_no(floor, c3, r3);
 	c->room[room].doors |= HAS_TOP_DOOR;
@@ -206,8 +373,11 @@ static void init_castle(struct castle *c)
 	int i;
 
 	/* Start with no doors. */
-	for (i = 0; i < NUM_ROOMS; i++)
+	for (i = 0; i < NUM_ROOMS; i++) {
 		c->room[i].doors = 0;
+		memset(c->room[i].obj, 0, sizeof(c->room[i].obj));
+		c->room[i].nobjs = 0;
+	}
 	for (i = 0; i < CASTLE_FLOORS; i++)
 		add_doors(&castle, i, 0, CASTLE_COLS - 1, 0, CASTLE_ROWS - 1);
 	add_start_room(c);
@@ -286,6 +456,8 @@ static void init_player(struct player *p, int start_room)
 
 static void gulag_init(void)
 {
+	gulag_nobjs = 0;
+	memset(go, 0, sizeof(go));
 	init_castle(&castle);
 	init_player(&player, castle.start_room);
 	print_castle(&castle, &player);
@@ -418,6 +590,64 @@ static void player_wins(void)
 #endif
 }
 
+static void maybe_traverse_stairs(struct castle *c, struct player *p, struct gulag_object *stairs)
+{
+	int px, py, sx, sy, floor, row, col;
+
+	(void) c; /* shut the compiler up about unused param */
+
+	px = p->x >> 8;
+	py = p->y >> 8;
+	sx = (stairs->x >> 8) + 16;
+	sy = (stairs->y >> 8) + 16;
+
+	/* No collision with stairs... */
+	if (abs(px - sx) > 12 || abs(py - sy) > 12)
+		return;
+
+	/* Traverse the stairs */
+	floor = get_room_floor(p->room);
+	col = get_room_col(p->room);
+	row = get_room_row(p->room);
+
+	if (stairs->type == TYPE_STAIRS_DOWN)
+		floor--;
+	else
+		floor++;
+#if TARGET_SIMULATOR
+	print_castle_floor(c, p, floor);
+#endif
+	p->room = room_no(floor, col, row);
+	p->angle = 32; /* down */
+	p->x = stairs->x + (24 << 8);
+	p->y = stairs->y + ((32 + 8) << 8);
+	FbClear();
+	screen_changed = 1;
+}
+
+static void check_object_collisions(struct castle *c, struct player *p)
+{
+	int room = p->room;
+	for (int i = 0; i < c->room[room].nobjs; i++) {
+		int index = c->room[room].obj[i];
+		struct gulag_object *o = &go[index];
+		int t = o->type;
+		switch (t) {
+		case TYPE_STAIRS_DOWN:
+			/* Fall through */
+		case TYPE_STAIRS_UP:
+			maybe_traverse_stairs(c, p, o);
+			break;
+		case TYPE_DESK:
+			break;
+		case TYPE_SOLDIER:
+			break;
+		case TYPE_CHEST:
+			break;
+		}
+	}
+}
+
 static void check_doors(struct castle *c, struct player *p)
 {
 	int room = p->room;
@@ -526,6 +756,7 @@ static void check_buttons()
 		player.y = (short) newy;
 		screen_changed = 1;
 		check_doors(&castle, &player);
+		check_object_collisions(&castle, &player);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 	}
 }
@@ -615,6 +846,16 @@ static void draw_player(struct player *p)
 
 }
 
+static void draw_room_objs(struct castle *c, int room)
+{
+
+	for (int i = 0; i < c->room[room].nobjs; i++) {
+		int n = c->room[room].obj[i];
+		struct gulag_object *o = &go[n];
+		objconst[o->type].draw(o);
+	}
+}
+
 static void draw_room(struct castle *c, int room)
 {
 	if (has_top_door(c, room)) {
@@ -641,6 +882,7 @@ static void draw_room(struct castle *c, int room)
 	} else {
 		FbVerticalLine(127, 0, 127, 127 - 16);
 	}
+	draw_room_objs(c, room);
 }
 
 static void draw_screen(void)
