@@ -23,7 +23,7 @@
  *   ( ) Searching chests/desks/bodies for bullets, keys, etc.
  *   ( ) Inventory of bullets/grenades/keys/bullet proof vest etc.
  *   ( ) planting bomb
- *   ( ) throwing grenades
+ *   (X) throwing grenades
  *   ( ) knifing?
  *   ( ) health damage/dying
  *   ( ) healing w/ medicine/food
@@ -85,6 +85,8 @@ enum gulag_state_t {
 
 static const short player_speed = 512;
 static const short soldier_speed = 512;
+static const short grenade_speed = 512;
+#define GRENADE_FRAGMENTS 40
 static int game_timer = 0;
 
 static struct player {
@@ -308,6 +310,14 @@ struct gulag_chest_data {
 	uint16_t opened:1;
 };
 
+#define MAXLIVEGRENADES 10
+static struct grenade {
+	short x, y;	/* 8.8 signed fixed point */
+	short vx, vy;	/* 8.8 signed fixed point */
+	short fuse;	/* ticks until it explodes */
+} grenade[MAXLIVEGRENADES];
+static int ngrenades = 0;
+
 union gulag_type_specific_data {
 	struct gulag_stairs_data stairs;
 	struct gulag_desk_data desk;
@@ -330,13 +340,17 @@ struct gulag_object {
 int gulag_nobjs = 0;
 
 typedef void (*gulag_object_drawing_function)(struct gulag_object *o);
+typedef void (*gulag_object_moving_function)(struct gulag_object *o);
 
 static void draw_stairs_up(struct gulag_object *o);
 static void draw_stairs_down(struct gulag_object *o);
 static void draw_desk(struct gulag_object *o);
 static void draw_soldier(struct gulag_object *o);
+static void move_soldier(struct gulag_object *s);
 static void draw_corpse(struct gulag_object *o);
 static void draw_chest(struct gulag_object *o);
+static void draw_grenade(struct grenade *o);
+static void move_grenade(struct grenade *s);
 
 /* Check if a bounding box and a wall segment collide.
  * Assumptions:
@@ -419,13 +433,14 @@ static int bb_bb_collision(int bb1x1, int bb1y1, int bb1x2, int bb1y2,
 struct gulag_object_typical_data {
 	char w, h; /* width, height of bounding box */
 	gulag_object_drawing_function draw;
+	gulag_object_moving_function move;
 } objconst[] = {
-	{ 32, 32, draw_stairs_up, },
-	{ 32, 32, draw_stairs_down, },
-	{ 16, 8, draw_desk, },
-	{ 8, 16, draw_soldier, },
-	{ 16, 8, draw_chest, },
-	{ 16, 8, draw_corpse, },
+	{ 32, 32, draw_stairs_up, NULL },
+	{ 32, 32, draw_stairs_down, NULL },
+	{ 16, 8, draw_desk, NULL },
+	{ 8, 16, draw_soldier, move_soldier },
+	{ 16, 8, draw_chest, NULL },
+	{ 16, 8, draw_corpse, NULL, },
 };
 
 static const signed char muzzle_xoffset[] = { 7, 7, 6, 6, 0, 0, 0, 5, };
@@ -1888,6 +1903,7 @@ static int bullet_track(int x, int y, void *cookie)
 
 	if (x < 0 || y < 0 || x > 127 || y > 111) {
 		draw_bullet_debris(x, y);
+		screen_changed = 1;
 		return -1; /* stop bline(), we've left the screen */
 	}
 	rc = bbox_interior_wall_collision(&castle, p->room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1);
@@ -1895,6 +1911,7 @@ static int bullet_track(int x, int y, void *cookie)
 		FbPoint(x, y);
 	if (rc) {
 		/* We've hit a wall */
+		screen_changed = 1;
 		draw_bullet_debris(x, y);
 		return -1;
 	}
@@ -1944,22 +1961,60 @@ static int bullet_track(int x, int y, void *cookie)
 			return -1;
 		}
 	}
+	screen_changed = 1;
 	return 0;
+}
+
+static void fire_bullet(struct player *p, int x, int y, int angle)
+{
+	int tx, ty;
+
+	draw_muzzle_flash(x, y, angle, 5);
+	tx = ((-cosine(angle) * 400) >> 8) + x; /* 400 will put target tx,ty offscreen, guaranteed */
+	ty = ((sine(angle) * 400) >> 8) + y;
+	bline(x, y, tx, ty, bullet_track, p);
 }
 
 static void fire_gun(struct player *p)
 {
 	int muzzle_flash_index;
-	int x, y, tx, ty;
+	int x, y; // , tx, ty;
 
 	p->anim_frame = shooting_frame(p);
 	muzzle_flash_index = p->anim_frame - 7;
 	x = (p->x >> 8) - 4 + muzzle_xoffset[muzzle_flash_index];
 	y = (p->y >> 8) - 8 + muzzle_yoffset[muzzle_flash_index];
+	fire_bullet(p, x, y, p->angle);
+#if 0
 	draw_muzzle_flash(x, y, p->angle, 5);
 	tx = ((-cosine(p->angle) * 400) >> 8) + x; /* 400 will put target tx,ty offscreen, guaranteed */
 	ty = ((sine(p->angle) * 400) >> 8) + y;
 	bline(x, y, tx, ty, bullet_track, p);
+#endif
+}
+
+static void remove_grenade(struct grenade *g)
+{
+	if (ngrenades <= 0)
+		return;
+	int n = g - &grenade[0];
+	size_t bytes = (ngrenades - n - 1) * sizeof(*g);
+	if (bytes > 0)
+		memmove(g, g + 1, bytes);
+	ngrenades--;
+}
+
+static void throw_grenade(struct player *p)
+{
+	if (ngrenades >= MAXLIVEGRENADES)
+		return;
+	int n = ngrenades;
+	grenade[n].x = player.x;
+	grenade[n].y = player.y;
+	grenade[n].vx = (grenade_speed * -cosine(p->angle)) >> 8;
+	grenade[n].vy = (grenade_speed * sine(p->angle)) >> 8;
+	grenade[n].fuse = 50;
+	ngrenades++;
 }
 
 static void check_buttons()
@@ -1985,6 +2040,12 @@ static void check_buttons()
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		fire_gun(&player);
 		firing_timer = 10; /* not sure this will work on pico */
+		screen_changed = 1;
+		anything_pressed = 1;
+	}
+        if (BUTTON_PRESSED(BADGE_BUTTON_SW2, down_latches)) {
+		throw_grenade(&player);
+		firing_timer = 10;
 		screen_changed = 1;
 		anything_pressed = 1;
 	}
@@ -2239,6 +2300,12 @@ static void draw_room(struct castle *c, int room)
 	draw_room_objs(c, room);
 }
 
+static void draw_grenades(void)
+{
+	for (int i = 0; i < ngrenades; i++)
+		draw_grenade(&grenade[i]);
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
@@ -2246,6 +2313,7 @@ static void draw_screen(void)
 	FbColor(WHITE);
 	draw_room(&castle, player.room);
 	draw_player(&player);
+	draw_grenades();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
@@ -2448,7 +2516,85 @@ static void move_soldier(struct gulag_object *s)
 	}
 }
 
-static void move_soldiers(void)
+static void explode_grenade(struct grenade *o)
+{
+	int i;
+
+	for (i = 0; i < GRENADE_FRAGMENTS; i++) {
+		int angle = random_num(127);
+		fire_bullet(&player, o->x >> 8, o->y >> 8, angle);
+		screen_changed = 1;
+	}
+}
+
+static void draw_grenade(struct grenade *o)
+{
+	int x1 = o->x >> 8;
+	int y1 = o->y >> 8;
+	int x2 = (o->x >> 8) + 1;
+	int y2 = (o->y >> 8) + 1;
+
+	if (x1 < 0 || x2 < 0 || x1 >= LCD_XSIZE || x2 >= LCD_XSIZE)
+		return;
+	if (y1 < 0 || y2 < 0 || y1 >= LCD_YSIZE || y2 >= LCD_YSIZE)
+		return;
+	FbColor(WHITE);
+	FbMove(x1, y1);
+	FbRectangle(2, 2);
+}
+
+static void move_grenade(struct grenade *o)
+{
+	short nx, ny;
+	nx = o->x + o->vx;
+	ny = o->y + o->vy;
+
+	/* Bounce off exterior walls */
+	if (nx < 0) {
+		nx = 1;
+		o->vx = abs(o->vx);
+	} else if (nx > (127 << 8)) {
+		nx = (127 << 8) - 1;
+		o->vx = -abs(o->vx);
+	}
+	if (ny < 0) {
+		ny = 1;
+		o->vy = abs(o->vy);
+	} else if (ny > ((127 - 16) << 8)) {
+		ny = ((127 - 16) << 8) - 1;
+		o->vy = -abs(o->vy);
+	}
+	o->x = nx;
+	o->y = ny;
+
+	if (o->fuse > 0) {
+		o->fuse--;
+		/* Explode when fuse reaches 1, not 0. This is so
+		 * that there's one more tick after the explosion
+		 * so screen_changed gets set to 1 and the explosion
+		 * gets erased. Otherwise the explosion would sit there
+		 * until something else moved and changed the screen.
+		 */
+		if (o->fuse == 1)
+			explode_grenade(o);
+	}
+	screen_changed = 1;
+}
+
+static void move_grenades(void)
+{
+	for (int i = 0; i < ngrenades; i++)
+		move_grenade(&grenade[i]);
+
+	/* Do this loop backwards so the memmove() in remove_grenade()
+	 * has less work to do.
+	 */
+	for (int i = ngrenades - 1; i >= 0; i--)
+		if (grenade[i].fuse == 0)
+			remove_grenade(&grenade[i]);
+}
+
+static void move_objects(void)
 {
 	int room = player.room;
 	int n = castle.room[room].nobjs;
@@ -2456,8 +2602,9 @@ static void move_soldiers(void)
 	for (int i = 0; i < n; i++) {
 		int j = castle.room[room].obj[i];
 		struct gulag_object *o = &go[j];
-		if (o->type == TYPE_SOLDIER)
-			move_soldier(o);
+		gulag_object_moving_function move = objconst[o->type].move;
+		if (move)
+			move(o);
 	}
 }
 
@@ -2465,7 +2612,8 @@ static void gulag_run()
 {
 	check_buttons();
 	draw_screen();
-	move_soldiers();
+	move_objects();
+	move_grenades();
 }
 
 static void gulag_exit()
