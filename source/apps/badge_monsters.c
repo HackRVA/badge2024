@@ -21,6 +21,8 @@ Dustin Firebaugh <dafirebaugh@gmail.com>
 #include "menu.h"
 #include "badge.h"
 #include "init.h"
+#include "utils.h"
+#include "key_value_storage.h"
 
 #include "dynmenu.h"
 #include "badge_monsters.h"
@@ -137,7 +139,7 @@ struct monster
 {
     char name[20];
     int npoints;
-    short status;
+    int status;
     int color;
     const struct point *drawing;
     char blurb[128];
@@ -658,17 +660,40 @@ static void game_menu(void)
     app_state = RENDER_SCREEN;
 }
 
-static void load_from_flash(void){
-    /*
-    load from flash should load a list of monsterIDs that have been enabled
-    for each monsterID, it should run enable_monster() function
-    */
+static char *key_from_monster(const struct monster *m, char *key, size_t len)
+{
+    snprintf(key, len, "monster/%s", m->name);
+    
+    return key;
 }
 
-static void save_to_flash(void){
-    /*
-    save to flash should save some form of a list of monsterIDs that have been unlocked
-    */
+static void save_if_enabled(const struct monster *m)
+{
+    if (m->status == 0) {
+        return;
+    }
+
+    char key[20];
+
+    flash_kv_store_int(key_from_monster(m, key, sizeof(key)), m->status);   
+}
+
+static void save_to_flash(void)
+{
+    for (struct monster *m = monsters; PART_OF_ARRAY(monsters, m); m++) {
+        save_if_enabled(m);
+    }
+}
+
+static void load_from_flash(void)
+{
+    char key[20];
+
+    for (struct monster *m = monsters; PART_OF_ARRAY(monsters, m); m++) {
+        if (!flash_kv_get_int(key_from_monster(m, key, sizeof(key)), &m->status)) {
+            m->status = 0;
+        }
+    }
 }
 
 static void ir_packet_callback(const IR_DATA *data)
@@ -712,10 +737,11 @@ static void app_init(void)
     smiley_y = LCD_XSIZE / 2;
     nmonsters = ARRAYSIZE(monsters);
     nvendor_monsters = ARRAYSIZE(vendor_monsters);
+
+    load_from_flash();
     initial_mon = BADGE_ID % nmonsters;
     current_monster = initial_mon;
     enable_monster(initial_mon);
-    load_from_flash();
 }
 
 int badge_monsters_cb(void)
