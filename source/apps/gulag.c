@@ -1910,7 +1910,19 @@ static void check_buttons()
 {
 	static int firing_timer = 0;
 	int down_latches = button_down_latches();
+	int rotary_switch = button_get_rotation(0);
 	int n;
+
+	if (rotary_switch) {
+		short new_angle = player.angle - 3 * rotary_switch;
+		if (new_angle > 127)
+			new_angle -= 127;
+		if (new_angle < 0)
+			new_angle += 127;
+		player.oldangle = player.angle;
+		player.angle = (unsigned char) new_angle;
+		screen_changed = 1;
+	}
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		fire_gun(&player);
