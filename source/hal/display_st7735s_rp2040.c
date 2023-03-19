@@ -57,8 +57,6 @@ void display_init_device(void) {
     static lcd_t lcd = {
         .width = 128,
         .height = 160,
-        // need to check these - as far as I can tell, they aren't published.
-        // Framebuffer _should_ be large enough already and the old driver just wrote the extra columns/rows anyway.
         .width_offset = 0,
         .height_offset = 0,
         .pin_reset = BADGE_GPIO_DISPLAY_RESET,
