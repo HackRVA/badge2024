@@ -9,6 +9,7 @@
 #include "random.h"
 #include "string.h"
 #include "bline.h"
+#include "a_star.h"
 
 /* Program states.  Initial state is GULAG_INIT */
 enum gulag_state_t {
@@ -27,6 +28,7 @@ enum gulag_state_t {
 #endif
 
 static const short player_speed = 512;
+static const short soldier_speed = 512;
 static int game_timer = 0;
 
 static struct player {
@@ -37,6 +39,27 @@ static struct player {
 	unsigned char current_room;
 	char anim_frame, prev_frame;
 } player;
+
+#define COST_XDIM 32
+#define COST_YDIM 32
+#define ASTAR_MAXNODES (COST_XDIM * COST_YDIM)
+/* A-star cost heuristic, see init_room_cost(), how soldiers avoid walls. */
+static unsigned char room_cost[COST_YDIM][COST_XDIM];
+
+/* Workspace for A* algorithm. */
+static unsigned char nodeset1[A_STAR_NODESET_SIZE(ASTAR_MAXNODES)];
+static unsigned char nodeset2[A_STAR_NODESET_SIZE(ASTAR_MAXNODES)];
+static unsigned char scoremap1[A_STAR_SCOREMAP_SIZE(ASTAR_MAXNODES)];
+static unsigned char scoremap2[A_STAR_SCOREMAP_SIZE(ASTAR_MAXNODES)];
+static unsigned char nodemap[A_STAR_NODEMAP_SIZE(ASTAR_MAXNODES)];
+static unsigned char a_star_path1[A_STAR_PATH_SIZE(ASTAR_MAXNODES)];
+static unsigned char a_star_path2[A_STAR_PATH_SIZE(ASTAR_MAXNODES)];
+static struct a_star_working_space astar_workspace = {
+	{ nodeset1, nodeset2 },
+	nodemap,
+	{ scoremap1, scoremap2 },
+	{ a_star_path1, a_star_path2 },
+};
 
 /* These wallx[] arrays define internal walls in rooms.  There are pairs of numbers,
  * with a -1 sentinel value  at the end.  The pairs of numbers define horizontal
@@ -197,12 +220,23 @@ struct gulag_soldier_data {
 	uint16_t keys:1;
 	uint16_t weapon:2;
 	uint16_t corpse_direction:1; /* left or right corpse variant */
+	uint16_t sees_player_now:1;
 	char anim_frame;
 	char prev_frame;
 	/* Careful, char is *unsigned* by default on the badge! */
 	signed char last_seen_x, last_seen_y; /* location player was last seen at */
-	char sees_player_now;
 	unsigned char angle; /* 0 - 127 */
+	char state;
+#define SOLDIER_STATE_RESTING 0
+#define SOLDIER_STATE_MOVING 1
+#define SOLDIER_STATE_CHASING 3
+#define SOLDIER_STATE_FLEEING 4
+#define SOLDIER_STATE_SHOOTING 5
+#define SOLDIER_STATE_HANDSUP 6
+	unsigned char destx, desty;
+#define SOLDIER_PATH_LENGTH 100
+	unsigned char pathx[SOLDIER_PATH_LENGTH], pathy[SOLDIER_PATH_LENGTH];
+	unsigned char current_step, nsteps;
 };
 
 struct gulag_chest_data {
@@ -648,6 +682,9 @@ static void draw_desk(struct gulag_object *o)
 	FbHorizontalLine(x + 11, y + 8, x + 14, y + 8);
 }
 
+static int astarx_to_8dot8x(int x);
+static int astary_to_8dot8y(int x);
+
 static void draw_soldier(struct gulag_object *o)
 {
 	FbColor(GREEN);
@@ -655,6 +692,20 @@ static void draw_soldier(struct gulag_object *o)
 #if 0
 		FbMove(o->x >> 8, o->y >> 8);
 		FbRectangle(objconst[TYPE_SOLDIER].w, objconst[TYPE_SOLDIER].h);
+#endif
+#if 0
+	FbColor(MAGENTA);
+	for (int i = 0; i < o->tsd.soldier.nsteps; i++) {
+		int x, y;
+
+		x = o->tsd.soldier.pathx[i];
+		y = o->tsd.soldier.pathy[i];
+		x = astarx_to_8dot8x(x);
+		y = astary_to_8dot8y(y);
+		x = x >> 8;
+		y = y >> 8;
+		FbPoint(x, y);
+	}
 #endif
 }
 
@@ -987,6 +1038,11 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.last_seen_y = -1;
 	go[n].tsd.soldier.sees_player_now = 0;
 	go[n].tsd.soldier.angle = random_num(128);
+	go[n].tsd.soldier.state = SOLDIER_STATE_RESTING;
+	go[n].tsd.soldier.nsteps = 0;
+	go[n].tsd.soldier.current_step = 0;
+	memset(go[n].tsd.soldier.pathx, 0, sizeof(go[n].tsd.soldier.pathx));
+	memset(go[n].tsd.soldier.pathy, 0, sizeof(go[n].tsd.soldier.pathy));
 }
 
 static void add_soldier_to_random_room(struct castle *c)
@@ -1170,12 +1226,138 @@ static void init_player(struct player *p, int start_room)
 	p->prev_frame = 0;
 }
 
+static int astarx_to_8dot8x(int x)
+{
+	const int dx = (120 << 8) / 32;
+	const int zx = (2 << 8);
+
+	return zx + x * dx;
+}
+
+static int astary_to_8dot8y(int y)
+{
+	const int dy = ((127 - 16 - 16) << 8) / 32;
+	const int zy = (2 << 8);
+
+	return zy + y * dy;
+}
+
+static int fpdot8x_to_astarx(int x)
+{
+	const int dx = (120 << 8) / 32;
+	const int zx = (2 << 8);
+	x = x - zx;
+	if (x < 0)
+		x = 0;
+	return x / dx;
+}
+
+static int fpdot8y_to_astary(int y)
+{
+	const int dy = ((127 - 16 - 16) << 8) / 32;
+	const int zy = (2 << 8);
+	y = y - zy;
+	if (y < 0)
+		y = 0;
+	return y / dy;
+}
+
+/* given an a-star node (in our case, a pointer into room_cost array),
+ * return x y coords into room_cost array */
+void astar_node_get_xy(void *node, int *x, int *y)
+{
+	void *origin = (void *) room_cost;
+	*y = (node - origin) / COST_XDIM;
+	*x = (node - origin) % COST_XDIM;
+}
+
+/* Fill in room_cost[][] upon entry into a room.  It does bounding box checks vs.
+ * walls in the room to set things up to allow the soldiers to avoid the
+ * walls.  */
+static void init_room_cost(struct castle *c, int room)
+{
+	int x, y, x1, y1, x2, y2, rc;
+
+	for (y = 0; y < COST_YDIM; y++) {
+		for (x = 0; x < COST_XDIM; x++) {
+			/* Check soldier bounding box against interior walls */
+			x1 = astarx_to_8dot8x(x);
+			y1 = astary_to_8dot8y(y);
+			x2 = x1 + (8 << 8);
+			y2 = y1 + (16 << 8);
+			rc = bbox_interior_wall_collision(c, room, x1, y1, x2, y2);
+			if (rc)
+				room_cost[y][x] = 255;
+			else
+				room_cost[y][x] = 0;
+		}
+	}
+}
+
+/* A-star callback, returns manhattan distance between nodes,
+ * which the nodes will be pointers into room_cost[][] array
+ */
+static int distance_fn(__attribute__((unused)) void *context, void *n1, void *n2)
+{
+	int x1, y1, x2, y2;
+
+	astar_node_get_xy(n1, &x1, &y1);
+	astar_node_get_xy(n2, &x2, &y2);
+	return abs(x1 - x2) + abs(y1 - y2);
+}
+
+/* A-star callback, returns the estimated cost to travel between two nodes. */
+static int cost_fn(__attribute__((unused)) void *context, void *n1, void *n2)
+{
+	unsigned char c1, c2;
+	int c;
+
+	/* The nodes will be pointers into room_cost[][] array */
+	c1 = *(unsigned char *) n1;
+	c2 = *(unsigned char *) n2;
+	c = c1 + c2 + 1; /* plus 1 so cost is not zero */
+	return c;
+}
+
+/* Callback function for A-star to iterate over a node's neighbors */
+static void *neighbor_fn(__attribute__((unused)) void *context, void *node, int neighbor)
+{
+	/* 8 x/y offsets for N, NE, E, SE, S, SW, W, NW */
+	const char xo[] = { 0, 1, 1, 1, 0, -1, -1, -1 };
+	const char yo[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
+	int x, y, nx, ny;
+	int count = 0;
+	unsigned char *n;
+
+	if (neighbor > 7 || neighbor < 0)
+		return NULL;
+	astar_node_get_xy(node, &x, &y);
+
+	/* Each node has up to eight neighbors, we need to return the right one */
+	for (int i = 0; i < 8; i++) {
+		nx = x + xo[i];
+		ny = y + yo[i];
+		if (nx < 0 || nx >= COST_XDIM) /* no neighbor this way */
+			continue;
+		if (ny < 0 || ny >= COST_YDIM) /* no neighbor this way */
+			continue;
+		n = &room_cost[ny][nx];
+		if (*n == 255) /* wall, not a viable neighbor (aka infinite cost) */
+			continue;
+		if (count == neighbor) /* viable neighbor node this way */
+			return n;
+		count++;
+	}
+	return NULL;
+}
+
 static void gulag_init(void)
 {
 	gulag_nobjs = 0;
 	memset(go, 0, sizeof(go));
 	init_castle(&castle);
 	init_player(&player, castle.start_room);
+	init_room_cost(&castle, player.room);
 	print_castle(&castle, &player);
 	FbInit();
 	FbClear();
@@ -1333,6 +1515,7 @@ static void player_enter_room(struct player *p, int room, int x, int y)
 	p->y = y;
 	FbClear();
 	screen_changed = 1;
+	init_room_cost(&castle, room);
 #if TARGET_SIMULATOR
 	print_castle_floor(&castle, p, get_room_floor(room));
 #endif
@@ -1843,7 +2026,6 @@ static void draw_player(struct player *p)
 	y = (short) (dy >> 8);
 	FbColor(CYAN);
 	draw_plus(x, y);
-
 }
 
 static void draw_room_objs(struct castle *c, int room)
@@ -1873,6 +2055,32 @@ static void draw_interior_walls(struct castle *c, int room)
 	}
 }
 
+#if 0
+static void draw_cost_dots(void)
+{
+	int dx, dy, px, py;
+
+	dx = (120 << 8) / 32;
+	dy = ((127 - 16 - 16) << 8) / 32;
+
+	px = (2 << 8);
+	py = (2 << 8);
+	FbColor(MAGENTA);
+	for (int y = 0; y < COST_YDIM; y++) {
+		for (int x = 0; x < COST_XDIM; x++) {
+			if (room_cost[y][x])
+				FbColor(RED);
+			else
+				FbColor(GREEN);
+			FbPoint(px >> 8, py >> 8);
+			px += dx;
+		}
+		px = (2 << 8);
+		py += dy;
+	}
+}
+#endif
+
 static void draw_room(struct castle *c, int room)
 {
 	if (has_top_door(c, room)) {
@@ -1900,6 +2108,7 @@ static void draw_room(struct castle *c, int room)
 		FbVerticalLine(127, 0, 127, 127 - 16);
 	}
 	draw_interior_walls(c, room);
+	/* draw_cost_dots(); */
 	draw_room_objs(c, room);
 }
 
@@ -1994,13 +2203,121 @@ static void soldier_look_for_player(struct gulag_object *s, struct player *p)
 
 static void move_soldier(struct gulag_object *s)
 {
-#define SOLDIER_MOVE_THROTTLE 10
+	int dx, dy, angle, newx, newy;
+#define SOLDIER_MOVE_THROTTLE 2
 
 	/* only move every nth tick, and move every soldier on a different tick */
 	int n = s - &go[0];
 	if (((game_timer + n) % SOLDIER_MOVE_THROTTLE) != 0)
 		return;
 	soldier_look_for_player(s, &player);
+
+	switch (s->tsd.soldier.state) {
+	case SOLDIER_STATE_RESTING:
+		if (random_num(1000) < 900) /* 90% chance he continues to do nothing */
+			break;
+		/* Or choose a destination and start moving there. */
+		do {
+			dx = random_num(COST_XDIM);
+			dy = random_num(COST_YDIM);
+		} while (room_cost[dy][dx] != 0);
+		s->tsd.soldier.destx = dx;
+		s->tsd.soldier.desty = dy;
+		s->tsd.soldier.nsteps = 0;
+		s->tsd.soldier.current_step = 0;
+		s->tsd.soldier.state = SOLDIER_STATE_MOVING;
+		/* TODO: maybe if we see the player, do something else. */
+		break;
+	case SOLDIER_STATE_MOVING:
+		/* Have we consumed all pathfinding steps? */
+		if (s->tsd.soldier.current_step == s->tsd.soldier.nsteps) {
+			/* Have we arrived at our desitination? */
+			dx = astarx_to_8dot8x(s->tsd.soldier.destx);
+			dy = astary_to_8dot8y(s->tsd.soldier.desty);
+			dx = abs(dx - s->x);
+			dy = abs(dy - s->y);
+			if (dx <= (1 << 8) + (1 << 7) && dy <= (1 << 8) + (1 << 7)) {
+				/* We have arrived at our destination */
+				s->tsd.soldier.state = SOLDIER_STATE_RESTING;
+			} else {
+				/* We need more pathfinding steps */
+				int sx = fpdot8x_to_astarx(s->x);
+				int sy = fpdot8y_to_astary(s->y);
+				int gx = s->tsd.soldier.destx;
+				int gy = s->tsd.soldier.desty;
+				void *start = &room_cost[sy][sx];
+				void *goal = &room_cost[gy][gx];
+				struct a_star_path *path = a_star(room_cost, &astar_workspace, start, goal,
+						ASTAR_MAXNODES, distance_fn, cost_fn, neighbor_fn);
+				if (!path) {
+					/* We do not expect this to happen. */
+					s->tsd.soldier.state = SOLDIER_STATE_RESTING;
+					s->tsd.soldier.nsteps = 0;
+					s->tsd.soldier.current_step = 0;
+					printf("path finding failed! (%d,%d) to (%d, %d)\n", sx, sy, gx, gy);
+					printf("costs are %d, %d\n", room_cost[sy][sx], room_cost[gy][gx]);
+					/* FIXME: this will cause a bad cycle where soldier
+					 * constantly fails at pathfinding */
+					break;
+				}
+#if 0
+				/* Debug code */
+				for (int i = 0; i < path->node_count; i++) {
+					int x, y;
+
+					astar_node_get_xy(path->path[i], &x, &y);
+					printf("xy = %d, %d\n", x, y);
+				}
+				printf("------\n");
+#endif
+				/* Copy up to SOLDIER_PATH_LENGTH steps into the soldiers cached pathing data */
+				s->tsd.soldier.nsteps = path->node_count > SOLDIER_PATH_LENGTH ? SOLDIER_PATH_LENGTH : path->node_count;
+				for (int i = 0; i < s->tsd.soldier.nsteps; i++) {
+					int x, y;
+
+					astar_node_get_xy(path->path[i], &x, &y);
+					s->tsd.soldier.pathx[i] = x;
+					s->tsd.soldier.pathy[i] = y;
+				}
+				s->tsd.soldier.current_step = 1; /* We're standing on zero already */
+			}
+		} else { /* move in the direction of the next pathfinding step */
+			dx = astarx_to_8dot8x(s->tsd.soldier.pathx[s->tsd.soldier.current_step]);
+			dy = astary_to_8dot8y(s->tsd.soldier.pathy[s->tsd.soldier.current_step]);
+
+			dx = (dx >> 8) - (s->x >> 8);
+			dy = (dy >> 8) - (s->y >> 8);
+
+			angle = arctan2(dy, -dx);
+			if (angle < 0)
+				angle += 128;
+			s->tsd.soldier.angle = (unsigned char) angle;
+			newx = ((-cosine(angle) * soldier_speed) >> 8) + s->x;
+			newy = ((sine(angle) * soldier_speed) >> 8) + s->y;
+
+			s->x = newx;
+			s->y = newy;
+			/* Have we arrived at our next path step? */
+			dx = astarx_to_8dot8x(s->tsd.soldier.pathx[s->tsd.soldier.current_step]);
+			dy = astary_to_8dot8y(s->tsd.soldier.pathy[s->tsd.soldier.current_step]);
+			dx = abs(dx - s->x);
+			dy = abs(dy - s->y);
+			if (dx <= (1 << 8) + (1 << 7) && dy <= (1 << 8) + (1 << 7)) {
+				/* Yes, we have arrived at our next path step, advance to the next one. */
+				s->tsd.soldier.current_step++;
+				if (s->tsd.soldier.current_step > s->tsd.soldier.nsteps) /* paranoia, shouldn't happen */
+					s->tsd.soldier.current_step = s->tsd.soldier.nsteps;
+			}
+			screen_changed = 1;
+		}
+		break;
+	case SOLDIER_STATE_CHASING:
+	case SOLDIER_STATE_FLEEING:
+	case SOLDIER_STATE_SHOOTING:
+	case SOLDIER_STATE_HANDSUP:
+	default:
+		break;
+	}
 }
 
 static void move_soldiers(void)
