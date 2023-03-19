@@ -298,6 +298,23 @@ static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, in
 	return 0;
 }
 
+/* Returns 1 if the two bounding boxes overlap, otherwise 0.
+ * Assumes bb1x1 < bb1x2, bb1y1 < bb1y2, bb2x1 < bb2x2, bb2y1 < bb2y2
+ */
+static int bb_bb_collision(int bb1x1, int bb1y1, int bb1x2, int bb1y2,
+				int bb2x1, int bb2y1, int bb2x2, int bb2y2)
+{
+	if (bb1x2 < bb2x1) /* bb1 is entirely left of bb2 */
+		return 0;
+	if (bb1x1 > bb2x2) /* bb1 is entirely right of bb2 */
+		return 0;
+	if (bb1y2 < bb2y1) /* bb1 is entirely above bb2 */
+		return 0;
+	if (bb1y1 > bb2y2) /* bb1 is entirely below bb2 */
+		return 0;
+	return 1; /* bb1 and bb2 must overlap */
+}
+
 struct gulag_object_typical_data {
 	char w, h; /* width, height of bounding box */
 	gulag_object_drawing_function draw;
@@ -1213,9 +1230,78 @@ static void advance_player_animation(struct player *p)
 	}
 }
 
+/* Returns -1 if no objects collided, or the ID of the object we collided with */
+static int player_object_collision(struct castle *c, struct player *p, int newx, int newy)
+{
+	const int n = c->room[p->room].nobjs;
+	int w, h, bb1x1, bb1y1, bb1x2, bb1y2, bb2x1, bb2y1, bb2x2, bb2y2;
+
+	for (int i = 0; i < n; i++) {
+		int j = c->room[p->room].obj[i];
+		struct gulag_object *o = &go[j];
+		int t = o->type;
+
+		switch (t) {
+		case TYPE_STAIRS_UP:
+			/* Fallthrough */
+		case TYPE_STAIRS_DOWN:
+			break; /* stairs handled elsewhere */
+		case TYPE_DESK: /* Fallthrough */
+		case TYPE_CHEST: /* Fallthrough */
+		case TYPE_SOLDIER: /* Fallthrough */
+			w = objconst[t].w;
+			h = objconst[t].h;
+
+			bb1x1 = newx - (4 << 8);
+			bb1y1 = newy - (8 << 8);
+			bb1x2 = newx + (5 << 8);
+			bb1y2 = newy + (9 << 8);
+
+			bb2x1 = o->x;
+			bb2y1 = o->y;
+			bb2x2 = o->x + (w << 8);
+			bb2y2 = o->y + (h << 8);
+
+			if (bb_bb_collision(bb1x1, bb1y1, bb1x2, bb1y2, bb2x1, bb2y1, bb2x2, bb2y2))
+				return j;
+			break;
+		default:
+			break;
+		}
+	}
+	return 0;
+}
+
+static void teleport_soldier(__attribute__((unused)) struct gulag_object *soldier)
+{
+	/* TODO: fill this in */
+}
+
+static void check_player_soldier_entanglement(struct player *p, int s)
+{
+	struct gulag_object *soldier = &go[s];
+	int px = p->x - (4 << 8);
+	int direction, dx;
+
+	if (px < soldier->x) {
+		direction = 1; /* shove soldier right */
+		dx = soldier->x - px;
+	} else {
+		direction = -1; /* shove soldier left */
+		dx = px - soldier->x;
+	}
+	if (dx < (9 << 8)) {
+		int amount = direction * ((9 << 8) - dx);
+		soldier->x += amount;
+		if (soldier->x <= 0 || soldier->x >= 127 - 8)
+			teleport_soldier(soldier);
+	}
+}
+
 static void check_buttons()
 {
 	int down_latches = button_down_latches();
+	int n;
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		/* Pressing the button exits the program. You probably want to change this. */
@@ -1256,6 +1342,31 @@ static void check_buttons()
 				newx + (5 << 8), newy + (8 << 8))) {
 			newx = player.x;
 			newy = player.y;
+		}
+
+		n = player_object_collision(&castle, &player, newx, newy);
+		if (n >= 0) { /* Collision with some object... */
+			switch (go[n].type) {
+			case TYPE_STAIRS_UP: /* fallthrough */
+			case TYPE_STAIRS_DOWN:  /* fallthrough */
+				break; /* handled elsewhere */
+			/* Chests and desks don't block movement so player isn't trapped by furniture. */
+			case TYPE_CHEST:
+				/* Here, maybe trigger searching chest, or unlocking with keys */
+				break;
+			case TYPE_DESK:
+				/* Here, maybe trigger searching desk, or unlocking with keys */
+				break;
+			case TYPE_SOLDIER: /* Soldiers block player movement */
+				/* Here, maybe trigger soldier action? */
+				newx = player.x;
+				newy = player.y;
+
+				check_player_soldier_entanglement(&player, n);
+				break;
+			default:
+				break;
+			}
 		}
 
 		player.oldx = player.x;
