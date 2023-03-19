@@ -1,10 +1,12 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
 #include "trig.h"
+#include "random.h"
 
 /* Program states.  Initial state is GULAG_INIT */
 enum gulag_state_t {
@@ -29,16 +31,251 @@ static struct player {
 	short x, y; /* 8.8 signed fixed point */
 	short oldx, oldy;
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
+	unsigned char current_room;
 } player;
+
+#define CASTLE_FLOORS 6
+#define CASTLE_ROWS 3
+#define CASTLE_COLS 4
+#define NUM_ROOMS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS)
+
+struct room_spec {
+	/* Each room has up to 4 doors (top, bottom, left, and right).
+	 * They are encoded into two bits.  Because the rooms are in a
+	 * grid, each room only stores the presence/absence of the left
+	 * and top doors, and determines the presense/absence of the right
+	 * and bottom doors by examining the neighboring room to the right
+	 * and below for left/top doors, respectively.
+	 */
+	int doors : 2;
+#define HAS_LEFT_DOOR (1 << 0)
+#define HAS_TOP_DOOR (1 << 1)
+};
+
+static struct castle {
+	struct room_spec room[NUM_ROOMS];
+	int exit_room;
+	int start_room;
+	int stairs_down[CASTLE_FLOORS];
+	int stairs_up[CASTLE_FLOORS];
+} castle;
 
 static enum gulag_state_t gulag_state = GULAG_INIT;
 static int screen_changed = 0;
 static int intro_offset = 0;
 static int flag_offset = 0;
 
-static void init_player(struct player *p)
+static int room_no(int floor, int col, int row)
 {
-	p->room = 0;
+	return floor * (CASTLE_ROWS * CASTLE_COLS) + col * CASTLE_ROWS + row;
+}
+
+static int get_room_floor(int room)
+{
+	return room / (CASTLE_COLS * CASTLE_ROWS);
+}
+
+static int get_room_col(int room)
+{
+	int r = room % (CASTLE_COLS * CASTLE_ROWS);
+	return r / CASTLE_ROWS;
+}
+
+static int get_room_row(int room)
+{
+	int r = room % (CASTLE_COLS * CASTLE_ROWS);
+	return r % CASTLE_ROWS;
+}
+
+static int has_left_door(struct castle *c, int room)
+{
+	return c->room[room].doors & HAS_LEFT_DOOR;
+}
+
+static int has_top_door(struct castle *c, int room)
+{
+	return c->room[room].doors & HAS_TOP_DOOR;
+}
+
+static int has_bottom_door(struct castle *c, int room)
+{
+	int row;
+
+	row = get_room_row(room);
+	if (row == CASTLE_ROWS - 1)
+		return (room == c->exit_room);
+	return (c->room[room + 1].doors & HAS_TOP_DOOR);
+}
+
+static int has_right_door(struct castle *c, int room)
+{
+	int col;
+
+	col = get_room_col(room);
+	if (col == CASTLE_COLS - 1)
+		return room == castle.exit_room;
+	return (c->room[room + CASTLE_ROWS].doors & HAS_LEFT_DOOR);
+}
+
+static void add_start_room(struct castle *c)
+{
+	int n, row, col;
+
+	random_insecure_bytes((uint8_t *) &n, sizeof(n));
+	if (n < 0)
+		n = -n;
+	row = n % CASTLE_ROWS;
+	random_insecure_bytes((uint8_t *) &n, sizeof(n));
+	if (n < 0)
+		n = -n;
+	col = n % CASTLE_COLS;
+	c->start_room = room_no(CASTLE_FLOORS - 1, col, row);
+}
+
+static void add_exit_room(struct castle *c)
+{
+	(void) c;
+}
+
+static void add_stairs(struct castle *c)
+{
+	(void) c;
+}
+
+static void add_doors(struct castle *c, int floor, int start_col, int end_col, int start_row, int end_row)
+{
+	int rows = end_row - start_row + 1;
+	int cols = end_col - start_col + 1;
+	int r1, r2, r3, r4, c1, c2, c3, c4, room;
+
+	if (rows == 1 && cols == 1)
+		return;
+	if (rows == 1 && cols == 2) {
+		room = room_no(floor, end_col, start_row);
+		c->room[room].doors |= HAS_LEFT_DOOR;
+		return;
+	}
+	if (rows == 2 && cols == 1) {
+		room = room_no(floor, start_col, end_row);
+		c->room[room].doors |= HAS_TOP_DOOR;
+		return;
+	}
+
+	if (cols >= rows) {
+		/* more columns than rows, choose a column randomly and add a door */
+		random_insecure_bytes((uint8_t *) &c3, sizeof(c3));
+		if (c3 < 0)
+			c3 = -c3;
+		c3 = c3 % (cols - 1) + start_col + 1;
+		r3 = rows / 2 + start_row;
+		room = room_no(floor, c3, r3);
+		c->room[room].doors |= HAS_LEFT_DOOR;
+
+		/* Subdivide */
+		c1 = start_col;
+		c2 = c3 - 1;
+		if (c2 < c1)
+			c2 = c1;
+		c4 = end_col;
+		add_doors(c, floor, c1, c2, start_row, end_row);
+		add_doors(c, floor, c3, c4, start_row, end_row);
+		return;
+	}
+
+	/* more rows than columns, choose a row randomly and add a door */
+	random_insecure_bytes((uint8_t *) &r3, sizeof(r3));
+	if (r3 < 0)
+		r3 = -r3;
+	r3 = r3 % (rows - 1) + start_row + 1;
+	c3 = cols / 2 + start_col;
+	room = room_no(floor, c3, r3);
+	c->room[room].doors |= HAS_TOP_DOOR;
+
+	/* Subdivide */
+	r1 = start_row;
+	r2 = r3 - 1;
+	if (r2 < r1)
+		r2 = r1;
+	r4 = end_row;
+	add_doors(c, floor, start_col, end_col, r1, r2);
+	add_doors(c, floor, start_col, end_col, r3, r4);
+}
+
+static void init_castle(struct castle *c)
+{
+	int i;
+
+	/* Start with no doors. */
+	for (i = 0; i < NUM_ROOMS; i++)
+		c->room[i].doors = 0;
+	for (i = 0; i < CASTLE_FLOORS; i++)
+		add_doors(&castle, i, 0, CASTLE_COLS - 1, 0, CASTLE_ROWS - 1);
+	add_start_room(c);
+	add_exit_room(c);
+	add_stairs(&castle);
+}
+
+#if TARGET_SIMULATOR
+static void print_castle_row(struct castle *c, struct player *p, int f, int r)
+{
+	int room;
+	char player_marker;
+
+	for (int i = 0; i < CASTLE_COLS; i++) {
+		room = room_no(f, i, r);
+		if (has_top_door(c, room))
+			printf("+-  -");
+		else
+			printf("+----");
+	}
+	printf("+\n");
+
+	for (int i = 0; i < CASTLE_COLS; i++)
+		printf("|%4d", room_no(f, i, r));
+	printf("|\n");
+
+	for (int i = 0; i < CASTLE_COLS; i++) {
+		room = room_no(f, i, r);
+		if (room == p->room)
+			player_marker = '*';
+		else
+			player_marker = ' ';
+		if (has_left_door(c, room))
+			printf("  %c  ", player_marker);
+		else
+			printf("| %c  ", player_marker);
+	}
+	printf("|\n");
+
+	for (int i = 0; i < CASTLE_COLS; i++)
+		printf("|    ");
+	printf("|\n");
+}
+
+static void print_castle_floor(struct castle *c, struct player *p, int f)
+{
+	printf("\n\nFLOOR %d\n", f);
+	for (int i = 0; i < CASTLE_ROWS; i++)
+		print_castle_row(c, p, f, i);
+	for (int i = 0; i < CASTLE_COLS; i++)
+		printf("+----");
+	printf("+\n");
+}
+#endif
+
+#if TARGET_SIMULATOR
+static void print_castle(struct castle *c, struct player *p)
+{
+	for (int i = 0; i < CASTLE_FLOORS; i++)
+		print_castle_floor(c, p, i);
+}
+#else
+#define print_castle(c, p)
+#endif
+
+static void init_player(struct player *p, int start_room)
+{
+	p->room = start_room;
 	p->x = 20 << 8;
 	p->y = 20 << 8;
 	p->oldx = p->x;
@@ -49,7 +286,9 @@ static void init_player(struct player *p)
 
 static void gulag_init(void)
 {
-	init_player(&player);
+	init_castle(&castle);
+	init_player(&player, castle.start_room);
+	print_castle(&castle, &player);
 	FbInit();
 	FbClear();
 	gulag_state = GULAG_INTRO;
@@ -171,6 +410,82 @@ static void gulag_flag(void)
 		gulag_state = GULAG_RUN;
 }
 
+static void player_wins(void)
+{
+#if TARGET_SIMULATOR
+	printf("You won!\n");
+	exit(0);
+#endif
+}
+
+static void check_doors(struct castle *c, struct player *p)
+{
+	int room = p->room;
+	int x, y, f, row, col;
+
+	x = p->x >> 8;
+	y = p->y >> 8;
+	f = get_room_floor(room);
+	row = get_room_row(room);
+	col = get_room_col(room);
+	if (has_top_door(c, room)) {
+		if (y <= 10 && x > 60 && x < 68) {
+			row--;
+			if (row < 0)
+				player_wins();
+			p->room = room_no(f, col, row);
+			FbClear();
+			p->y = (127 - 16 - 12) << 8;
+#if TARGET_SIMULATOR
+			print_castle_floor(c, p, f);
+#endif
+			return;
+		}
+	}
+	if (has_bottom_door(c, room)) {
+		if (y >= 127 - 16 - 10 && x > 60 && x < 68) {
+			row++;
+			if (row >= CASTLE_ROWS)
+				player_wins();
+			p->room = room_no(f, col, row);
+			FbClear();
+			p->y = 18 << 8;
+#if TARGET_SIMULATOR
+			print_castle_floor(c, p, f);
+#endif
+			return;
+		}
+	}
+	if (has_left_door(c, room)) {
+		if (x < 6 && y > 54 && y < 74) {
+			col--;
+			if (col < 0)
+				player_wins();
+			p->room = room_no(f, col, row);
+			FbClear();
+			p->x = 117 << 8;
+#if TARGET_SIMULATOR
+			print_castle_floor(c, p, f);
+#endif
+			return;
+		}
+	}
+	if (has_right_door(c, room)) {
+		if (x >121 && y > 54 && y < 74) {
+			col++;
+			if (col >= CASTLE_COLS)
+				player_wins();
+			p->room = room_no(f, col, row);
+			FbClear();
+			p->x = 10 << 8;
+#if TARGET_SIMULATOR
+			print_castle_floor(c, p, f);
+#endif
+			return;
+		}
+	}
+}
+
 static void check_buttons()
 {
     int down_latches = button_down_latches();
@@ -210,6 +525,7 @@ static void check_buttons()
 		player.x = (short) newx;
 		player.y = (short) newy;
 		screen_changed = 1;
+		check_doors(&castle, &player);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 	}
 }
@@ -299,12 +615,32 @@ static void draw_player(struct player *p)
 
 }
 
-static void draw_room(void)
+static void draw_room(struct castle *c, int room)
 {
-	FbHorizontalLine(0, 0, 127, 0);
-	FbVerticalLine(0, 0, 0, 127 - 16);
-	FbHorizontalLine(0, 127 - 16, 127, 127 - 16);
-	FbVerticalLine(127, 0, 127, 127 - 16);
+	if (has_top_door(c, room)) {
+		FbHorizontalLine(0, 0, 54, 0);
+		FbHorizontalLine(74, 0, 127, 0);
+	} else {
+		FbHorizontalLine(0, 0, 127, 0);
+	}
+	if (has_left_door(c, room)) {
+		FbVerticalLine(0, 0, 0, 54);
+		FbVerticalLine(0, 74, 0, 127 - 16);
+	} else {
+		FbVerticalLine(0, 0, 0, 127 - 16);
+	}
+	if (has_bottom_door(c, room)) {
+		FbHorizontalLine(0, 127 - 16, 54, 127 - 16);
+		FbHorizontalLine(74, 127 - 16, 127, 127 - 16);
+	} else {
+		FbHorizontalLine(0, 127 - 16, 127, 127 - 16);
+	}
+	if (has_right_door(c, room)) {
+		FbVerticalLine(127, 0, 127, 54);
+		FbVerticalLine(127, 74, 127, 127 - 16);
+	} else {
+		FbVerticalLine(127, 0, 127, 127 - 16);
+	}
 }
 
 static void draw_screen(void)
@@ -312,7 +648,7 @@ static void draw_screen(void)
 	if (!screen_changed)
 		return;
 	FbColor(WHITE);
-	draw_room();
+	draw_room(&castle, player.room);
 	draw_player(&player);
 	FbSwapBuffers();
 	screen_changed = 0;
