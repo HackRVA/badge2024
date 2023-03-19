@@ -153,7 +153,7 @@ void FbImage16bit(const struct asset* asset, unsigned char seqNum) {
         pixdata = (unsigned short*) &(asset->pixdata[ (y - G_Fb.pos.y) * asset->x * 2 + seqNum * asset->x * asset->y * 2]);
 
         for (x = 0; x < asset->x; x++) {
-            if ((x + G_Fb.pos.x) >= LCD_XSIZE) continue; /* clip x */
+            if ((x + G_Fb.pos.x) >= LCD_XSIZE) break; /* clip x */
             pixel = *pixdata; /* 1 pixel per byte */
             fb_mark_row_changed(x + G_Fb.pos.x, y);
             BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
@@ -178,7 +178,7 @@ void FbImage8bit(const struct asset* asset, unsigned char seqNum)
         pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * asset->x + seqNum * asset->x * asset->y]));
 
         for (x = 0; x < asset->x; x++) {
-            if ((x + G_Fb.pos.x) >= LCD_XSIZE) continue; /* clip x */
+            if ((x + G_Fb.pos.x) >= LCD_XSIZE) break; /* clip x */
 
             pixbyte = *pixdata; /* 1 pixel per byte */
 
@@ -225,7 +225,7 @@ void FbImage4bit(const struct asset* asset, unsigned char seqNum)
             pixbyte = *pixdata++; /* 2 pixels per byte */
 
             /* 1st pixel */
-            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
 
             ci = ((pixbyte >> 4) & 0xF);
             if (ci != G_Fb.transIndex) { /* transparent? */
@@ -252,7 +252,7 @@ void FbImage4bit(const struct asset* asset, unsigned char seqNum)
             }
 
             /* 2nd pixel */
-            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
 
             ci = pixbyte & 0xF;
             if (ci != G_Fb.transIndex) { /* transparent? */
@@ -329,7 +329,7 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
             }
 
             /* ----------- 2nd pixel ----------- */
-            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
 
             ci = ((pixbyte >> 4) & 0x3);
             if (ci != G_Fb.transIndex) { /* transparent? */
@@ -356,7 +356,7 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
             }
 
             /* ----------- 3rd pixel ----------- */
-            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
 
             ci = ((pixbyte >> 2) & 0x3);
             if (ci != G_Fb.transIndex) { /* transparent? */
@@ -383,7 +383,7 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
             }
 
             /* ----------- 4th pixel ----------- */
-            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) continue; /* clip x */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
 
             ci = ((pixbyte) & 0x3);
             if (ci != G_Fb.transIndex) { /* transparent? */
