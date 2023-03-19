@@ -1,3 +1,59 @@
+/*
+ * "Goodbye, Gulag!" by Stephen M. Cameron
+ *
+ * Find the Russian war plans, plant a bomb in the munitions depot, and
+ * make your escape from the Russian compound.
+ *
+ * Inspired by the 1981 Apple ][ game, "Castle Wolfenstein" by Silas Warner.
+ *
+ */
+
+
+/*
+ * Things remaining to do:
+ *
+ * Enemy behaviors:
+ *   ( ) Shooting
+ *   ( ) Chasing
+ *   ( ) Fleeing
+ *   ( ) Surrendering/being searched
+ *   ( ) Following room to room (Spetsnaz only)
+ *
+ * Player behaviors:
+ *   ( ) Searching chests/desks/bodies for bullets, keys, etc.
+ *   ( ) Inventory of bullets/grenades/keys/bullet proof vest etc.
+ *   ( ) planting bomb
+ *   ( ) throwing grenades
+ *   ( ) knifing?
+ *   ( ) health damage/dying
+ *   ( ) healing w/ medicine/food
+ *
+ * Environment features
+ *   ( ) Locked doors
+ *   ( ) Keys
+ *   ( ) food and drink (vodka, cabbages, potatoes).
+ *   ( ) the munitions depot
+ *   ( ) the war plans
+ *   ( ) plastic explosives
+ *   ( ) remote detonator
+ *   ( ) Win condition/scene
+ *   ( ) Lose condition/scene
+ *   ( ) Safes, and safe-cracking mini game
+ *   ( ) Flamethrowers
+ *
+ * Quality of Life
+ *   ( ) Difficulty levels (easy/medium/hard/insane)
+ *   ( ) Help screen
+ *   ( ) Quit confirmation screen
+ *   ( ) Building map?
+ *
+ * Optimizations
+ *   ( ) Every soldier in the game does not need pathfinding memory,
+ *       only every soldier *in the current room* needs pathfinding
+ *       memory.
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 
