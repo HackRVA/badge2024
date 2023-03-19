@@ -36,6 +36,104 @@ static struct player {
 	char anim_frame, prev_frame;
 } player;
 
+/* These wallx[] arrays define internal walls in rooms.  There are pairs of numbers,
+ * with a -1 sentinel value  at the end.  The pairs of numbers define horizontal
+ * and vertical line segments.  Each column is 16 pixels apart in X, and each row is
+ * 16 pixels apart in Y, except the last row and last column, which are 15 pixels
+ * from the above or left row or column, respectively. (i.e. last column is 127,
+ * last row is 111, or 8 * 16 - 1 or 7 * 16 - 1, respectively.
+ *
+ *    0  1  2  3  4  5  6  7  8
+ *    9 10 11 12 13 14 15 16 17
+ *   18 19 20 21 22 23 24 25 26
+ *   27 28 29 30 31 32 33 34 35
+ *   36 37 38 39 40 41 42 43 44
+ *   45 46 47 48 49 50 51 52 53
+ *   54 55 56 57 58 59 60 61 62
+ *   63 64 65 66 67 68 69 70 71
+ *
+ * To convert to room coordinates (x -> (0 - 127), y -> (0 - 111), see
+ * wall_spec_x() and wall_spec_y() functions.
+ *
+ */
+static const int8_t walls0[] = { 20, 24, 6, 51, 20, 47, 47, 48, 50, 51, -1, };
+static const int8_t walls1[] = { 20, 65, 20, 21, 23, 24, 6, 51, -1, };
+static const int8_t walls2[] = { 20, 47, 29, 32, 23, 50, -1, };
+static const int8_t walls3[] = { 2, 20, 20, 21, 21, 39, 41, 42, 6, 42, 57, 66, -1, };
+static const int8_t walls4[] = { 20, 21, 23, 24, 6, 51, 20, 65, -1, };
+static const int8_t walls5[] = { 6, 51, 27, 30, 21, 30, 32, 33, 47, 51, -1, };
+static const int8_t walls6[] = { 22, 49, 47, 51, -1, };
+static const int8_t walls7[] = { 20, 24, 23, 50, 47, 51, -1, };
+static const int8_t walls8[] = { 6, 51, 47, 51, 20, 47, 20, 22, -1, };
+static const int8_t walls9[] = { 6, 51, 20, 24, 20, 29, 47, 51, -1, };
+static const int8_t walls10[] = { 5, 23, 20, 23, 47, 50, 50, 68, -1, };
+static const int8_t walls11[] = { 2, 20, 6, 24, 22, 40, 47, 65, 51, 69, -1, };
+static const int8_t walls12[] = { 20, 24, 22, 49, -1, };
+static const int8_t walls13[] = { 19, 25, 6, 24, 25, 52, 50, 52, 46, 48, 19, 46, -1, };
+static const int8_t walls14[] = { 19, 20, 19, 46, 22, 49, 22, 25, 25, 52, 51, 52, -1, };
+static const int8_t walls15[] = { 19, 46, 28, 33, 6, 51, -1, };
+static const int8_t walls16[] = { 19, 21, 19, 46, 23, 25, 25, 52, 45, 50, -1, };
+static const int8_t walls17[] = { 19, 21, 23, 25, 6, 24, 19, 46, 25, 52, 46, 52, -1, };
+static const int8_t walls18[] = { 19, 20, 20, 47, 46, 47, 6, 51, -1, };
+static const int8_t walls19[] = { 21, 23, 21, 30, 28, 46, 46, 50, 41, 50, -1, };
+
+/* Returns x coord in the range 0 - 127, assuming 0 <= n <= 71 */
+static int wall_spec_x(int n)
+{
+	int x = (n % 9) * 16;
+	if (x > 127)
+		x = 127;
+	return x;
+}
+
+/* Returns y coord in the range 0 - 111, assuming 0 <= n <= 71  */
+static int wall_spec_y(int n)
+{
+	int y = 16 * (n / 9);
+	if (y > 111)
+		y = 111;
+	return y;
+}
+
+static const int8_t *wall_spec[] = {
+	walls0, walls1, walls2, walls3, walls4,
+	walls5, walls6, walls7, walls8, walls9,
+	walls10, walls11, walls12, walls13, walls14,
+	walls15, walls16, walls17, walls18, walls19,
+};
+
+#if TARGET_SIMULATOR
+static void sanity_check_wall_spec(const int8_t *ws, int n)
+{
+	int i, x1, y1, x2, y2;
+	x2 = 0;
+	y2 = 0;
+
+	for (i = 0; ws[i] != -1; i++) {
+		x1 = x2;
+		y1 = y2;
+		x2 = wall_spec_x(ws[i]);
+		y2 = wall_spec_y(ws[i]);
+		if ((i % 2) != 1 || i == 0)
+			continue;
+		if (x1 == x2 || y1 == y2)
+			continue;
+		printf("walls%d contains non-vertical and non-horizontal line segment at %d, (%d, %d)\n",
+				n, i - 1, ws[i - 1], ws[i]);
+	}
+	if ((i % 2) != 0)
+		printf("walls%d[] has an odd number of points, %d, should be even.\n", n, i);
+}
+
+static void sanity_check_wall_specs(void)
+{
+	for (size_t i = 0; i < ARRAYSIZE(wall_spec); i++)
+		sanity_check_wall_spec(wall_spec[i], i);
+}
+#else
+static inline void sanity_check_wall_specs(void) { } /* compiler will optimize away */
+#endif
+
 #define CASTLE_FLOORS 5
 #define CASTLE_ROWS 3
 #define CASTLE_COLS 4
@@ -59,6 +157,7 @@ struct room_spec {
 #define HAS_TOP_DOOR (1 << 1)
 	int16_t obj[GULAG_MAX_OBJS_PER_ROOM]; /* indices into go[], below */
 	char nobjs;
+	char interior_walls;
 };
 
 static struct castle {
@@ -666,6 +765,7 @@ static void init_castle(struct castle *c)
 		c->room[i].doors = 0;
 		memset(c->room[i].obj, 0, sizeof(c->room[i].obj));
 		c->room[i].nobjs = 0;
+		c->room[i].interior_walls = random_num(ARRAYSIZE(wall_spec));
 	}
 	for (i = 0; i < CASTLE_FLOORS; i++)
 		add_doors(&castle, i, 0, CASTLE_COLS - 1, 0, CASTLE_ROWS - 1);
@@ -761,6 +861,7 @@ static void gulag_init(void)
 	screen_changed = 1;
 	intro_offset = 0;
 	flag_offset = 0;
+	sanity_check_wall_specs();
 }
 
 static void gulag_intro(void)
@@ -1170,11 +1271,28 @@ static void draw_player(struct player *p)
 
 static void draw_room_objs(struct castle *c, int room)
 {
-
 	for (int i = 0; i < c->room[room].nobjs; i++) {
 		int n = c->room[room].obj[i];
 		struct gulag_object *o = &go[n];
 		objconst[o->type].draw(o);
+	}
+}
+
+static void draw_interior_walls(struct castle *c, int room)
+{
+	/* Draw interior walls */
+	int n = c->room[room].interior_walls;
+	const int8_t *ws =  wall_spec[n];
+
+	for (int i = 0; ws[i] != -1; i += 2) {
+		int x1 = wall_spec_x(ws[i]);
+		int y1 = wall_spec_y(ws[i]);
+		int x2 = wall_spec_x(ws[i + 1]);
+		int y2 = wall_spec_y(ws[i + 1]);
+		if (x1 == x2)
+			FbVerticalLine(x1, y1, x1, y2);
+		else
+			FbHorizontalLine(x1, y1, x2, y1);
 	}
 }
 
@@ -1204,6 +1322,7 @@ static void draw_room(struct castle *c, int room)
 	} else {
 		FbVerticalLine(127, 0, 127, 127 - 16);
 	}
+	draw_interior_walls(c, room);
 	draw_room_objs(c, room);
 }
 
