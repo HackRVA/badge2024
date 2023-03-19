@@ -27,6 +27,7 @@ enum gulag_state_t {
 #endif
 
 static const short player_speed = 512;
+static int game_timer = 0;
 
 static struct player {
 	short room;
@@ -174,6 +175,7 @@ static int screen_changed = 0;
 static int intro_offset = 0;
 static int flag_offset = 0;
 
+
 struct gulag_stairs_data {
 	uint16_t unused;
 };
@@ -196,6 +198,10 @@ struct gulag_soldier_data {
 	uint16_t corpse_direction:1; /* left or right corpse variant */
 	char anim_frame;
 	char prev_frame;
+	/* Careful, char is *unsigned* by default on the badge! */
+	signed char last_seen_x, last_seen_y; /* location player was last seen at */
+	char sees_player_now;
+	unsigned char angle; /* 0 - 127 */
 };
 
 struct gulag_chest_data {
@@ -895,6 +901,10 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.weapon = 0;
 	go[n].tsd.soldier.anim_frame = 0;
 	go[n].tsd.soldier.prev_frame = 0;
+	go[n].tsd.soldier.last_seen_x = -1;
+	go[n].tsd.soldier.last_seen_y = -1;
+	go[n].tsd.soldier.sees_player_now = 0;
+	go[n].tsd.soldier.angle = random_num(128);
 }
 
 static void add_soldier_to_random_room(struct castle *c)
@@ -1215,6 +1225,37 @@ static void player_wins(void)
 #endif
 }
 
+/* When player enters a room, soldiers must forget last seen info */
+static void reset_soldier(struct gulag_object *s)
+{
+	s->tsd.soldier.last_seen_x = -1;
+	s->tsd.soldier.last_seen_y = -1;
+	s->tsd.soldier.sees_player_now = 0;
+}
+
+static void reset_soldiers_in_room(struct castle *c, int room)
+{
+	for (int i = 0; i < c->room[room].nobjs; i++) {
+		int n = c->room[room].obj[i];
+		struct gulag_object *o = &go[n];
+		if (o->type == TYPE_SOLDIER)
+			reset_soldier(o);
+	}
+}
+
+static void player_enter_room(struct player *p, int room, int x, int y)
+{
+	p->room = room;
+	reset_soldiers_in_room(&castle, room);
+	p->x = x;
+	p->y = y;
+	FbClear();
+	screen_changed = 1;
+#if TARGET_SIMULATOR
+	print_castle_floor(&castle, p, get_room_floor(room));
+#endif
+}
+
 static void maybe_traverse_stairs(struct castle *c, struct player *p, struct gulag_object *stairs)
 {
 	int px, py, sx, sy, floor, row, col;
@@ -1242,12 +1283,8 @@ static void maybe_traverse_stairs(struct castle *c, struct player *p, struct gul
 #if TARGET_SIMULATOR
 	print_castle_floor(c, p, floor);
 #endif
-	p->room = room_no(floor, col, row);
 	p->angle = 32; /* down */
-	p->x = stairs->x + (24 << 8);
-	p->y = stairs->y + ((32 + 8) << 8);
-	FbClear();
-	screen_changed = 1;
+	player_enter_room(p, room_no(floor, col, row), stairs->x + (24 << 8), stairs->y + ((32 + 8) << 8));
 }
 
 static void check_object_collisions(struct castle *c, struct player *p)
@@ -1288,12 +1325,7 @@ static void check_doors(struct castle *c, struct player *p)
 			row--;
 			if (row < 0)
 				player_wins();
-			p->room = room_no(f, col, row);
-			FbClear();
-			p->y = (127 - 16 - 12) << 8;
-#if TARGET_SIMULATOR
-			print_castle_floor(c, p, f);
-#endif
+			player_enter_room(p, room_no(f, col, row), p->x, (127 - 16 - 12) << 8);
 			return;
 		}
 	}
@@ -1302,12 +1334,7 @@ static void check_doors(struct castle *c, struct player *p)
 			row++;
 			if (row >= CASTLE_ROWS)
 				player_wins();
-			p->room = room_no(f, col, row);
-			FbClear();
-			p->y = 18 << 8;
-#if TARGET_SIMULATOR
-			print_castle_floor(c, p, f);
-#endif
+			player_enter_room(p, room_no(f, col, row), p->x, 18 << 8);
 			return;
 		}
 	}
@@ -1316,12 +1343,7 @@ static void check_doors(struct castle *c, struct player *p)
 			col--;
 			if (col < 0)
 				player_wins();
-			p->room = room_no(f, col, row);
-			FbClear();
-			p->x = 117 << 8;
-#if TARGET_SIMULATOR
-			print_castle_floor(c, p, f);
-#endif
+			player_enter_room(p, room_no(f, col, row), 117 << 8, p->y);
 			return;
 		}
 	}
@@ -1330,12 +1352,7 @@ static void check_doors(struct castle *c, struct player *p)
 			col++;
 			if (col >= CASTLE_COLS)
 				player_wins();
-			p->room = room_no(f, col, row);
-			FbClear();
-			p->x = 10 << 8;
-#if TARGET_SIMULATOR
-			print_castle_floor(c, p, f);
-#endif
+			player_enter_room(p, room_no(f, col, row), 10 << 8, p->y);
 			return;
 		}
 	}
@@ -1698,6 +1715,7 @@ static void draw_plus(short x, short y)
 	FbVerticalLine(x, y1, x, y2);
 }
 
+#if 0
 static void erase_player(struct player *p)
 {
 	short x, y;
@@ -1715,13 +1733,14 @@ static void erase_player(struct player *p)
 	FbColor(BLACK);
 	draw_plus(x, y);
 }
+#endif
 
 static void draw_player(struct player *p)
 {
 	short x, y;
 	int dx, dy;
 
-	erase_player(p);
+	// erase_player(p);
 	x = p->x >> 8;
 	y = p->y >> 8;
 
@@ -1813,10 +1832,113 @@ static void draw_screen(void)
 	screen_changed = 0;
 }
 
+struct soldier_eyeline_data {
+	struct player *p;
+	struct gulag_object *s;
+	char seen;
+	int target_x, target_y;
+};
+
+static int soldier_eyeline(int x, int y, void *cookie)
+{
+	struct soldier_eyeline_data *sed = cookie;
+	int bbx1, bby1, bbx2, bby2;
+
+	bbx1 = (x <<  8);
+	bby1 = (y << 8);
+	bbx2 = (x << 8) + 1;
+	bby2 = (y << 8) + 1;
+
+#if 0
+	/* Draw eyelines for debugging */
+	FbColor(YELLOW);
+	FbPoint(x, y);
+#endif
+
+	if (bbox_interior_wall_collision(&castle, sed->p->room, bbx1, bby1, bbx2, bby2)) {
+		sed->seen = 0;
+		return -1;
+	}
+	if (x == sed->target_x && y == sed->target_y)
+		sed->seen = 1;
+	return 0;
+}
+
+static void soldier_look_for_player(struct gulag_object *s, struct player *p)
+{
+	struct soldier_eyeline_data head_data, foot_data;
+
+	if (s->tsd.soldier.last_seen_x == -1)	/* If we haven't seen player yet then there's */
+		if (random_num(100) < 90)	/* a 90% chance we won't notice him in this moment */
+			return;			/* Saves looking all the time, and we'll see player */
+						/* soon enough. */
+
+	head_data.s = s;
+	head_data.p = p;
+	head_data.seen = 0;
+	foot_data.s = s;
+	foot_data.p = p;
+	foot_data.seen = 0;
+
+	/* TODO: if we had a fixed point dot product, we could dot the
+	 * soldier's facing direction with a vector to the player and
+	 * skip looking for the player when the dot product was negative
+	 * or close to zero. But to get the unit vector towards the player
+	 * we need a fixed point square root.
+	 */
+
+	int soldier_x = (s->x >> 8) + 4;
+	int soldier_heady = (s->y >> 8) + 1;
+
+	int player_x = (p->x >> 8);
+	int player_heady = (p->y >> 8) - 5;
+	int player_footy = (p->y >> 8) + 5;
+
+	head_data.target_x = player_x;
+	head_data.target_y = player_heady;
+	foot_data.target_x = player_x;
+	foot_data.target_y = player_footy;
+
+	bline(soldier_x, soldier_heady, player_x, player_heady, soldier_eyeline, &head_data);
+	bline(soldier_x, soldier_heady, player_x, player_footy, soldier_eyeline, &foot_data);
+	if (head_data.seen || foot_data.seen) {
+		s->tsd.soldier.last_seen_x = p->x >> 8;
+		s->tsd.soldier.last_seen_y = p->y >> 8;
+		s->tsd.soldier.sees_player_now = 1;
+	} else {
+		s->tsd.soldier.sees_player_now = 0;
+	}
+}
+
+static void move_soldier(struct gulag_object *s)
+{
+#define SOLDIER_MOVE_THROTTLE 10
+
+	/* only move every nth tick, and move every soldier on a different tick */
+	int n = s - &go[0];
+	if (((game_timer + n) % SOLDIER_MOVE_THROTTLE) != 0)
+		return;
+	soldier_look_for_player(s, &player);
+}
+
+static void move_soldiers(void)
+{
+	int room = player.room;
+	int n = castle.room[room].nobjs;
+
+	for (int i = 0; i < n; i++) {
+		int j = castle.room[room].obj[i];
+		struct gulag_object *o = &go[j];
+		if (o->type == TYPE_SOLDIER)
+			move_soldier(o);
+	}
+}
+
 static void gulag_run()
 {
 	check_buttons();
 	draw_screen();
+	move_soldiers();
 }
 
 static void gulag_exit()
@@ -1827,6 +1949,7 @@ static void gulag_exit()
 
 void gulag_cb(void)
 {
+	game_timer++;
 	switch (gulag_state) {
 	case GULAG_INIT:
 		gulag_init();
