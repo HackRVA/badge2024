@@ -1967,6 +1967,7 @@ static void check_buttons()
 	static int firing_timer = 0;
 	int down_latches = button_down_latches();
 	int rotary_switch = button_get_rotation(0);
+	int anything_pressed = 0;
 	int n;
 
 	if (rotary_switch) {
@@ -1978,28 +1979,35 @@ static void check_buttons()
 		player.oldangle = player.angle;
 		player.angle = (unsigned char) new_angle;
 		screen_changed = 1;
+		anything_pressed = 1;
 	}
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		fire_gun(&player);
 		firing_timer = 10; /* not sure this will work on pico */
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+		anything_pressed = 1;
+	}
+	if (button_poll(BADGE_BUTTON_LEFT)) {
 		short new_angle = player.angle + 3;
 		if (new_angle > 127)
 			new_angle -= 127;
 		player.oldangle = player.angle;
 		player.angle = (unsigned char) new_angle;
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
+		anything_pressed = 1;
+	}
+	if (button_poll(BADGE_BUTTON_RIGHT)) {
 		short new_angle = player.angle - 3;
 		if (new_angle < 0)
 			new_angle += 127;
 		player.oldangle = player.angle;
 		player.angle = (unsigned char) new_angle;
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_B, down_latches)) {
+		anything_pressed = 1;
+	}
+	if (button_poll(BADGE_BUTTON_UP) || button_poll(BADGE_BUTTON_ENCODER_B)) {
+		anything_pressed = 1;
 		int newx, newy;
 		newx = ((-cosine(player.angle) * player_speed) >> 8) + player.x;
 		newy = ((sine(player.angle) * player_speed) >> 8) + player.y;
@@ -2055,8 +2063,11 @@ static void check_buttons()
 		check_doors(&castle, &player);
 		check_object_collisions(&castle, &player);
 		advance_player_animation(&player);
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-	} else { /* nothing pressed */
+	}
+	if (button_poll(BADGE_BUTTON_DOWN)) {
+	}
+
+	if (!anything_pressed) { /* nothing pressed */
 		if (firing_timer > 0) {
 			if (firing_timer == 10) /* not sure this will work on pico */
 				screen_changed = 1; /* cause muzzle flash to disappear */
