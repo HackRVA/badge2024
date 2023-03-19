@@ -237,6 +237,67 @@ static void draw_desk(struct gulag_object *o);
 static void draw_soldier(struct gulag_object *o);
 static void draw_chest(struct gulag_object *o);
 
+/* Check if a bounding box and a wall segment collide.
+ * Assumptions:
+ * 1. wall segments are horizontal or vertical, (wx1 == wx2 || wy1 == wy2)
+ * 2. bbx1 < bbx2 and bby1 < bby2
+ *
+ * Returns:
+ * 0 if no collision;
+ * 1 if collision;
+ */
+static int bbox_wall_collides(int bbx1, int bby1, int bbx2, int bby2, int wx1, int wy1, int wx2, int wy2)
+{
+	if (wx1 == wx2) { /* vertical wall segment */
+		if (wx1 < bbx1 || wx1 > bbx2) /* wall entirely left or right of bb */
+			return 0;
+		if (wy1 > bby2 && wy2 > bby2) /* wall entirely below bb */
+			return 0;
+		if (wy1 < bby1 && wy2 < bby1) /* wall entirely above bb */
+			return 0;
+		return 1;
+	}
+	if (wy1 == wy2) { /* horizontal wall segment */
+		if (wy1 < bby1 || wy1 > bby2) /* wall entirely above or below bb */
+			return 0;
+		if (wx1 < bbx1 && wx2 < bbx1) /* wall entirely left of bb */
+			return 0;
+		if (wx1 > bbx2 && wx2 > bbx2) /* wall entirely right of bb */
+			return 0;
+		return 1;
+	}
+	return 0;
+}
+
+/* See if bounding box (bbx1, bby1) - (bbx2, bby2) collides with any interior walls of
+ * the given room.
+ * Assumptions:
+ * 1: bbx1 < bbx2 and bby1 < bby2
+ * 2: bounding box coords are 8.8 fixed point
+ *
+ * Returns:
+ * 0 if no collision
+ * 1 if collision
+ */
+static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, int bby1, int bbx2, int bby2)
+{
+	/* Possible optimization: maybe we unpack wall_spec[n] into a list of coordinates
+	 * once when we enter a room, instead of every time we move.  On x86 it might be
+	 * faster to unpack each time (in any case, it doesn't matter), on pico, who knows.
+	 */
+	int n = c->room[room].interior_walls;
+	const int8_t *ws = wall_spec[n];
+	for (int i = 0; ws[i] != -1; i += 2) {
+		int x1 = wall_spec_x(ws[i]) << 8;
+		int y1 = wall_spec_y(ws[i]) << 8;
+		int x2 = wall_spec_x(ws[i + 1]) << 8;
+		int y2 = wall_spec_y(ws[i + 1]) << 8;
+		if (bbox_wall_collides(bbx1, bby1, bbx2, bby2, x1, y1, x2, y2))
+			return 1;
+	}
+	return 0;
+}
+
 struct gulag_object_typical_data {
 	char w, h; /* width, height of bounding box */
 	gulag_object_drawing_function draw;
@@ -1154,7 +1215,8 @@ static void advance_player_animation(struct player *p)
 
 static void check_buttons()
 {
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
+
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
 		/* Pressing the button exits the program. You probably want to change this. */
 		// gulag_state = GULAG_EXIT;
@@ -1178,6 +1240,7 @@ static void check_buttons()
 		newx = ((-cosine(player.angle) * player_speed) >> 8) + player.x;
 		newy = ((sine(player.angle) * player_speed) >> 8) + player.y;
 
+		/* Check for exterior wall collision ... */
 		if (newx < 5 << 8)
 			newx = 5 << 8;
 		if (newx > ((127 - 4) << 8))
@@ -1186,6 +1249,15 @@ static void check_buttons()
 			newy = 9 << 8;
 		if (newy > ((127 -16 - 8) << 8))
 			newy = (127 - 16 - 8) << 8;
+
+		/* Check for interior wall collision */
+		if (bbox_interior_wall_collision(&castle, player.room,
+				newx - (4 << 8), newy - (9 << 8),
+				newx + (5 << 8), newy + (8 << 8))) {
+			newx = player.x;
+			newy = player.y;
+		}
+
 		player.oldx = player.x;
 		player.oldy = player.y;
 		player.x = (short) newx;
@@ -1260,6 +1332,15 @@ static void draw_player(struct player *p)
 
 	FbColor(WHITE);
 	draw_figure(x - 4, y - 8, WHITE, p->anim_frame);
+#if 0
+	/* Draw bounding box (debug) */
+	FbColor(GREEN);
+	FbHorizontalLine(x - 4, y - 8, x + 5, y - 8);
+	FbHorizontalLine(x - 4, y + 9, x + 5, y + 9);
+	FbVerticalLine(x - 4, y - 8, x - 4, y + 9);
+	FbVerticalLine(x + 5, y - 8, x + 5, y + 9);
+#endif
+
 	dx = ((-cosine(p->angle) * 16 * player_speed) >> 8) + p->x;
 	dy = ((sine(p->angle) * 16 * player_speed) >> 8) + p->y;
 	x = (short) (dx >> 8);
