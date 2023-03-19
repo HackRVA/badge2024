@@ -29,6 +29,7 @@
 #include "smashout.h"
 #include "username.h"
 #include "slot_machine.h"
+#include "gulag.h"
 
 /* TODO: remove this warning once we get new 134x162 display hardware working. */
 #if (LCD_XSIZE == 132 && LCD_YSIZE == 132)
@@ -479,6 +480,7 @@ const struct menu_t games_m[] = {
    {"Spinning Cube", VERT_ITEM, FUNCTION, {(struct menu_t *)cube_cb} },
    {"Game of Life", VERT_ITEM, FUNCTION, {(struct menu_t *)game_of_life_cb} },
    {"Slot Machine", VERT_ITEM, FUNCTION, {(struct menu_t *)slot_machine_cb}},
+   {"Goodbye Gulag", VERT_ITEM, FUNCTION, {(struct menu_t *)gulag_cb}},
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 

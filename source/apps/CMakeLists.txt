@@ -12,6 +12,7 @@ target_sources(badge2023_c PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/qc.c
         ${CMAKE_CURRENT_LIST_DIR}/smashout.c
         ${CMAKE_CURRENT_LIST_DIR}/username.c
+        ${CMAKE_CURRENT_LIST_DIR}/gulag.c
         ${CMAKE_CURRENT_LIST_DIR}/slot_machine.c
         )
 
