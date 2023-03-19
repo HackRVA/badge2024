@@ -503,6 +503,10 @@ static void draw_soldier(struct gulag_object *o)
 	FbColor(GREEN);
 	if (o->tsd.soldier.health != 0) {
 		draw_figure(o->x >> 8, o->y >> 8, GREEN, o->tsd.soldier.anim_frame);
+#if 0
+		FbMove(o->x >> 8, o->y >> 8);
+		FbRectangle(objconst[TYPE_SOLDIER].w, objconst[TYPE_SOLDIER].h);
+#endif
 	} else {
 		FbMove(o->x >> 8, o->y >> 8);
 		FbRectangle(16, 8);
@@ -646,18 +650,63 @@ static int room_contains_obj_of_type(struct castle *c, int room, int type)
 	return 0;
 }
 
+static void random_location_in_room(int *x, int *y, int width, int height)
+{
+	*x = random_num((126 - width) << 8);
+	*y = random_num((110 - height) << 8);
+}
+
 static int add_object_to_room(struct castle *c, int room, int object_type, int x, int y)
 {
+	int done, w, h;
 	int n = gulag_nobjs;
+	int bb1x1, bb1y1, bb1x2, bb1y2, bb2x1, bb2y1, bb2x2, bb2y2;
+
 	if (n >= GULAG_MAXOBJS)
 		return -1;
 	if (c->room[room].nobjs >= GULAG_MAX_OBJS_PER_ROOM)
 		return -1;
 	go[n].type = object_type;
 	go[n].room = room;
-	/* TODO: move things around so nothing collides */
-	go[n].x = x;
-	go[n].y = y;
+	w = objconst[object_type].w;
+	h = objconst[object_type].h;
+
+	done = 0;
+	do {
+		go[n].x = x;
+		go[n].y = y;
+
+		bb1x1 = x;
+		bb1y1 = y;
+		bb1x2 = x + (w << 8);
+		bb1y2 = y + (h << 8);
+
+		/* Check against interior wall collisions */
+		if (bbox_interior_wall_collision(c, room, bb1x1, bb1y1, bb1x2, bb1y2)) {
+			random_location_in_room(&x, &y, w, h);
+			done = 0;
+			continue;
+		}
+		done = 1;
+
+		/* Check for collisions with other objects already in room */
+		for (int i = 0; i < c->room[room].nobjs; i++) {
+			int w2, h2;
+			int j = c->room[room].obj[i];
+			struct gulag_object *o2 = &go[j];
+			w2 = objconst[o2->type].w;
+			h2 = objconst[o2->type].h;
+			bb2x1 = o2->x;
+			bb2y1 = o2->y;
+			bb2x2 = o2->x + (w2 << 8);
+			bb2y2 = o2->y + (h2 << 8);
+			if (bb_bb_collision(bb1x1, bb1y1, bb1x2, bb1y2, bb2x1, bb2y1, bb2x2, bb2y2)) {
+				random_location_in_room(&x, &y, w, h);
+				done = 0;
+			}
+		}
+	} while (!done);
+
 	gulag_nobjs++;
 	int i = c->room[room].nobjs;
 	c->room[room].obj[i] = n;
@@ -730,8 +779,8 @@ static void add_soldier_to_room(struct castle *c, int room)
 {
 	int x, y;
 
-	x = random_num(127 - 16) + 8;
-	y = random_num(127 - 32) + 8;
+	x = random_num(127 - 10) + 1;
+	y = random_num(111 - 18) + 1;
 	int n = add_object_to_room(c, room, TYPE_SOLDIER, x << 8, y << 8);
 	if (n < 0)
 		return;
