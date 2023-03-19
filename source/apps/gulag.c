@@ -33,6 +33,7 @@ static struct player {
 	short oldx, oldy;
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
 	unsigned char current_room;
+	char anim_frame, prev_frame;
 } player;
 
 #define CASTLE_FLOORS 5
@@ -92,6 +93,8 @@ struct gulag_soldier_data {
 	uint16_t grenades:2;
 	uint16_t keys:1;
 	uint16_t weapon:2;
+	char anim_frame;
+	char prev_frame;
 };
 
 struct gulag_chest_data {
@@ -145,6 +148,107 @@ struct gulag_object_typical_data {
 	{ 8, 16, draw_soldier, },
 	{ 16, 8, draw_chest, },
 };
+
+static inline void draw_figures_head1(int x, int y)
+{
+	FbHorizontalLine(x + 3, y, x + 4, y);
+	FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
+}
+
+/* x, y here are plain screen coords not fixed point 8.8. */
+static void draw_figure(int x, int y, int color, int anim_frame)
+{
+	FbColor(color);
+	switch (anim_frame) {
+	case 0:
+		draw_figures_head1(x, y);
+		FbHorizontalLine(x + 2, y + 3, x + 5, y + 3);
+		FbVerticalLine(x + 1, y + 4, x + 1, y + 6);
+		FbVerticalLine(x + 6, y + 4, x + 6, y + 6);
+		FbVerticalLine(x + 3, y + 4, x + 3, y + 15);
+		FbVerticalLine(x + 4, y + 4, x + 4, y + 14);
+		FbPoint(x + 5, y + 14);
+		break;
+	case 1:
+		draw_figures_head1(x, y);
+		FbHorizontalLine(x + 2, y + 3, x + 5, y + 3);
+		FbVerticalLine(x + 1, y + 4, x + 1, y + 6);
+		FbVerticalLine(x + 5, y + 4, x + 5, y + 5);
+		FbPoint(x + 6, y + 6);
+		FbVerticalLine(x + 3, y + 4, x + 3, y + 15);
+		FbVerticalLine(x + 4, y + 4, x + 4, y + 14);
+		FbPoint(x + 5, y + 14);
+		break;
+	case 2:
+		FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
+		FbHorizontalLine(x + 3, y + 2, x + 4, y + 2);
+		FbHorizontalLine(x + 2, y + 4, x + 5, y + 4);
+		FbVerticalLine(x + 1, y + 5, x + 1, y + 6);
+		FbVerticalLine(x + 5, y + 5, x + 5, y + 6);
+		FbHorizontalLine(x + 2, y + 7, x + 6, y + 7);
+		FbVerticalLine(x + 3, y + 5, x + 3, y + 12);
+		FbVerticalLine(x + 4, y + 5, x + 4, y + 9);
+		FbPoint(x + 5, y + 10);
+		FbHorizontalLine(x, y + 12, x + 3, y + 12);
+		FbVerticalLine(x + 6, y + 11, x + 6, y + 15);
+		FbPoint(x, y + 13);
+		FbPoint(x + 7, y + 15);
+		break;
+	case 3:
+		draw_figures_head1(x, y);
+		FbHorizontalLine(x + 2, y + 3, x + 5, y + 3);
+		FbPoint(x + 1, y + 4);
+		FbPoint(x, y + 5);
+		FbPoint(x + 1, y + 6);
+		FbPoint(x + 6, y + 4);
+		FbPoint(x + 7, y + 5);
+		FbVerticalLine(x + 3, y + 4, x + 3, y + 8);
+		FbVerticalLine(x + 4, y + 4, x + 4, y + 8);
+		FbLine(x + 2, y + 9, x, y + 14);
+		FbLine(x + 5, y + 9, x + 7, y + 11);
+		FbVerticalLine(x + 7, y + 12, x + 7, y + 14);
+		break;
+	case 4:
+		draw_figures_head1(x, y);
+		FbVerticalLine(x + 3, y + 3, x + 3, y + 8);
+		FbVerticalLine(x + 4, y + 3, x + 4, y + 8);
+		FbLine(x, y + 5, x + 2, y + 3);
+		FbPoint(x, y + 6);
+		FbLine(x + 5, y + 4, x + 7, y + 5);
+		FbPoint(x + 6, y + 6);
+		FbPoint(x + 2, y + 9);
+		FbLine(x + 5, y + 9, x + 7, y + 14);
+		FbVerticalLine(x + 1, y + 10, x + 1, y + 14);
+		FbPoint(x, y + 15);
+		break;
+	case 5:
+		FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
+		FbHorizontalLine(x + 3, y + 2, x + 4, y + 2);
+		FbVerticalLine(x + 2, y + 4, x + 2, y + 7);
+		FbVerticalLine(x + 3, y + 4, x + 3, y + 9);
+		FbVerticalLine(x + 4, y + 4, x + 4, y + 12);
+		FbVerticalLine(x + 6, y + 5, x + 6, y + 6);
+		FbPoint(x + 1, y + 7);
+		FbPoint(x + 5, y + 4);
+		FbPoint(x + 5, y + 7);
+		FbPoint(x + 2, y + 10);
+		FbVerticalLine(x + 1, y + 11, x + 1, y + 14);
+		FbHorizontalLine(x + 4, y + 12, x + 7, y + 12);
+		FbPoint(x, y + 15);
+		FbPoint(x + 7, y + 13);
+		break;
+	case 6:
+		draw_figures_head1(x, y);
+		FbVerticalLine(x + 2, y + 3, x + 2, y + 6);
+		FbVerticalLine(x + 3, y + 3, x + 3, y + 15);
+		FbVerticalLine(x + 4, y + 3, x + 4, y + 15);
+		FbVerticalLine(x + 6, y + 4, x + 6, y + 6);
+		FbPoint(x + 1, y + 6);
+		FbPoint(x + 5, y + 3);
+		FbPoint(x + 2, y + 15);
+		break;
+	}
+}
 
 static void draw_stairs_up(struct gulag_object *o)
 {
@@ -221,8 +325,7 @@ static void draw_soldier(struct gulag_object *o)
 {
 	FbColor(GREEN);
 	if (o->tsd.soldier.health != 0) {
-		FbMove(o->x >> 8, o->y >> 8);
-		FbRectangle(8, 16);
+		draw_figure(o->x >> 8, o->y >> 8, GREEN, o->tsd.soldier.anim_frame);
 	} else {
 		FbMove(o->x >> 8, o->y >> 8);
 		FbRectangle(16, 8);
@@ -461,6 +564,8 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.grenades = 0;
 	go[n].tsd.soldier.keys = 0;
 	go[n].tsd.soldier.weapon = 0;
+	go[n].tsd.soldier.anim_frame = 0;
+	go[n].tsd.soldier.prev_frame = 0;
 }
 
 static void add_soldier_to_random_room(struct castle *c)
@@ -639,6 +744,8 @@ static void init_player(struct player *p, int start_room)
 	p->oldy = p->y;
 	p->angle = 0;
 	p->oldangle = 0;
+	p->anim_frame = 0;
+	p->prev_frame = 0;
 }
 
 static void gulag_init(void)
@@ -903,6 +1010,47 @@ static void check_doors(struct castle *c, struct player *p)
 	}
 }
 
+static void advance_player_animation(struct player *p)
+{
+	if (p->angle >= 32 && p->angle <= 96) { /* player is facing to the right */
+		switch(p->anim_frame) {
+		case 0:
+			p->anim_frame = 1;
+			break;
+		case 1:
+			p->anim_frame = 3;
+			break;
+		case 2:
+			p->anim_frame = 1;
+			break;
+		case 3:
+			p->anim_frame = 2;
+			break;
+		default:
+			p->anim_frame = 0;
+			break;
+		}
+	} else { /* player is facing to the left */
+		switch(p->anim_frame) {
+		case 4:
+			p->anim_frame = 5;
+			break;
+		case 5:
+			p->anim_frame = 6;
+			break;
+		case 6:
+			p->anim_frame = 4;
+			break;
+		case 3:
+			p->anim_frame = 1;
+			break;
+		default:
+			p->anim_frame = 6;
+			break;
+		}
+	}
+}
+
 static void check_buttons()
 {
     int down_latches = button_down_latches();
@@ -944,7 +1092,16 @@ static void check_buttons()
 		screen_changed = 1;
 		check_doors(&castle, &player);
 		check_object_collisions(&castle, &player);
+		advance_player_animation(&player);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else { /* nothing pressed */
+		if (player.anim_frame != 0 && player.anim_frame != 6) {
+			if (player.angle >= 32 && player.angle <= 96) /* player is facing to the right */
+				player.anim_frame = 0;
+			else
+				player.anim_frame = 6; /* left */
+			screen_changed = 1;
+		}
 	}
 }
 
@@ -975,24 +1132,14 @@ static void draw_plus(short x, short y)
 
 static void erase_player(struct player *p)
 {
-	short x, y, w, h;
+	short x, y;
 	int dx, dy;
 
 	x = p->oldx >> 8;
 	y = p->oldy >> 8;
-	x = x - 4;
-	y = y - 8;
-	w = x + 8;
-	if (w >= 127)
-		w = 126;
-	w = w - x;
-	h = y + 16;
-	if (h >= 127)
-		h = 126;
-	h = h - y;
-	FbColor(BLACK);
-	FbMove(x, y);
-	FbFilledRectangle(w, h);
+
+	draw_figure(x, y, BLACK, p->prev_frame);
+
 	dx = ((-cosine(p->oldangle) * 16 * player_speed) >> 8) + p->oldx;
 	dy = ((sine(p->oldangle) * 16 * player_speed) >> 8) + p->oldy;
 	x = (short) (dx >> 8);
@@ -1003,27 +1150,15 @@ static void erase_player(struct player *p)
 
 static void draw_player(struct player *p)
 {
-	short x, y, x1, y1, x2, y2;
+	short x, y;
 	int dx, dy;
 
 	erase_player(p);
 	x = p->x >> 8;
 	y = p->y >> 8;
 
-	x1 = x - 4;
-	x2 = x + 3;
-	y1 = y - 8;
-	y2 = y + 7;
-	constrain_to_screen(&x1);
-	constrain_to_screen(&y1);
-	constrain_to_screen(&x2);
-	constrain_to_screen(&y2);
-
 	FbColor(WHITE);
-	FbHorizontalLine(x1, y1, x2, y1);
-	FbHorizontalLine(x1, y2, x2, y2);
-	FbVerticalLine(x1, y1, x1, y2);
-	FbVerticalLine(x2, y1, x2, y2);
+	draw_figure(x - 4, y - 8, WHITE, p->anim_frame);
 	dx = ((-cosine(p->angle) * 16 * player_speed) >> 8) + p->x;
 	dy = ((sine(p->angle) * 16 * player_speed) >> 8) + p->y;
 	x = (short) (dx >> 8);
