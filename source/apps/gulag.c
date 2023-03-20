@@ -20,7 +20,7 @@
  *   ( ) Following room to room (Spetsnaz only)
  *
  * Player behaviors:
- *   ( ) Searching chests/desks/bodies for bullets, keys, etc.
+ *   (X) Searching chests/desks/bodies for bullets, keys, etc.
  *   (X) Inventory of bullets/grenades/keys/bullet proof vest etc.
  *   ( ) planting bomb
  *   (X) throwing grenades
@@ -101,7 +101,16 @@ static struct player {
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
 	unsigned char current_room;
 	char anim_frame, prev_frame;
+#define SEARCH_INIT_TIME 30
+	int initial_search_timer;
+#define SEARCH_TIME (30 * 4)
+#define MIN_SEARCH_DIST2 (15 * 15)
+	int search_timer;
+	int search_object;
 } player;
+
+static char player_message[100] = { 0 };
+static int display_message = 0;
 
 #define COST_XDIM 32
 #define COST_YDIM 32
@@ -1312,6 +1321,7 @@ static void init_player(struct player *p, int start_room)
 	p->health = 100 << 8;
 	p->keys = 0;
 	p->have_war_plans = 0;
+	p->search_object = -1;
 }
 
 static int astarx_to_8dot8x(int x)
@@ -2035,6 +2045,65 @@ static void throw_grenade(struct player *p)
 	ngrenades++;
 }
 
+static void maybe_search_for_loot(void)
+{
+	char *object_type;
+	int distance2, dx, dy;
+
+	if (player.search_object == -1) {
+		display_message = 0;
+		return;
+	}
+
+	struct gulag_object *o = &go[player.search_object];
+	dx = (o->x >> 8) - (player.x >> 8);
+	dy = (o->y >> 8) - (player.y >> 8);
+	distance2 = dx * dx + dy * dy;
+	if (distance2 > MIN_SEARCH_DIST2) {
+		player.search_object = -1;
+		player.initial_search_timer = SEARCH_INIT_TIME;
+		return;
+	}
+
+	if (player.initial_search_timer > 0) {
+		player.initial_search_timer--;
+		if (player.initial_search_timer == 0)
+			player.search_timer = SEARCH_TIME;
+		return;
+	}
+
+	if (player.search_timer > 0) {
+		switch (o->type) {
+		case TYPE_DESK:
+			object_type = " DESK ";
+			break;
+		case TYPE_CHEST:
+			object_type = " CHEST ";
+			break;
+		default:
+			object_type = " ...";
+			break;
+		}
+		snprintf(player_message, sizeof(player_message), "SEARCHING%s", object_type);
+		display_message = 1;
+		screen_changed = 1;
+		if (player.search_timer > 0) {
+			player.search_timer--;
+			if (player.search_timer == 0) {
+				player.initial_search_timer = SEARCH_INIT_TIME;
+				player.search_object = -1;
+				display_message = 0;
+				screen_changed = 1;
+			}
+		}
+	} else {
+		player.initial_search_timer = SEARCH_INIT_TIME;
+		player.search_object = -1;
+		display_message = 0;
+		screen_changed = 1;
+	}
+}
+
 static void check_buttons()
 {
 	static int firing_timer = 0;
@@ -2117,9 +2186,12 @@ static void check_buttons()
 				break; /* handled elsewhere */
 			/* Chests and desks don't block movement so player isn't trapped by furniture. */
 			case TYPE_CHEST:
-				/* Here, maybe trigger searching chest, or unlocking with keys */
+				player.initial_search_timer = SEARCH_INIT_TIME;
+				player.search_object = n;
 				break;
 			case TYPE_DESK:
+				player.initial_search_timer = SEARCH_INIT_TIME;
+				player.search_object = n;
 				/* Here, maybe trigger searching desk, or unlocking with keys */
 				break;
 			case TYPE_SOLDIER: /* Soldiers block player movement */
@@ -2132,6 +2204,10 @@ static void check_buttons()
 			default:
 				break;
 			}
+		} else {
+			player.search_object = -1;
+			player.search_timer = SEARCH_INIT_TIME;
+			display_message = 0;
 		}
 
 		player.oldx = player.x;
@@ -2328,6 +2404,13 @@ static void draw_player_data(void)
 {
 	char buf[100];
 
+	if (display_message) {
+		FbColor(YELLOW);
+		FbMove(3, 130);
+		FbWriteString(player_message);
+		return;
+	}
+
 	FbColor(YELLOW);
 	snprintf(buf, sizeof(buf), "H:%4d", player.health >> 8);
 	FbMove(3, 130); FbWriteString(buf);
@@ -2345,8 +2428,8 @@ static void draw_screen(void)
 	draw_room(&castle, player.room);
 	draw_player(&player);
 	draw_grenades();
-	FbSwapBuffers();
 	draw_player_data();
+	FbSwapBuffers();
 	screen_changed = 0;
 }
 
@@ -2670,6 +2753,7 @@ static void gulag_run()
 	draw_screen();
 	move_objects();
 	move_grenades();
+	maybe_search_for_loot();
 }
 
 static void gulag_exit()
