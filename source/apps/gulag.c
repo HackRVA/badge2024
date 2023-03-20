@@ -2073,18 +2073,24 @@ static void maybe_search_for_loot(void)
 	}
 
 	if (player.search_timer > 0) {
+		int locked = 0;
 		switch (o->type) {
 		case TYPE_DESK:
 			object_type = " DESK ";
+			locked = o->tsd.desk.locked;
 			break;
 		case TYPE_CHEST:
 			object_type = " CHEST ";
+			locked = o->tsd.chest.locked;
 			break;
 		default:
 			object_type = " ...";
 			break;
 		}
-		snprintf(player_message, sizeof(player_message), "SEARCHING%s", object_type);
+		if (locked && player.search_timer < 2 * SEARCH_TIME / 3)
+			snprintf(player_message, sizeof(player_message), "LOCKED!");
+		else
+			snprintf(player_message, sizeof(player_message), "SEARCHING%s", object_type);
 		display_message = 1;
 		screen_changed = 1;
 		if (player.search_timer > 0) {
