@@ -2554,7 +2554,7 @@ static void draw_grenade(struct grenade *o)
 static void move_grenade(struct grenade *o)
 {
 	int collision, bbx1, bby1, bbx2, bby2, wall_index;
-	short nx, ny;
+	int nx, ny; /* nx, ny must be int, not short, to prevent overflow */
 	nx = o->x + o->vx;
 	ny = o->y + o->vy;
 
@@ -2563,8 +2563,8 @@ static void move_grenade(struct grenade *o)
 		nx = 1;
 		o->vx = (abs(o->vx) * grenade_speed_reduction) >> 8;
 		o->vy = (o->vy * grenade_speed_reduction) >> 8;
-	} else if (nx > (127 << 8)) {
-		nx = (127 << 8) - 1;
+	} else if (nx >= (127 << 8)) {
+		nx = (126 << 8) - 1;
 		o->vx = (-abs(o->vx) * grenade_speed_reduction) >> 8;
 		o->vy = (o->vy * grenade_speed_reduction) >> 8;
 	}
@@ -2572,7 +2572,7 @@ static void move_grenade(struct grenade *o)
 		ny = 1;
 		o->vx = (o->vx * grenade_speed_reduction) >> 8;
 		o->vy = (abs(o->vy) * grenade_speed_reduction) >> 8;
-	} else if (ny > ((127 - 16) << 8)) {
+	} else if (ny >= ((127 - 16) << 8)) {
 		ny = ((127 - 16) << 8) - 1;
 		o->vx = (o->vx * grenade_speed_reduction) >> 8;
 		o->vy = (-abs(o->vy) * grenade_speed_reduction) >> 8;
