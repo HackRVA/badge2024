@@ -13,7 +13,7 @@
  * Things remaining to do:
  *
  * Enemy behaviors:
- *   ( ) Shooting
+ *   (X) Shooting
  *   ( ) Chasing
  *   ( ) Fleeing
  *   ( ) Surrendering/being searched
@@ -107,7 +107,9 @@ static struct player {
 	short room;
 	short x, y; /* 8.8 signed fixed point */
 	short oldx, oldy;
-	short bullets, grenades, health;
+	short bullets, grenades;
+	short health; /* 8.8 fixed point */
+#define BULLET_DAMAGE (1 << 8)
 	unsigned char have_war_plans;
 	unsigned char keys;
 	short kills;
@@ -325,6 +327,8 @@ struct gulag_soldier_data {
 #define SOLDIER_PATH_LENGTH 100
 	unsigned char pathx[SOLDIER_PATH_LENGTH], pathy[SOLDIER_PATH_LENGTH];
 	unsigned char current_step, nsteps;
+	unsigned char shoot_cooldown;
+#define SOLDIER_SHOOT_COOLDOWN 20
 };
 
 struct gulag_chest_data {
@@ -1151,6 +1155,7 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.nsteps = 0;
 	go[n].tsd.soldier.current_step = 0;
 	go[n].tsd.soldier.already_looted = 0;
+	go[n].tsd.soldier.shoot_cooldown = SOLDIER_SHOOT_COOLDOWN;
 	memset(go[n].tsd.soldier.pathx, 0, sizeof(go[n].tsd.soldier.pathx));
 	memset(go[n].tsd.soldier.pathy, 0, sizeof(go[n].tsd.soldier.pathy));
 }
@@ -1943,9 +1948,14 @@ static void draw_bullet_debris(int x, int y)
 	}
 }
 
+
+#define BULLET_SOURCE_PLAYER (-1)
+#define BULLET_SOURCE_GRENADE (-2)
+
 static int bullet_track(int x, int y, void *cookie)
 {
-	struct player *p = cookie;
+	intptr_t bullet_source = (intptr_t) cookie;
+	int room = player.room;
 	int rc;
 
 	if (x < 0 || y < 0 || x > 127 || y > 111) {
@@ -1953,7 +1963,7 @@ static int bullet_track(int x, int y, void *cookie)
 		screen_changed = 1;
 		return -1; /* stop bline(), we've left the screen */
 	}
-	rc = bbox_interior_wall_collision(&castle, p->room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, NULL);
+	rc = bbox_interior_wall_collision(&castle, room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, NULL);
 	if (random_num(100) < 20)
 		FbPoint(x, y);
 	if (rc) {
@@ -1963,9 +1973,9 @@ static int bullet_track(int x, int y, void *cookie)
 		return -1;
 	}
 	/* Check for collisions with objects in room */
-	for (int i = 0; i < castle.room[p->room].nobjs; i++) {
+	for (int i = 0; i < castle.room[room].nobjs; i++) {
 		int w2, h2;
-		int j = castle.room[p->room].obj[i];
+		int j = castle.room[room].obj[i];
 		struct gulag_object *o2 = &go[j];
 		w2 = objconst[o2->type].w;
 		h2 = objconst[o2->type].h;
@@ -1985,6 +1995,8 @@ static int bullet_track(int x, int y, void *cookie)
 					go[j].tsd.desk.locked = 0;
 				break;
 			case TYPE_SOLDIER:
+				if (bullet_source > 0 && bullet_source == j) /* bullet was fired by this soldier */
+					return 0; /* soldiers do not shoot themselves */
 				draw_bullet_debris(x, y);
 				go[j].tsd.soldier.health--;
 				if (go[j].tsd.soldier.health == 0) {
@@ -2012,18 +2024,37 @@ static int bullet_track(int x, int y, void *cookie)
 			return -1;
 		}
 	}
+	/* Check for collisions with the player */
+	if (bullet_source != BULLET_SOURCE_PLAYER) {
+		int bbx1, bby1, bbx2, bby2;
+
+		bbx1 = player.x - (3 << 8);
+		bby1 = player.y - (6 << 8);
+		bbx2 = player.x + (3 << 8);
+		bby2 = player.y + (6 << 8);
+
+		if (bb_bb_collision(x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, bbx1, bby1, bbx2, bby2)) {
+			if (player.health > 0)
+				player.health = player.health - BULLET_DAMAGE;
+			if ((player.health >> 8) <= 0) {
+				printf("PLAYER IS DEAD!\n");
+			}
+			return -1; /* stop the bullet */
+		}
+	}
+
 	screen_changed = 1;
 	return 0;
 }
 
-static void fire_bullet(struct player *p, int x, int y, int angle)
+static void fire_bullet(__attribute__((unused)) struct player *p, int x, int y, int angle, int bullet_source)
 {
 	int tx, ty;
 
 	draw_muzzle_flash(x, y, angle, 5);
 	tx = ((-cosine(angle) * 400) >> 8) + x; /* 400 will put target tx,ty offscreen, guaranteed */
 	ty = ((sine(angle) * 400) >> 8) + y;
-	bline(x, y, tx, ty, bullet_track, p);
+	bline(x, y, tx, ty, bullet_track, (void *) (intptr_t) bullet_source);
 }
 
 static void fire_gun(struct player *p)
@@ -2035,7 +2066,7 @@ static void fire_gun(struct player *p)
 	muzzle_flash_index = p->anim_frame - 7;
 	x = (p->x >> 8) - 4 + muzzle_xoffset[muzzle_flash_index];
 	y = (p->y >> 8) - 8 + muzzle_yoffset[muzzle_flash_index];
-	fire_bullet(p, x, y, p->angle);
+	fire_bullet(p, x, y, p->angle, BULLET_SOURCE_PLAYER);
 #if 0
 	draw_muzzle_flash(x, y, p->angle, 5);
 	tx = ((-cosine(p->angle) * 400) >> 8) + x; /* 400 will put target tx,ty offscreen, guaranteed */
@@ -2746,6 +2777,28 @@ static void soldier_look_for_player(struct gulag_object *s, struct player *p)
 	}
 }
 
+static void maybe_shoot_player(struct gulag_object *s)
+{
+	int angle;
+	int dx, dy;
+
+	if (!s->tsd.soldier.sees_player_now)
+		return;
+	if (s->tsd.soldier.shoot_cooldown > 0) {
+		s->tsd.soldier.shoot_cooldown--;
+		return;
+	}
+	dy = (player.y >> 8) - ((s->y >> 8) + 4);
+	dx = (player.x >> 8) - ((s->x >> 8) + 8);
+	dx += random_num(10) - 5; /* make them miss sometimes */
+	dy += random_num(10) - 5;
+	angle = arctan2(dy, -dx);
+	if (angle < 0)
+		angle += 128;
+	fire_bullet(&player, (s->x >> 8) + 4, (s->y >> 8) + 8, angle, s - &go[0]);
+	s->tsd.soldier.shoot_cooldown = SOLDIER_SHOOT_COOLDOWN;
+}
+
 static void move_soldier(struct gulag_object *s)
 {
 	int dx, dy, angle, newx, newy;
@@ -2756,6 +2809,7 @@ static void move_soldier(struct gulag_object *s)
 	if (((game_timer + n) % SOLDIER_MOVE_THROTTLE) != 0)
 		return;
 	soldier_look_for_player(s, &player);
+	maybe_shoot_player(s);
 
 	switch (s->tsd.soldier.state) {
 	case SOLDIER_STATE_RESTING:
@@ -2872,7 +2926,7 @@ static void explode_grenade(struct grenade *o)
 
 	for (i = 0; i < GRENADE_FRAGMENTS; i++) {
 		int angle = random_num(127);
-		fire_bullet(&player, o->x >> 8, o->y >> 8, angle);
+		fire_bullet(&player, o->x >> 8, o->y >> 8, angle, BULLET_SOURCE_GRENADE);
 		screen_changed = 1;
 	}
 }
