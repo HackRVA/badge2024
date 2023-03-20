@@ -1830,6 +1830,7 @@ static int player_object_collision(struct castle *c, struct player *p, int newx,
 		case TYPE_DESK: /* Fallthrough */
 		case TYPE_CHEST: /* Fallthrough */
 		case TYPE_SOLDIER: /* Fallthrough */
+		case TYPE_CORPSE:
 			w = objconst[t].w;
 			h = objconst[t].h;
 
@@ -2076,12 +2077,16 @@ static void maybe_search_for_loot(void)
 		int locked = 0;
 		switch (o->type) {
 		case TYPE_DESK:
-			object_type = " DESK ";
+			object_type = " DESK";
 			locked = o->tsd.desk.locked;
 			break;
 		case TYPE_CHEST:
-			object_type = " CHEST ";
+			object_type = " CHEST";
 			locked = o->tsd.chest.locked;
+			break;
+		case TYPE_CORPSE:
+			object_type = " BODY";
+			locked = 0;
 			break;
 		default:
 			object_type = " ...";
@@ -2198,7 +2203,10 @@ static void check_buttons()
 			case TYPE_DESK:
 				player.initial_search_timer = SEARCH_INIT_TIME;
 				player.search_object = n;
-				/* Here, maybe trigger searching desk, or unlocking with keys */
+				break;
+			case TYPE_CORPSE:
+				player.initial_search_timer = SEARCH_INIT_TIME;
+				player.search_object = n;
 				break;
 			case TYPE_SOLDIER: /* Soldiers block player movement */
 				/* Here, maybe trigger soldier action? */
