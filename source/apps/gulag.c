@@ -21,7 +21,7 @@
  *
  * Player behaviors:
  *   ( ) Searching chests/desks/bodies for bullets, keys, etc.
- *   ( ) Inventory of bullets/grenades/keys/bullet proof vest etc.
+ *   (X) Inventory of bullets/grenades/keys/bullet proof vest etc.
  *   ( ) planting bomb
  *   (X) throwing grenades
  *   ( ) knifing?
@@ -94,6 +94,10 @@ static struct player {
 	short room;
 	short x, y; /* 8.8 signed fixed point */
 	short oldx, oldy;
+	short bullets, grenades, health;
+	unsigned char have_war_plans;
+	unsigned char keys;
+	short kills;
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
 	unsigned char current_room;
 	char anim_frame, prev_frame;
@@ -1303,6 +1307,11 @@ static void init_player(struct player *p, int start_room)
 	p->oldangle = 0;
 	p->anim_frame = 0;
 	p->prev_frame = 0;
+	p->bullets = 10;
+	p->grenades = 3;
+	p->health = 100 << 8;
+	p->keys = 0;
+	p->have_war_plans = 0;
 }
 
 static int astarx_to_8dot8x(int x)
@@ -2314,6 +2323,19 @@ static void draw_grenades(void)
 		draw_grenade(&grenade[i]);
 }
 
+static void draw_player_data(void)
+{
+	char buf[100];
+
+	FbColor(YELLOW);
+	snprintf(buf, sizeof(buf), "H:%4d", player.health >> 8);
+	FbMove(3, 130); FbWriteString(buf);
+	snprintf(buf, sizeof(buf), "B:%4d", player.bullets >> 8);
+	FbMove(3, 140); FbWriteString(buf);
+	snprintf(buf, sizeof(buf), "G:%4d", player.bullets >> 8);
+	FbMove(3, 150); FbWriteString(buf);
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
@@ -2323,6 +2345,7 @@ static void draw_screen(void)
 	draw_player(&player);
 	draw_grenades();
 	FbSwapBuffers();
+	draw_player_data();
 	screen_changed = 0;
 }
 
