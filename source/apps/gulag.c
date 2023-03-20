@@ -1604,6 +1604,7 @@ static void player_enter_room(struct player *p, int room, int x, int y)
 	FbClear();
 	screen_changed = 1;
 	init_room_cost(&castle, room);
+	ngrenades = 0; /* make any live grenades disappear */
 #if TARGET_SIMULATOR
 	print_castle_floor(&castle, p, get_room_floor(room));
 #endif
