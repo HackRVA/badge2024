@@ -44,7 +44,7 @@
  * Quality of Life
  *   ( ) Difficulty levels (easy/medium/hard/insane)
  *   ( ) Help screen
- *   ( ) Quit confirmation screen
+ *   (X) Quit confirmation screen
  *   ( ) Building map?
  *
  * Optimizations
@@ -66,6 +66,10 @@
 #include "string.h"
 #include "bline.h"
 #include "a_star.h"
+#include "dynmenu.h"
+
+static struct dynmenu quit_menu;
+static struct dynmenu_item quit_menu_item[2];
 
 /* Program states.  Initial state is GULAG_INIT */
 enum gulag_state_t {
@@ -73,6 +77,7 @@ enum gulag_state_t {
 	GULAG_INTRO,
 	GULAG_FLAG,
 	GULAG_RUN,
+	GULAG_MAYBE_EXIT,
 	GULAG_EXIT,
 };
 
@@ -2372,6 +2377,9 @@ static void check_buttons()
 			player.grenades--;
 		}
 	}
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_A, down_latches)) {
+		gulag_state = GULAG_MAYBE_EXIT;
+        }
 	if (button_poll(BADGE_BUTTON_LEFT)) {
 		short new_angle = player.angle + 3;
 		if (new_angle > 127)
@@ -2390,7 +2398,7 @@ static void check_buttons()
 		screen_changed = 1;
 		anything_pressed = 1;
 	}
-	if (button_poll(BADGE_BUTTON_UP) || button_poll(BADGE_BUTTON_ENCODER_B)) {
+	if (button_poll(BADGE_BUTTON_UP) || button_poll(BADGE_BUTTON_ENCODER_A)) {
 		anything_pressed = 1;
 		int newx, newy;
 		newx = ((-cosine(player.angle) * player_speed) >> 8) + player.x;
@@ -3045,10 +3053,38 @@ static void move_objects(void)
 static void gulag_run()
 {
 	check_buttons();
+	if (gulag_state != GULAG_RUN)
+		return;
 	draw_screen();
 	move_objects();
 	move_grenades();
 	maybe_search_for_loot();
+}
+
+static void gulag_maybe_exit()
+{
+	static char menu_initialized = 0;
+	if (!menu_initialized) {
+		dynmenu_init(&quit_menu, quit_menu_item, 2);
+		strcpy(quit_menu.title, "QUIT NOW?");
+		dynmenu_set_colors(&quit_menu, BLUE, YELLOW);
+		dynmenu_add_item(&quit_menu, "NO, DON'T QUIT", GULAG_RUN, 0);
+		dynmenu_add_item(&quit_menu, "YES, QUIT NOW", GULAG_EXIT, 0);
+		menu_initialized = 1;
+	}
+	dynmenu_draw(&quit_menu);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	int rotary_switch = button_get_rotation(0);
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_A, down_latches))
+		gulag_state = quit_menu.item[quit_menu.current_item].next_state;
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0)
+		dynmenu_change_current_selection(&quit_menu, 1);
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0)
+		dynmenu_change_current_selection(&quit_menu, -1);
 }
 
 static void gulag_exit()
@@ -3072,6 +3108,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_RUN:
 		gulag_run();
+		break;
+	case GULAG_MAYBE_EXIT:
+		gulag_maybe_exit();
 		break;
 	case GULAG_EXIT:
 		gulag_exit();
