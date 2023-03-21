@@ -2355,16 +2355,22 @@ static void check_buttons()
 	}
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
-		fire_gun(&player);
-		firing_timer = 10; /* not sure this will work on pico */
-		screen_changed = 1;
-		anything_pressed = 1;
+		if (player.bullets > 0) {
+			fire_gun(&player);
+			firing_timer = 10; /* not sure this will work on pico */
+			screen_changed = 1;
+			anything_pressed = 1;
+			player.bullets--;
+		}
 	}
         if (BUTTON_PRESSED(BADGE_BUTTON_SW2, down_latches)) {
-		throw_grenade(&player);
-		firing_timer = 10;
-		screen_changed = 1;
-		anything_pressed = 1;
+		if (player.grenades > 0) {
+			throw_grenade(&player);
+			firing_timer = 10;
+			screen_changed = 1;
+			anything_pressed = 1;
+			player.grenades--;
+		}
 	}
 	if (button_poll(BADGE_BUTTON_LEFT)) {
 		short new_angle = player.angle + 3;
