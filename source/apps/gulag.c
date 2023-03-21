@@ -84,11 +84,24 @@ enum gulag_state_t {
 #endif
 
 static const short player_speed = 512;
-static const short soldier_speed = 512;
+static const short soldier_speed = 256;
 static const short grenade_speed = 512;
 static const short grenade_speed_reduction = 128;
 #define GRENADE_FRAGMENTS 40
 static int game_timer = 0;
+
+struct loot {
+#define LOOT_TIME (30 * 2)
+	int timer;
+	char keys;
+	char grenades;
+	char bullets;
+	char war_plans;
+	char vodka;
+	char cabbage;
+	char potato;
+	char explosives;
+};
 
 static struct player {
 	short room;
@@ -101,12 +114,13 @@ static struct player {
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
 	unsigned char current_room;
 	char anim_frame, prev_frame;
-#define SEARCH_INIT_TIME 30
+#define SEARCH_INIT_TIME 20
 	int initial_search_timer;
-#define SEARCH_TIME (30 * 4)
+#define SEARCH_TIME (30 * 2)
 #define MIN_SEARCH_DIST2 (15 * 15)
 	int search_timer;
 	int search_object;
+	struct loot loot;
 } player;
 
 static char player_message[100] = { 0 };
@@ -281,6 +295,7 @@ struct gulag_desk_data {
 	uint16_t bullets:3;
 	uint16_t vodka:1;
 	uint16_t locked:1;
+	uint16_t already_looted:1;
 };
 
 struct gulag_soldier_data {
@@ -293,6 +308,7 @@ struct gulag_soldier_data {
 	uint16_t weapon:2;
 	uint16_t corpse_direction:1; /* left or right corpse variant */
 	uint16_t sees_player_now:1;
+	uint16_t already_looted:1;
 	char anim_frame;
 	char prev_frame;
 	/* Careful, char is *unsigned* by default on the badge! */
@@ -314,7 +330,6 @@ struct gulag_soldier_data {
 struct gulag_chest_data {
 	uint16_t bullets:3;
 	uint16_t grenades:3;
-	uint16_t weapons:2;
 	uint16_t war_plans:1;
 	uint16_t explosives:1;
 	uint16_t vodka:1;
@@ -322,6 +337,7 @@ struct gulag_chest_data {
 	uint16_t cabbage:1;
 	uint16_t locked:1;
 	uint16_t opened:1;
+	uint16_t already_looted:1;
 };
 
 #define MAXLIVEGRENADES 10
@@ -1066,6 +1082,7 @@ static void add_desk(struct castle *c)
 	go[n].tsd.desk.keys = (random_num(100) < 20);
 	go[n].tsd.desk.war_plans = 0;
 	go[n].tsd.desk.locked = (random_num(100) < 50);
+	go[n].tsd.desk.already_looted = 0;
 }
 
 static void add_desks(struct castle *c)
@@ -1095,9 +1112,9 @@ static void add_chest(struct castle *c)
 	go[n].tsd.chest.grenades = random_num(8);
 	go[n].tsd.chest.war_plans = 0;
 	go[n].tsd.chest.explosives = 0;
-	go[n].tsd.chest.weapons = 0;
 	go[n].tsd.chest.locked = (random_num(100) < 80);
 	go[n].tsd.chest.opened = 0;
+	go[n].tsd.chest.already_looted = 0;
 }
 
 static void add_chests(struct castle *c)
@@ -1133,6 +1150,7 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.state = SOLDIER_STATE_RESTING;
 	go[n].tsd.soldier.nsteps = 0;
 	go[n].tsd.soldier.current_step = 0;
+	go[n].tsd.soldier.already_looted = 0;
 	memset(go[n].tsd.soldier.pathx, 0, sizeof(go[n].tsd.soldier.pathx));
 	memset(go[n].tsd.soldier.pathy, 0, sizeof(go[n].tsd.soldier.pathy));
 }
@@ -1963,6 +1981,8 @@ static int bullet_track(int x, int y, void *cookie)
 				return 0;
 			case TYPE_DESK:
 				draw_bullet_debris(x, y);
+				if (random_num(100) < 50)
+					go[j].tsd.desk.locked = 0;
 				break;
 			case TYPE_SOLDIER:
 				draw_bullet_debris(x, y);
@@ -1981,6 +2001,8 @@ static int bullet_track(int x, int y, void *cookie)
 				break;
 			case TYPE_CHEST:
 				draw_bullet_debris(x, y);
+				if (random_num(100) < 50)
+					go[j].tsd.chest.locked = 0;
 				break;
 			case TYPE_CORPSE: /* bullets don't hit corpses because they are on the floor */
 				return 0;
@@ -2046,10 +2068,30 @@ static void throw_grenade(struct player *p)
 	ngrenades++;
 }
 
+static void update_player_loot(void)
+{
+
+	player.keys += player.loot.keys;
+	player.grenades += player.loot.grenades;
+	player.bullets += player.loot.bullets;
+	// player.war_plans += player.loot.war_plans;
+	// player.explosives += player.loot.explosives;
+	// player.cabbage += player.loot.cabbage;
+	//player.potato += player.loot.potato;
+}
+
 static void maybe_search_for_loot(void)
 {
 	char *object_type;
 	int distance2, dx, dy;
+
+#ifdef DEBUG_LOOT
+	printf("lt = %d, ist=%d, st=%d, lo=%d\n", player.loot.timer,
+		player.initial_search_timer, player.search_timer, player.search_object);
+#endif
+
+	if (player.loot.timer > 0)
+		player.loot.timer--;
 
 	if (player.search_object == -1) {
 		display_message = 0;
@@ -2066,7 +2108,7 @@ static void maybe_search_for_loot(void)
 		return;
 	}
 
-	if (player.initial_search_timer > 0) {
+	if (player.initial_search_timer > 0 && player.loot.timer == 0) {
 		player.initial_search_timer--;
 		if (player.initial_search_timer == 0)
 			player.search_timer = SEARCH_TIME;
@@ -2101,11 +2143,157 @@ static void maybe_search_for_loot(void)
 		if (player.search_timer > 0) {
 			player.search_timer--;
 			if (player.search_timer == 0) {
+				if (!locked)
+					player.loot.timer = LOOT_TIME;
+				else
+					player.search_object = -1;
 				player.initial_search_timer = SEARCH_INIT_TIME;
-				player.search_object = -1;
 				display_message = 0;
 				screen_changed = 1;
 			}
+		}
+	} else if (player.loot.timer > 0) {
+		switch (o->type) {
+		case TYPE_CORPSE:
+			if (!o->tsd.soldier.already_looted) {
+				player.loot.keys = o->tsd.soldier.keys;
+				player.loot.grenades = o->tsd.soldier.grenades;
+				player.loot.bullets = o->tsd.soldier.bullets;
+				player.loot.war_plans = 0;
+				player.loot.explosives = 0;
+				player.loot.cabbage = 0;
+				player.loot.potato = 0;
+
+				o->tsd.soldier.already_looted = 1;
+				o->tsd.soldier.keys = 0;
+				o->tsd.soldier.grenades = 0;
+				o->tsd.soldier.bullets = 0;
+
+				update_player_loot();
+#ifdef DEBUG_LOOT
+				printf("body loot = k%d g%d b%d w%d e%d c%d p%d\n",
+					player.loot.keys,
+					player.loot.grenades,
+					player.loot.bullets,
+					player.loot.war_plans,
+					player.loot.explosives,
+					player.loot.cabbage,
+					player.loot.potato);
+#endif
+				screen_changed = 1;
+			} else {
+#ifdef DEBUG_LOOT
+				printf("Already looted\n");
+#endif
+				player.loot.keys = 0;
+				player.loot.grenades = 0;
+				player.loot.bullets = 0;
+				player.loot.war_plans = 0;
+				player.loot.explosives = 0;
+				player.loot.cabbage = 0;
+				player.loot.potato = 0;
+			}
+			break;
+		case TYPE_DESK:
+			if (!o->tsd.desk.already_looted) {
+				player.loot.keys = o->tsd.desk.keys;
+				player.loot.bullets = o->tsd.desk.bullets;
+				player.loot.grenades = 0;
+				player.loot.vodka = o->tsd.desk.vodka;
+				player.loot.war_plans = o->tsd.desk.war_plans;
+				player.loot.explosives = 0;
+				player.loot.cabbage = 0;
+				player.loot.potato = 0;
+
+				o->tsd.desk.already_looted = 1;
+				o->tsd.desk.keys = 0;
+				o->tsd.desk.bullets = 0;
+				o->tsd.desk.vodka = 0;
+				o->tsd.desk.war_plans = 0;
+
+				update_player_loot();
+#ifdef DEBUG_LOOT
+				printf("desk loot = k%d g%d b%d w%d e%d c%d p%d\n",
+					player.loot.keys,
+					player.loot.grenades,
+					player.loot.bullets,
+					player.loot.war_plans,
+					player.loot.explosives,
+					player.loot.cabbage,
+					player.loot.potato);
+#endif
+
+				screen_changed = 1;
+			} else {
+#ifdef DEBUG_LOOT
+				printf("Already looted\n");
+#endif
+				player.loot.keys = 0;
+				player.loot.grenades = 0;
+				player.loot.bullets = 0;
+				player.loot.war_plans = 0;
+				player.loot.explosives = 0;
+				player.loot.cabbage = 0;
+				player.loot.potato = 0;
+			}
+			break;
+		case TYPE_CHEST:
+			if (!o->tsd.chest.already_looted) {
+				player.loot.keys = 0;
+				player.loot.bullets = o->tsd.chest.bullets;
+				player.loot.grenades = o->tsd.chest.grenades;
+				player.loot.vodka = 0;
+				player.loot.war_plans = 0;
+				player.loot.explosives = o->tsd.chest.explosives;
+				player.loot.cabbage = o->tsd.chest.cabbage;
+				player.loot.potato = o->tsd.chest.potato;
+
+				o->tsd.chest.already_looted = 1;
+				o->tsd.chest.bullets = 0;
+				o->tsd.chest.grenades = 0;
+				o->tsd.chest.explosives = 0;
+				o->tsd.chest.cabbage = 0;
+				o->tsd.chest.potato = 0;
+				o->tsd.chest.opened = 1;
+
+				update_player_loot();
+#ifdef DEBUG_LOOT
+				printf("chest loot = k%d g%d b%d w%d e%d c%d p%d\n",
+					player.loot.keys,
+					player.loot.grenades,
+					player.loot.bullets,
+					player.loot.war_plans,
+					player.loot.explosives,
+					player.loot.cabbage,
+					player.loot.potato);
+#endif
+
+				screen_changed = 1;
+			} else {
+#ifdef DEBUG_LOOT
+				printf("Already looted\n");
+#endif
+				player.loot.keys = 0;
+				player.loot.grenades = 0;
+				player.loot.bullets = 0;
+				player.loot.war_plans = 0;
+				player.loot.explosives = 0;
+				player.loot.cabbage = 0;
+				player.loot.potato = 0;
+			}
+			break;
+		}
+		if (player.loot.timer == 0) {
+				player.loot.keys = 0;
+				player.loot.bullets = 0;
+				player.loot.grenades = 0;
+				player.loot.vodka = 0;
+				player.loot.war_plans = 0;
+				player.loot.explosives = 0;
+				player.loot.cabbage = 0;
+				player.loot.potato = 0;
+				display_message = 0;
+				screen_changed = 1;
 		}
 	} else {
 		player.initial_search_timer = SEARCH_INIT_TIME;
@@ -2222,6 +2410,7 @@ static void check_buttons()
 			player.search_object = -1;
 			player.search_timer = SEARCH_INIT_TIME;
 			display_message = 0;
+			player.loot.timer = 0;
 		}
 
 		player.oldx = player.x;
@@ -2414,6 +2603,17 @@ static void draw_grenades(void)
 		draw_grenade(&grenade[i]);
 }
 
+static void print_loot(int *y, char *buf, size_t bufsize, char *name, int quantity, int *total_found)
+{
+	if (quantity == 0)
+		return;
+	(*total_found) += quantity;
+	FbMove(3, *y);
+	snprintf(buf, bufsize, "%d %s", quantity, name);
+	FbWriteString(buf);
+	(*y) += 8;
+}
+
 static void draw_player_data(void)
 {
 	char buf[100];
@@ -2425,13 +2625,34 @@ static void draw_player_data(void)
 		return;
 	}
 
+	if (player.loot.timer > 0) {
+		FbColor(YELLOW);
+		int y = 128;
+		int total_found = 0;
+		print_loot(&y, buf, sizeof(buf), "KEYS", player.loot.keys, &total_found);
+		print_loot(&y, buf, sizeof(buf), "BULLETS", player.loot.bullets, &total_found);
+		print_loot(&y, buf, sizeof(buf), "GRENADES", player.loot.grenades, &total_found);
+		print_loot(&y, buf, sizeof(buf), "WAR PLANS", player.loot.war_plans, &total_found);
+		print_loot(&y, buf, sizeof(buf), "VODKA", player.loot.vodka, &total_found);
+		print_loot(&y, buf, sizeof(buf), "CABBAGE", player.loot.cabbage, &total_found);
+		print_loot(&y, buf, sizeof(buf), "POTATO", player.loot.potato, &total_found);
+		print_loot(&y, buf, sizeof(buf), "EXPLOSIVES", player.loot.explosives, &total_found);
+		if (total_found == 0) {
+			FbMove(3, y);
+			FbWriteString("FOUND NOTHING!");
+		}
+		return;
+	}
+
 	FbColor(YELLOW);
 	snprintf(buf, sizeof(buf), "H:%4d", player.health >> 8);
 	FbMove(3, 130); FbWriteString(buf);
-	snprintf(buf, sizeof(buf), "B:%4d", player.bullets >> 8);
+	snprintf(buf, sizeof(buf), "B:%4d", player.bullets);
 	FbMove(3, 140); FbWriteString(buf);
-	snprintf(buf, sizeof(buf), "G:%4d", player.bullets >> 8);
+	snprintf(buf, sizeof(buf), "G:%4d", player.grenades);
 	FbMove(3, 150); FbWriteString(buf);
+	snprintf(buf, sizeof(buf), "K:%4d", player.keys);
+	FbMove(64, 130); FbWriteString(buf);
 }
 
 static void draw_screen(void)
