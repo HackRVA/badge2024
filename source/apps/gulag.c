@@ -42,7 +42,7 @@
  *   ( ) Flamethrowers
  *
  * Quality of Life
- *   ( ) Difficulty levels (easy/medium/hard/insane)
+ *   (X) Difficulty levels (easy/medium/hard/insane)
  *   ( ) Help screen
  *   (X) Quit confirmation screen
  *   ( ) Building map?
@@ -68,6 +68,9 @@
 #include "a_star.h"
 #include "dynmenu.h"
 
+static struct dynmenu start_menu;
+#define START_MENU_SIZE 5
+static struct dynmenu_item start_menu_item[START_MENU_SIZE];
 static struct dynmenu quit_menu;
 static struct dynmenu_item quit_menu_item[2];
 
@@ -76,6 +79,7 @@ enum gulag_state_t {
 	GULAG_INIT,
 	GULAG_INTRO,
 	GULAG_FLAG,
+	GULAG_START_MENU,
 	GULAG_RUN,
 	GULAG_MAYBE_EXIT,
 	GULAG_EXIT,
@@ -88,8 +92,19 @@ enum gulag_state_t {
 #define printf(...)
 #endif
 
+struct difficulty_settings {
+	short soldier_speed;
+	short soldier_shoot_cooldown;
+	short bullet_damage;
+} difficulty[] = {
+	{ 128, 30, 1 << 8, }, /* easy */
+	{ 200, 25, 2 << 8, }, /* medium */
+	{ 256, 20, 3 << 8, }, /* hard */
+	{ 300, 15, 4 << 8, }, /* insane */
+};
+static int difficulty_level;
+
 static const short player_speed = 512;
-static const short soldier_speed = 256;
 static const short grenade_speed = 512;
 static const short grenade_speed_reduction = 128;
 #define GRENADE_FRAGMENTS 40
@@ -114,7 +129,6 @@ static struct player {
 	short oldx, oldy;
 	short bullets, grenades;
 	short health; /* 8.8 fixed point */
-#define BULLET_DAMAGE (1 << 8)
 	unsigned char have_war_plans;
 	unsigned char keys;
 	short kills;
@@ -333,7 +347,6 @@ struct gulag_soldier_data {
 	unsigned char pathx[SOLDIER_PATH_LENGTH], pathy[SOLDIER_PATH_LENGTH];
 	unsigned char current_step, nsteps;
 	unsigned char shoot_cooldown;
-#define SOLDIER_SHOOT_COOLDOWN 20
 };
 
 struct gulag_chest_data {
@@ -1160,7 +1173,7 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.nsteps = 0;
 	go[n].tsd.soldier.current_step = 0;
 	go[n].tsd.soldier.already_looted = 0;
-	go[n].tsd.soldier.shoot_cooldown = SOLDIER_SHOOT_COOLDOWN;
+	go[n].tsd.soldier.shoot_cooldown = difficulty[difficulty_level].soldier_shoot_cooldown;
 	memset(go[n].tsd.soldier.pathx, 0, sizeof(go[n].tsd.soldier.pathx));
 	memset(go[n].tsd.soldier.pathy, 0, sizeof(go[n].tsd.soldier.pathy));
 }
@@ -1583,14 +1596,14 @@ static void gulag_intro(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
-		gulag_state = GULAG_RUN;
+		gulag_state = GULAG_START_MENU;
 }
 
 static void gulag_flag(void)
 {
 	if (flag_offset == 80) {
 		flag_offset = 0;
-		gulag_state = GULAG_RUN;
+		gulag_state = GULAG_START_MENU;
 		return;
 	}
 	FbMove(0, 0);
@@ -1604,7 +1617,7 @@ static void gulag_flag(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
-		gulag_state = GULAG_RUN;
+		gulag_state = GULAG_START_MENU;
 }
 
 static void player_wins(void)
@@ -2040,7 +2053,7 @@ static int bullet_track(int x, int y, void *cookie)
 
 		if (bb_bb_collision(x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, bbx1, bby1, bbx2, bby2)) {
 			if (player.health > 0)
-				player.health = player.health - BULLET_DAMAGE;
+				player.health = player.health - difficulty[difficulty_level].bullet_damage;
 			if ((player.health >> 8) <= 0) {
 				printf("PLAYER IS DEAD!\n");
 			}
@@ -2810,7 +2823,7 @@ static void maybe_shoot_player(struct gulag_object *s)
 	if (angle < 0)
 		angle += 128;
 	fire_bullet(&player, (s->x >> 8) + 4, (s->y >> 8) + 8, angle, s - &go[0]);
-	s->tsd.soldier.shoot_cooldown = SOLDIER_SHOOT_COOLDOWN;
+	s->tsd.soldier.shoot_cooldown = difficulty[difficulty_level].soldier_shoot_cooldown;
 }
 
 static void move_soldier(struct gulag_object *s)
@@ -2905,8 +2918,8 @@ static void move_soldier(struct gulag_object *s)
 			if (angle < 0)
 				angle += 128;
 			s->tsd.soldier.angle = (unsigned char) angle;
-			newx = ((-cosine(angle) * soldier_speed) >> 8) + s->x;
-			newy = ((sine(angle) * soldier_speed) >> 8) + s->y;
+			newx = ((-cosine(angle) * difficulty[difficulty_level].soldier_speed) >> 8) + s->x;
+			newy = ((sine(angle) * difficulty[difficulty_level].soldier_speed) >> 8) + s->y;
 
 			s->x = newx;
 			s->y = newy;
@@ -3061,6 +3074,41 @@ static void gulag_run()
 	maybe_search_for_loot();
 }
 
+static void gulag_start_menu()
+{
+	static char menu_initialized = 0;
+	if (!menu_initialized) {
+		dynmenu_init(&start_menu, start_menu_item, START_MENU_SIZE);
+		strcpy(start_menu.title, "GOODBYE GULAG");
+		strcpy(start_menu.title2, "CHOOSE");
+		strcpy(start_menu.title3, "DIFICULTY");
+		dynmenu_set_colors(&start_menu, BLUE, YELLOW);
+		dynmenu_add_item(&start_menu, "EASY", GULAG_RUN, 0);
+		dynmenu_add_item(&start_menu, "MEDIUM", GULAG_RUN, 1);
+		dynmenu_add_item(&start_menu, "HARD", GULAG_RUN, 2);
+		dynmenu_add_item(&start_menu, "INSANE", GULAG_RUN, 3);
+		dynmenu_add_item(&start_menu, "QUIT", GULAG_EXIT, 4);
+		menu_initialized = 1;
+	}
+	dynmenu_draw(&start_menu);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	int rotary_switch = button_get_rotation(0);
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_A, down_latches)) {
+		int choice = start_menu.item[start_menu.current_item].cookie;
+		if (choice >= 0 && choice < 4)
+			difficulty_level = choice;
+		gulag_state = start_menu.item[start_menu.current_item].next_state;
+	}
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0)
+		dynmenu_change_current_selection(&start_menu, 1);
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0)
+		dynmenu_change_current_selection(&start_menu, -1);
+}
+
 static void gulag_maybe_exit()
 {
 	static char menu_initialized = 0;
@@ -3105,6 +3153,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_FLAG:
 		gulag_flag();
+		break;
+	case GULAG_START_MENU:
+		gulag_start_menu();
 		break;
 	case GULAG_RUN:
 		gulag_run();
