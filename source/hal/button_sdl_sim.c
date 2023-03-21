@@ -312,18 +312,22 @@ int key_release_cb(SDL_Keysym *keysym)
 {
     BADGE_BUTTON button = BADGE_BUTTON_MAX;
     switch (keysym->sym) {
+        case SDLK_k:
         case SDLK_w:
         case SDLK_UP:
             button = BADGE_BUTTON_UP;
             break;
+        case SDLK_j:
         case SDLK_s:
         case SDLK_DOWN:
             button = BADGE_BUTTON_DOWN;
             break;
+        case SDLK_h:
         case SDLK_a:
         case SDLK_LEFT:
             button = BADGE_BUTTON_LEFT;
             break;
+        case SDLK_l:
         case SDLK_d:
         case SDLK_RIGHT:
             button = BADGE_BUTTON_RIGHT;
@@ -340,6 +344,15 @@ int key_release_cb(SDL_Keysym *keysym)
 	case SDLK_RCTRL:
 		control_key_pressed = 0;
 	break;
+        case SDLK_b:
+            button = BADGE_BUTTON_SW2;
+        break;
+        case SDLK_n:
+            button = BADGE_BUTTON_ENCODER_B;
+        break;
+        case SDLK_v:
+            button = BADGE_BUTTON_ENCODER_A;
+        break;
         default:
             break;
     }
