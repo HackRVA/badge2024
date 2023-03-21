@@ -253,6 +253,18 @@ int key_press_cb(SDL_Keysym *keysym)
             button = BADGE_BUTTON_SW;
             sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
         break;
+        case SDLK_b:
+            button = BADGE_BUTTON_SW2;
+            sim_button_status.button_b = BUTTON_DISPLAY_DURATION;
+        break;
+        case SDLK_v:
+            button = BADGE_BUTTON_ENCODER_A;
+            sim_button_status.left_rotary_button = BUTTON_DISPLAY_DURATION;
+        break;
+        case SDLK_n:
+            button = BADGE_BUTTON_ENCODER_B;
+            sim_button_status.right_rotary_button = BUTTON_DISPLAY_DURATION;
+        break;
         case SDLK_q:
         case SDLK_ESCAPE:
             time_to_quit = 1;
