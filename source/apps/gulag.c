@@ -83,6 +83,7 @@ enum gulag_state_t {
 	GULAG_START_MENU,
 	GULAG_RUN,
 	GULAG_SAFECRACKING,
+	GULAG_SAFE_CRACKED,
 	GULAG_PLAYER_DIED,
 	GULAG_MAYBE_EXIT,
 	GULAG_EXIT,
@@ -145,6 +146,7 @@ static struct player {
 	int search_timer;
 	int search_object;
 	int safecracking_cooldown;
+#define SAFECRACK_COOLDOWN_TIME 60
 	int current_safe;
 	struct loot loot;
 } player;
@@ -370,8 +372,18 @@ static const char *safe_documents[] = {
 
 struct gulag_safe_data {
 	uint8_t documents;
-	uint8_t combo[3];
+	uint8_t combo[3]; /* R38, L16, R42, or whatever */
 	uint8_t opened;
+	int angle, first_angle, second_angle;
+	uint8_t right_rotations;
+	uint8_t left_rotations;
+	uint8_t state;
+#define COMBO_STATE_WAITING_FOR_FIRST_REV 0
+#define COMBO_STATE_WAITING_FOR_SECOND_REV 1
+#define COMBO_STATE_GETTING_FIRST_NUMBER 2
+#define COMBO_STATE_WAITING_FOR_LEFT_REV 3
+#define COMBO_STATE_GETTING_SECOND_NUMBER 4
+#define COMBO_STATE_GETTING_THIRD_NUMBER 5
 };
 
 struct gulag_chest_data {
@@ -2176,6 +2188,9 @@ static void maybe_search_for_loot(void)
 	char *object_type;
 	int distance2, dx, dy;
 
+	if (player.safecracking_cooldown > 0)
+		player.safecracking_cooldown--;
+
 #ifdef DEBUG_LOOT
 	printf("lt = %d, ist=%d, st=%d, lo=%d\n", player.loot.timer,
 		player.initial_search_timer, player.search_timer, player.search_object);
@@ -2412,6 +2427,12 @@ static void maybe_crack_safe(struct gulag_object *safe)
 	}
 	gulag_state = GULAG_SAFECRACKING;
 	player.current_safe = safe - &go[0];
+	safe->tsd.safe.right_rotations = 0;
+	safe->tsd.safe.left_rotations = 0;
+	safe->tsd.safe.angle = random_num(128);
+	safe->tsd.safe.first_angle = safe->tsd.safe.angle;
+	safe->tsd.safe.second_angle = safe->tsd.safe.angle;
+	safe->tsd.safe.state = COMBO_STATE_WAITING_FOR_FIRST_REV;
 }
 
 static void check_buttons()
@@ -3279,10 +3300,11 @@ static void gulag_player_died()
 	}
 }
 
-static void draw_safecracking_screen(struct gulag_object *safe, int angle)
+static void draw_safecracking_screen(struct gulag_object *s)
 {
 	char buf[4];
 	int x, y, r1, r2, r3;
+	int angle = s->tsd.safe.angle;
 
 	FbClear();
 	FbColor(CYAN);
@@ -3329,8 +3351,11 @@ static void draw_safecracking_screen(struct gulag_object *safe, int angle)
 
 static void gulag_safecracking()
 {
-	static int angle = 0;
 	struct gulag_object *s;
+	static int first_number = -1;
+	static int second_number = -1;
+	static int third_number = -1;
+	int angle, i, n, d;
 
 	if (player.current_safe == -1) {
 		gulag_state = GULAG_RUN;
@@ -3338,15 +3363,111 @@ static void gulag_safecracking()
 	}
 	s = &go[player.current_safe];
 
-	draw_safecracking_screen(s, angle);
-	int rotary_switch = button_get_rotation(0);
-	angle += rotary_switch;
-	while (angle < 0)
-		angle += 128;
-	while (angle >= 128)
-		angle -= 128;
+	draw_safecracking_screen(s);
 
-	// check_safecracking_buttons(s);
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+		printf("Trying combo R%d, L%d, R%d\n", first_number, second_number, third_number);
+		if (first_number == s->tsd.safe.combo[0] &&
+			second_number == s->tsd.safe.combo[1] &&
+			third_number == s->tsd.safe.combo[2]) {
+			printf("Safe is opened!\n");
+			s->tsd.safe.opened = 1;
+			gulag_state = GULAG_SAFE_CRACKED;
+			return;
+		} else {
+			printf("Safe is not opened\n");
+		}
+	}
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW2, down_latches)) {
+		/* Give up on cracking the safe */
+		player.safecracking_cooldown = SAFECRACK_COOLDOWN_TIME;
+		gulag_state = GULAG_RUN;
+		return;
+	}
+
+	int rotary_switch = button_get_rotation(0);
+	if (rotary_switch == 0)
+		return;
+
+	n = abs(rotary_switch);
+	d = (rotary_switch < 0) ? -1 : 1;
+
+	for (i = 0; i < n; i++) {
+		angle = s->tsd.safe.angle;
+		angle += d;
+		while (angle < 0)
+			angle += 128;
+		while (angle >= 128)
+			angle -= 128;
+
+		switch (s->tsd.safe.state) {
+		case COMBO_STATE_WAITING_FOR_FIRST_REV:
+			first_number = -1;
+			second_number = -1;
+			third_number = -1;
+			if (angle == s->tsd.safe.first_angle && rotary_switch > 0 &&
+				s->tsd.safe.angle != s->tsd.safe.first_angle) {
+				s->tsd.safe.state = COMBO_STATE_WAITING_FOR_SECOND_REV;
+				printf("Waiting for 2nd rev\n");
+			}
+			break;
+		case COMBO_STATE_WAITING_FOR_SECOND_REV:
+			if (angle == s->tsd.safe.first_angle && rotary_switch > 0 &&
+				s->tsd.safe.angle != s->tsd.safe.first_angle) {
+				s->tsd.safe.state = COMBO_STATE_GETTING_FIRST_NUMBER;
+				printf("Getting first number\n");
+			}
+			break;
+		case COMBO_STATE_GETTING_FIRST_NUMBER:
+			if (rotary_switch < 0) {
+				first_number = 64 - (s->tsd.safe.angle / 2) - 1;
+				printf("Got first number: %d\n", first_number);
+				s->tsd.safe.state = COMBO_STATE_WAITING_FOR_LEFT_REV;
+				s->tsd.safe.second_angle = s->tsd.safe.angle;
+			}
+			break;
+		case COMBO_STATE_WAITING_FOR_LEFT_REV:
+			if (angle == s->tsd.safe.second_angle && rotary_switch < 0 &&
+				s->tsd.safe.angle != s->tsd.safe.second_angle) {
+				s->tsd.safe.state = COMBO_STATE_GETTING_SECOND_NUMBER;
+				printf("Getting second number\n");
+			}
+			break;
+		case COMBO_STATE_GETTING_SECOND_NUMBER:
+			if (rotary_switch > 0) {
+				second_number = 64 - (s->tsd.safe.angle / 2) - 1;
+				printf("Got second number: %d\n", second_number);
+				s->tsd.safe.state = COMBO_STATE_GETTING_THIRD_NUMBER;
+			}
+			break;
+		case COMBO_STATE_GETTING_THIRD_NUMBER:
+			third_number = 64 - (angle / 2) - 1;
+			printf("third number = %d\n", third_number);
+			if (rotary_switch < 0) {
+				s->tsd.safe.state = COMBO_STATE_WAITING_FOR_FIRST_REV;
+				printf("Waiting for first rev\n");
+			}
+			break;
+		}
+	}
+	s->tsd.safe.angle = angle;
+}
+
+static void gulag_safe_cracked(void)
+{
+	struct gulag_object *s = &go[player.current_safe];
+
+	FbClear();
+	FbColor(CYAN);
+	FbMove(3, 3);
+	FbWriteString("YOU OPENED THE\nSAFE AND FOUND\nTOP SECRET\n");
+	FbWriteString(safe_documents[s->tsd.safe.documents]);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+		gulag_state = GULAG_RUN;
 }
 
 void gulag_cb(void)
@@ -3376,6 +3497,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_SAFECRACKING:
 		gulag_safecracking();
+		break;
+	case GULAG_SAFE_CRACKED:
+		gulag_safe_cracked();
 		break;
 	case GULAG_EXIT:
 		gulag_exit();
