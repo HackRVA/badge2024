@@ -38,7 +38,7 @@
  *   ( ) remote detonator
  *   ( ) Win condition/scene
  *   (X) Lose condition/scene
- *   ( ) Safes, and safe-cracking mini game
+ *   (/) Safes, and safe-cracking mini game
  *   ( ) Flamethrowers
  *
  * Quality of Life
@@ -351,6 +351,25 @@ struct gulag_soldier_data {
 	unsigned char shoot_cooldown;
 };
 
+static const char *safe_documents[] = {
+	"INVASION\nPLANS",
+	"FIGHTER JET\nPLANS",
+	"TANK\nBLUEPRINTS",
+	"DEATH RAY\nBLUEPRINTS",
+	"LOGISTICS\nPLANS",
+	"KOMPROMAT",
+	"BOMB PLANS",
+	"WARSHIP PLANS",
+	"BOMBER PLANS",
+};
+
+#define SAFE_DOC_COUNT (sizeof(safe_documents) / sizeof(safe_documents[0]))
+
+struct gulag_safe_data {
+	uint8_t documents;
+	uint8_t combo[3];
+};
+
 struct gulag_chest_data {
 	uint16_t bullets:3;
 	uint16_t grenades:3;
@@ -379,6 +398,7 @@ union gulag_type_specific_data {
 	struct gulag_desk_data desk;
 	struct gulag_soldier_data soldier; /* also used by corpses */
 	struct gulag_chest_data chest;
+	struct gulag_safe_data safe;
 };
 
 struct gulag_object {
@@ -391,6 +411,7 @@ struct gulag_object {
 #define TYPE_SOLDIER 3
 #define TYPE_CHEST 4
 #define TYPE_CORPSE 5
+#define TYPE_SAFE 6
 	union gulag_type_specific_data tsd;
 } go[GULAG_MAXOBJS];
 int gulag_nobjs = 0;
@@ -406,6 +427,7 @@ static void move_soldier(struct gulag_object *s);
 static void draw_corpse(struct gulag_object *o);
 static void draw_chest(struct gulag_object *o);
 static void draw_grenade(struct grenade *o);
+static void draw_safe(struct gulag_object *o);
 static void move_grenade(struct grenade *s);
 
 /* Check if a bounding box and a wall segment collide.
@@ -502,6 +524,7 @@ struct gulag_object_typical_data {
 	{ 8, 16, draw_soldier, move_soldier },
 	{ 16, 8, draw_chest, NULL },
 	{ 16, 8, draw_corpse, NULL, },
+	{ 16, 16, draw_safe, NULL, },
 };
 
 static const signed char muzzle_xoffset[] = { 7, 7, 6, 6, 0, 0, 0, 5, };
@@ -1147,6 +1170,32 @@ static void add_chests(struct castle *c)
 		add_chest(c);
 }
 
+static void add_safe(struct castle *c, int floor)
+{
+	int col, row, room;
+
+	row = random_num(CASTLE_ROWS);
+	col = random_num(CASTLE_COLS);
+	room = room_no(floor, col, row);
+
+	int x = random_num(127 - 40) + 8;
+	int y = random_num(127 - 16 - 16);
+
+	int n = add_object_to_room(c, room, TYPE_SAFE, x << 8, y << 8);
+	if (n < 0)
+		return;
+	go[n].tsd.safe.documents = random_num(SAFE_DOC_COUNT);
+	go[n].tsd.safe.combo[0] = random_num(65);
+	go[n].tsd.safe.combo[1] = random_num(65);
+	go[n].tsd.safe.combo[2] = random_num(65);
+}
+
+static void add_safes(struct castle *c)
+{
+	for (int i = 0; i < CASTLE_FLOORS; i++)
+		add_safe(c, i);
+}
+
 static void add_soldier_to_room(struct castle *c, int room)
 {
 	int x, y;
@@ -1287,6 +1336,7 @@ static void init_castle(struct castle *c)
 	add_stairs(&castle);
 	add_desks(&castle);
 	add_chests(&castle);
+	add_safes(&castle);
 	add_soldiers(&castle);
 }
 
@@ -2639,6 +2689,15 @@ static void draw_grenades(void)
 {
 	for (int i = 0; i < ngrenades; i++)
 		draw_grenade(&grenade[i]);
+}
+
+static void draw_safe(struct gulag_object *safe)
+{
+	FbColor(CYAN);
+	FbMove(safe->x >> 8, safe->y >> 8);
+	FbRectangle(16, 16);
+	FbMove((safe->x >> 8) + 3, (safe->y >> 8) + 3);
+	FbRectangle(10, 10);
 }
 
 static void print_loot(int *y, char *buf, size_t bufsize, char *name, int quantity, int *total_found)
