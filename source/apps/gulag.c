@@ -1038,13 +1038,27 @@ static void add_staircase(struct castle *c, int floor, int col, int row, int sta
 	c->room[room].nobjs++;
 }
 
+static int contains_stairs(struct castle *c, int floor, int col, int row)
+{
+	int room = room_no(floor, col, row);
+	for (int i = 0; i < c->room[room].nobjs; i++) {
+		int j = c->room[room].obj[i];
+		if (go[j].type == TYPE_STAIRS_DOWN || go[j].type == TYPE_STAIRS_UP)
+			return 1;
+	}
+	return 0;
+}
+
 static void add_stairs(struct castle *c)
 {
 	int row, col;
 
 	for (int i = CASTLE_FLOORS - 1; i > 0; i--) {
-		row = random_num(CASTLE_ROWS);
-		col = random_num(CASTLE_COLS);
+		/* This loop is to ensure up/down stairs do not overlap on same floor */ 
+		do {
+			row = random_num(CASTLE_ROWS);
+			col = random_num(CASTLE_COLS);
+		} while (contains_stairs(c, i, col, row));
 		add_staircase(c, i, col, row, TYPE_STAIRS_DOWN);
 		add_staircase(c, i - 1, col, row, TYPE_STAIRS_UP);
 	}
