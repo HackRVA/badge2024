@@ -1898,32 +1898,6 @@ static int player_object_collision(struct castle *c, struct player *p, int newx,
 	return 0;
 }
 
-static void teleport_soldier(__attribute__((unused)) struct gulag_object *soldier)
-{
-	/* TODO: fill this in */
-}
-
-static void check_player_soldier_entanglement(struct player *p, int s)
-{
-	struct gulag_object *soldier = &go[s];
-	int px = p->x - (4 << 8);
-	int direction, dx;
-
-	if (px < soldier->x) {
-		direction = 1; /* shove soldier right */
-		dx = soldier->x - px;
-	} else {
-		direction = -1; /* shove soldier left */
-		dx = px - soldier->x;
-	}
-	if (dx < (9 << 8)) {
-		int amount = direction * ((9 << 8) - dx);
-		soldier->x += amount;
-		if (soldier->x <= 0 || soldier->x >= 127 - 8)
-			teleport_soldier(soldier);
-	}
-}
-
 int shooting_frame(struct player *p)
 {
 	if (p->angle < 8 || p->angle > 119)
@@ -2466,10 +2440,6 @@ static void check_buttons()
 				break;
 			case TYPE_SOLDIER: /* Soldiers block player movement */
 				/* Here, maybe trigger soldier action? */
-				newx = player.x;
-				newy = player.y;
-
-				check_player_soldier_entanglement(&player, n);
 				break;
 			default:
 				break;
