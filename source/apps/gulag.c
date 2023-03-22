@@ -82,6 +82,7 @@ enum gulag_state_t {
 	GULAG_FLAG,
 	GULAG_START_MENU,
 	GULAG_RUN,
+	GULAG_SAFECRACKING,
 	GULAG_PLAYER_DIED,
 	GULAG_MAYBE_EXIT,
 	GULAG_EXIT,
@@ -143,6 +144,8 @@ static struct player {
 #define MIN_SEARCH_DIST2 (15 * 15)
 	int search_timer;
 	int search_object;
+	int safecracking_cooldown;
+	int current_safe;
 	struct loot loot;
 } player;
 
@@ -368,6 +371,7 @@ static const char *safe_documents[] = {
 struct gulag_safe_data {
 	uint8_t documents;
 	uint8_t combo[3];
+	uint8_t opened;
 };
 
 struct gulag_chest_data {
@@ -1188,6 +1192,7 @@ static void add_safe(struct castle *c, int floor)
 	go[n].tsd.safe.combo[0] = random_num(65);
 	go[n].tsd.safe.combo[1] = random_num(65);
 	go[n].tsd.safe.combo[2] = random_num(65);
+	go[n].tsd.safe.opened = 0;
 }
 
 static void add_safes(struct castle *c)
@@ -1416,6 +1421,8 @@ static void init_player(struct player *p, int start_room)
 	p->have_war_plans = 0;
 	p->search_object = -1;
 	p->kills = 0;
+	p->safecracking_cooldown = 0;
+	p->current_safe = -1;
 }
 
 static int astarx_to_8dot8x(int x)
@@ -1925,6 +1932,7 @@ static int player_object_collision(struct castle *c, struct player *p, int newx,
 		case TYPE_CHEST: /* Fallthrough */
 		case TYPE_SOLDIER: /* Fallthrough */
 		case TYPE_CORPSE:
+		case TYPE_SAFE:
 			w = objconst[t].w;
 			h = objconst[t].h;
 
@@ -2386,6 +2394,26 @@ static void maybe_search_for_loot(void)
 	}
 }
 
+static void maybe_crack_safe(struct gulag_object *safe)
+{
+	/* Wait some time between safecracking attempts */
+	if (player.safecracking_cooldown > 0)
+		return;
+
+	/* Can't crack a safe if it's already open */
+	if (safe->tsd.safe.opened)
+		return;
+
+	/* Not safe to attempt safecracking if soldiers are running around here */
+	for (int i = 0; i < castle.room[player.room].nobjs; i++) {
+		int n = castle.room[player.room].obj[i];
+		if (go[n].type == TYPE_SOLDIER)
+			return;
+	}
+	gulag_state = GULAG_SAFECRACKING;
+	player.current_safe = safe - &go[0];
+}
+
 static void check_buttons()
 {
 	static int firing_timer = 0;
@@ -2490,6 +2518,9 @@ static void check_buttons()
 				break;
 			case TYPE_SOLDIER: /* Soldiers block player movement */
 				/* Here, maybe trigger soldier action? */
+				break;
+			case TYPE_SAFE:
+				maybe_crack_safe(&go[n]);
 				break;
 			default:
 				break;
@@ -3248,6 +3279,76 @@ static void gulag_player_died()
 	}
 }
 
+static void draw_safecracking_screen(struct gulag_object *safe, int angle)
+{
+	char buf[4];
+	int x, y, r1, r2, r3;
+
+	FbClear();
+	FbColor(CYAN);
+	FbMove(3, 3);
+	FbWriteString("CRACK THE SAFE");
+	snprintf(buf, sizeof(buf), "%02d", 64 - (angle / 2) - 1);
+	FbMove(LCD_XSIZE / 2 - 10, 30);
+	FbWriteString(buf);
+	x = LCD_XSIZE / 2;
+	y = LCD_YSIZE / 2 + 20;
+	r2 = ((80 * LCD_XSIZE / 2) / 100);
+	r1 = ((40 * LCD_XSIZE / 2) / 100);
+	r3 = ((70 * LCD_XSIZE / 2) / 100);
+
+	FbCircle(x, y, r2 + 1);
+	FbCircle(x, y, r1);
+	r1 = ((75 * LCD_XSIZE / 2) / 100);
+
+	int i, dx1, dy1, dx2, dy2;
+
+	for (i = 0; i < 64; i++) {
+		int a = (2 * i) + angle;
+		while (a >= 128)
+			a = a - 128;
+		while (a < 0)
+			a = a + 128;
+		if ((i & 0x03) == 0) {
+			dx1 = (r3 * cosine(a)) >> 8;
+			dy1 = (r3 * sine(a)) >> 8;
+		} else {
+			dx1 = (r1 * cosine(a)) >> 8;
+			dy1 = (r1 * sine(a)) >> 8;
+		}
+		dx2 = (r2 * cosine(a)) >> 8;
+		dy2 = (r2 * sine(a)) >> 8;
+		if (i == 48)
+			FbColor(WHITE);
+		else
+			FbColor(CYAN);
+		FbLine(x + dx1, y + dy1, x + dx2, y + dy2);
+	}
+	FbSwapBuffers();
+}
+
+static void gulag_safecracking()
+{
+	static int angle = 0;
+	struct gulag_object *s;
+
+	if (player.current_safe == -1) {
+		gulag_state = GULAG_RUN;
+		return;
+	}
+	s = &go[player.current_safe];
+
+	draw_safecracking_screen(s, angle);
+	int rotary_switch = button_get_rotation(0);
+	angle += rotary_switch;
+	while (angle < 0)
+		angle += 128;
+	while (angle >= 128)
+		angle -= 128;
+
+	// check_safecracking_buttons(s);
+}
+
 void gulag_cb(void)
 {
 	game_timer++;
@@ -3272,6 +3373,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_PLAYER_DIED:
 		gulag_player_died();
+		break;
+	case GULAG_SAFECRACKING:
+		gulag_safecracking();
 		break;
 	case GULAG_EXIT:
 		gulag_exit();
