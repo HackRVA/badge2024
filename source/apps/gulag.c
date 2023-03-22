@@ -2655,6 +2655,7 @@ static void print_loot(int *y, char *buf, size_t bufsize, char *name, int quanti
 static void draw_player_data(void)
 {
 	char buf[100];
+	int blink = 0;
 
 	if (display_message) {
 		FbColor(YELLOW);
@@ -2682,9 +2683,21 @@ static void draw_player_data(void)
 		return;
 	}
 
-	FbColor(YELLOW);
+	if ((player.health >> 8) < 15) {
+		FbColor(RED);
+		blink = ((game_timer & 0x0C) == 0);
+	} else {
+		if ((player.health >> 8) < 50)
+			FbColor(YELLOW);
+		else
+			FbColor(GREEN);
+	}
 	snprintf(buf, sizeof(buf), "H:%4d", player.health >> 8);
-	FbMove(3, 130); FbWriteString(buf);
+	if (!blink) {
+		FbMove(3, 130);
+		FbWriteString(buf);
+	}
+	FbColor(YELLOW);
 	snprintf(buf, sizeof(buf), "B:%4d", player.bullets);
 	FbMove(3, 140); FbWriteString(buf);
 	snprintf(buf, sizeof(buf), "G:%4d", player.grenades);
