@@ -624,7 +624,7 @@ void FbCircle(int cx, int cy, int r)
 {
 	int dx1, dy1, dx2, dy2, i;
 
-	for (i = 0; i < 31; i++) {
+	for (i = 0; i < 16; i++) {
 		dx1 = (cosine(i) * r) >> 8;
 		dy1 = (sine(i) * r) >> 8;
 		dx2 = (cosine(i + 1) * r) >> 8;
