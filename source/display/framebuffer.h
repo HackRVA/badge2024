@@ -68,6 +68,7 @@ void FbLine(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char 
 void FbWriteLine(const char *string);
 void FbWriteString(const char *string);
 void FbRectangle(unsigned char width, unsigned char height);
+void FbCircle(int x, int y, int r);
 
 /** @brief Render the asset with its upper left corner at the current frame buffer location.
  *

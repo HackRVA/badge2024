@@ -5,6 +5,7 @@
 #include "display.h"
 #include "assetList.h"
 #include "colors.h"
+#include "trig.h"
 
 #define uCHAR (unsigned char *)
 struct framebuffer_t G_Fb;
@@ -608,6 +609,43 @@ void FbRectangle(unsigned char width, unsigned char height)
     FbHorizontalLine(x, y,	  x + width, y	 );
     FbHorizontalLine(x, y + height, x + width, y + height);
     G_Fb.changed = 1;
+}
+
+static int onscreen(int x, int y)
+{
+	if (x < 0 || x >= LCD_XSIZE)
+		return 0;
+	if (y < 0 || y >= LCD_YSIZE)
+		return 0;
+	return 1;
+}
+
+void FbCircle(int cx, int cy, int r)
+{
+	int dx1, dy1, dx2, dy2, i;
+
+	for (i = 0; i < 31; i++) {
+		dx1 = (cosine(i) * r) >> 8;
+		dy1 = (sine(i) * r) >> 8;
+		dx2 = (cosine(i + 1) * r) >> 8;
+		dy2 = (sine(i + 1) * r) >> 8;
+		if (onscreen(cx + dx1, cy + dy1) && onscreen(cx + dx2, cy + dy2))
+			FbLine(cx + dx1, cy + dy1, cx + dx2, cy + dy2);
+		if (onscreen(cx + dy1, cy + dx1) && onscreen(cx + dy2, cy + dx2))
+			FbLine(cx + dy1, cy + dx1, cx + dy2, cy + dx2);
+		if (onscreen(cx + dx1, cy - dy1) && onscreen(cx + dx2, cy - dy2))
+			FbLine(cx + dx1, cy - dy1, cx + dx2, cy - dy2);
+		if (onscreen(cx + dy1, cy - dx1) && onscreen(cx + dy2, cy - dx2))
+			FbLine(cx + dy1, cy - dx1, cx + dy2, cy - dx2);
+		if (onscreen(cx - dy1, cy - dx1) && onscreen(cx - dy2, cy - dx2))
+			FbLine(cx - dy1, cy - dx1, cx - dy2, cy - dx2);
+		if (onscreen(cx - dx1, cy - dy1) && onscreen(cx - dx2, cy - dy2))
+			FbLine(cx - dx1, cy - dy1, cx - dx2, cy - dy2);
+		if (onscreen(cx - dx1, cy + dy1) && onscreen(cx - dx2, cy + dy2))
+			FbLine(cx - dx1, cy + dy1, cx - dx2, cy + dy2);
+		if (onscreen(cx - dy1, cy + dx1) && onscreen(cx - dy2, cy + dx2))
+			FbLine(cx - dy1, cy + dx1, cx - dy2, cy + dx2);
+	}
 }
 
 void FbSwapBuffers()
