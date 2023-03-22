@@ -25,7 +25,7 @@
  *   ( ) planting bomb
  *   (X) throwing grenades
  *   ( ) knifing?
- *   ( ) health damage/dying
+ *   (X) health damage/dying
  *   ( ) healing w/ medicine/food
  *
  * Environment features
@@ -37,7 +37,7 @@
  *   ( ) plastic explosives
  *   ( ) remote detonator
  *   ( ) Win condition/scene
- *   ( ) Lose condition/scene
+ *   (X) Lose condition/scene
  *   ( ) Safes, and safe-cracking mini game
  *   ( ) Flamethrowers
  *
@@ -67,6 +67,7 @@
 #include "bline.h"
 #include "a_star.h"
 #include "dynmenu.h"
+#include "led_pwm.h"
 
 static struct dynmenu start_menu;
 #define START_MENU_SIZE 5
@@ -81,6 +82,7 @@ enum gulag_state_t {
 	GULAG_FLAG,
 	GULAG_START_MENU,
 	GULAG_RUN,
+	GULAG_PLAYER_DIED,
 	GULAG_MAYBE_EXIT,
 	GULAG_EXIT,
 };
@@ -131,7 +133,7 @@ static struct player {
 	short health; /* 8.8 fixed point */
 	unsigned char have_war_plans;
 	unsigned char keys;
-	short kills;
+	int kills;
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
 	unsigned char current_room;
 	char anim_frame, prev_frame;
@@ -1363,6 +1365,7 @@ static void init_player(struct player *p, int start_room)
 	p->keys = 0;
 	p->have_war_plans = 0;
 	p->search_object = -1;
+	p->kills = 0;
 }
 
 static int astarx_to_8dot8x(int x)
@@ -2017,7 +2020,14 @@ static int bullet_track(int x, int y, void *cookie)
 					return 0; /* soldiers do not shoot themselves */
 				draw_bullet_debris(x, y);
 				go[j].tsd.soldier.health--;
+
 				if (go[j].tsd.soldier.health == 0) {
+
+					/* This will need fixing if soldiers can throw grenades */
+					if (bullet_source == BULLET_SOURCE_PLAYER ||
+						bullet_source == BULLET_SOURCE_GRENADE)
+						player.kills++;
+
 					go[j].type = TYPE_CORPSE;
 					if ((go[j].x >> 8) > 64) {
 						go[j].tsd.soldier.corpse_direction = 1;
@@ -2713,6 +2723,28 @@ static void draw_player_data(void)
 	FbMove(64, 130); FbWriteString(buf);
 }
 
+static void maybe_draw_wasted(void)
+{
+	int x, y;
+
+	if (player.health > 0)
+		return;
+
+	gulag_state = GULAG_PLAYER_DIED;
+	x = player.x >> 8;
+	if (x < 3)
+		x = 3;
+	if (x > LCD_XSIZE - 8 * 7)
+		x = LCD_XSIZE - 8 * 7;
+	y = player.y >> 8;
+	if (y < 8)
+		y = 8;
+
+	FbMove(x, y);
+	FbColor(WHITE);
+	FbWriteString("WASTED!");
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
@@ -2722,6 +2754,7 @@ static void draw_screen(void)
 	draw_player(&player);
 	draw_grenades();
 	draw_player_data();
+	maybe_draw_wasted();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
@@ -3141,6 +3174,38 @@ static void gulag_exit()
 	returnToMenus();
 }
 
+static void gulag_player_died()
+{
+	static int state = 0;
+
+	if (state < 255) {
+		/* Fade screen to black */
+		led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 255 - state);
+		state++;
+	} else if (state == 255) {
+		char buf[255];
+		FbClear();
+		FbColor(RED);
+		FbMove(10, 10);
+		snprintf(buf, sizeof(buf),
+			"OUR UKRANIAN\nHERO FOUGHT\nBRAVELY AND\n"
+			"KILLED %d\nENEMIES\nBEFORE\nTRAGICALLY\n"
+			"BEING KILLED\nIN ACTION", player.kills);
+		FbWriteString(buf);
+		FbSwapBuffers();
+		state++;
+	} else if (state > 255) {
+		if (state >= 512) {
+			state = 0;
+			gulag_state = GULAG_INIT;
+		} else {
+			/* Fade screen brightness up */
+			led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, state - 256);
+			state++;
+		}
+	}
+}
+
 void gulag_cb(void)
 {
 	game_timer++;
@@ -3162,6 +3227,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_MAYBE_EXIT:
 		gulag_maybe_exit();
+		break;
+	case GULAG_PLAYER_DIED:
+		gulag_player_died();
 		break;
 	case GULAG_EXIT:
 		gulag_exit();
