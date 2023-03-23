@@ -48,7 +48,7 @@
  *   ( ) Building map?
  *
  * Optimizations
- *   ( ) Every soldier in the game does not need pathfinding memory,
+ *   (X) Every soldier in the game does not need pathfinding memory,
  *       only every soldier *in the current room* needs pathfinding
  *       memory.
  *
@@ -342,6 +342,12 @@ struct gulag_desk_data {
 	uint16_t already_looted:1;
 };
 
+static struct path_data {
+#define SOLDIER_PATH_LENGTH 100
+	unsigned char pathx[SOLDIER_PATH_LENGTH], pathy[SOLDIER_PATH_LENGTH];
+	unsigned char current_step, nsteps;
+} path_data[GULAG_MAX_OBJS_PER_ROOM]; /* path data used by soldiers in a room */
+
 struct gulag_soldier_data {
 	uint16_t health:3;
 	uint16_t bullets:3;
@@ -366,9 +372,7 @@ struct gulag_soldier_data {
 #define SOLDIER_STATE_SHOOTING 5
 #define SOLDIER_STATE_HANDSUP 6
 	unsigned char destx, desty;
-#define SOLDIER_PATH_LENGTH 100
-	unsigned char pathx[SOLDIER_PATH_LENGTH], pathy[SOLDIER_PATH_LENGTH];
-	unsigned char current_step, nsteps;
+	unsigned char path_index;
 	unsigned char shoot_cooldown;
 };
 
@@ -1164,6 +1168,10 @@ static int add_object_to_room(struct castle *c, int room, int object_type, int x
 		}
 	} while (!done);
 
+	/* Tell soldier which path data to use */
+	if (object_type == TYPE_SOLDIER)
+		go[n].tsd.soldier.path_index = c->room[room].nobjs;
+
 	gulag_nobjs++;
 	int i = c->room[room].nobjs;
 	c->room[room].obj[i] = n;
@@ -1285,12 +1293,8 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.sees_player_now = 0;
 	go[n].tsd.soldier.angle = random_num(128);
 	go[n].tsd.soldier.state = SOLDIER_STATE_RESTING;
-	go[n].tsd.soldier.nsteps = 0;
-	go[n].tsd.soldier.current_step = 0;
 	go[n].tsd.soldier.already_looted = 0;
 	go[n].tsd.soldier.shoot_cooldown = difficulty[difficulty_level].soldier_shoot_cooldown;
-	memset(go[n].tsd.soldier.pathx, 0, sizeof(go[n].tsd.soldier.pathx));
-	memset(go[n].tsd.soldier.pathy, 0, sizeof(go[n].tsd.soldier.pathy));
 }
 
 static void add_soldier_to_random_room(struct castle *c)
@@ -1903,6 +1907,13 @@ static void player_enter_room(struct player *p, int room, int x, int y)
 #if TARGET_SIMULATOR
 	print_castle_floor(&castle, p, get_room_floor(room));
 #endif
+
+	for (int i = 0; i < GULAG_MAX_OBJS_PER_ROOM; i++) {
+		memset(path_data[i].pathx, 0, sizeof(path_data[i].pathx));
+		memset(path_data[i].pathy, 0, sizeof(path_data[i].pathy));
+		path_data[i].nsteps = 0;
+		path_data[i].current_step = 0;
+	}
 }
 
 static void maybe_traverse_stairs(struct castle *c, struct player *p, struct gulag_object *stairs)
@@ -3139,10 +3150,13 @@ static void maybe_shoot_player(struct gulag_object *s)
 
 static void move_soldier(struct gulag_object *s)
 {
-	int dx, dy, angle, newx, newy;
+	int dx, dy, angle, newx, newy, p;
+	struct path_data *pd;
 #define SOLDIER_MOVE_THROTTLE 2
 
 	/* only move every nth tick, and move every soldier on a different tick */
+	p = s->tsd.soldier.path_index;
+	pd = &path_data[p];
 	int n = s - &go[0];
 	if (((game_timer + n) % SOLDIER_MOVE_THROTTLE) != 0)
 		return;
@@ -3160,14 +3174,14 @@ static void move_soldier(struct gulag_object *s)
 		} while (room_cost[dy][dx] != 0);
 		s->tsd.soldier.destx = dx;
 		s->tsd.soldier.desty = dy;
-		s->tsd.soldier.nsteps = 0;
-		s->tsd.soldier.current_step = 0;
+		pd->nsteps = 0;
+		pd->current_step = 0;
 		s->tsd.soldier.state = SOLDIER_STATE_MOVING;
 		/* TODO: maybe if we see the player, do something else. */
 		break;
 	case SOLDIER_STATE_MOVING:
 		/* Have we consumed all pathfinding steps? */
-		if (s->tsd.soldier.current_step == s->tsd.soldier.nsteps) {
+		if (pd->current_step == pd->nsteps) {
 			/* Have we arrived at our desitination? */
 			dx = astarx_to_8dot8x(s->tsd.soldier.destx);
 			dy = astary_to_8dot8y(s->tsd.soldier.desty);
@@ -3189,8 +3203,8 @@ static void move_soldier(struct gulag_object *s)
 				if (!path) {
 					/* We do not expect this to happen. */
 					s->tsd.soldier.state = SOLDIER_STATE_RESTING;
-					s->tsd.soldier.nsteps = 0;
-					s->tsd.soldier.current_step = 0;
+					pd->nsteps = 0;
+					pd->current_step = 0;
 					printf("path finding failed! (%d,%d) to (%d, %d)\n", sx, sy, gx, gy);
 					printf("costs are %d, %d\n", room_cost[sy][sx], room_cost[gy][gx]);
 					/* FIXME: this will cause a bad cycle where soldier
@@ -3208,19 +3222,19 @@ static void move_soldier(struct gulag_object *s)
 				printf("------\n");
 #endif
 				/* Copy up to SOLDIER_PATH_LENGTH steps into the soldiers cached pathing data */
-				s->tsd.soldier.nsteps = path->node_count > SOLDIER_PATH_LENGTH ? SOLDIER_PATH_LENGTH : path->node_count;
-				for (int i = 0; i < s->tsd.soldier.nsteps; i++) {
+				pd->nsteps = path->node_count > SOLDIER_PATH_LENGTH ? SOLDIER_PATH_LENGTH : path->node_count;
+				for (int i = 0; i < pd->nsteps; i++) {
 					int x, y;
 
 					astar_node_get_xy(path->path[i], &x, &y);
-					s->tsd.soldier.pathx[i] = x;
-					s->tsd.soldier.pathy[i] = y;
+					pd->pathx[i] = x;
+					pd->pathy[i] = y;
 				}
-				s->tsd.soldier.current_step = 1; /* We're standing on zero already */
+				pd->current_step = 1; /* We're standing on zero already */
 			}
 		} else { /* move in the direction of the next pathfinding step */
-			dx = astarx_to_8dot8x(s->tsd.soldier.pathx[s->tsd.soldier.current_step]);
-			dy = astary_to_8dot8y(s->tsd.soldier.pathy[s->tsd.soldier.current_step]);
+			dx = astarx_to_8dot8x(pd->pathx[pd->current_step]);
+			dy = astary_to_8dot8y(pd->pathy[pd->current_step]);
 
 			dx = (dx >> 8) - (s->x >> 8);
 			dy = (dy >> 8) - (s->y >> 8);
@@ -3235,15 +3249,15 @@ static void move_soldier(struct gulag_object *s)
 			s->x = newx;
 			s->y = newy;
 			/* Have we arrived at our next path step? */
-			dx = astarx_to_8dot8x(s->tsd.soldier.pathx[s->tsd.soldier.current_step]);
-			dy = astary_to_8dot8y(s->tsd.soldier.pathy[s->tsd.soldier.current_step]);
+			dx = astarx_to_8dot8x(pd->pathx[pd->current_step]);
+			dy = astary_to_8dot8y(pd->pathy[pd->current_step]);
 			dx = abs(dx - s->x);
 			dy = abs(dy - s->y);
 			if (dx <= (1 << 8) + (1 << 7) && dy <= (1 << 8) + (1 << 7)) {
 				/* Yes, we have arrived at our next path step, advance to the next one. */
-				s->tsd.soldier.current_step++;
-				if (s->tsd.soldier.current_step > s->tsd.soldier.nsteps) /* paranoia, shouldn't happen */
-					s->tsd.soldier.current_step = s->tsd.soldier.nsteps;
+				pd->current_step++;
+				if (pd->current_step > pd->nsteps) /* paranoia, shouldn't happen */
+					pd->current_step = pd->nsteps;
 			}
 		}
 		advance_soldier_animation(s);
