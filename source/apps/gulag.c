@@ -515,27 +515,42 @@ static int bbox_wall_collides(int bbx1, int bby1, int bbx2, int bby2, int wx1, i
  * 3 if collision with horizontal and vertical wall
  *
  * If wall_index is not NULL, and a collision occurs, it is filled in with the offset into the room's wall_spec
+ * for each wall, and nwallindices will contain the number of wall indices.
  */
 
-static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, int bby1, int bbx2, int bby2, int *wall_index)
+static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, int bby1, int bbx2, int bby2,
+		int wall_index[], int *nwallindices)
 {
 	/* Possible optimization: maybe we unpack wall_spec[n] into a list of coordinates
 	 * once when we enter a room, instead of every time we move.  On x86 it might be
 	 * faster to unpack each time (in any case, it doesn't matter), on pico, who knows.
 	 */
+	int capacity = 0;
 	int n = c->room[room].interior_walls;
+	int nx = 0;
 	int rc = 0;
+	int accrc = 0;
+	if (nwallindices)
+		capacity = *nwallindices;
 	const int8_t *ws = wall_spec[n];
 	for (int i = 0; ws[i] != -1; i += 2) {
 		int x1 = wall_spec_x(ws[i]) << 8;
 		int y1 = wall_spec_y(ws[i]) << 8;
 		int x2 = wall_spec_x(ws[i + 1]) << 8;
 		int y2 = wall_spec_y(ws[i + 1]) << 8;
-		rc |= bbox_wall_collides(bbx1, bby1, bbx2, bby2, x1, y1, x2, y2);
-		if (rc && wall_index)
-			*wall_index = i;
+		rc = bbox_wall_collides(bbx1, bby1, bbx2, bby2, x1, y1, x2, y2);
+		if (rc) {
+			accrc |= rc;
+			if (wall_index) {
+				if (nx < capacity)
+					wall_index[nx] = i;
+				nx++;
+			}
+		}
 	}
-	return rc;
+	if (nwallindices)
+		*nwallindices = nx;
+	return accrc;
 }
 
 /* Returns 1 if the two bounding boxes overlap, otherwise 0.
@@ -1149,7 +1164,7 @@ static int add_object_to_room(struct castle *c, int room, int object_type, int x
 		bb1y2 = y + (h << 8);
 
 		/* Check against interior wall collisions */
-		if (bbox_interior_wall_collision(c, room, bb1x1, bb1y1, bb1x2, bb1y2, NULL)) {
+		if (bbox_interior_wall_collision(c, room, bb1x1, bb1y1, bb1x2, bb1y2, NULL, NULL)) {
 			random_location_in_room(&x, &y, w, h);
 			done = 0;
 			continue;
@@ -1571,7 +1586,7 @@ static void init_room_cost(struct castle *c, int room)
 			y1 = astary_to_8dot8y(y);
 			x2 = x1 + (8 << 8);
 			y2 = y1 + (16 << 8);
-			rc = bbox_interior_wall_collision(c, room, x1, y1, x2, y2, NULL);
+			rc = bbox_interior_wall_collision(c, room, x1, y1, x2, y2, NULL, NULL);
 			if (rc)
 				room_cost[y][x] = 255;
 			else
@@ -2225,7 +2240,7 @@ static int bullet_track(int x, int y, void *cookie)
 		screen_changed = 1;
 		return -1; /* stop bline(), we've left the screen */
 	}
-	rc = bbox_interior_wall_collision(&castle, room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, NULL);
+	rc = bbox_interior_wall_collision(&castle, room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, NULL, NULL);
 	if (random_num(100) < 20)
 		FbPoint(x, y);
 	if (rc) {
@@ -2710,13 +2725,32 @@ static void check_buttons()
 			newy = (127 - 16 - 8) << 8;
 
 		/* Check for interior wall collision */
-		int wall_type = bbox_interior_wall_collision(&castle, player.room,
+		int wall_index[2], nwallindices;
+		nwallindices = 2;
+		(void) bbox_interior_wall_collision(&castle, player.room,
 				newx - (4 << 8), newy - (9 << 8),
-				newx + (5 << 8), newy + (8 << 8), NULL);
-		if (wall_type & HORIZONTAL_WALL_COLLISION)
-			newy = player.y;
-		if (wall_type & VERTICAL_WALL_COLLISION)
-			newx = player.x;
+				newx + (5 << 8), newy + (8 << 8), wall_index, &nwallindices);
+		for (int j = 0; j < nwallindices; j++) {
+			int n = castle.room[player.room].interior_walls;
+			const int8_t *ws = wall_spec[n];
+			int x1 = wall_spec_x(ws[wall_index[j]]);
+			int y1 = wall_spec_y(ws[wall_index[j]]);
+			int x2 = wall_spec_x(ws[wall_index[j] + 1]);
+			int y2 = wall_spec_y(ws[wall_index[j] + 1]);
+			if (x1 == x2) { /* vertical wall */
+				if (x1 < (player.x >> 8)) { /* wall is to left of player */
+					newx = (x1 + 8) << 8;
+				} else {			/* wall is to the right of player */
+					newx = (x1 - 8) << 8;
+				}
+			} else if (y1 == y2) { /* horizontal wall */
+				if (y1 < (player.y >> 8)) { /* wall is above player */
+					newy = (y1 + 10) << 8;
+				} else {			/* wall is below player */
+					newy = (y1 - 10) << 8;
+				}
+			}
+		}
 
 		n = player_object_collision(&castle, &player, newx, newy);
 		if (n >= 0) { /* Collision with some object... */
@@ -3078,7 +3112,7 @@ static int soldier_eyeline(int x, int y, void *cookie)
 	FbPoint(x, y);
 #endif
 
-	if (bbox_interior_wall_collision(&castle, sed->p->room, bbx1, bby1, bbx2, bby2, NULL)) {
+	if (bbox_interior_wall_collision(&castle, sed->p->room, bbx1, bby1, bbx2, bby2, NULL, NULL)) {
 		sed->seen = 0;
 		return -1;
 	}
@@ -3308,7 +3342,7 @@ static void draw_grenade(struct grenade *o)
 
 static void move_grenade(struct grenade *o)
 {
-	int collision, bbx1, bby1, bbx2, bby2, wall_index;
+	int collision, bbx1, bby1, bbx2, bby2, wall_index[2], nwallindices;
 	int nx, ny; /* nx, ny must be int, not short, to prevent overflow */
 	nx = o->x + o->vx;
 	ny = o->y + o->vy;
@@ -3338,16 +3372,20 @@ static void move_grenade(struct grenade *o)
 	bby1 = ny - (1 << 8);
 	bbx2 = nx + (1 << 8);
 	bby2 = ny + (1 << 8);
-	collision = bbox_interior_wall_collision(&castle, player.room, bbx1, bby1, bbx2, bby2, &wall_index);
+	nwallindices = 2;
+	collision = bbox_interior_wall_collision(&castle, player.room, bbx1, bby1, bbx2, bby2, wall_index, &nwallindices);
 	if (collision) {
 		int n = castle.room[player.room].interior_walls;
 		const int8_t *ws = wall_spec[n];
-		if (wall_spec_x(ws[wall_index]) == wall_spec_x(ws[wall_index + 1])) { /* vertical wall */
-			o->vx = (grenade_speed_reduction * -o->vx) >> 8;
-			o->vy = (grenade_speed_reduction * o->vy) >> 8;
-		} else { /* horizontal wall */
-			o->vx = (grenade_speed_reduction * o->vx) >> 8;
-			o->vy = (grenade_speed_reduction * -o->vy) >> 8;
+		for (int j = 0; j < nwallindices; j++) {
+			if (wall_spec_x(ws[wall_index[j]]) == wall_spec_x(ws[wall_index[j] + 1])) { /* vertical wall */
+				o->vx = (grenade_speed_reduction * -o->vx) >> 8;
+				o->vy = (grenade_speed_reduction * o->vy) >> 8;
+			}
+			if (wall_spec_y(ws[wall_index[j]]) == wall_spec_y(ws[wall_index[j] + 1])) { /* horizontal wall */
+				o->vx = (grenade_speed_reduction * o->vx) >> 8;
+				o->vy = (grenade_speed_reduction * -o->vy) >> 8;
+			}
 		}
 	} else {
 		o->x = nx;
