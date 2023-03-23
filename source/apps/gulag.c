@@ -1987,7 +1987,7 @@ static void check_doors(struct castle *c, struct player *p)
 	row = get_room_row(room);
 	col = get_room_col(room);
 	if (has_top_door(c, room)) {
-		if (y <= 10 && x > 60 && x < 68) {
+		if (y <= 10 && x > 54 && x < 74 && player.angle > 80 && player.angle < 112) {
 			row--;
 			if (row < 0) {
 				gulag_state = GULAG_PLAYER_WINS;
@@ -1998,7 +1998,7 @@ static void check_doors(struct castle *c, struct player *p)
 		}
 	}
 	if (has_bottom_door(c, room)) {
-		if (y >= 127 - 16 - 10 && x > 60 && x < 68) {
+		if (y >= 127 - 16 - 10 && x > 54 && x < 74 && player.angle > 16 && player.angle < 48) {
 			row++;
 			if (row >= CASTLE_ROWS) {
 				gulag_state = GULAG_PLAYER_WINS;
@@ -2009,7 +2009,7 @@ static void check_doors(struct castle *c, struct player *p)
 		}
 	}
 	if (has_left_door(c, room)) {
-		if (x < 6 && y > 54 && y < 74) {
+		if (x < 6 && y > 54 && y < 74 && (player.angle > 112 || player.angle < 16)) {
 			col--;
 			if (col < 0) {
 				gulag_state = GULAG_PLAYER_WINS;
@@ -2020,7 +2020,7 @@ static void check_doors(struct castle *c, struct player *p)
 		}
 	}
 	if (has_right_door(c, room)) {
-		if (x >121 && y > 54 && y < 74) {
+		if (x >121 && y > 54 && y < 74 && player.angle > 48 && player.angle < 80) {
 			col++;
 			if (col >= CASTLE_COLS) {
 				gulag_state = GULAG_PLAYER_WINS;
