@@ -473,8 +473,12 @@ static void move_grenade(struct grenade *s);
  *
  * Returns:
  * 0 if no collision;
- * 1 if collision;
+ * 1 if collision with horizontal wall
+ * 2 if collision with vertical wall
  */
+#define HORIZONTAL_WALL_COLLISION 0x01
+#define VERTICAL_WALL_COLLISION 0x02
+#define HORZVERT_WALL_COLLISION (HORIZONTAL_WALL_COLLISION | VERTICAL_WALL_COLLISION)
 static int bbox_wall_collides(int bbx1, int bby1, int bbx2, int bby2, int wx1, int wy1, int wx2, int wy2)
 {
 	if (wx1 == wx2) { /* vertical wall segment */
@@ -484,7 +488,7 @@ static int bbox_wall_collides(int bbx1, int bby1, int bbx2, int bby2, int wx1, i
 			return 0;
 		if (wy1 < bby1 && wy2 < bby1) /* wall entirely above bb */
 			return 0;
-		return 1;
+		return VERTICAL_WALL_COLLISION;
 	}
 	if (wy1 == wy2) { /* horizontal wall segment */
 		if (wy1 < bby1 || wy1 > bby2) /* wall entirely above or below bb */
@@ -493,7 +497,7 @@ static int bbox_wall_collides(int bbx1, int bby1, int bbx2, int bby2, int wx1, i
 			return 0;
 		if (wx1 > bbx2 && wx2 > bbx2) /* wall entirely right of bb */
 			return 0;
-		return 1;
+		return HORIZONTAL_WALL_COLLISION;
 	}
 	return 0;
 }
@@ -506,10 +510,13 @@ static int bbox_wall_collides(int bbx1, int bby1, int bbx2, int bby2, int wx1, i
  *
  * Returns:
  * 0 if no collision
- * 1 if collision
+ * 1 if collision with horizontal wall
+ * 2 if collision with vertical wall
+ * 3 if collision with horizontal and vertical wall
  *
  * If wall_index is not NULL, and a collision occurs, it is filled in with the offset into the room's wall_spec
  */
+
 static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, int bby1, int bbx2, int bby2, int *wall_index)
 {
 	/* Possible optimization: maybe we unpack wall_spec[n] into a list of coordinates
@@ -517,19 +524,18 @@ static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, in
 	 * faster to unpack each time (in any case, it doesn't matter), on pico, who knows.
 	 */
 	int n = c->room[room].interior_walls;
+	int rc = 0;
 	const int8_t *ws = wall_spec[n];
 	for (int i = 0; ws[i] != -1; i += 2) {
 		int x1 = wall_spec_x(ws[i]) << 8;
 		int y1 = wall_spec_y(ws[i]) << 8;
 		int x2 = wall_spec_x(ws[i + 1]) << 8;
 		int y2 = wall_spec_y(ws[i + 1]) << 8;
-		if (bbox_wall_collides(bbx1, bby1, bbx2, bby2, x1, y1, x2, y2)) {
-			if (wall_index)
-				*wall_index = i;
-			return 1;
-		}
+		rc |= bbox_wall_collides(bbx1, bby1, bbx2, bby2, x1, y1, x2, y2);
+		if (rc && wall_index)
+			*wall_index = i;
 	}
-	return 0;
+	return rc;
 }
 
 /* Returns 1 if the two bounding boxes overlap, otherwise 0.
@@ -2704,12 +2710,13 @@ static void check_buttons()
 			newy = (127 - 16 - 8) << 8;
 
 		/* Check for interior wall collision */
-		if (bbox_interior_wall_collision(&castle, player.room,
+		int wall_type = bbox_interior_wall_collision(&castle, player.room,
 				newx - (4 << 8), newy - (9 << 8),
-				newx + (5 << 8), newy + (8 << 8), NULL)) {
-			newx = player.x;
+				newx + (5 << 8), newy + (8 << 8), NULL);
+		if (wall_type & HORIZONTAL_WALL_COLLISION)
 			newy = player.y;
-		}
+		if (wall_type & VERTICAL_WALL_COLLISION)
+			newx = player.x;
 
 		n = player_object_collision(&castle, &player, newx, newy);
 		if (n >= 0) { /* Collision with some object... */
