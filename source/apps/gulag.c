@@ -1381,18 +1381,19 @@ static void print_castle_row(struct castle *c, struct player *p, int f, int r)
 {
 	int room;
 	char player_marker;
+	char stairs;
 
 	for (int i = 0; i < CASTLE_COLS; i++) {
 		room = room_no(f, i, r);
 		if (has_top_door(c, room))
-			printf("+-  -");
+			printf("+---  ---");
 		else
-			printf("+----");
+			printf("+--------");
 	}
 	printf("+\n");
 
 	for (int i = 0; i < CASTLE_COLS; i++)
-		printf("|%4d", room_no(f, i, r));
+		printf("|  %4d  ", room_no(f, i, r));
 	printf("|\n");
 
 	for (int i = 0; i < CASTLE_COLS; i++) {
@@ -1402,14 +1403,19 @@ static void print_castle_row(struct castle *c, struct player *p, int f, int r)
 		else
 			player_marker = ' ';
 		if (has_left_door(c, room))
-			printf("  %c  ", player_marker);
+			printf("    %c    ", player_marker);
 		else
-			printf("| %c  ", player_marker);
+			printf("|   %c    ", player_marker);
 	}
 	printf("|\n");
 
-	for (int i = 0; i < CASTLE_COLS; i++)
-		printf("|    ");
+	for (int i = 0; i < CASTLE_COLS; i++) {
+		if (contains_stairs(c, f, i, r))
+			stairs = '/';
+		else
+			stairs = ' ';
+		printf("|       %c", stairs);
+	}
 	printf("|\n");
 }
 
@@ -1419,7 +1425,7 @@ static void print_castle_floor(struct castle *c, struct player *p, int f)
 	for (int i = 0; i < CASTLE_ROWS; i++)
 		print_castle_row(c, p, f, i);
 	for (int i = 0; i < CASTLE_COLS; i++)
-		printf("+----");
+		printf("+--------");
 	printf("+\n");
 }
 #endif
