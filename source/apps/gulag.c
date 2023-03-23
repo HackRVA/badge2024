@@ -84,6 +84,7 @@ static struct dynmenu_item quit_menu_item[2];
 enum gulag_state_t {
 	GULAG_INIT,
 	GULAG_INTRO,
+	GULAG_SCROLL_TEXT,
 	GULAG_FLAG,
 	GULAG_START_MENU,
 	GULAG_RUN,
@@ -314,7 +315,8 @@ static struct castle {
 
 static enum gulag_state_t gulag_state = GULAG_INIT;
 static int screen_changed = 0;
-static int intro_offset = 0;
+static int gulag_text_offset = 0;
+static int gulag_text_offset_limit = 425;
 static int flag_offset = 0;
 
 
@@ -1599,87 +1601,91 @@ static void gulag_init(void)
 	FbClear();
 	gulag_state = GULAG_INTRO;
 	screen_changed = 1;
-	intro_offset = 0;
+	gulag_text_offset = 0;
 	flag_offset = 0;
 	sanity_check_wall_specs();
 }
 
-static void gulag_intro(void)
+static int gulag_text_scroll_lines = 0;
+static char **gulag_text_scroll = NULL;
+
+static const char *intro_text[] = {
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"YOU ARE A",
+	"UKRANIAN",
+	"SOLDIER",
+	"CAPTURED BY THE",
+	"RUSSIAN ARMY",
+	"AND IMPRISONED.",
+	"",
+	"BUT YOU HAVE",
+	"A DARING PLAN",
+	"TO ESCAPE,",
+	"PLANT A BOMB",
+	"IN THE",
+	"MUNITIONS",
+	"DEPOT AND",
+	"STEAL THE",
+	"BATTLE PLANS",
+	"OF YOUR RUSSIAN",
+	"CAPTORS.",
+	"",
+	"YOU HAVE JUST",
+	"PICKED THE LOCK",
+	"ON YOUR CELL",
+	"DOOR AND YOU",
+	"NOW BEGIN TO",
+	"PUT YOUR BOLD",
+	"PLAN INTO",
+	"ACTION!",
+	"",
+	"SLAVA UKRAINI!",
+	"",
+	"",
+	"",
+	"",
+	"",
+	0,
+};
+
+static void gulag_scroll_text(void)
 {
 	int first_line;
 	int y;
 
 	FbColor(YELLOW);
-	static const char *intro_text[] = {
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"",
-		"YOU ARE A",
-		"UKRANIAN",
-		"SOLDIER",
-		"CAPTURED BY THE",
-		"RUSSIAN ARMY",
-		"AND IMPRISONED.",
-		"",
-		"BUT YOU HAVE",
-		"A DARING PLAN",
-		"TO ESCAPE,",
-		"PLANT A BOMB",
-		"IN THE",
-		"MUNITIONS",
-		"DEPOT AND",
-		"STEAL THE",
-		"BATTLE PLANS",
-		"OF YOUR RUSSIAN",
-		"CAPTORS.",
-		"",
-		"YOU HAVE JUST",
-		"PICKED THE LOCK",
-		"ON YOUR CELL",
-		"DOOR AND YOU",
-		"NOW BEGIN TO",
-		"PUT YOUR BOLD",
-		"PLAN INTO",
-		"ACTION!",
-		"",
-		"SLAVA UKRAINI!",
-		"",
-		"",
-		"",
-		"",
-		"",
-		0,
-	};
 
-	if (intro_offset == 425) {
+	if (gulag_text_offset == gulag_text_offset_limit) {
 		gulag_state = GULAG_FLAG;
 		return;
 	}
 
-	first_line = intro_offset / 10;
+	first_line = gulag_text_offset / 10;
 
-	y = -(intro_offset) % 10;
+	y = -(gulag_text_offset) % 10;
 	y = y + 12;
 	for (int i = first_line; i < first_line + 14; i++) {
-		if (i >= (int) ARRAYSIZE(intro_text)) {
+		if (i >= gulag_text_scroll_lines) {
 			i++;
 			y = y + 10;
 			continue;
 		}
-		if (!intro_text[i])
+		if (!gulag_text_scroll[i])
 			continue;
 		FbMove(5, y);
-		FbWriteLine(intro_text[i]);
+		FbWriteLine(gulag_text_scroll[i]);
 		y = y + 10;
 	}
 	FbColor(BLACK);
@@ -1688,12 +1694,21 @@ static void gulag_intro(void)
 	FbColor(BLACK);
 	FbMove(0, 140);
 	FbFilledRectangle(128, 10);
-	intro_offset++;
+	gulag_text_offset++;
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 		gulag_state = GULAG_START_MENU;
+}
+
+static void gulag_intro(void)
+{
+	gulag_text_scroll = (char **) intro_text;
+	gulag_text_scroll_lines = ARRAYSIZE(intro_text);
+	gulag_text_offset = 0;
+	gulag_text_offset_limit = 425;
+	gulag_state = GULAG_SCROLL_TEXT;
 }
 
 static void gulag_flag(void)
@@ -3504,6 +3519,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_INTRO:
 		gulag_intro();
+		break;
+	case GULAG_SCROLL_TEXT:
+		gulag_scroll_text();
 		break;
 	case GULAG_FLAG:
 		gulag_flag();
