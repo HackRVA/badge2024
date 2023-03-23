@@ -144,6 +144,9 @@ static struct player {
 	short health; /* 8.8 fixed point */
 	unsigned char have_war_plans;
 	unsigned char keys;
+	unsigned char trying_key;
+	int key_trying_timer;
+#define KEY_TRY_TIME 10
 	int kills;
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
 	unsigned char current_room;
@@ -340,6 +343,7 @@ struct gulag_desk_data {
 	uint16_t vodka:1;
 	uint16_t locked:1;
 	uint16_t already_looted:1;
+	int key;
 };
 
 static struct path_data {
@@ -417,6 +421,7 @@ struct gulag_chest_data {
 	uint16_t locked:1;
 	uint16_t opened:1;
 	uint16_t already_looted:1;
+	int key;
 };
 
 #define MAXLIVEGRENADES 10
@@ -1218,10 +1223,11 @@ static void add_desk(struct castle *c)
 	if (n < 0)
 		return;
 	go[n].tsd.desk.bullets = random_num(8);
-	go[n].tsd.desk.keys = (random_num(100) < 20);
+	go[n].tsd.desk.keys = (random_num(100) < 40);
 	go[n].tsd.desk.war_plans = 0;
 	go[n].tsd.desk.locked = (random_num(100) < 50);
 	go[n].tsd.desk.already_looted = 0;
+	go[n].tsd.desk.key = random_num(12);
 }
 
 static void add_desks(struct castle *c)
@@ -1254,6 +1260,7 @@ static void add_chest(struct castle *c)
 	go[n].tsd.chest.locked = (random_num(100) < 80);
 	go[n].tsd.chest.opened = 0;
 	go[n].tsd.chest.already_looted = 0;
+	go[n].tsd.chest.key = random_num(12);
 }
 
 static void add_chests(struct castle *c)
@@ -1515,7 +1522,8 @@ static void init_player(struct player *p, int start_room)
 	p->bullets = 10;
 	p->grenades = 3;
 	p->health = 100 << 8;
-	p->keys = 0;
+	p->keys = 12;
+	p->trying_key = 255;
 	p->have_war_plans = 0;
 	p->search_object = -1;
 	p->kills = 0;
@@ -2437,14 +2445,17 @@ static void maybe_search_for_loot(void)
 
 	if (player.search_timer > 0) {
 		int locked = 0;
+		int *required_key = NULL;
 		switch (o->type) {
 		case TYPE_DESK:
 			object_type = " DESK";
 			locked = o->tsd.desk.locked;
+			required_key = &o->tsd.desk.key;
 			break;
 		case TYPE_CHEST:
 			object_type = " CHEST";
 			locked = o->tsd.chest.locked;
+			required_key = &o->tsd.chest.key;
 			break;
 		case TYPE_CORPSE:
 			object_type = " BODY";
@@ -2454,10 +2465,38 @@ static void maybe_search_for_loot(void)
 			object_type = " ...";
 			break;
 		}
-		if (locked && player.search_timer < 2 * SEARCH_TIME / 3)
-			snprintf(player_message, sizeof(player_message), "LOCKED!");
-		else
+		if (locked && player.search_timer < 2 * SEARCH_TIME / 3) {
+			if (player.keys > 0) {
+				if (player.trying_key == 255) {
+					player.trying_key = 0;
+					snprintf(player_message, sizeof(player_message),
+						"TRYING KEYS %d", player.trying_key + 1);
+					player.key_trying_timer = KEY_TRY_TIME;
+				} else {
+					if (player.key_trying_timer > 0)
+						player.key_trying_timer--;
+					if (player.key_trying_timer == 0) {
+						if (required_key && player.trying_key == *required_key) {
+							if (o->type == TYPE_CHEST)
+								o->tsd.chest.locked = 0;
+							if (o->type == TYPE_DESK)
+								o->tsd.desk.locked = 0;
+							player.trying_key = 0;
+						} else {
+							player.trying_key++;
+							if (player.trying_key > player.keys - 1) {
+								snprintf(player_message, sizeof(player_message), "LOCKED!");
+								player.trying_key = 0;
+							}
+						}
+					}
+				}
+			} else {
+				snprintf(player_message, sizeof(player_message), "LOCKED!");
+			}
+		} else {
 			snprintf(player_message, sizeof(player_message), "SEARCHING%s", object_type);
+		}
 		display_message = 1;
 		screen_changed = 1;
 		if (player.search_timer > 0) {
