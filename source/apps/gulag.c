@@ -36,7 +36,7 @@
  *   ( ) the war plans
  *   ( ) plastic explosives
  *   ( ) remote detonator
- *   ( ) Win condition/scene
+ *   (X) Win condition/scene
  *   (X) Lose condition/scene
  *   (/) Safes, and safe-cracking mini game
  *   ( ) Flamethrowers
@@ -73,6 +73,7 @@
 #include "a_star.h"
 #include "dynmenu.h"
 #include "led_pwm.h"
+#include "rtc.h"
 
 static struct dynmenu start_menu;
 #define START_MENU_SIZE 5
@@ -92,6 +93,8 @@ enum gulag_state_t {
 	GULAG_SAFE_CRACKED,
 	GULAG_PLAYER_DIED,
 	GULAG_MAYBE_EXIT,
+	GULAG_PLAYER_WINS,
+	GULAG_PRINT_STATS,
 	GULAG_EXIT,
 };
 
@@ -155,6 +158,12 @@ static struct player {
 #define SAFECRACK_COOLDOWN_TIME 60
 	int current_safe;
 	struct loot loot;
+	uint16_t documents_collected;
+	int has_won;
+	uint64_t start_time_ms;
+	uint64_t end_time_ms;
+	int shots_fired;
+	int grenades_thrown;
 } player;
 
 static char player_message[100] = { 0 };
@@ -988,32 +997,28 @@ static int get_room_row(int room)
 
 static int has_left_door(struct castle *c, int room)
 {
-	return c->room[room].doors & HAS_LEFT_DOOR;
+	return (c->room[room].doors & HAS_LEFT_DOOR) ||
+		(room == c->exit_room && get_room_col(room) == 0);
 }
 
 static int has_top_door(struct castle *c, int room)
 {
-	return c->room[room].doors & HAS_TOP_DOOR;
+	return (c->room[room].doors & HAS_TOP_DOOR) ||
+		(room == c->exit_room && get_room_row(room) == 0);
 }
 
 static int has_bottom_door(struct castle *c, int room)
 {
-	int row;
-
-	row = get_room_row(room);
-	if (row == CASTLE_ROWS - 1)
-		return (room == c->exit_room);
-	return (c->room[room + 1].doors & HAS_TOP_DOOR);
+	if (get_room_row(room) == CASTLE_ROWS - 1)
+		return room == c->exit_room;
+	return c->room[room + 1].doors & HAS_TOP_DOOR;
 }
 
 static int has_right_door(struct castle *c, int room)
 {
-	int col;
-
-	col = get_room_col(room);
-	if (col == CASTLE_COLS - 1)
-		return room == castle.exit_room;
-	return (c->room[room + CASTLE_ROWS].doors & HAS_LEFT_DOOR);
+	if (get_room_col(room) == CASTLE_COLS - 1)
+		return room == c->exit_room;
+	return c->room[room + CASTLE_ROWS].doors & HAS_LEFT_DOOR;
 }
 
 static void add_start_room(struct castle *c)
@@ -1027,7 +1032,28 @@ static void add_start_room(struct castle *c)
 
 static void add_exit_room(struct castle *c)
 {
-	(void) c;
+	/* Choose a side of the castle on which to place the exit */
+	int row, col, side = random_num(4);
+	switch (side) {
+	case 0: /* north side */
+		row = 0;
+		col = random_num(CASTLE_COLS);
+		break;
+	case 1: /* east side */
+		row = random_num(CASTLE_ROWS);
+		col = CASTLE_COLS - 1;
+		break;
+	case 2:
+		/* south side */
+		row = CASTLE_ROWS - 1;
+		col = random_num(CASTLE_COLS);
+		break;
+	case 3: /* west side */
+		row = random_num(CASTLE_ROWS);
+		col = 0;
+		break;
+	}
+	c->exit_room = room_no(0, col, row);
 }
 
 static void add_staircase(struct castle *c, int floor, int col, int row, int stair_direction)
@@ -1409,7 +1435,10 @@ static void print_castle_row(struct castle *c, struct player *p, int f, int r)
 		else
 			printf("|   %c    ", player_marker);
 	}
-	printf("|\n");
+	if (has_right_door(c, room))
+		printf(" \n");
+	else
+		printf("|\n");
 
 	for (int i = 0; i < CASTLE_COLS; i++) {
 		if (contains_stairs(c, f, i, r))
@@ -1426,8 +1455,13 @@ static void print_castle_floor(struct castle *c, struct player *p, int f)
 	printf("\n\nFLOOR %d\n", f);
 	for (int i = 0; i < CASTLE_ROWS; i++)
 		print_castle_row(c, p, f, i);
-	for (int i = 0; i < CASTLE_COLS; i++)
-		printf("+--------");
+	for (int i = 0; i < CASTLE_COLS; i++) {
+		int room = room_no(f, i, CASTLE_ROWS - 1);
+		if (has_bottom_door(c, room))
+			printf("+---  ---");
+		else
+			printf("+--------");
+	}
 	printf("+\n");
 }
 #endif
@@ -1462,6 +1496,10 @@ static void init_player(struct player *p, int start_room)
 	p->kills = 0;
 	p->safecracking_cooldown = 0;
 	p->current_safe = -1;
+	p->documents_collected = 0;
+	p->has_won = 0;
+	p->shots_fired = 0;
+	p->grenades_thrown = 0;
 }
 
 static int astarx_to_8dot8x(int x)
@@ -1660,6 +1698,51 @@ static const char *intro_text[] = {
 	0,
 };
 
+static const char *win_text[] = {
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"YOU HAVE",
+	"SUCCESSFULLY",
+	"ESCAPED FROM",
+	"THE RUSSIAN",
+	"GULAG AND MADE",
+	"YOUR WAY BACK",
+	"TO FRIENDLY",
+	"TERRITORY",
+	"AND ARE MET",
+	"WITH A HERO'S",
+	"WELCOME!",
+	"",
+	"SLAVA UKRAINI!",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	"",
+	0,
+};
+
+
 static void gulag_scroll_text(void)
 {
 	int first_line;
@@ -1668,7 +1751,10 @@ static void gulag_scroll_text(void)
 	FbColor(YELLOW);
 
 	if (gulag_text_offset == gulag_text_offset_limit) {
-		gulag_state = GULAG_FLAG;
+		if (player.has_won)
+			gulag_state = GULAG_PRINT_STATS;
+		else
+			gulag_state = GULAG_FLAG;
 		return;
 	}
 
@@ -1711,6 +1797,60 @@ static void gulag_intro(void)
 	gulag_state = GULAG_SCROLL_TEXT;
 }
 
+static void gulag_player_wins(void)
+{
+	player.has_won = 1;
+	player.end_time_ms = rtc_get_ms_since_boot();
+	gulag_text_scroll = (char **) win_text;
+	gulag_text_scroll_lines = ARRAYSIZE(win_text);
+	gulag_text_offset = 0;
+	gulag_text_offset_limit = 275;
+	gulag_state = GULAG_SCROLL_TEXT;
+}
+
+static void gulag_print_stats(void)
+{
+	char buf[25];
+	int count = 0;
+	int hours, mins, secs;
+	uint64_t millis;
+
+	FbColor(YELLOW);
+        FbMove(3, 3);
+	FbWriteString("STATS:\n");
+	FbWriteString("YOU KILLED\n");
+	snprintf(buf, sizeof(buf), "%d MOBIKS\n", player.kills);
+	FbWriteString(buf);
+	FbWriteString("SECRET DOCS\n");
+	FbWriteString("EXFILTRATED\n");
+	for (int i = 0; i < (int) ARRAYSIZE(safe_documents); i++)
+		if ((1 << i) & player.documents_collected)
+			count++;
+	snprintf(buf, sizeof(buf), "  %d / %d\n", count, (int) ARRAYSIZE(safe_documents));
+	FbWriteString(buf);
+	millis = player.end_time_ms - player.start_time_ms;
+	secs = millis / 1000;
+	mins = secs / 60;
+	hours = mins / 60;
+	mins = mins - (hours * 60);
+	secs = secs - (hours * 60 * 60) - (mins * 60);
+	FbWriteString("ELAPSED TIME:\n");
+	snprintf(buf, sizeof(buf), "  %02d:%02d:%02d\n", hours, mins, secs);
+	FbWriteString(buf);
+	FbWriteString("SHOTS FIRED:\n");
+	snprintf(buf, sizeof(buf), "  %d\n", player.shots_fired);
+	FbWriteString(buf);
+	FbWriteString("GRENADES:\n");
+	snprintf(buf, sizeof(buf), "  %d\n", player.grenades_thrown);
+	FbWriteString(buf);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+		gulag_state = GULAG_FLAG;
+	}
+}
+
 static void gulag_flag(void)
 {
 	if (flag_offset == 80) {
@@ -1730,14 +1870,6 @@ static void gulag_flag(void)
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
 		gulag_state = GULAG_START_MENU;
-}
-
-static void player_wins(void)
-{
-#if TARGET_SIMULATOR
-	printf("You won!\n");
-	exit(0);
-#endif
 }
 
 /* When player enters a room, soldiers must forget last seen info */
@@ -1840,8 +1972,10 @@ static void check_doors(struct castle *c, struct player *p)
 	if (has_top_door(c, room)) {
 		if (y <= 10 && x > 60 && x < 68) {
 			row--;
-			if (row < 0)
-				player_wins();
+			if (row < 0) {
+				gulag_state = GULAG_PLAYER_WINS;
+				return;
+			}
 			player_enter_room(p, room_no(f, col, row), p->x, (127 - 16 - 12) << 8);
 			return;
 		}
@@ -1849,8 +1983,10 @@ static void check_doors(struct castle *c, struct player *p)
 	if (has_bottom_door(c, room)) {
 		if (y >= 127 - 16 - 10 && x > 60 && x < 68) {
 			row++;
-			if (row >= CASTLE_ROWS)
-				player_wins();
+			if (row >= CASTLE_ROWS) {
+				gulag_state = GULAG_PLAYER_WINS;
+				return;
+			}
 			player_enter_room(p, room_no(f, col, row), p->x, 18 << 8);
 			return;
 		}
@@ -1858,8 +1994,10 @@ static void check_doors(struct castle *c, struct player *p)
 	if (has_left_door(c, room)) {
 		if (x < 6 && y > 54 && y < 74) {
 			col--;
-			if (col < 0)
-				player_wins();
+			if (col < 0) {
+				gulag_state = GULAG_PLAYER_WINS;
+				return;
+			}
 			player_enter_room(p, room_no(f, col, row), 117 << 8, p->y);
 			return;
 		}
@@ -1867,8 +2005,10 @@ static void check_doors(struct castle *c, struct player *p)
 	if (has_right_door(c, room)) {
 		if (x >121 && y > 54 && y < 74) {
 			col++;
-			if (col >= CASTLE_COLS)
-				player_wins();
+			if (col >= CASTLE_COLS) {
+				gulag_state = GULAG_PLAYER_WINS;
+				return;
+			}
 			player_enter_room(p, room_no(f, col, row), 10 << 8, p->y);
 			return;
 		}
@@ -2174,6 +2314,7 @@ static void fire_gun(struct player *p)
 	int muzzle_flash_index;
 	int x, y; // , tx, ty;
 
+	p->shots_fired++;
 	p->anim_frame = shooting_frame(p);
 	muzzle_flash_index = p->anim_frame - 7;
 	x = (p->x >> 8) - 4 + muzzle_xoffset[muzzle_flash_index];
@@ -2202,6 +2343,7 @@ static void throw_grenade(struct player *p)
 {
 	if (ngrenades >= MAXLIVEGRENADES)
 		return;
+	p->grenades_thrown++;
 	int n = ngrenades;
 	grenade[n].x = player.x;
 	grenade[n].y = player.y;
@@ -2599,6 +2741,8 @@ static void check_buttons()
 		player.y = (short) newy;
 		screen_changed = 1;
 		check_doors(&castle, &player);
+		if (gulag_state != GULAG_RUN)
+			return;
 		check_object_collisions(&castle, &player);
 		advance_player_animation(&player);
 	}
@@ -3266,8 +3410,10 @@ static void gulag_start_menu()
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_A, down_latches)) {
 		int choice = start_menu.item[start_menu.current_item].cookie;
-		if (choice >= 0 && choice < 4)
+		if (choice >= 0 && choice < 4) {
 			difficulty_level = choice;
+			player.start_time_ms = rtc_get_ms_since_boot();
+		}
 		gulag_state = start_menu.item[start_menu.current_item].next_state;
 	}
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0)
@@ -3413,6 +3559,7 @@ static void gulag_safecracking()
 			third_number == s->tsd.safe.combo[2]) {
 			printf("Safe is opened!\n");
 			s->tsd.safe.opened = 1;
+			player.documents_collected |= (1 << s->tsd.safe.documents);
 			gulag_state = GULAG_SAFE_CRACKED;
 			return;
 		} else {
@@ -3543,6 +3690,12 @@ void gulag_cb(void)
 		break;
 	case GULAG_SAFE_CRACKED:
 		gulag_safe_cracked();
+		break;
+	case GULAG_PLAYER_WINS:
+		gulag_player_wins();
+		break;
+	case GULAG_PRINT_STATS:
+		gulag_print_stats();
 		break;
 	case GULAG_EXIT:
 		gulag_exit();
