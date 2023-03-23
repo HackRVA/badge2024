@@ -51,6 +51,11 @@
  *   ( ) Every soldier in the game does not need pathfinding memory,
  *       only every soldier *in the current room* needs pathfinding
  *       memory.
+ *
+ * Known bugs
+ *   * When searching objects, it prints "Nothing found!" way too often
+ *     and too soon after finding stuff.
+ *   
  */
 
 
