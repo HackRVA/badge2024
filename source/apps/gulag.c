@@ -22,7 +22,7 @@
  * Player behaviors:
  *   (X) Searching chests/desks/bodies for bullets, keys, etc.
  *   (X) Inventory of bullets/grenades/keys/bullet proof vest etc.
- *   ( ) planting bomb
+ *   (X) planting bomb
  *   (X) throwing grenades
  *   ( ) knifing?
  *   (X) health damage/dying
@@ -91,6 +91,7 @@ enum gulag_state_t {
 	GULAG_PLAYER_WINS,
 	GULAG_PRINT_STATS,
 	GULAG_VIEW_COMBO,
+	GULAG_MUNITIONS_ROOM,
 	GULAG_EXIT,
 };
 
@@ -189,6 +190,7 @@ static struct player {
 	int grenades_thrown;
 	unsigned char has_combo[CASTLE_FLOORS];
 	unsigned char has_detonator;
+	unsigned char planted_bomb;
 	unsigned char has_c4;
 } player;
 
@@ -1579,6 +1581,7 @@ static void init_player(struct player *p, int start_room)
 	p->grenades_thrown = 0;
 	p->has_detonator = 0;
 	p->has_c4 = 0;
+	p->planted_bomb = 0;
 	memset(player.has_combo, 0, sizeof(player.has_combo));
 }
 
@@ -1905,6 +1908,49 @@ static void gulag_view_combo(void)
 	}
 }
 
+static void gulag_munitions_room()
+{
+	if (player.planted_bomb) {
+		gulag_state = GULAG_RUN;
+		return;
+	}
+
+	FbClear();
+	FbMove(3, 3);
+	FbColor(WHITE);
+	FbWriteString("YOU FOUND THE\n");
+	FbWriteString("MUNITIONS\n");
+	FbWriteString("DEPOT.\n");
+
+	if (player.has_c4 && player.has_detonator) {
+		FbWriteString("YOU USE THE\n");
+		FbWriteString("C-4 EXPLOSIVE\n");
+		FbWriteString("AND DETONATOR\n");
+		FbWriteString("TO PLANT A\n");
+		FbWriteString("BOMB YOU WILL\n");
+		FbWriteString("REMOTELY\n");
+		FbWriteString("DETONATE\n");
+		FbWriteString("LATER.");
+	} else {
+		FbWriteString("IF ONLY YOU\n");
+		FbWriteString("HAD SOME C-4\n");
+		FbWriteString("AND A\n");
+		FbWriteString("DETONATOR\n");
+		FbWriteString("YOU COULD\n");
+		FbWriteString("BLOW THIS\n");
+		FbWriteString("PLACE SKY\n");
+		FbWriteString("HIGH!\n");
+	}
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+		if (player.has_c4 && player.has_detonator)
+			player.planted_bomb = 1;
+		gulag_state = GULAG_RUN;
+	}
+}
+
 static void gulag_print_stats(void)
 {
 	char buf[25];
@@ -1918,12 +1964,19 @@ static void gulag_print_stats(void)
 	FbWriteString("YOU KILLED\n");
 	snprintf(buf, sizeof(buf), "%d MOBIKS\n", player.kills);
 	FbWriteString(buf);
+
+	if (player.planted_bomb)
+		FbWriteString("YOU BLEW UP\nTHE MUNITIONS\nDEPOT\n");
+	else
+		FbWriteString("YOU FAILED TO\nBLOW UP THE\nMUNITIONS\nDEPOT\n");
+
 	FbWriteString("SECRET DOCS\n");
 	FbWriteString("EXFILTRATED\n");
 	for (int i = 0; i < (int) ARRAYSIZE(safe_documents); i++)
 		if ((1 << i) & player.documents_collected)
 			count++;
 	snprintf(buf, sizeof(buf), "  %d / %d\n", count, CASTLE_FLOORS);
+
 	FbWriteString(buf);
 	millis = player.end_time_ms - player.start_time_ms;
 	secs = millis / 1000;
@@ -1934,11 +1987,9 @@ static void gulag_print_stats(void)
 	FbWriteString("ELAPSED TIME:\n");
 	snprintf(buf, sizeof(buf), "  %02d:%02d:%02d\n", hours, mins, secs);
 	FbWriteString(buf);
-	FbWriteString("SHOTS FIRED:\n");
-	snprintf(buf, sizeof(buf), "  %d\n", player.shots_fired);
+	snprintf(buf, sizeof(buf), "SHOTS:%d\n", player.shots_fired);
 	FbWriteString(buf);
-	FbWriteString("GRENADES:\n");
-	snprintf(buf, sizeof(buf), "  %d\n", player.grenades_thrown);
+	snprintf(buf, sizeof(buf),"GRENADES:%d\n", player.grenades_thrown);
 	FbWriteString(buf);
 	FbSwapBuffers();
 
@@ -1990,6 +2041,10 @@ static void reset_soldiers_in_room(struct castle *c, int room)
 static void player_enter_room(struct player *p, int room, int x, int y)
 {
 	p->room = room;
+
+	if (room == castle.munitions_room)
+		gulag_state = GULAG_MUNITIONS_ROOM;
+
 	reset_soldiers_in_room(&castle, room);
 	p->x = x;
 	p->y = y;
@@ -4000,6 +4055,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_VIEW_COMBO:
 		gulag_view_combo();
+		break;
+	case GULAG_MUNITIONS_ROOM:
+		gulag_munitions_room();
 		break;
 	case GULAG_EXIT:
 		gulag_exit();
