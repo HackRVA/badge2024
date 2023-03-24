@@ -100,15 +100,30 @@ enum gulag_state_t {
 #define printf(...)
 #endif
 
+#define CASTLE_FLOORS 5
+#define CASTLE_ROWS 3
+#define CASTLE_COLS 4
+#define NUM_ROOMS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS)
+#define NUM_DESKS 30
+#define NUM_CHESTS 30
+/* NUM_SOLDIERS is nominally 120, 2 per room, on average */
+#define NUM_SOLDIERS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS * 2)
+#define GULAG_MAX_OBJS_PER_ROOM 5
+#define GULAG_MAXOBJS (CASTLE_FLOORS * CASTLE_COLS * CASTLE_ROWS * GULAG_MAX_OBJS_PER_ROOM)
+
 struct difficulty_settings {
+	short nsoldiers;
 	short soldier_speed;
 	short soldier_shoot_cooldown;
 	short bullet_damage;
+	short chest_grenade_chance;
+	short soldier_grenade_chance;
+	short chest_first_aid_chance;
 } difficulty[] = {
-	{ 128, 30, 1 << 8, }, /* easy */
-	{ 200, 25, 2 << 8, }, /* medium */
-	{ 256, 20, 3 << 8, }, /* hard */
-	{ 300, 15, 4 << 8, }, /* insane */
+	{ NUM_SOLDIERS / 2,		128, 30, 1 << 8, 1000,	300, 500, }, /* easy */
+	{ (3 * NUM_SOLDIERS) / 2,	200, 25, 2 << 8, 800,	200, 400, }, /* medium */
+	{ NUM_SOLDIERS,			256, 20, 3 << 8, 600,	200, 300, }, /* hard */
+	{ NUM_SOLDIERS,			300, 15, 4 << 8, 300,	100, 200, }, /* insane */
 };
 static int difficulty_level;
 
@@ -287,16 +302,6 @@ static void sanity_check_wall_specs(void)
 #else
 static inline void sanity_check_wall_specs(void) { } /* compiler will optimize away */
 #endif
-
-#define CASTLE_FLOORS 5
-#define CASTLE_ROWS 3
-#define CASTLE_COLS 4
-#define NUM_ROOMS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS)
-#define NUM_DESKS 30
-#define NUM_CHESTS 30
-#define NUM_SOLDIERS (CASTLE_FLOORS * CASTLE_ROWS * CASTLE_COLS * 2)
-#define GULAG_MAX_OBJS_PER_ROOM 5
-#define GULAG_MAXOBJS (CASTLE_FLOORS * CASTLE_COLS * CASTLE_ROWS * GULAG_MAX_OBJS_PER_ROOM)
 
 struct room_spec {
 	/* Each room has up to 4 doors (top, bottom, left, and right).
@@ -1246,12 +1251,13 @@ static void add_chest(struct castle *c)
 	if (n < 0)
 		return;
 	go[n].tsd.chest.bullets = random_num(8);
-	go[n].tsd.chest.grenades = random_num(8);
+	if (random_num(1000) < difficulty[difficulty_level].chest_grenade_chance)
+		go[n].tsd.chest.grenades = random_num(8);
 	go[n].tsd.chest.explosives = (random_num(1000) < 100);
 	go[n].tsd.chest.vodka = random_num(1000) < 400;
 	go[n].tsd.chest.potato = random_num(1000) < 200;
 	go[n].tsd.chest.cabbage = random_num(1000) < 200;
-	go[n].tsd.chest.first_aid = random_num(1000) < 200;
+	go[n].tsd.chest.first_aid = random_num(1000) < difficulty[difficulty_level].chest_first_aid_chance;
 	go[n].tsd.chest.locked = (random_num(100) < 80);
 	go[n].tsd.chest.opened = 0;
 	go[n].tsd.chest.key = random_num(12);
@@ -1299,13 +1305,13 @@ static void add_soldier_to_room(struct castle *c, int room)
 	int n = add_object_to_room(c, room, TYPE_SOLDIER, x << 8, y << 8);
 	if (n < 0)
 		return;
-	go[n].tsd.soldier.health = 2 + random_num(3);
+	go[n].tsd.soldier.health = 1 + random_num(4);
 	go[n].tsd.soldier.bullets = random_num(7);
 	if (random_num(1000) < 100)
 		go[n].tsd.soldier.spetsnaz = 1;
 	else
 		go[n].tsd.soldier.spetsnaz = 0;
-	go[n].tsd.soldier.grenades = random_num(1000) < 200;
+	go[n].tsd.soldier.grenades = random_num(1000) < difficulty[difficulty_level].soldier_grenade_chance;
 	go[n].tsd.soldier.keys = random_num(1000) < 200;
 	go[n].tsd.soldier.weapon = 0;
 	go[n].tsd.soldier.anim_frame = 0;
@@ -1338,7 +1344,7 @@ static void add_soldiers(struct castle *c)
 			}
 		}
 	}
-	for (; s < NUM_SOLDIERS; s++)
+	for (; s < difficulty[difficulty_level].nsoldiers; s++)
 		add_soldier_to_random_room(c);
 }
 
