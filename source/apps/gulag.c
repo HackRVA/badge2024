@@ -32,7 +32,7 @@
  *   ( ) Locked doors
  *   (X) Keys
  *   (X) food and drink (vodka, cabbages, potatoes).
- *   ( ) the munitions depot
+ *   (X) the munitions depot
  *   (X) the war plans
  *   (X) plastic explosives
  *   (X) remote detonator
@@ -334,6 +334,7 @@ static struct castle {
 	struct room_spec room[NUM_ROOMS];
 	int exit_room;
 	int start_room;
+	int munitions_room;
 	int stairs_down[CASTLE_FLOORS];
 	int stairs_up[CASTLE_FLOORS];
 } castle;
@@ -464,6 +465,7 @@ struct gulag_object {
 #define TYPE_CHEST 4
 #define TYPE_CORPSE 5
 #define TYPE_SAFE 6
+#define TYPE_MUNITIONS 7
 	union gulag_type_specific_data tsd;
 } go[GULAG_MAXOBJS];
 int gulag_nobjs = 0;
@@ -478,8 +480,10 @@ static void draw_soldier(struct gulag_object *o);
 static void move_soldier(struct gulag_object *s);
 static void draw_corpse(struct gulag_object *o);
 static void draw_chest(struct gulag_object *o);
-static void draw_grenade(struct grenade *o);
 static void draw_safe(struct gulag_object *o);
+static void draw_munitions(struct gulag_object *o);
+
+static void draw_grenade(struct grenade *o);
 static void move_grenade(struct grenade *s);
 
 /* Check if a bounding box and a wall segment collide.
@@ -598,6 +602,7 @@ struct gulag_object_typical_data {
 	{ 16, 8, draw_chest, NULL },
 	{ 16, 8, draw_corpse, NULL, },
 	{ 16, 16, draw_safe, NULL, },
+	{ 20, 20, draw_munitions, NULL, },
 };
 
 static const signed char muzzle_xoffset[] = { 7, 7, 6, 6, 0, 0, 0, 5, };
@@ -1431,6 +1436,26 @@ static void add_doors(struct castle *c, int floor, int start_col, int end_col, i
 	add_doors(c, floor, start_col, end_col, r3, r4);
 }
 
+static void setup_munitions_depot(struct castle *c)
+{
+	int floor = 0;
+	int row, col, room;
+
+	/* pick a room on floor 0 that does not contain a safe */
+	do {
+		row = random_num(CASTLE_ROWS);
+		col = random_num(CASTLE_COLS);
+		room = room_no(floor, col, row);
+	} while (room_contains_obj_of_type(c, room, TYPE_SAFE));
+	c->room[room].interior_walls = 0; /* We want these particular walls */
+	c->room[room].nobjs = 0; /* get rid of all the objects in here */
+
+	int n = add_object_to_room(c, room, TYPE_MUNITIONS, 19 << 8, 35 << 8);
+	go[n].x = 32 << 8;
+	go[n].y = 32 << 8;
+	c->munitions_room = room;
+}
+
 static void init_castle(struct castle *c)
 {
 	int i;
@@ -1451,6 +1476,7 @@ static void init_castle(struct castle *c)
 	add_chests(&castle);
 	add_safes(&castle);
 	add_soldiers(&castle);
+	setup_munitions_depot(&castle);
 }
 
 #if TARGET_SIMULATOR
@@ -3209,6 +3235,26 @@ static void draw_safe(struct gulag_object *safe)
 	FbRectangle(16, 16);
 	FbMove((safe->x >> 8) + 3, (safe->y >> 8) + 3);
 	FbRectangle(10, 10);
+}
+
+static void draw_munition(int x, int y)
+{
+	FbMove(x, y + 7);
+	FbColor(YELLOW);
+	FbRectangle(6, 8);
+	FbColor(RED);
+	FbLine(x, y + 7, x + 2, y);
+	FbLine(x + 5, y + 7, x + 3, y);
+}
+
+static void draw_munitions(struct gulag_object *o)
+{
+	int x = o->x >> 8;
+	int y = o->y >> 8;
+
+	for (int i = 0; i < 8; i++)
+		for (int j = 0; j < 3; j++)
+			draw_munition(x + i * 8 + 1, y + j * 16 + 1);
 }
 
 static void draw_player_data(void)
