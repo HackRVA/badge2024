@@ -3930,8 +3930,15 @@ static void gulag_safecracking()
 	}
 
 	int rotary_switch = button_get_rotation(0);
-	if (rotary_switch == 0)
-		return;
+	
+	if (rotary_switch == 0) {
+		if (button_poll(BADGE_BUTTON_LEFT))
+			rotary_switch = -1;
+		else if (button_poll(BADGE_BUTTON_RIGHT))
+			rotary_switch = 1;
+		else
+			return;
+	}
 
 	n = abs(rotary_switch);
 	d = (rotary_switch < 0) ? -1 : 1;
