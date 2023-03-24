@@ -26,7 +26,7 @@
  *   (X) throwing grenades
  *   ( ) knifing?
  *   (X) health damage/dying
- *   ( ) healing w/ medicine/food
+ *   (X) healing w/ medicine/food
  *
  * Environment features
  *   ( ) Locked doors
@@ -162,6 +162,11 @@ static struct player {
 	short oldx, oldy;
 	short bullets, grenades;
 	short health; /* 8.8 fixed point */
+#define MAX_PLAYER_HEALTH (100 << 8)
+#define POTATO_HEALTH_BOOST (3 << 8);
+#define CABBAGE_HEALTH_BOOST (4 << 8);
+#define VODKA_HEALTH_BOOST (5 << 8);
+#define FIRST_AID_HEALTH_BOOST (10 << 8);
 	unsigned char have_war_plans;
 	unsigned char keys;
 	unsigned char trying_key;
@@ -1529,7 +1534,7 @@ static void init_player(struct player *p, int start_room)
 	p->prev_frame = 0;
 	p->bullets = 10;
 	p->grenades = 3;
-	p->health = 100 << 8;
+	p->health = MAX_PLAYER_HEALTH;
 	p->keys = 0;
 	p->have_war_plans = 0;
 	p->search_object = -1;
@@ -2710,7 +2715,9 @@ static void maybe_search_for_loot(void)
 					if (player.search_item_num == nitems && player.search_timer == 0) {
 						o->tsd.chest.vodka = 0;
 						took_item = 1;
-						/* TODO: stash the vodka on the player for future use */
+						player.health += VODKA_HEALTH_BOOST;
+						if (player.health > MAX_PLAYER_HEALTH)
+							player.health = MAX_PLAYER_HEALTH;
 					}
 				}
 				nitems++;
@@ -2721,7 +2728,9 @@ static void maybe_search_for_loot(void)
 					if (player.search_item_num == nitems && player.search_timer == 0) {
 						o->tsd.chest.potato = 0;
 						took_item = 1;
-						/* TODO: stash the potato on the player for future use */
+						player.health += POTATO_HEALTH_BOOST;
+						if (player.health > MAX_PLAYER_HEALTH)
+							player.health = MAX_PLAYER_HEALTH;
 					}
 				}
 				nitems++;
@@ -2732,7 +2741,9 @@ static void maybe_search_for_loot(void)
 					if (player.search_item_num == nitems && player.search_timer == 0) {
 						o->tsd.chest.cabbage = 0;
 						took_item = 1;
-						/* TODO: stash the cabbage on the player for future use */
+						player.health += CABBAGE_HEALTH_BOOST;
+						if (player.health > MAX_PLAYER_HEALTH)
+							player.health = MAX_PLAYER_HEALTH;
 					}
 				}
 				nitems++;
@@ -2743,7 +2754,9 @@ static void maybe_search_for_loot(void)
 					if (player.search_item_num == nitems && player.search_timer == 0) {
 						o->tsd.chest.first_aid = 0;
 						took_item = 1;
-						/* TODO: stash the first aid on the player for future use */
+						player.health += FIRST_AID_HEALTH_BOOST;
+						if (player.health > MAX_PLAYER_HEALTH)
+							player.health = MAX_PLAYER_HEALTH;
 					}
 				}
 				nitems++;
