@@ -33,12 +33,12 @@
  *   (X) Keys
  *   (X) food and drink (vodka, cabbages, potatoes).
  *   ( ) the munitions depot
- *   ( ) the war plans
+ *   (X) the war plans
  *   (X) plastic explosives
  *   ( ) remote detonator
  *   (X) Win condition/scene
  *   (X) Lose condition/scene
- *   (/) Safes, and safe-cracking mini game
+ *   (X) Safes, and safe-cracking mini game
  *   ( ) Flamethrowers
  *
  * Quality of Life
@@ -90,6 +90,7 @@ enum gulag_state_t {
 	GULAG_MAYBE_EXIT,
 	GULAG_PLAYER_WINS,
 	GULAG_PRINT_STATS,
+	GULAG_VIEW_COMBO,
 	GULAG_EXIT,
 };
 
@@ -119,11 +120,12 @@ struct difficulty_settings {
 	short chest_grenade_chance;
 	short soldier_grenade_chance;
 	short chest_first_aid_chance;
+	short num_desk_safe_combo;
 } difficulty[] = {
-	{ NUM_SOLDIERS / 2,		128, 30, 1 << 8, 1000,	300, 500, }, /* easy */
-	{ (3 * NUM_SOLDIERS) / 2,	200, 25, 2 << 8, 800,	200, 400, }, /* medium */
-	{ NUM_SOLDIERS,			256, 20, 3 << 8, 600,	200, 300, }, /* hard */
-	{ NUM_SOLDIERS,			300, 15, 4 << 8, 300,	100, 200, }, /* insane */
+	{ NUM_SOLDIERS / 2,		128, 30, 1 << 8, 1000,	300, 500, 10, }, /* easy */
+	{ (3 * NUM_SOLDIERS) / 2,	200, 25, 2 << 8, 800,	200, 400,  8, }, /* medium */
+	{ NUM_SOLDIERS,			256, 20, 3 << 8, 600,	200, 300,  5, }, /* hard */
+	{ NUM_SOLDIERS,			300, 15, 4 << 8, 300,	100, 200,  5, }, /* insane */
 };
 static int difficulty_level;
 
@@ -132,6 +134,7 @@ static const short grenade_speed = 512;
 static const short grenade_speed_reduction = 128;
 #define GRENADE_FRAGMENTS 40
 static int game_timer = 0;
+static char safe_combo[CASTLE_FLOORS][20];
 
 enum search_state {
 	search_state_idle = 0, /* not searching right now */
@@ -179,6 +182,7 @@ static struct player {
 	uint64_t end_time_ms;
 	int shots_fired;
 	int grenades_thrown;
+	unsigned char has_combo[CASTLE_FLOORS];
 } player;
 
 static char player_message[100] = { 0 };
@@ -343,6 +347,7 @@ struct gulag_desk_data {
 	uint16_t bullets:3;
 	uint16_t vodka:1;
 	uint16_t locked:1;
+	uint16_t safe_combo:1;
 	int key;
 };
 
@@ -1203,12 +1208,11 @@ static int add_object_to_room(struct castle *c, int room, int object_type, int x
 	return n;
 }
 
-static void add_desk(struct castle *c)
+static void add_desk(struct castle *c, int floor, int has_combo)
 {
-	int floor, col, row, room;
+	int col, row, room;
 
 	do {
-		floor = random_num(CASTLE_FLOORS);
 		row = random_num(CASTLE_ROWS);
 		col = random_num(CASTLE_COLS);
 		room = room_no(floor, col, row);
@@ -1225,12 +1229,15 @@ static void add_desk(struct castle *c)
 	go[n].tsd.desk.vodka = (random_num(1000) < 300);
 	go[n].tsd.desk.locked = (random_num(100) < 50);
 	go[n].tsd.desk.key = random_num(12);
+	go[n].tsd.desk.safe_combo = has_combo;
 }
 
 static void add_desks(struct castle *c)
 {
-	for (int i = 0; i < NUM_DESKS; i++)
-		add_desk(c);
+	for (int i = 0; i < NUM_DESKS; i++) {
+		int has_combo = i < difficulty[difficulty_level].num_desk_safe_combo;
+		add_desk(c, i % CASTLE_FLOORS, has_combo);
+	}
 }
 
 static void add_chest(struct castle *c)
@@ -1288,6 +1295,8 @@ static void add_safe(struct castle *c, int floor)
 	go[n].tsd.safe.combo[1] = random_num(65);
 	go[n].tsd.safe.combo[2] = random_num(65);
 	go[n].tsd.safe.opened = 0;
+	snprintf(safe_combo[floor], sizeof(safe_combo[floor]), "R%d, L%d, R%d",
+		go[n].tsd.safe.combo[0], go[n].tsd.safe.combo[1], go[n].tsd.safe.combo[2]);
 }
 
 static void add_safes(struct castle *c)
@@ -1533,6 +1542,7 @@ static void init_player(struct player *p, int start_room)
 	p->has_won = 0;
 	p->shots_fired = 0;
 	p->grenades_thrown = 0;
+	memset(player.has_combo, 0, sizeof(player.has_combo));
 }
 
 static int astarx_to_8dot8x(int x)
@@ -1841,6 +1851,23 @@ static void gulag_player_wins(void)
 	gulag_state = GULAG_SCROLL_TEXT;
 }
 
+static void gulag_view_combo(void)
+{
+	FbClear();
+	FbMove(3,3);
+	FbWriteString("YOU FOUND\nA SLIP OF\nPAPER\n\n");
+	FbWriteString("IT LOOKS LIKE A\n");
+	FbWriteString("COMBINATION\n");
+	FbWriteString("TO A SAFE!\n\n");
+	FbWriteString(safe_combo[get_room_floor(player.room)]);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+		gulag_state = GULAG_RUN;
+	}
+}
+
 static void gulag_print_stats(void)
 {
 	char buf[25];
@@ -1859,7 +1886,7 @@ static void gulag_print_stats(void)
 	for (int i = 0; i < (int) ARRAYSIZE(safe_documents); i++)
 		if ((1 << i) & player.documents_collected)
 			count++;
-	snprintf(buf, sizeof(buf), "  %d / %d\n", count, (int) ARRAYSIZE(safe_documents));
+	snprintf(buf, sizeof(buf), "  %d / %d\n", count, CASTLE_FLOORS);
 	FbWriteString(buf);
 	millis = player.end_time_ms - player.start_time_ms;
 	secs = millis / 1000;
@@ -2627,6 +2654,17 @@ static void maybe_search_for_loot(void)
 					player.bullets += o->tsd.desk.bullets;
 					o->tsd.desk.bullets = 0;
 					took_item = 1;
+				}
+				nitems++;
+			}
+			if (o->tsd.desk.safe_combo > 0) {
+				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
+					"%s", "SLIP OF PAPER");
+				if (player.search_item_num == nitems && player.search_timer == 0) {
+					o->tsd.desk.safe_combo = 0;
+					took_item = 1;
+					player.has_combo[get_room_floor(player.room)] = 1;
+					gulag_state = GULAG_VIEW_COMBO;
 				}
 				nitems++;
 			}
@@ -3679,7 +3717,10 @@ static void draw_safecracking_screen(struct gulag_object *s)
 	FbClear();
 	FbColor(CYAN);
 	FbMove(3, 3);
-	FbWriteString("CRACK THE SAFE");
+	FbWriteString("CRACK THE SAFE\n");
+	if (player.has_combo[get_room_floor(player.room)])
+		FbWriteString(safe_combo[get_room_floor(player.room)]);
+
 	snprintf(buf, sizeof(buf), "%02d", 64 - (angle / 2) - 1);
 	FbMove(LCD_XSIZE / 2 - 10, 30);
 	FbWriteString(buf);
@@ -3880,6 +3921,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_PRINT_STATS:
 		gulag_print_stats();
+		break;
+	case GULAG_VIEW_COMBO:
+		gulag_view_combo();
 		break;
 	case GULAG_EXIT:
 		gulag_exit();
