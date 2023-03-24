@@ -35,7 +35,7 @@
  *   ( ) the munitions depot
  *   (X) the war plans
  *   (X) plastic explosives
- *   ( ) remote detonator
+ *   (X) remote detonator
  *   (X) Win condition/scene
  *   (X) Lose condition/scene
  *   (X) Safes, and safe-cracking mini game
@@ -188,6 +188,8 @@ static struct player {
 	int shots_fired;
 	int grenades_thrown;
 	unsigned char has_combo[CASTLE_FLOORS];
+	unsigned char has_detonator;
+	unsigned char has_c4;
 } player;
 
 static char player_message[100] = { 0 };
@@ -427,6 +429,7 @@ struct gulag_chest_data {
 	uint16_t vodka:1;
 	uint16_t potato:1;
 	uint16_t cabbage:1;
+	uint16_t detonator:1;
 	uint16_t locked:1;
 	uint16_t opened:1;
 	int key;
@@ -1266,6 +1269,7 @@ static void add_chest(struct castle *c)
 	if (random_num(1000) < difficulty[difficulty_level].chest_grenade_chance)
 		go[n].tsd.chest.grenades = random_num(8);
 	go[n].tsd.chest.explosives = (random_num(1000) < 100);
+	go[n].tsd.chest.detonator = (random_num(1000) < 100);
 	go[n].tsd.chest.vodka = random_num(1000) < 400;
 	go[n].tsd.chest.potato = random_num(1000) < 200;
 	go[n].tsd.chest.cabbage = random_num(1000) < 200;
@@ -1547,6 +1551,8 @@ static void init_player(struct player *p, int start_room)
 	p->has_won = 0;
 	p->shots_fired = 0;
 	p->grenades_thrown = 0;
+	p->has_detonator = 0;
+	p->has_c4 = 0;
 	memset(player.has_combo, 0, sizeof(player.has_combo));
 }
 
@@ -2688,10 +2694,21 @@ static void maybe_search_for_loot(void)
 			}
 			if (o->tsd.chest.explosives > 0) {
 				if (!took_item) {
-					strcpy(search_item_list[nitems].name, "C4 EXPLOSIVE");
+					strcpy(search_item_list[nitems].name, "C-4 EXPLOSIVE");
 					if (player.search_item_num == nitems && player.search_timer == 0) {
-						/* TODO: player needs to take the c4 */
 						o->tsd.chest.explosives = 0;
+						player.has_c4 = 1;
+						took_item = 1;
+					}
+				}
+				nitems++;
+			}
+			if (o->tsd.chest.detonator > 0) {
+				if (!took_item) {
+					strcpy(search_item_list[nitems].name, "DETONATOR");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						o->tsd.chest.detonator = 0;
+						player.has_detonator = 1;
 						took_item = 1;
 					}
 				}
