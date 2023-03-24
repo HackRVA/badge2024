@@ -30,11 +30,11 @@
  *
  * Environment features
  *   ( ) Locked doors
- *   ( ) Keys
- *   ( ) food and drink (vodka, cabbages, potatoes).
+ *   (X) Keys
+ *   (X) food and drink (vodka, cabbages, potatoes).
  *   ( ) the munitions depot
  *   ( ) the war plans
- *   ( ) plastic explosives
+ *   (X) plastic explosives
  *   ( ) remote detonator
  *   (X) Win condition/scene
  *   (X) Lose condition/scene
@@ -51,11 +51,6 @@
  *   (X) Every soldier in the game does not need pathfinding memory,
  *       only every soldier *in the current room* needs pathfinding
  *       memory.
- *
- * Known bugs
- *   * When searching objects, it prints "Nothing found!" way too often
- *     and too soon after finding stuff.
- *   
  */
 
 
@@ -123,17 +118,24 @@ static const short grenade_speed_reduction = 128;
 #define GRENADE_FRAGMENTS 40
 static int game_timer = 0;
 
-struct loot {
-#define LOOT_TIME (30 * 2)
-	int timer;
-	char keys;
-	char grenades;
-	char bullets;
-	char war_plans;
-	char vodka;
-	char cabbage;
-	char potato;
-	char explosives;
+enum search_state {
+	search_state_idle = 0, /* not searching right now */
+#define SEARCH_INIT_TIME 30
+#define MIN_SEARCH_DIST2 (15 * 15)
+	search_state_searching,
+#define SEARCH_TIME (30 * 2)
+	search_state_trying_keys,
+#define SEARCH_KEY_TIME 20
+	search_state_unlocked,
+#define SEARCH_UNLOCKED_TIME 30
+	search_state_no_dice,
+#define SEARCH_NO_DICE_TIME 30
+	search_state_locked,
+#define SEARCH_LOCKED_TIME 30
+	search_state_finding_items,
+#define SEARCH_ITEM_TIME 30
+	search_state_cooldown,
+#define SEARCH_COOLDOWN_TIME 30
 };
 
 static struct player {
@@ -145,22 +147,17 @@ static struct player {
 	unsigned char have_war_plans;
 	unsigned char keys;
 	unsigned char trying_key;
-	int key_trying_timer;
-#define KEY_TRY_TIME 10
 	int kills;
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
 	unsigned char current_room;
 	char anim_frame, prev_frame;
-#define SEARCH_INIT_TIME 20
-	int initial_search_timer;
-#define SEARCH_TIME (30 * 2)
-#define MIN_SEARCH_DIST2 (15 * 15)
+	enum search_state search_state;
 	int search_timer;
+	int search_item_num;
 	int search_object;
 	int safecracking_cooldown;
 #define SAFECRACK_COOLDOWN_TIME 60
 	int current_safe;
-	struct loot loot;
 	uint16_t documents_collected;
 	int has_won;
 	uint64_t start_time_ms;
@@ -338,11 +335,9 @@ struct gulag_stairs_data {
 
 struct gulag_desk_data {
 	uint16_t keys:1;
-	uint16_t war_plans:1;
 	uint16_t bullets:3;
 	uint16_t vodka:1;
 	uint16_t locked:1;
-	uint16_t already_looted:1;
 	int key;
 };
 
@@ -354,15 +349,14 @@ static struct path_data {
 
 struct gulag_soldier_data {
 	uint16_t health:3;
-	uint16_t bullets:3;
 	uint16_t spetsnaz:1;
 #define SPETSNAZ_ARMBAND BLUE
+	uint16_t bullets:3;
 	uint16_t grenades:2;
 	uint16_t keys:1;
 	uint16_t weapon:2;
 	uint16_t corpse_direction:1; /* left or right corpse variant */
 	uint16_t sees_player_now:1;
-	uint16_t already_looted:1;
 	char anim_frame;
 	char prev_frame;
 	/* Careful, char is *unsigned* by default on the badge! */
@@ -413,14 +407,13 @@ struct gulag_safe_data {
 struct gulag_chest_data {
 	uint16_t bullets:3;
 	uint16_t grenades:3;
-	uint16_t war_plans:1;
+	uint16_t first_aid:1;
 	uint16_t explosives:1;
 	uint16_t vodka:1;
 	uint16_t potato:1;
 	uint16_t cabbage:1;
 	uint16_t locked:1;
 	uint16_t opened:1;
-	uint16_t already_looted:1;
 	int key;
 };
 
@@ -1224,9 +1217,8 @@ static void add_desk(struct castle *c)
 		return;
 	go[n].tsd.desk.bullets = random_num(8);
 	go[n].tsd.desk.keys = (random_num(100) < 40);
-	go[n].tsd.desk.war_plans = 0;
+	go[n].tsd.desk.vodka = (random_num(1000) < 300);
 	go[n].tsd.desk.locked = (random_num(100) < 50);
-	go[n].tsd.desk.already_looted = 0;
 	go[n].tsd.desk.key = random_num(12);
 }
 
@@ -1255,11 +1247,13 @@ static void add_chest(struct castle *c)
 		return;
 	go[n].tsd.chest.bullets = random_num(8);
 	go[n].tsd.chest.grenades = random_num(8);
-	go[n].tsd.chest.war_plans = 0;
-	go[n].tsd.chest.explosives = 0;
+	go[n].tsd.chest.explosives = (random_num(1000) < 100);
+	go[n].tsd.chest.vodka = random_num(1000) < 400;
+	go[n].tsd.chest.potato = random_num(1000) < 200;
+	go[n].tsd.chest.cabbage = random_num(1000) < 200;
+	go[n].tsd.chest.first_aid = random_num(1000) < 200;
 	go[n].tsd.chest.locked = (random_num(100) < 80);
 	go[n].tsd.chest.opened = 0;
-	go[n].tsd.chest.already_looted = 0;
 	go[n].tsd.chest.key = random_num(12);
 }
 
@@ -1311,8 +1305,8 @@ static void add_soldier_to_room(struct castle *c, int room)
 		go[n].tsd.soldier.spetsnaz = 1;
 	else
 		go[n].tsd.soldier.spetsnaz = 0;
-	go[n].tsd.soldier.grenades = 0;
-	go[n].tsd.soldier.keys = 0;
+	go[n].tsd.soldier.grenades = random_num(1000) < 200;
+	go[n].tsd.soldier.keys = random_num(1000) < 200;
 	go[n].tsd.soldier.weapon = 0;
 	go[n].tsd.soldier.anim_frame = 0;
 	go[n].tsd.soldier.prev_frame = 0;
@@ -1321,7 +1315,6 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.sees_player_now = 0;
 	go[n].tsd.soldier.angle = random_num(128);
 	go[n].tsd.soldier.state = SOLDIER_STATE_RESTING;
-	go[n].tsd.soldier.already_looted = 0;
 	go[n].tsd.soldier.shoot_cooldown = difficulty[difficulty_level].soldier_shoot_cooldown;
 }
 
@@ -1522,10 +1515,11 @@ static void init_player(struct player *p, int start_room)
 	p->bullets = 10;
 	p->grenades = 3;
 	p->health = 100 << 8;
-	p->keys = 12;
-	p->trying_key = 255;
+	p->keys = 0;
 	p->have_war_plans = 0;
 	p->search_object = -1;
+	p->search_state = search_state_cooldown;
+	p->search_timer = 2;
 	p->kills = 0;
 	p->safecracking_cooldown = 0;
 	p->current_safe = -1;
@@ -2393,272 +2387,391 @@ static void throw_grenade(struct player *p)
 	ngrenades++;
 }
 
-static void update_player_loot(void)
-{
+#define DEBUG_SEARCH 0
+#if DEBUG_SEARCH
+#define debug_search(...) printf(__VA_ARGS__)
 
-	player.keys += player.loot.keys;
-	player.grenades += player.loot.grenades;
-	player.bullets += player.loot.bullets;
-	// player.war_plans += player.loot.war_plans;
-	// player.explosives += player.loot.explosives;
-	// player.cabbage += player.loot.cabbage;
-	//player.potato += player.loot.potato;
+static const char *search_state_name[] = {
+	"IDLE",
+	"SEARCHING",
+	"TRYING KEYS",
+	"UNLOCKED",
+	"NO DICE",
+	"LOCKED",
+	"FINDING ITEMS",
+	"COOLDOWN",
+};
+
+#else
+#define debug_search(...)
+#endif
+
+static void set_search_state(enum search_state s, int time)
+{
+	debug_search("search state now: %s, time = %d\n", search_state_name[s], time);
+	player.search_state = s;
+	player.search_timer = time;
 }
+
+static void goto_search_cooldown(void)
+{
+	set_search_state(search_state_cooldown, SEARCH_COOLDOWN_TIME);
+	strcpy(player_message, "");
+	display_message = 0;
+	return;
+}
+
+struct search_item {
+	char name[25];
+};
 
 static void maybe_search_for_loot(void)
 {
 	char *object_type;
 	int distance2, dx, dy;
+	struct gulag_object *o;
+	int locked = 0;
+	struct search_item search_item_list[10];
+	int nitems, took_item;
+
+	screen_changed = 1;
 
 	if (player.safecracking_cooldown > 0)
 		player.safecracking_cooldown--;
 
-#ifdef DEBUG_LOOT
-	printf("lt = %d, ist=%d, st=%d, lo=%d\n", player.loot.timer,
-		player.initial_search_timer, player.search_timer, player.search_object);
-#endif
+	if (player.search_object == -1)
+		o = NULL;
+	else
+		o = &go[player.search_object];
 
-	if (player.loot.timer > 0)
-		player.loot.timer--;
-
-	if (player.search_object == -1) {
-		display_message = 0;
+	switch (player.search_state) {
+	case search_state_idle:
+		if (player.search_object == -1)
+			return;
+		dx = (o->x >> 8) - (player.x >> 8);
+		dy = (o->y >> 8) - (player.y >> 8);
+		distance2 = dx * dx + dy * dy;
+		if (distance2 > MIN_SEARCH_DIST2) {
+			player.search_object = -1;
+			goto_search_cooldown();
+			return;
+		}
+		if (player.search_timer > 0) {
+			player.search_timer--;
+			if (player.search_timer == 0)
+				set_search_state(search_state_searching, SEARCH_TIME);
+		}
 		return;
-	}
-
-	struct gulag_object *o = &go[player.search_object];
-	dx = (o->x >> 8) - (player.x >> 8);
-	dy = (o->y >> 8) - (player.y >> 8);
-	distance2 = dx * dx + dy * dy;
-	if (distance2 > MIN_SEARCH_DIST2) {
-		player.search_object = -1;
-		player.initial_search_timer = SEARCH_INIT_TIME;
-		return;
-	}
-
-	if (player.initial_search_timer > 0 && player.loot.timer == 0) {
-		player.initial_search_timer--;
-		if (player.initial_search_timer == 0)
-			player.search_timer = SEARCH_TIME;
-		return;
-	}
-
-	if (player.search_timer > 0) {
-		int locked = 0;
-		int *required_key = NULL;
+	case search_state_searching:
+		if (player.search_object == -1) {
+			goto_search_cooldown();
+			return;
+		}
 		switch (o->type) {
 		case TYPE_DESK:
-			object_type = " DESK";
+			object_type = "DESK";
 			locked = o->tsd.desk.locked;
-			required_key = &o->tsd.desk.key;
 			break;
 		case TYPE_CHEST:
-			object_type = " CHEST";
+			object_type = "CHEST";
 			locked = o->tsd.chest.locked;
-			required_key = &o->tsd.chest.key;
 			break;
 		case TYPE_CORPSE:
-			object_type = " BODY";
+			object_type = "BODY";
 			locked = 0;
 			break;
 		default:
-			object_type = " ...";
+			object_type = "...";
 			break;
 		}
-		if (locked && player.search_timer < 2 * SEARCH_TIME / 3) {
-			if (player.keys > 0) {
-				if (player.trying_key == 255) {
-					player.trying_key = 0;
-					snprintf(player_message, sizeof(player_message),
-						"TRYING KEYS %d", player.trying_key + 1);
-					player.key_trying_timer = KEY_TRY_TIME;
-				} else {
-					if (player.key_trying_timer > 0)
-						player.key_trying_timer--;
-					if (player.key_trying_timer == 0) {
-						if (required_key && player.trying_key == *required_key) {
-							if (o->type == TYPE_CHEST)
-								o->tsd.chest.locked = 0;
-							if (o->type == TYPE_DESK)
-								o->tsd.desk.locked = 0;
-							player.trying_key = 0;
-						} else {
-							player.trying_key++;
-							if (player.trying_key > player.keys - 1) {
-								snprintf(player_message, sizeof(player_message), "LOCKED!");
-								player.trying_key = 0;
-							}
-						}
-					}
-				}
-			} else {
-				snprintf(player_message, sizeof(player_message), "LOCKED!");
-			}
-		} else {
-			snprintf(player_message, sizeof(player_message), "SEARCHING%s", object_type);
-		}
+		snprintf(player_message, sizeof(player_message), "SEARCHING %s", object_type);
 		display_message = 1;
-		screen_changed = 1;
-		if (player.search_timer > 0) {
+		if (player.search_timer > 0)
 			player.search_timer--;
-			if (player.search_timer == 0) {
-				if (!locked)
-					player.loot.timer = LOOT_TIME;
-				else
-					player.search_object = -1;
-				player.initial_search_timer = SEARCH_INIT_TIME;
-				display_message = 0;
-				screen_changed = 1;
+		if (player.search_timer == 0) {
+			if (!locked) {
+				set_search_state(search_state_finding_items, SEARCH_ITEM_TIME);
+				player.search_item_num = 0;
+				return;
 			}
+			if (player.keys > 0) {
+				set_search_state(search_state_trying_keys, SEARCH_KEY_TIME);
+				player.trying_key = 0;
+				return;
+			}
+			set_search_state(search_state_locked, SEARCH_LOCKED_TIME);
+			return;
 		}
-	} else if (player.loot.timer > 0) {
-		switch (o->type) {
-		case TYPE_CORPSE:
-			if (!o->tsd.soldier.already_looted) {
-				player.loot.keys = o->tsd.soldier.keys;
-				player.loot.grenades = o->tsd.soldier.grenades;
-				player.loot.bullets = o->tsd.soldier.bullets;
-				player.loot.war_plans = 0;
-				player.loot.explosives = 0;
-				player.loot.cabbage = 0;
-				player.loot.potato = 0;
-
-				o->tsd.soldier.already_looted = 1;
-				o->tsd.soldier.keys = 0;
-				o->tsd.soldier.grenades = 0;
-				o->tsd.soldier.bullets = 0;
-
-				update_player_loot();
-#ifdef DEBUG_LOOT
-				printf("body loot = k%d g%d b%d w%d e%d c%d p%d\n",
-					player.loot.keys,
-					player.loot.grenades,
-					player.loot.bullets,
-					player.loot.war_plans,
-					player.loot.explosives,
-					player.loot.cabbage,
-					player.loot.potato);
-#endif
-				screen_changed = 1;
-			} else {
-#ifdef DEBUG_LOOT
-				printf("Already looted\n");
-#endif
-				player.loot.keys = 0;
-				player.loot.grenades = 0;
-				player.loot.bullets = 0;
-				player.loot.war_plans = 0;
-				player.loot.explosives = 0;
-				player.loot.cabbage = 0;
-				player.loot.potato = 0;
+		return;
+	case search_state_locked:
+		if (player.search_object == -1) {
+			goto_search_cooldown();
+			return;
+		}
+		snprintf(player_message, sizeof(player_message), "LOCKED!");
+		display_message = 1;
+		if (player.search_timer > 0)
+			player.search_timer--;
+		if (player.search_timer == 0) {
+			goto_search_cooldown();
+			return;
+		}
+		return;
+	case search_state_trying_keys:
+		if (player.search_object == -1) {
+			goto_search_cooldown();
+			return;
+		}
+		snprintf(player_message, sizeof(player_message), "TRYING KEY %d/%d", player.trying_key, player.keys);
+		display_message = 1;
+		if (player.search_timer > 0)
+			player.search_timer--;
+		if (player.search_timer == 0) {
+			switch (o->type) {
+			case TYPE_DESK:
+				if (player.trying_key == o->tsd.desk.key) {
+					set_search_state(search_state_unlocked, SEARCH_LOCKED_TIME);
+					o->tsd.desk.locked = 0;
+					player.trying_key = 0;
+					return;
+				}
+				break;
+			case TYPE_CHEST:
+				if (player.trying_key == o->tsd.chest.key) {
+					set_search_state(search_state_unlocked, SEARCH_LOCKED_TIME);
+					o->tsd.chest.locked = 0;
+					player.trying_key = 0;
+					return;
+				}
+				break;
 			}
-			break;
+			player.trying_key++;
+			if (player.trying_key >= player.keys) { /* tried all the keys already */
+				set_search_state(search_state_no_dice, SEARCH_NO_DICE_TIME);
+				return;
+			}
+			set_search_state(search_state_trying_keys, SEARCH_KEY_TIME);
+		}
+		return;
+	case search_state_no_dice:
+		if (player.search_object == -1) {
+			goto_search_cooldown();
+			return;
+		}
+		snprintf(player_message, sizeof(player_message), "NO DICE!");
+		display_message = 1;
+		if (player.search_timer > 0)
+			player.search_timer--;
+		if (player.search_timer == 0) {
+			goto_search_cooldown();
+			return;
+		}
+		return;
+	case search_state_unlocked:
+		if (player.search_object == -1) {
+			goto_search_cooldown();
+			return;
+		}
+		snprintf(player_message, sizeof(player_message), "UNLOCKED!");
+		display_message = 1;
+		if (player.search_timer > 0)
+			player.search_timer--;
+		if (player.search_timer == 0) {
+			set_search_state(search_state_finding_items, SEARCH_ITEM_TIME);
+			player.search_item_num = 0;
+			return;
+		}
+		return;
+	case search_state_finding_items:
+		took_item = 0;
+		if (player.search_object == -1) {
+			goto_search_cooldown();
+			return;
+		}
+		/* Build the list of items we found */
+		nitems = 0;
+		if (player.search_timer > 0)
+			player.search_timer--;
+		switch (o->type) {
 		case TYPE_DESK:
-			if (!o->tsd.desk.already_looted) {
-				player.loot.keys = o->tsd.desk.keys;
-				player.loot.bullets = o->tsd.desk.bullets;
-				player.loot.grenades = 0;
-				player.loot.vodka = o->tsd.desk.vodka;
-				player.loot.war_plans = o->tsd.desk.war_plans;
-				player.loot.explosives = 0;
-				player.loot.cabbage = 0;
-				player.loot.potato = 0;
-
-				o->tsd.desk.already_looted = 1;
-				o->tsd.desk.keys = 0;
-				o->tsd.desk.bullets = 0;
-				o->tsd.desk.vodka = 0;
-				o->tsd.desk.war_plans = 0;
-
-				update_player_loot();
-#ifdef DEBUG_LOOT
-				printf("desk loot = k%d g%d b%d w%d e%d c%d p%d\n",
-					player.loot.keys,
-					player.loot.grenades,
-					player.loot.bullets,
-					player.loot.war_plans,
-					player.loot.explosives,
-					player.loot.cabbage,
-					player.loot.potato);
-#endif
-
-				screen_changed = 1;
-			} else {
-#ifdef DEBUG_LOOT
-				printf("Already looted\n");
-#endif
-				player.loot.keys = 0;
-				player.loot.grenades = 0;
-				player.loot.bullets = 0;
-				player.loot.war_plans = 0;
-				player.loot.explosives = 0;
-				player.loot.cabbage = 0;
-				player.loot.potato = 0;
+			if (o->tsd.desk.vodka > 0) {
+				strcpy(search_item_list[nitems].name, "FLASK OF VODKA");
+				display_message = 1;
+				if (player.search_item_num == nitems && player.search_timer == 0) {
+					o->tsd.desk.vodka = 0;
+					took_item = 1;
+					/* TODO: stash the vodka on the player for future use */
+				}
+				nitems++;
+			}
+			if (o->tsd.desk.keys > 0) {
+				strcpy(search_item_list[nitems].name, "A KEY");
+				display_message = 1;
+				if (player.search_item_num == nitems && player.search_timer == 0) {
+					player.keys += o->tsd.desk.keys;
+					o->tsd.desk.keys = 0;
+					took_item = 1;
+				}
+				nitems++;
+			}
+			if (o->tsd.desk.bullets > 0) {
+				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
+					"%d %s", o->tsd.desk.bullets, o->tsd.desk.bullets > 1 ? "BULLETS" : "BULLET");
+				if (player.search_item_num == nitems && player.search_timer == 0) {
+					player.bullets += o->tsd.desk.bullets;
+					o->tsd.desk.bullets = 0;
+					took_item = 1;
+				}
+				nitems++;
 			}
 			break;
 		case TYPE_CHEST:
-			if (!o->tsd.chest.already_looted) {
-				player.loot.keys = 0;
-				player.loot.bullets = o->tsd.chest.bullets;
-				player.loot.grenades = o->tsd.chest.grenades;
-				player.loot.vodka = 0;
-				player.loot.war_plans = 0;
-				player.loot.explosives = o->tsd.chest.explosives;
-				player.loot.cabbage = o->tsd.chest.cabbage;
-				player.loot.potato = o->tsd.chest.potato;
-
-				o->tsd.chest.already_looted = 1;
-				o->tsd.chest.bullets = 0;
-				o->tsd.chest.grenades = 0;
-				o->tsd.chest.explosives = 0;
-				o->tsd.chest.cabbage = 0;
-				o->tsd.chest.potato = 0;
-				o->tsd.chest.opened = 1;
-
-				update_player_loot();
-#ifdef DEBUG_LOOT
-				printf("chest loot = k%d g%d b%d w%d e%d c%d p%d\n",
-					player.loot.keys,
-					player.loot.grenades,
-					player.loot.bullets,
-					player.loot.war_plans,
-					player.loot.explosives,
-					player.loot.cabbage,
-					player.loot.potato);
-#endif
-
-				screen_changed = 1;
-			} else {
-#ifdef DEBUG_LOOT
-				printf("Already looted\n");
-#endif
-				player.loot.keys = 0;
-				player.loot.grenades = 0;
-				player.loot.bullets = 0;
-				player.loot.war_plans = 0;
-				player.loot.explosives = 0;
-				player.loot.cabbage = 0;
-				player.loot.potato = 0;
+			o->tsd.chest.opened = 1;
+			if (o->tsd.chest.grenades > 0) {
+				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
+					"%d %s", o->tsd.chest.grenades, o->tsd.chest.grenades > 1 ? "GRENADES" : "GRENADE");
+				if (player.search_item_num == nitems && player.search_timer == 0) {
+					player.grenades += o->tsd.chest.grenades;
+					o->tsd.chest.grenades = 0;
+					took_item = 1;
+				}
+				nitems++;
+			}
+			if (o->tsd.chest.explosives > 0) {
+				if (!took_item) {
+					strcpy(search_item_list[nitems].name, "C4 EXPLOSIVE");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						/* TODO: player needs to take the c4 */
+						o->tsd.chest.explosives = 0;
+						took_item = 1;
+					}
+				}
+				nitems++;
+			}
+			if (o->tsd.chest.bullets > 0) {
+				if (!took_item) {
+					snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
+						"%d %s", o->tsd.chest.bullets, o->tsd.chest.bullets > 1 ? "BULLETS" : "BULLET");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						player.bullets += o->tsd.chest.bullets;
+						o->tsd.chest.bullets = 0;
+						took_item = 1;
+					}
+				}
+				nitems++;
+			}
+			if (o->tsd.chest.vodka > 0) {
+				if (!took_item) {
+					strcpy(search_item_list[nitems].name, "FLASK OF VODKA");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						o->tsd.chest.vodka = 0;
+						took_item = 1;
+						/* TODO: stash the vodka on the player for future use */
+					}
+				}
+				nitems++;
+			}
+			if (o->tsd.chest.potato > 0) {
+				if (!took_item) {
+					strcpy(search_item_list[nitems].name, "A POTATO");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						o->tsd.chest.potato = 0;
+						took_item = 1;
+						/* TODO: stash the potato on the player for future use */
+					}
+				}
+				nitems++;
+			}
+			if (o->tsd.chest.cabbage > 0) {
+				if (!took_item) {
+					strcpy(search_item_list[nitems].name, "A CABBAGE");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						o->tsd.chest.cabbage = 0;
+						took_item = 1;
+						/* TODO: stash the cabbage on the player for future use */
+					}
+				}
+				nitems++;
+			}
+			if (o->tsd.chest.first_aid > 0) {
+				if (!took_item) {
+					strcpy(search_item_list[nitems].name, "FIRST AID KIT");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						o->tsd.chest.first_aid = 0;
+						took_item = 1;
+						/* TODO: stash the first aid on the player for future use */
+					}
+				}
+				nitems++;
+			}
+			break;
+		case TYPE_CORPSE:
+			if (o->tsd.soldier.grenades > 0) {
+				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
+					"%d %s", o->tsd.soldier.grenades, o->tsd.soldier.grenades > 1 ? "GRENADES" : "GRENADE");
+				if (player.search_item_num == nitems && player.search_timer == 0) {
+					player.grenades += o->tsd.soldier.grenades;
+					o->tsd.soldier.grenades = 0;
+					took_item = 1;
+				}
+				nitems++;
+			}
+			if (o->tsd.soldier.bullets > 0) {
+				if (!took_item) {
+					snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
+						"%d %s", o->tsd.soldier.bullets, o->tsd.soldier.bullets > 1 ? "BULLETS" : "BULLET");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						player.bullets += o->tsd.soldier.bullets;
+						o->tsd.soldier.bullets = 0;
+						took_item = 1;
+					}
+				}
+				nitems++;
+			}
+			if (o->tsd.soldier.keys > 0) {
+				if (!took_item) {
+					strcpy(search_item_list[nitems].name, "A KEY");
+					if (player.search_item_num == nitems && player.search_timer == 0) {
+						player.keys += o->tsd.soldier.keys;
+						o->tsd.soldier.keys = 0;
+						took_item = 1;
+					}
+				}
+				nitems++;
 			}
 			break;
 		}
-		if (player.loot.timer == 0) {
-				player.loot.keys = 0;
-				player.loot.bullets = 0;
-				player.loot.grenades = 0;
-				player.loot.vodka = 0;
-				player.loot.war_plans = 0;
-				player.loot.explosives = 0;
-				player.loot.cabbage = 0;
-				player.loot.potato = 0;
-				display_message = 0;
-				screen_changed = 1;
+		if (took_item && nitems > 1) {
+			/* we took an item, but more items remain. */
+			player.search_timer = SEARCH_ITEM_TIME;
 		}
-	} else {
-		player.initial_search_timer = SEARCH_INIT_TIME;
-		player.search_object = -1;
-		display_message = 0;
-		screen_changed = 1;
+		if (nitems == 0) {
+			strcpy(player_message, "NOTHING.");
+			display_message = 1;
+			debug_search("NOTHING.\n");
+		} else {
+			strcpy(player_message, search_item_list[player.search_item_num].name);
+			display_message = 1;
+			debug_search("%s\n", player_message);
+		}
+		if (player.search_timer == 0) {
+			if (nitems == 0) {
+				goto_search_cooldown();
+				return;
+			}
+			player.search_item_num++;
+			if (player.search_item_num >= nitems) {
+				goto_search_cooldown();
+				return;
+			}
+		}
+		return;
+	case search_state_cooldown:
+		if (player.search_timer > 0)
+			player.search_timer--;
+		if (player.search_timer == 0)
+			set_search_state(search_state_idle, SEARCH_INIT_TIME);
+		return;
 	}
 }
 
@@ -2799,15 +2912,12 @@ static void check_buttons()
 				break; /* handled elsewhere */
 			/* Chests and desks don't block movement so player isn't trapped by furniture. */
 			case TYPE_CHEST:
-				player.initial_search_timer = SEARCH_INIT_TIME;
 				player.search_object = n;
 				break;
 			case TYPE_DESK:
-				player.initial_search_timer = SEARCH_INIT_TIME;
 				player.search_object = n;
 				break;
 			case TYPE_CORPSE:
-				player.initial_search_timer = SEARCH_INIT_TIME;
 				player.search_object = n;
 				break;
 			case TYPE_SOLDIER: /* Soldiers block player movement */
@@ -2821,10 +2931,10 @@ static void check_buttons()
 			}
 		} else {
 			player.search_object = -1;
-			player.search_timer = SEARCH_INIT_TIME;
 			display_message = 0;
-			player.loot.timer = 0;
 		}
+		/* if (player.search_object != -1 && player.search_state == search_state_idle)
+			set_search_state(search_state_searching, SEARCH_TIME); */
 
 		player.oldx = player.x;
 		player.oldy = player.y;
@@ -3027,17 +3137,6 @@ static void draw_safe(struct gulag_object *safe)
 	FbRectangle(10, 10);
 }
 
-static void print_loot(int *y, char *buf, size_t bufsize, char *name, int quantity, int *total_found)
-{
-	if (quantity == 0)
-		return;
-	(*total_found) += quantity;
-	FbMove(3, *y);
-	snprintf(buf, bufsize, "%d %s", quantity, name);
-	FbWriteString(buf);
-	(*y) += 8;
-}
-
 static void draw_player_data(void)
 {
 	char buf[100];
@@ -3047,25 +3146,6 @@ static void draw_player_data(void)
 		FbColor(YELLOW);
 		FbMove(3, 130);
 		FbWriteString(player_message);
-		return;
-	}
-
-	if (player.loot.timer > 0) {
-		FbColor(YELLOW);
-		int y = 128;
-		int total_found = 0;
-		print_loot(&y, buf, sizeof(buf), "KEYS", player.loot.keys, &total_found);
-		print_loot(&y, buf, sizeof(buf), "BULLETS", player.loot.bullets, &total_found);
-		print_loot(&y, buf, sizeof(buf), "GRENADES", player.loot.grenades, &total_found);
-		print_loot(&y, buf, sizeof(buf), "WAR PLANS", player.loot.war_plans, &total_found);
-		print_loot(&y, buf, sizeof(buf), "VODKA", player.loot.vodka, &total_found);
-		print_loot(&y, buf, sizeof(buf), "CABBAGE", player.loot.cabbage, &total_found);
-		print_loot(&y, buf, sizeof(buf), "POTATO", player.loot.potato, &total_found);
-		print_loot(&y, buf, sizeof(buf), "EXPLOSIVES", player.loot.explosives, &total_found);
-		if (total_found == 0) {
-			FbMove(3, y);
-			FbWriteString("FOUND NOTHING!");
-		}
 		return;
 	}
 
