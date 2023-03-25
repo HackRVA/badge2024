@@ -598,6 +598,7 @@ static void process_events(SDL_Window *window)
             mouse_button_down_cb(&event, &bcl);
             break;
         case SDL_MOUSEBUTTONUP:
+            mouse_button_up_cb(&event);
             break;
         case SDL_MOUSEMOTION:
             break;

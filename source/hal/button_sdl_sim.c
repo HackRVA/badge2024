@@ -108,6 +108,8 @@ static int mouse_close_enough(int x, int y, struct button_coord *b)
 	return ((x - b->x) * (x - b->x) + (y - b->y) * (y - b->y)) < (40 * 40);
 }
 
+static int last_mouse_pressed_button = BADGE_BUTTON_MAX;
+
 int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *bcl)
 {
 	int x, y;
@@ -155,12 +157,25 @@ int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *
                 sim_button_status.dpad_right = BUTTON_DISPLAY_DURATION;
 	}
 	if (button != BADGE_BUTTON_MAX) {
+                last_mouse_pressed_button = button;
 		down_latches |= 1<<button;
 		button_states |= 1<<button;
 		if (callback) {
 			callback(button, true);
 		}
 		last_change = rtc_get_ms_since_boot();
+	}
+	return 1;
+}
+
+int mouse_button_up_cb(__attribute__((unused)) SDL_MouseButtonEvent *event)
+{
+	/* Release whichever mouse-pressed simulated button was last pressed */
+	if (last_mouse_pressed_button >= 0 && last_mouse_pressed_button < BADGE_BUTTON_MAX) {
+		down_latches &= ~(1 << last_mouse_pressed_button);
+		button_states &= ~(1 << last_mouse_pressed_button);
+		last_change = rtc_get_ms_since_boot();
+		last_mouse_pressed_button = BADGE_BUTTON_MAX;
 	}
 	return 1;
 }

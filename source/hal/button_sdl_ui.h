@@ -10,6 +10,7 @@ extern int time_to_quit;
 extern int key_press_cb();
 extern int key_release_cb();
 extern int mouse_button_down_cb();
+extern int mouse_button_up_cb();
 extern int mouse_scroll_cb();
 extern void handle_window_event();
 extern int joystick_event_cb();
