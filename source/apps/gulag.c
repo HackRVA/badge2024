@@ -15,8 +15,8 @@
  * Enemy behaviors:
  *   (X) Shooting
  *   ( ) Chasing
- *   ( ) Fleeing
- *   ( ) Surrendering/being searched
+ *   (X) Fleeing
+ *   (X) Surrendering/being searched
  *   ( ) Following room to room (Spetsnaz only)
  *
  * Player behaviors:
@@ -174,7 +174,11 @@ static struct player {
 	int kills;
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
 	unsigned char current_room;
-	char anim_frame, prev_frame;
+	char anim_frame;
+#define HANDSUP_FIGURE 15
+#define SURRENDER_DIST 15
+#define UNSURRENDER_DIST 50
+#define SURRENDER_CHANCE 100 /* out of 1000 */
 	enum search_state search_state;
 	int search_timer;
 	int search_item_num;
@@ -377,8 +381,8 @@ struct gulag_soldier_data {
 	uint16_t weapon:2;
 	uint16_t corpse_direction:1; /* left or right corpse variant */
 	uint16_t sees_player_now:1;
+	uint16_t disarmed:1;
 	char anim_frame;
-	char prev_frame;
 	/* Careful, char is *unsigned* by default on the badge! */
 	signed char last_seen_x, last_seen_y; /* location player was last seen at */
 	unsigned char angle; /* 0 - 127 */
@@ -840,6 +844,20 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 			FbColor(SPETSNAZ_ARMBAND);
 			FbPoint(x + 2, y + 5);
 			FbPoint(x + 5, y + 3);
+		}
+		break;
+	case HANDSUP_FIGURE: /* 15 */
+		draw_figures_head1(x, y);
+		FbHorizontalLine(x + 2, y + 3, x + 5, y + 3);
+		FbVerticalLine(x + 1, y, x + 1, y + 3);
+		FbVerticalLine(x + 6, y, x + 6, y + 3);
+		FbVerticalLine(x + 3, y + 4, x + 3, y + 15);
+		FbVerticalLine(x + 4, y + 4, x + 4, y + 14);
+		FbPoint(x + 5, y + 14);
+		if (armband) {
+			FbColor(SPETSNAZ_ARMBAND);
+			FbPoint(x + 1, y + 2);
+			FbPoint(x + 6, y + 2);
 		}
 		break;
 	}
@@ -1339,13 +1357,13 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.keys = random_num(1000) < 200;
 	go[n].tsd.soldier.weapon = 0;
 	go[n].tsd.soldier.anim_frame = 0;
-	go[n].tsd.soldier.prev_frame = 0;
 	go[n].tsd.soldier.last_seen_x = -1;
 	go[n].tsd.soldier.last_seen_y = -1;
 	go[n].tsd.soldier.sees_player_now = 0;
 	go[n].tsd.soldier.angle = random_num(128);
 	go[n].tsd.soldier.state = SOLDIER_STATE_RESTING;
 	go[n].tsd.soldier.shoot_cooldown = difficulty[difficulty_level].soldier_shoot_cooldown;
+	go[n].tsd.soldier.disarmed = 0;
 }
 
 static void add_soldier_to_random_room(struct castle *c)
@@ -1562,7 +1580,6 @@ static void init_player(struct player *p, int start_room)
 	p->angle = 0;
 	p->oldangle = 0;
 	p->anim_frame = 0;
-	p->prev_frame = 0;
 	p->bullets = 10;
 	p->grenades = 3;
 	p->health = MAX_PLAYER_HEALTH;
@@ -2025,6 +2042,7 @@ static void reset_soldier(struct gulag_object *s)
 	s->tsd.soldier.last_seen_x = -1;
 	s->tsd.soldier.last_seen_y = -1;
 	s->tsd.soldier.sees_player_now = 0;
+	s->tsd.soldier.disarmed = 0;
 }
 
 static void reset_soldiers_in_room(struct castle *c, int room)
@@ -2180,6 +2198,10 @@ static void advance_soldier_animation(struct gulag_object *s)
 			s->tsd.soldier.anim_frame = 0;
 		else
 			s->tsd.soldier.anim_frame = 6; /* left */
+		return;
+	}
+	if (s->tsd.soldier.state == SOLDIER_STATE_HANDSUP) {
+		s->tsd.soldier.anim_frame = HANDSUP_FIGURE;
 		return;
 	}
 	if (s->tsd.soldier.angle >= 32 && s->tsd.soldier.angle <= 96) { /* soldier is facing to the right */
@@ -2604,6 +2626,10 @@ static void maybe_search_for_loot(void)
 			object_type = "BODY";
 			locked = 0;
 			break;
+		case TYPE_SOLDIER:
+			object_type = "MOBIK";
+			locked = 0;
+			break;
 		default:
 			object_type = "...";
 			break;
@@ -2859,7 +2885,9 @@ static void maybe_search_for_loot(void)
 				nitems++;
 			}
 			break;
+		case TYPE_SOLDIER:
 		case TYPE_CORPSE:
+			o->tsd.soldier.disarmed = 1;
 			if (o->tsd.soldier.grenades > 0) {
 				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
 					"%d %s", o->tsd.soldier.grenades, o->tsd.soldier.grenades > 1 ? "GRENADES" : "GRENADE");
@@ -3074,8 +3102,9 @@ static void check_buttons()
 			case TYPE_CORPSE:
 				player.search_object = n;
 				break;
-			case TYPE_SOLDIER: /* Soldiers block player movement */
-				/* Here, maybe trigger soldier action? */
+			case TYPE_SOLDIER:
+				if (go[n].tsd.soldier.state == SOLDIER_STATE_HANDSUP)
+					player.search_object = n;
 				break;
 			case TYPE_SAFE:
 				maybe_crack_safe(&go[n]);
@@ -3143,26 +3172,6 @@ static void draw_plus(short x, short y)
 	FbHorizontalLine(x1, y, x2, y);
 	FbVerticalLine(x, y1, x, y2);
 }
-
-#if 0
-static void erase_player(struct player *p)
-{
-	short x, y;
-	int dx, dy;
-
-	x = p->oldx >> 8;
-	y = p->oldy >> 8;
-
-	draw_figure(x, y, BLACK, p->prev_frame, 0);
-
-	dx = ((-cosine(p->oldangle) * 16 * player_speed) >> 8) + p->oldx;
-	dy = ((sine(p->oldangle) * 16 * player_speed) >> 8) + p->oldy;
-	x = (short) (dx >> 8);
-	y = (short) (dy >> 8);
-	FbColor(BLACK);
-	draw_plus(x, y);
-}
-#endif
 
 static void draw_player(struct player *p)
 {
@@ -3475,6 +3484,11 @@ static void maybe_shoot_player(struct gulag_object *s)
 		s->tsd.soldier.shoot_cooldown--;
 		return;
 	}
+	if (s->tsd.soldier.state == SOLDIER_STATE_HANDSUP)
+		return;
+	if (s->tsd.soldier.disarmed)
+		return;
+
 	dy = (player.y >> 8) - ((s->y >> 8) + 4);
 	dx = (player.x >> 8) - ((s->x >> 8) + 8);
 	dx += random_num(10) - 5; /* make them miss sometimes */
@@ -3484,6 +3498,47 @@ static void maybe_shoot_player(struct gulag_object *s)
 		angle += 128;
 	fire_bullet(&player, (s->x >> 8) + 4, (s->y >> 8) + 8, angle, s - &go[0]);
 	s->tsd.soldier.shoot_cooldown = difficulty[difficulty_level].soldier_shoot_cooldown;
+}
+
+static void maybe_surrender(struct gulag_object *s)
+{
+	int dx, dy, dist2;
+
+	if ((s - &go[0]) & 0x01) /* The odd soldiers never surrender */
+		return;
+
+	/* If surrendered soldier can't see the player, put hands down */
+	if (!s->tsd.soldier.sees_player_now) {
+		if (s->tsd.soldier.state == SOLDIER_STATE_HANDSUP) {
+			s->tsd.soldier.state = SOLDIER_STATE_RESTING;
+			s->tsd.soldier.anim_frame = 0;
+		}
+		return;
+	}
+
+	dx = (player.x - s->x);
+	dy = (player.y - s->y);
+	dist2 = ((dx * dx) >> 8) + ((dy * dy) >> 8);
+
+	/* If surrendered soldier is far enough away from player, put hands down */
+	if (s->tsd.soldier.state == SOLDIER_STATE_HANDSUP &&
+		dist2 > ((UNSURRENDER_DIST * UNSURRENDER_DIST) << 8)) {
+		s->tsd.soldier.state = SOLDIER_STATE_RESTING;
+		s->tsd.soldier.anim_frame = 0;
+		return;
+	}
+
+	/* If player is not too close, don't surrender */
+	if (dist2 > ((SURRENDER_DIST * SURRENDER_DIST) << 8))
+		return;
+
+	/* Player is close enough, but probably still don't surrender */
+	if (random_num(1000) < (1000 - SURRENDER_CHANCE))
+		return;
+
+	/* surrender */
+	s->tsd.soldier.state = SOLDIER_STATE_HANDSUP;
+	s->tsd.soldier.anim_frame = HANDSUP_FIGURE;
 }
 
 static void move_soldier(struct gulag_object *s)
@@ -3499,6 +3554,7 @@ static void move_soldier(struct gulag_object *s)
 	if (((game_timer + n) % SOLDIER_MOVE_THROTTLE) != 0)
 		return;
 	soldier_look_for_player(s, &player);
+	maybe_surrender(s);
 	maybe_shoot_player(s);
 
 	switch (s->tsd.soldier.state) {
@@ -3507,15 +3563,39 @@ static void move_soldier(struct gulag_object *s)
 			break;
 		/* Or choose a destination and start moving there. */
 		do {
-			if (s->tsd.soldier.last_seen_x > 0 && /* has seen player */
-				random_num(1000) < 500) { /* 50% chance */
-				/* Choose a destination where the player was last seen */
-				dx = s->tsd.soldier.last_seen_x;
-				dy = s->tsd.soldier.last_seen_y;
+			if (s->tsd.soldier.disarmed) {
+				/* Disarmed soldier can't shoot, so try to avoid the player */
+				int minx, miny;
+				if (s->tsd.soldier.last_seen_x < 0) {
+					/* No idea where player is, so choose destination randomly */
+					dx = random_num(COST_XDIM);
+					dy = random_num(COST_YDIM);
+				} else {
+					/* Choose a random destination in the quadrant of the room
+					 * furthest from the player.
+					 */
+					if (s->tsd.soldier.last_seen_x < COST_XDIM / 2)
+						minx = COST_XDIM / 2;
+					else
+						minx = 0;
+					if (s->tsd.soldier.last_seen_y < COST_YDIM / 2)
+						miny = COST_YDIM / 2;
+					else
+						miny = 0;
+					dx = random_num(COST_XDIM / 2) + minx;
+					dy = random_num(COST_YDIM / 2) + miny;
+				}
 			} else {
-				/* Choose a destination randomly */
-				dx = random_num(COST_XDIM);
-				dy = random_num(COST_YDIM);
+				if (s->tsd.soldier.last_seen_x > 0 && /* has seen player */
+					random_num(1000) < 500) { /* 50% chance */
+					/* Choose a destination where the player was last seen */
+					dx = s->tsd.soldier.last_seen_x;
+					dy = s->tsd.soldier.last_seen_y;
+				} else {
+					/* Choose a destination randomly */
+					dx = random_num(COST_XDIM);
+					dy = random_num(COST_YDIM);
+				}
 			}
 		} while (room_cost[dy][dx] != 0);
 		s->tsd.soldier.destx = dx;
@@ -3610,8 +3690,12 @@ static void move_soldier(struct gulag_object *s)
 		screen_changed = 1;
 		break;
 	case SOLDIER_STATE_CHASING:
+		break;
 	case SOLDIER_STATE_FLEEING:
+		break;
 	case SOLDIER_STATE_HANDSUP:
+		s->tsd.soldier.anim_frame = HANDSUP_FIGURE;
+		break;
 	default:
 		break;
 	}
