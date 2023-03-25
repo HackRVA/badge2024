@@ -133,11 +133,14 @@ int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *
             button = BADGE_BUTTON_SW;
             sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->b_button)) {
-		/* TODO: fill this in */
+            button = BADGE_BUTTON_SW2;
+            sim_button_status.button_b = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->left_rotary)) {
-		/* TODO: fill this in */
+            button = BADGE_BUTTON_ENCODER_A;
+            sim_button_status.left_rotary_button = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->right_rotary)) {
-		/* TODO: fill this in */
+            button = BADGE_BUTTON_ENCODER_B;
+            sim_button_status.right_rotary_button = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->dpad_up)) {
                 button = BADGE_BUTTON_UP;
                 sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
