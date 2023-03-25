@@ -207,6 +207,7 @@ static int display_message = 0;
 /* A-star cost heuristic, see init_room_cost(), how soldiers avoid walls. */
 static unsigned char room_cost[COST_YDIM][COST_XDIM];
 
+#define DEBUG_PATHFINDING 0
 /* Workspace for A* algorithm. */
 static unsigned char nodeset1[A_STAR_NODESET_SIZE(ASTAR_MAXNODES)];
 static unsigned char nodeset2[A_STAR_NODESET_SIZE(ASTAR_MAXNODES)];
@@ -945,18 +946,27 @@ static void draw_soldier(struct gulag_object *o)
 		FbMove(o->x >> 8, o->y >> 8);
 		FbRectangle(objconst[TYPE_SOLDIER].w, objconst[TYPE_SOLDIER].h);
 #endif
-#if 0
-	FbColor(MAGENTA);
-	for (int i = 0; i < o->tsd.soldier.nsteps; i++) {
-		int x, y;
+#if DEBUG_PATHFINDING 
+	int n = o - &go[0];
+	int j = -1;
+	for (int i = 0; i < castle.room[o->room].nobjs; i++) {
+		if (castle.room[o->room].obj[i] == n)
+			j = i;
+	}
 
-		x = o->tsd.soldier.pathx[i];
-		y = o->tsd.soldier.pathy[i];
-		x = astarx_to_8dot8x(x);
-		y = astary_to_8dot8y(y);
-		x = x >> 8;
-		y = y >> 8;
-		FbPoint(x, y);
+	if (j >= 0) {
+		FbColor(MAGENTA);
+		for (int i = 0; i < path_data[j].nsteps; i++) {
+			int x, y;
+
+			x = path_data[j].pathx[i];
+			y = path_data[j].pathy[i];
+			x = astarx_to_8dot8x(x);
+			y = astary_to_8dot8y(y);
+			x = x >> 8;
+			y = y >> 8;
+			FbPoint(x, y);
+		}
 	}
 #endif
 }
@@ -3228,7 +3238,7 @@ static void draw_interior_walls(struct castle *c, int room)
 	}
 }
 
-#if 0
+#if DEBUG_PATHFINDING 
 static void draw_cost_dots(void)
 {
 	int dx, dy, px, py;
@@ -3281,7 +3291,9 @@ static void draw_room(struct castle *c, int room)
 		FbVerticalLine(127, 0, 127, 127 - 16);
 	}
 	draw_interior_walls(c, room);
-	/* draw_cost_dots(); */
+#if DEBUG_PATHFINDING
+	draw_cost_dots();
+#endif
 	draw_room_objs(c, room);
 }
 
