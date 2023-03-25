@@ -206,7 +206,7 @@ static void docube(void)
 
 	FbColor(WHITE);
 	draw_cube();
-	FbPaintNewRows();
+	FbSwapBuffers();
 }
 
 static void check_buttons(void)

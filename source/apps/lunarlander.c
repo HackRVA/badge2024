@@ -675,7 +675,7 @@ static void draw_screen()
 	draw_lunar_base(&lander, CYAN);
 	draw_fuel_gauge(&lander, RED);
 	draw_sparks(&lander, YELLOW);
-	FbPaintNewRows();
+	FbSwapBuffers();
 }
 
 static void lunarlander_run()

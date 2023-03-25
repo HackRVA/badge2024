@@ -788,7 +788,7 @@ static void render_splash_screen()
 	FbColor(WHITE);
 	FbMove(0, 20);
 	FbWriteString(splash_screen_messages[difficulty_level_state]);
-	FbPaintNewRows();
+	FbSwapBuffers();
 }
 
 static void render_hackingsimulator_splash_screen()
@@ -806,7 +806,7 @@ static void render_hackingsimulator_fail_screen()
 	FbColor(WHITE);
 	FbMove(0, 20);
 	FbWriteString("You FAILED to\ncomplete the\npuzzle in\nthe allotted\ntime.");
-	FbPaintNewRows();
+	FbSwapBuffers();
 
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
@@ -819,7 +819,7 @@ static void render_hackingsimulator_win_screen()
 	FbColor(WHITE);
 	FbMove(0, 20);
 	FbWriteLine("You WON!");
-	FbPaintNewRows();
+	FbSwapBuffers();
 
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
