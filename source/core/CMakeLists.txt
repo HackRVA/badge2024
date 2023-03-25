@@ -1,5 +1,5 @@
 
-target_sources(badge2023_c PUBLIC
+target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/achievements.c
         ${CMAKE_CURRENT_LIST_DIR}/a_star.c
         ${CMAKE_CURRENT_LIST_DIR}/badge.c
@@ -43,4 +43,4 @@ if (${TARGET} STREQUAL "SIMULATOR")
 	)
 endif()
 
-target_include_directories(badge2023_c PUBLIC .)
+target_include_directories(${PRODUCT} PUBLIC .)

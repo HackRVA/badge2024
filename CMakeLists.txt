@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.12)
 set(PICO_SDK_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK from Git. Default on.")
 set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git. Default on.")
 set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
+set(PRODUCT "badge2023_c")
 
 if (${TARGET} STREQUAL "PICO")
     # Pull in SDK (must be before project).
@@ -12,7 +13,7 @@ if (${TARGET} STREQUAL "PICO")
     include(pico_extras_import.cmake)
 endif()
 
-project(badge2023_c C CXX ASM)
+project(${PRODUCT} C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 enable_testing()

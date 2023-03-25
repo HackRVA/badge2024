@@ -1,6 +1,6 @@
 
 if (${TARGET} STREQUAL "PICO")
-    target_sources(badge2023_c PUBLIC
+    target_sources(${PRODUCT} PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/delay_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/flash_storage_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/init_rp2040.c
@@ -16,13 +16,13 @@ if (${TARGET} STREQUAL "PICO")
             ${CMAKE_CURRENT_LIST_DIR}/driver-ST7735S/source/st7735s.c
             )
 
-    target_include_directories(badge2023_c PUBLIC ./driver-ST7735S/source)
+    target_include_directories(${PRODUCT} PUBLIC ./driver-ST7735S/source)
     
     add_subdirectory(ir_library)
 endif()
 
 if (${TARGET} STREQUAL "SIMULATOR")
-    target_sources(badge2023_c PUBLIC
+    target_sources(${PRODUCT} PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/delay_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/flash_storage_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/init_sim.c
@@ -39,18 +39,18 @@ if (${TARGET} STREQUAL "SIMULATOR")
 
     cmake_policy(SET CMP0079 NEW)
     find_package(GTK2 2.6 REQUIRED gtk)
-    target_include_directories(badge2023_c PRIVATE ${GTK2_INCLUDE_DIRS})
-    target_link_directories(badge2023_c PRIVATE ${GTK2_LIBRARY_DIRS})
-    target_link_libraries(badge2023_c ${GTK2_LIBRARIES})
+    target_include_directories(${PRODUCT} PRIVATE ${GTK2_INCLUDE_DIRS})
+    target_link_directories(${PRODUCT} PRIVATE ${GTK2_LIBRARY_DIRS})
+    target_link_libraries(${PRODUCT} ${GTK2_LIBRARIES})
     # Add other flags to the compiler
-    target_compile_definitions(badge2023_c PRIVATE ${GTK2_CFLAGS_OTHER})
+    target_compile_definitions(${PRODUCT} PRIVATE ${GTK2_CFLAGS_OTHER})
 
     find_package(Threads REQUIRED)
-    target_link_libraries(badge2023_c Threads::Threads)
+    target_link_libraries(${PRODUCT} Threads::Threads)
 endif()
 
 if (${TARGET} STREQUAL "SDL_SIMULATOR")
-    target_sources(badge2023_c PUBLIC
+    target_sources(${PRODUCT} PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/button_coords.c
             ${CMAKE_CURRENT_LIST_DIR}/delay_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/flash_storage_sim.c
@@ -70,19 +70,19 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
 
     cmake_policy(SET CMP0079 NEW)
     find_package(SDL2 REQUIRED)
-    target_include_directories(badge2023_c PRIVATE ${SDL2_INCLUDE_DIRS})
-    target_link_directories(badge2023_c PRIVATE ${SDL2_LIBRARY_DIRS})
-    target_link_libraries(badge2023_c ${SDL2_LIBRARIES})
+    target_include_directories(${PRODUCT} PRIVATE ${SDL2_INCLUDE_DIRS})
+    target_link_directories(${PRODUCT} PRIVATE ${SDL2_LIBRARY_DIRS})
+    target_link_libraries(${PRODUCT} ${SDL2_LIBRARIES})
     # Add other flags to the compiler
-    target_compile_definitions(badge2023_c PRIVATE ${SDL2_CFLAGS_OTHER})
+    target_compile_definitions(${PRODUCT} PRIVATE ${SDL2_CFLAGS_OTHER})
     
     find_package(PNG REQUIRED)
-    target_include_directories(badge2023_c PRIVATE ${PNG_INCLUDE_DIRS})
-    target_link_libraries(badge2023_c ${PNG_LIBRARIES})
-    target_compile_definitions(badge2023_c PRIVATE ${PNG_CFLAGS_OTHER})
+    target_include_directories(${PRODUCT} PRIVATE ${PNG_INCLUDE_DIRS})
+    target_link_libraries(${PRODUCT} ${PNG_LIBRARIES})
+    target_compile_definitions(${PRODUCT} PRIVATE ${PNG_CFLAGS_OTHER})
 
     find_package(Threads REQUIRED)
-    target_link_libraries(badge2023_c Threads::Threads)
+    target_link_libraries(${PRODUCT} Threads::Threads)
 endif()
 
-target_include_directories(badge2023_c PUBLIC .)
+target_include_directories(${PRODUCT} PUBLIC .)
