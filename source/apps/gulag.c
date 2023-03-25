@@ -387,7 +387,6 @@ struct gulag_soldier_data {
 #define SOLDIER_STATE_MOVING 1
 #define SOLDIER_STATE_CHASING 3
 #define SOLDIER_STATE_FLEEING 4
-#define SOLDIER_STATE_SHOOTING 5
 #define SOLDIER_STATE_HANDSUP 6
 	unsigned char destx, desty;
 	unsigned char path_index;
@@ -3453,9 +3452,13 @@ static void soldier_look_for_player(struct gulag_object *s, struct player *p)
 	bline(soldier_x, soldier_heady, player_x, player_heady, soldier_eyeline, &head_data);
 	bline(soldier_x, soldier_heady, player_x, player_footy, soldier_eyeline, &foot_data);
 	if (head_data.seen || foot_data.seen) {
-		s->tsd.soldier.last_seen_x = p->x >> 8;
-		s->tsd.soldier.last_seen_y = p->y >> 8;
-		s->tsd.soldier.sees_player_now = 1;
+		int dx = fpdot8x_to_astarx(p->x - (4 << 8));
+		int dy = fpdot8y_to_astary(p->y - (8 << 8));
+		if (room_cost[dy][dx] == 0) { /* should always be true, but don't aim into a wall */
+			s->tsd.soldier.last_seen_x = dx;
+			s->tsd.soldier.last_seen_y = dy;
+			s->tsd.soldier.sees_player_now = 1;
+		}
 	} else {
 		s->tsd.soldier.sees_player_now = 0;
 	}
@@ -3500,12 +3503,20 @@ static void move_soldier(struct gulag_object *s)
 
 	switch (s->tsd.soldier.state) {
 	case SOLDIER_STATE_RESTING:
-		if (random_num(1000) < 900) /* 90% chance he continues to do nothing */
+		if (random_num(1000) < 950) /* 95% chance he continues to do nothing */
 			break;
 		/* Or choose a destination and start moving there. */
 		do {
-			dx = random_num(COST_XDIM);
-			dy = random_num(COST_YDIM);
+			if (s->tsd.soldier.last_seen_x > 0 && /* has seen player */
+				random_num(1000) < 500) { /* 50% chance */
+				/* Choose a destination where the player was last seen */
+				dx = s->tsd.soldier.last_seen_x;
+				dy = s->tsd.soldier.last_seen_y;
+			} else {
+				/* Choose a destination randomly */
+				dx = random_num(COST_XDIM);
+				dy = random_num(COST_YDIM);
+			}
 		} while (room_cost[dy][dx] != 0);
 		s->tsd.soldier.destx = dx;
 		s->tsd.soldier.desty = dy;
@@ -3600,7 +3611,6 @@ static void move_soldier(struct gulag_object *s)
 		break;
 	case SOLDIER_STATE_CHASING:
 	case SOLDIER_STATE_FLEEING:
-	case SOLDIER_STATE_SHOOTING:
 	case SOLDIER_STATE_HANDSUP:
 	default:
 		break;
