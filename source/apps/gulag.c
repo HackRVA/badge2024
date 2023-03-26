@@ -197,6 +197,9 @@ static struct player {
 	unsigned char has_detonator;
 	unsigned char planted_bomb;
 	unsigned char has_c4;
+	int has_flamethrower;
+	int flamethrower_counter;
+#define FIRE_DURATION (5 * 30)
 } player;
 
 static char player_message[100] = { 0 };
@@ -364,6 +367,7 @@ struct gulag_desk_data {
 	uint16_t vodka:1;
 	uint16_t locked:1;
 	uint16_t safe_combo:1;
+	int on_fire;
 	int key;
 };
 
@@ -384,6 +388,7 @@ struct gulag_soldier_data {
 	uint16_t corpse_direction:1; /* left or right corpse variant */
 	uint16_t sees_player_now:1;
 	uint16_t disarmed:1;
+	int on_fire;
 	char anim_frame;
 	/* Careful, char is *unsigned* by default on the badge! */
 	signed char last_seen_x, last_seen_y; /* location player was last seen at */
@@ -427,6 +432,7 @@ struct gulag_safe_data {
 #define COMBO_STATE_WAITING_FOR_LEFT_REV 3
 #define COMBO_STATE_GETTING_SECOND_NUMBER 4
 #define COMBO_STATE_GETTING_THIRD_NUMBER 5
+	int on_fire;
 };
 
 struct gulag_chest_data {
@@ -438,8 +444,10 @@ struct gulag_chest_data {
 	uint16_t potato:1;
 	uint16_t cabbage:1;
 	uint16_t detonator:1;
+	uint16_t flamethrower:1;
 	uint16_t locked:1;
 	uint16_t opened:1;
+	int on_fire;
 	int key;
 };
 
@@ -452,6 +460,14 @@ static struct grenade {
 #define GRENADE_FUSE_TIME_VARIANCE 20
 } grenade[MAXLIVEGRENADES];
 static int ngrenades = 0;
+
+#define MAXFLAMES 1000
+static struct flame {
+#define FLAME_NOT_IN_USE 255
+	unsigned char x, y; /* screen coords */
+	unsigned life; /* ticks until it dies */
+} flame[MAXFLAMES];
+static int nflames = 0;
 
 union gulag_type_specific_data {
 	struct gulag_stairs_data stairs;
@@ -611,6 +627,123 @@ struct gulag_object_typical_data {
 	{ 16, 16, draw_safe, NULL, },
 	{ 20, 20, draw_munitions, NULL, },
 };
+
+
+static void init_flames(void)
+{
+	memset(flame, 0, sizeof(flame));
+	for (int i = 0; i < MAXFLAMES; i++) {
+		flame[i].x = FLAME_NOT_IN_USE; /* This flame is not in use */
+		flame[i].y = 0;
+		flame[i].life = 0;
+	}
+}
+
+static void add_flame(unsigned char x, unsigned char y, unsigned char life)
+{
+	struct flame *free_flame;
+	int n;
+
+	free_flame = memchr(flame, FLAME_NOT_IN_USE, sizeof(flame));
+	if (free_flame) {
+		n = free_flame - &flame[0];
+		if (n > nflames - 1)
+			nflames = n + 1;
+		free_flame->x = x;
+		free_flame->y = y;
+		free_flame->life = life;
+	}
+}
+
+static void compact_flames(void)
+{
+	int i = 0;
+	while (i < nflames) {
+		if (flame[i].life > 0) {
+			i++;
+			continue;
+		}
+		flame[i] = flame[nflames - 1];
+		flame[nflames - 1].x = FLAME_NOT_IN_USE;
+		flame[nflames - 1].y = 0;
+		flame[nflames - 1].life = 0;
+		nflames--;
+		continue;
+	}
+}
+
+static void move_flames(void)
+{
+	int dx;
+	int nx, ny;
+
+	for (int i = 0; i < nflames; i++) {
+		if (flame[i].life > 0)
+			flame[i].life--;
+
+		/* Every once in a while a flame moves left or right */
+		if (((i + game_timer) & 0x7) == 0)
+			dx = (i & 0x01) ? 1 : -1;
+		else
+			dx = 0;
+		nx = flame[i].x + dx;
+		ny = flame[i].y - 1; /* flames always move up */
+
+		/* flames die if they move off screen */
+		if (nx < 0 || nx > 127)
+			flame[i].life = 0;
+		if (ny < 0)
+			flame[i].life = 0;
+		flame[i].x = nx;
+		flame[i].y = ny;
+	}
+	compact_flames(); /* remove dead flames */
+}
+
+/* return a random int between 0 and n - 1 */
+static int random_num(int n)
+{
+	int x;
+	static unsigned int state = 0;
+
+	if (state == 0)
+		random_insecure_bytes((uint8_t *) &state, sizeof(state));
+	x = xorshift(&state);
+	if (x < 0)
+		x = -x;
+	return x % n;
+}
+
+static void draw_flames(void)
+{
+#define ORANGE 0b1111110111100000;
+	int x1, y1, y2, len, color;
+
+	for (int i = 0; i < nflames; i++) {
+		if (flame[i].life == 0)
+			continue;
+		x1 = flame[i].x;
+		y1 = flame[i].y;
+		if (flame[i].life > 20) {
+			len = random_num(5) + 2;
+			color = WHITE;
+		} else if (flame[i].life > 15) {
+			len = random_num(5) + 2;
+			color = YELLOW;
+		} else if (flame[i].life > 5) {
+			color = ORANGE;
+			len = random_num(3) + 1;
+		} else {
+			len = 1;
+			color = RED;
+		}
+		y2 = y1 - len;
+		if (y2 < 0)
+			y2 = 0;
+		FbColor(color);
+		FbLine(x1, y1, x1, y2);
+	}
+}
 
 static const signed char muzzle_xoffset[] = { 7, 7, 6, 6, 0, 0, 0, 5, };
 static const signed char muzzle_yoffset[] = { 2, 4, 8, 9, 8, 4, 1, 0, };
@@ -934,6 +1067,16 @@ static void draw_desk(struct gulag_object *o)
 	FbVerticalLine(x + 11, y + 2, x + 11, y + 8);
 	FbHorizontalLine(x + 2, y + 8, x + 5, y + 8);
 	FbHorizontalLine(x + 11, y + 8, x + 14, y + 8);
+
+	if (o->tsd.desk.on_fire) {
+		const int n = 1 + o->tsd.desk.on_fire / 30;
+		for (int i = 0; i < n; i++) {
+			int x = random_num(objconst[TYPE_DESK].w) + (o->x >> 8);
+			int y = (random_num(objconst[TYPE_DESK].h) / 2) + (o->y >> 8);
+			int life = random_num(15) + 15;
+			add_flame(x, y, life);
+		}
+	}
 }
 
 static int astarx_to_8dot8x(int x);
@@ -943,6 +1086,17 @@ static void draw_soldier(struct gulag_object *o)
 {
 	FbColor(GREEN);
 	draw_figure(o->x >> 8, o->y >> 8, GREEN, o->tsd.soldier.anim_frame, o->tsd.soldier.spetsnaz);
+
+	if (o->tsd.soldier.on_fire) {
+		const int n = 1 + o->tsd.soldier.on_fire / 30;
+		for (int i = 0; i < n; i++) {
+			int x, y, life;
+			x = random_num(4) + 2;
+			y = random_num(14) + 2;
+			life = random_num(15) + 15;
+			add_flame((o->x >> 8) + x, (o->y >> 8) + y, life);
+		}
+	}
 #if 0
 		FbMove(o->x >> 8, o->y >> 8);
 		FbRectangle(objconst[TYPE_SOLDIER].w, objconst[TYPE_SOLDIER].h);
@@ -1013,6 +1167,15 @@ static void draw_corpse(struct gulag_object *o)
 			FbPoint(x + 11, y + 6);
 		}
 	}
+	if (o->tsd.soldier.on_fire) {
+		const int n = 1 + o->tsd.soldier.on_fire / 30;
+		for (int i = 0; i < n; i++) {
+			int x = random_num(objconst[TYPE_CORPSE].w) + (o->x >> 8);
+			int y = random_num(objconst[TYPE_CORPSE].h / 2) + (o->y >> 8);
+			int life = random_num(15) + 15;
+			add_flame(x, y, life);
+		}
+	}
 }
 
 static void draw_chest(struct gulag_object *o)
@@ -1037,20 +1200,16 @@ static void draw_chest(struct gulag_object *o)
 		FbVerticalLine(x + 13, y - 4, x + 13, y + 3);
 		FbHorizontalLine(x + 3, y - 4, x + 13, y - 4);
 	}
-}
 
-/* return a random int between 0 and n - 1 */
-static int random_num(int n)
-{
-	int x;
-	static unsigned int state = 0;
-
-	if (state == 0)
-		random_insecure_bytes((uint8_t *) &state, sizeof(state));
-	x = xorshift(&state);
-	if (x < 0)
-		x = -x;
-	return x % n;
+	if (o->tsd.chest.on_fire) {
+		const int n = 1 + o->tsd.chest.on_fire / 30;
+		for (int i = 0; i < n; i++) {
+			int x = random_num(objconst[TYPE_CHEST].w) + (o->x >> 8);
+			int y = random_num(objconst[TYPE_CHEST].h) / 2 + (o->y >> 8);
+			int life = random_num(15) + 15;
+			add_flame(x, y, life);
+		}
+	}
 }
 
 static int room_no(int floor, int col, int row)
@@ -1277,6 +1436,7 @@ static void add_desk(struct castle *c, int floor, int has_combo)
 	go[n].tsd.desk.locked = (random_num(100) < 50);
 	go[n].tsd.desk.key = random_num(12);
 	go[n].tsd.desk.safe_combo = has_combo;
+	go[n].tsd.desk.on_fire = 0;
 }
 
 static void add_desks(struct castle *c)
@@ -1316,6 +1476,8 @@ static void add_chest(struct castle *c)
 	go[n].tsd.chest.locked = (random_num(100) < 80);
 	go[n].tsd.chest.opened = 0;
 	go[n].tsd.chest.key = random_num(12);
+	go[n].tsd.chest.flamethrower = 0;
+	go[n].tsd.chest.on_fire = 0;
 }
 
 static void add_chests(struct castle *c)
@@ -1343,6 +1505,7 @@ static void add_safe(struct castle *c, int floor)
 	go[n].tsd.safe.combo[1] = random_num(65);
 	go[n].tsd.safe.combo[2] = random_num(65);
 	go[n].tsd.safe.opened = 0;
+	go[n].tsd.safe.on_fire = 0;
 	snprintf(safe_combo[floor], sizeof(safe_combo[floor]), "R%d, L%d, R%d",
 		go[n].tsd.safe.combo[0], go[n].tsd.safe.combo[1], go[n].tsd.safe.combo[2]);
 }
@@ -1379,6 +1542,7 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.state = SOLDIER_STATE_RESTING;
 	go[n].tsd.soldier.shoot_cooldown = difficulty[difficulty_level].soldier_shoot_cooldown;
 	go[n].tsd.soldier.disarmed = 0;
+	go[n].tsd.soldier.on_fire = 0;
 }
 
 static void add_soldier_to_random_room(struct castle *c)
@@ -1490,6 +1654,20 @@ static void setup_munitions_depot(struct castle *c)
 	c->munitions_room = room;
 }
 
+static void add_flamethrowers(__attribute__((unused)) struct castle *c)
+{
+	int n = gulag_nobjs;
+	for (int i = 0; i < CASTLE_FLOORS; i++) { /* one flamethrower per floor */
+		for (int j = 0; j < n; j++) {
+			if (go[j].type == TYPE_CHEST &&
+				get_room_floor(go[j].room) == i) {
+				go[j].tsd.chest.flamethrower = 1;
+				break;
+			}
+		}
+	}
+}
+
 static void init_castle(struct castle *c)
 {
 	int i;
@@ -1510,6 +1688,7 @@ static void init_castle(struct castle *c)
 	add_chests(&castle);
 	add_safes(&castle);
 	add_soldiers(&castle);
+	add_flamethrowers(&castle);
 	setup_munitions_depot(&castle);
 }
 
@@ -1613,6 +1792,7 @@ static void init_player(struct player *p, int start_room)
 	p->has_detonator = 0;
 	p->has_c4 = 0;
 	p->planted_bomb = 0;
+	p->has_flamethrower = 0;
 	memset(player.has_combo, 0, sizeof(player.has_combo));
 }
 
@@ -1747,6 +1927,7 @@ static void gulag_init(void)
 	memset(go, 0, sizeof(go));
 	init_castle(&castle);
 	init_player(&player, castle.start_room);
+	init_flames();
 	init_room_cost(&castle, player.room);
 	print_castle(&castle, &player);
 	FbInit();
@@ -2077,6 +2258,7 @@ static void player_enter_room(struct player *p, int room, int x, int y)
 	if (room == castle.munitions_room)
 		gulag_state = GULAG_MUNITIONS_ROOM;
 
+	init_flames(); /* don't let flames persist across a room change */
 	reset_soldiers_in_room(&castle, room);
 	p->x = x;
 	p->y = y;
@@ -2404,8 +2586,20 @@ static int bullet_track(int x, int y, void *cookie)
 		return -1; /* stop bline(), we've left the screen */
 	}
 	rc = bbox_interior_wall_collision(&castle, room, x << 8, y << 8, (x << 8) + 1, (y << 8) + 1, NULL, NULL);
-	if (random_num(100) < 20)
+	if (bullet_source == BULLET_SOURCE_PLAYER && player.has_flamethrower) {
+		add_flame(x, y, random_num(15) + 15);
+		player.flamethrower_counter++;
+		if (player.flamethrower_counter > 30) {
+			for (int i = 0; i < 3; i++) {
+				int fx = x + random_num(5) - 2;
+				int fy = y + random_num(5) - 2;
+				add_flame(fx, fy, random_num(15) + 15);
+			}
+		}
+	}
+	if (random_num(100) < 20) {
 		FbPoint(x, y);
+	}
 	if (rc) {
 		/* We've hit a wall */
 		screen_changed = 1;
@@ -2429,16 +2623,25 @@ static int bullet_track(int x, int y, void *cookie)
 				return 0;
 			case TYPE_STAIRS_DOWN:
 				return 0;
+			case TYPE_SAFE:
+				draw_bullet_debris(x, y);
+				if (player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER)
+					go[j].tsd.safe.on_fire = FIRE_DURATION;
+				break;
 			case TYPE_DESK:
 				draw_bullet_debris(x, y);
 				if (random_num(100) < 50)
 					go[j].tsd.desk.locked = 0;
+				if (player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER)
+					go[j].tsd.desk.on_fire = FIRE_DURATION;
 				break;
 			case TYPE_SOLDIER:
 				if (bullet_source > 0 && bullet_source == j) /* bullet was fired by this soldier */
 					return 0; /* soldiers do not shoot themselves */
 				draw_bullet_debris(x, y);
-				go[j].tsd.soldier.health--;
+
+				if (!player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER)
+					go[j].tsd.soldier.health--;
 
 				if (go[j].tsd.soldier.health == 0) {
 
@@ -2457,13 +2660,19 @@ static int bullet_track(int x, int y, void *cookie)
 						go[j].y += (8 << 8);
 					}
 				}
+				if (player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER)
+					go[j].tsd.soldier.on_fire = FIRE_DURATION;
 				break;
 			case TYPE_CHEST:
 				draw_bullet_debris(x, y);
 				if (random_num(100) < 50)
 					go[j].tsd.chest.locked = 0;
+				if (player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER)
+					go[j].tsd.chest.on_fire = FIRE_DURATION;
 				break;
 			case TYPE_CORPSE: /* bullets don't hit corpses because they are on the floor */
+				if (player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER)
+					go[j].tsd.soldier.on_fire = FIRE_DURATION; /* but you can set them on fire */
 				return 0;
 			default:
 				break;
@@ -2509,7 +2718,8 @@ static void fire_gun(struct player *p)
 	int muzzle_flash_index;
 	int x, y; // , tx, ty;
 
-	p->shots_fired++;
+	if (!player.has_flamethrower)
+		p->shots_fired++;
 	p->anim_frame = shooting_frame(p);
 	muzzle_flash_index = p->anim_frame - 7;
 	x = (p->x >> 8) - 4 + muzzle_xoffset[muzzle_flash_index];
@@ -2803,6 +3013,16 @@ static void maybe_search_for_loot(void)
 			break;
 		case TYPE_CHEST:
 			o->tsd.chest.opened = 1;
+			if (o->tsd.chest.flamethrower > 0) {
+				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
+					"%s", "FLAMETHROWER");
+				if (player.search_item_num == nitems && player.search_timer == 0) {
+					player.has_flamethrower = 15;
+					o->tsd.chest.flamethrower = 0;
+					took_item = 1;
+				}
+				nitems++;
+			}
 			if (o->tsd.chest.grenades > 0) {
 				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
 					"%d %s", o->tsd.chest.grenades, o->tsd.chest.grenades > 1 ? "GRENADES" : "GRENADE");
@@ -3019,7 +3239,14 @@ static void check_buttons()
 	}
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
-		if (player.bullets > 0) {
+		if (player.has_flamethrower) {
+			fire_gun(&player);
+			firing_timer = 2; /* not sure this will work on pico */
+			screen_changed = 1;
+			anything_pressed = 1;
+			player.flamethrower_counter = 0;
+			player.has_flamethrower--;
+		} else if (player.bullets > 0) {
 			fire_gun(&player);
 			firing_timer = 10; /* not sure this will work on pico */
 			screen_changed = 1;
@@ -3315,6 +3542,16 @@ static void draw_safe(struct gulag_object *safe)
 	FbRectangle(16, 16);
 	FbMove((safe->x >> 8) + 3, (safe->y >> 8) + 3);
 	FbRectangle(10, 10);
+
+	if (safe->tsd.safe.on_fire) {
+		const int n = 1 + safe->tsd.safe.on_fire / 30;
+		for (int i = 0; i < n; i++) {
+			int x = random_num(objconst[TYPE_SAFE].w) + (safe->x >> 8);
+			int y = random_num(objconst[TYPE_SAFE].h) / 2 + (safe->y >> 8);
+			int life = random_num(15) + 15;
+			add_flame(x, y, life);
+		}
+	}
 }
 
 static void draw_munition(int x, int y)
@@ -3402,6 +3639,7 @@ static void draw_screen(void)
 	draw_room(&castle, player.room);
 	draw_player(&player);
 	draw_grenades();
+	draw_flames();
 	draw_player_data();
 	maybe_draw_wasted();
 	FbSwapBuffers();
@@ -3505,6 +3743,8 @@ static void maybe_shoot_player(struct gulag_object *s)
 		return;
 	if (s->tsd.soldier.disarmed)
 		return;
+	if (s->tsd.soldier.on_fire)
+		return;
 
 	dy = (player.y >> 8) - ((s->y >> 8) + 4);
 	dx = (player.x >> 8) - ((s->x >> 8) + 8);
@@ -3522,6 +3762,9 @@ static void maybe_surrender(struct gulag_object *s)
 	int dx, dy, dist2;
 
 	if ((s - &go[0]) & 0x01) /* The odd soldiers never surrender */
+		return;
+
+	if (s->tsd.soldier.on_fire) /* soldiers that are on fire don't surrender */
 		return;
 
 	/* If surrendered soldier can't see the player, put hands down */
@@ -3568,6 +3811,23 @@ static void move_soldier(struct gulag_object *s)
 	p = s->tsd.soldier.path_index;
 	pd = &path_data[p];
 	int n = s - &go[0];
+
+	if (s->tsd.soldier.on_fire) {
+		if (s->tsd.soldier.on_fire == 1) {
+			s->tsd.soldier.on_fire = FIRE_DURATION / 2;
+			s->tsd.soldier.health = 0;
+			s->type = TYPE_CORPSE;
+			if ((s->x >> 8) > 64) {
+				s->tsd.soldier.corpse_direction = 1;
+				s->x -= (8 << 8);
+				s->y += (8 << 8);
+			} else {
+				s->tsd.soldier.corpse_direction = 0;
+				s->y += (8 << 8);
+			}
+		}
+	}
+
 	if (((game_timer + n) % SOLDIER_MOVE_THROTTLE) != 0)
 		return;
 	soldier_look_for_player(s, &player);
@@ -3576,8 +3836,8 @@ static void move_soldier(struct gulag_object *s)
 
 	switch (s->tsd.soldier.state) {
 	case SOLDIER_STATE_RESTING:
-		if (random_num(1000) < 950) /* 95% chance he continues to do nothing */
-			break;
+		if (random_num(1000) < 950 && !s->tsd.soldier.on_fire) /* 95% chance he continues to do nothing */
+			break;						/* so long as he's not on fire. */
 		/* Or choose a destination and start moving there. */
 		do {
 			if (s->tsd.soldier.disarmed) {
@@ -3676,6 +3936,13 @@ static void move_soldier(struct gulag_object *s)
 				pd->current_step = 1; /* We're standing on zero already */
 			}
 		} else { /* move in the direction of the next pathfinding step */
+			int speed;
+
+			if (s->tsd.soldier.on_fire)
+				speed = difficulty[3].soldier_speed; /* max speed when on fire */
+			else
+				speed = difficulty[difficulty_level].soldier_speed;
+
 			dx = astarx_to_8dot8x(pd->pathx[pd->current_step]);
 			dy = astary_to_8dot8y(pd->pathy[pd->current_step]);
 
@@ -3686,8 +3953,8 @@ static void move_soldier(struct gulag_object *s)
 			if (angle < 0)
 				angle += 128;
 			s->tsd.soldier.angle = (unsigned char) angle;
-			newx = ((-cosine(angle) * difficulty[difficulty_level].soldier_speed) >> 8) + s->x;
-			newy = ((sine(angle) * difficulty[difficulty_level].soldier_speed) >> 8) + s->y;
+			newx = ((-cosine(angle) * speed) >> 8) + s->x;
+			newy = ((sine(angle) * speed) >> 8) + s->y;
 
 			s->x = newx;
 			s->y = newy;
@@ -3824,6 +4091,29 @@ static void move_grenades(void)
 			remove_grenade(&grenade[i]);
 }
 
+static void age_fire(struct gulag_object *o)
+{
+	switch (o->type) {
+	case TYPE_SOLDIER:
+	case TYPE_CORPSE:
+		if (o->tsd.soldier.on_fire > 0)
+			o->tsd.soldier.on_fire--;
+		break;
+	case TYPE_SAFE:
+		if (o->tsd.safe.on_fire > 0)
+			o->tsd.safe.on_fire--;
+		break;
+	case TYPE_CHEST:
+		if (o->tsd.chest.on_fire > 0)
+			o->tsd.chest.on_fire--;
+		break;
+	case TYPE_DESK:
+		if (o->tsd.desk.on_fire > 0)
+			o->tsd.desk.on_fire--;
+		break;
+	}
+}
+
 static void move_objects(void)
 {
 	int room = player.room;
@@ -3835,6 +4125,7 @@ static void move_objects(void)
 		gulag_object_moving_function move = objconst[o->type].move;
 		if (move)
 			move(o);
+		age_fire(o);
 	}
 }
 
@@ -3846,6 +4137,7 @@ static void gulag_run()
 	draw_screen();
 	move_objects();
 	move_grenades();
+	move_flames();
 	maybe_search_for_loot();
 }
 
