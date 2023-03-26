@@ -82,10 +82,13 @@ void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
 }
 
 static char *badge_image_pixels, *landscape_badge_image_pixels, *badge_background_pixels;
+static char *quit_confirm_pixels;
+int quit_confirm_active = 0;
 static char *led_pixels;
 static int badge_image_width, badge_image_height;
 static int landscape_badge_image_width, landscape_badge_image_height;
 static int badge_background_width, badge_background_height;
+static int quit_confirm_width, quit_confirm_height;
 static int led_width, led_height;
 static SDL_Joystick *joystick = NULL;
 
@@ -94,6 +97,7 @@ static SDL_Window *window;
 static SDL_Renderer *renderer;
 static SDL_Texture *pix_buf, *landscape_pix_buf, *badge_image, *landscape_badge_image, *badge_background_image;
 static SDL_Texture *led_image;
+static SDL_Texture *quit_confirm_image;
 static char *program_title;
 extern int lcd_brightness;
 
@@ -165,6 +169,12 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 							led_width, led_height);
 			SDL_SetTextureBlendMode(led_image, SDL_BLENDMODE_BLEND);
 			SDL_UpdateTexture(led_image, NULL, led_pixels, led_width * 4);
+		}
+		if (quit_confirm_pixels) {
+			quit_confirm_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
+							quit_confirm_width, quit_confirm_height);
+			SDL_SetTextureBlendMode(quit_confirm_image, SDL_BLENDMODE_BLEND);
+			SDL_UpdateTexture(quit_confirm_image, NULL, quit_confirm_pixels, quit_confirm_width * 4);
 		}
 		created_textures = 1;
 	}
@@ -338,6 +348,40 @@ static void draw_flare_led(struct sim_lcd_params *slp)
 
 }
 
+int quit_confirmed(int mousex, int mousey)
+{
+	int x, y, x1, y1, x2, y2, w, h;
+
+	SDL_GetWindowSize(window, &w, &h);
+
+	x = w / 2 - quit_confirm_width / 2;
+	y = h / 2 - quit_confirm_height / 2;
+
+	/* coords of "YES" box */
+	x1 = x + 24;
+	y1 = y + 72;
+	x2 = x + 101;
+	y2 = y + 123;
+
+	if (mousex >= x1 && mousex <= x2 && mousey >= y1 && mousey <= y2)
+		return 1;
+	return 0;
+}
+
+static void maybe_draw_quit_confirmation(void)
+{
+	int x, y, x1, y1;
+
+	SDL_GetWindowSize(window, &x, &y);
+
+	x1 = x / 2 - quit_confirm_width / 2;
+	y1 = y / 2 - quit_confirm_height / 2;
+
+	if (!quit_confirm_active)
+		return;
+	SDL_RenderCopy(renderer, quit_confirm_image, NULL, &(SDL_Rect) { x1, y1, quit_confirm_width, quit_confirm_height });
+}
+
 static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture *landscape_texture)
 {
     extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
@@ -418,6 +462,8 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
 
     draw_flare_led(&slp);
 
+    maybe_draw_quit_confirmation();
+
     SDL_RenderPresent(renderer);
     return 0;
 }
@@ -468,48 +514,36 @@ static int start_sdl(void)
     return 0;
 }
 
-static void load_badge_images(void)
+static void load_image(char *filename, char **pixels, int *width, int *height)
 {
 	int w = 0, h = 0, a = 0;
 	char whynot[1024];
 
-	badge_image_pixels = png_utils_read_png_image("../images/badge-image-1024.png",
-		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
-	if (!badge_image_pixels)
-		fprintf(stderr, "Failed to load badge image: %s\n", whynot);
-	badge_image_width = w;
-	badge_image_height = h;
+	if (*pixels)
+		return;
 
-        whynot[0] = '\0';
-	w = 0;
-	h = 0;
-	a = 0;
-	landscape_badge_image_pixels = png_utils_read_png_image("../images/badge-image-vert-1024.png",
+	*pixels = png_utils_read_png_image(filename,
 		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
-	if (!landscape_badge_image_pixels)
-		fprintf(stderr, "Failed to load landscape badge image: %s\n", whynot);
-	landscape_badge_image_width = w;
-	landscape_badge_image_height = h;
+	if (!*pixels)
+		fprintf(stderr, "Failed to load image \"%s\": %s\n", filename, whynot);
+	*width = w;
+	*height = h;
+}
 
-	w = 0;
-	h = 0;
-	a = 0;
-	badge_background_pixels = png_utils_read_png_image("../images/badge-background.png",
-		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
-	if (!badge_background_pixels)
-		fprintf(stderr, "Failed to load badge background image: %s\n", whynot);
-	badge_background_width = w;
-	badge_background_height = h;
+static void load_badge_images(void)
+{
 
-	w = 0;
-	h = 0;
-	a = 0;
-	led_pixels = png_utils_read_png_image("../images/badge-led.png",
-		0, 0, 0, &w, &h, &a, whynot, sizeof(whynot) - 1);
-	if (!badge_background_pixels)
-		fprintf(stderr, "Failed to load badge LED image: %s\n", whynot);
-	led_width = w;
-	led_height = h;
+	load_image("../images/badge-image-1024.png", &badge_image_pixels,
+			&badge_image_width, &badge_image_height);
+	load_image("../images/badge-image-vert-1024.png", &landscape_badge_image_pixels,
+			&landscape_badge_image_width, &landscape_badge_image_height);
+	load_image("../images/badge-background.png", &badge_background_pixels,
+			&badge_background_width, &badge_background_height);
+	load_image("../images/badge-led.png", &led_pixels,
+			&led_width, &led_height);
+	load_image("../images/really-quit.png", &quit_confirm_pixels,
+			&quit_confirm_width, &quit_confirm_height);
+	printf("quit_confirm_ w,h = %d, %d\n", quit_confirm_width, quit_confirm_height);
 }
 
 void toggle_fullscreen_mode(void)

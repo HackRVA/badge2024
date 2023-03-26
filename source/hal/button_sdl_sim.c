@@ -170,6 +170,15 @@ int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *
 
 int mouse_button_up_cb(__attribute__((unused)) SDL_MouseButtonEvent *event)
 {
+	if (quit_confirm_active) {
+		int x, y;
+		SDL_GetMouseState(&x, &y);
+		if (quit_confirmed(x, y))
+			time_to_quit = 1;
+		else
+			quit_confirm_active = 0;
+		return 1;
+	}
 	/* Release whichever mouse-pressed simulated button was last pressed */
 	if (last_mouse_pressed_button >= 0 && last_mouse_pressed_button < BADGE_BUTTON_MAX) {
 		down_latches &= ~(1 << last_mouse_pressed_button);
@@ -268,8 +277,10 @@ int key_press_cb(SDL_Keysym *keysym)
         break;
         case SDLK_SPACE:
         case SDLK_RETURN:
-            button = BADGE_BUTTON_SW;
-            sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
+            if (!quit_confirm_active) {
+                button = BADGE_BUTTON_SW;
+                sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
+            }
         break;
         case SDLK_b:
             button = BADGE_BUTTON_SW2;
@@ -285,7 +296,7 @@ int key_press_cb(SDL_Keysym *keysym)
         break;
         case SDLK_q:
         case SDLK_ESCAPE:
-            time_to_quit = 1;
+		quit_confirm_active = !quit_confirm_active;
         break;
         case SDLK_COMMA:
         case SDLK_LESS:
@@ -352,12 +363,14 @@ int key_release_cb(SDL_Keysym *keysym)
             break;
         case SDLK_SPACE:
         case SDLK_RETURN:
-            button = BADGE_BUTTON_SW;
+            if (quit_confirm_active)
+                time_to_quit = 1;
+            else
+                button = BADGE_BUTTON_SW;
             break;
         case SDLK_q:
         case SDLK_ESCAPE:
-            time_to_quit = 1;
-	break;
+		break;
 	case SDLK_LCTRL:
 	case SDLK_RCTRL:
 		control_key_pressed = 0;
