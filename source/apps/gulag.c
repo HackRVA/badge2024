@@ -2792,6 +2792,8 @@ static void goto_search_cooldown(void)
 	return;
 }
 
+static void maybe_crack_safe(struct gulag_object *safe);
+
 struct search_item {
 	char name[25];
 };
@@ -2829,8 +2831,14 @@ static void maybe_search_for_loot(void)
 		}
 		if (player.search_timer > 0) {
 			player.search_timer--;
-			if (player.search_timer == 0)
-				set_search_state(search_state_searching, SEARCH_TIME);
+			if (player.search_timer == 0) {
+				if (o->type != TYPE_SAFE) {
+					set_search_state(search_state_searching, SEARCH_TIME);
+				} else {
+					maybe_crack_safe(o);
+					return;
+				}
+			}
 		}
 		return;
 	case search_state_searching:
@@ -3349,7 +3357,7 @@ static void check_buttons()
 					player.search_object = n;
 				break;
 			case TYPE_SAFE:
-				maybe_crack_safe(&go[n]);
+				player.search_object = n;
 				break;
 			default:
 				break;
