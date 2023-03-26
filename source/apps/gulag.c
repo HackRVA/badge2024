@@ -69,6 +69,7 @@
 #include "dynmenu.h"
 #include "led_pwm.h"
 #include "rtc.h"
+#include "xorshift.h"
 
 static struct dynmenu start_menu;
 #define START_MENU_SIZE 5
@@ -1042,7 +1043,11 @@ static void draw_chest(struct gulag_object *o)
 static int random_num(int n)
 {
 	int x;
-	random_insecure_bytes((uint8_t *) &x, sizeof(x));
+	static unsigned int state = 0;
+
+	if (state == 0)
+		random_insecure_bytes((uint8_t *) &state, sizeof(state));
+	x = xorshift(&state);
 	if (x < 0)
 		x = -x;
 	return x % n;
