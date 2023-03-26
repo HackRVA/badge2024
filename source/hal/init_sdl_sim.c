@@ -647,6 +647,8 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
     setup_window_and_renderer(&window, &renderer, &pix_buf, &landscape_pix_buf);
     flareled(0, 0, 0);
 
+    init_sim_lcd_params();
+
     while (!time_to_quit) {
 	draw_window(renderer, pix_buf, landscape_pix_buf);
 

@@ -38,9 +38,16 @@ static const struct sim_lcd_params initial_default_landscape_sim_lcd_params = {
 	.height = LCD_XSIZE * 3,
 };
 
-static struct sim_lcd_params default_sim_lcd_params = initial_default_sim_lcd_params;
-static struct sim_lcd_params default_landscape_sim_lcd_params = initial_default_landscape_sim_lcd_params;
-static struct sim_lcd_params sim_lcd_params = initial_default_sim_lcd_params;
+static struct sim_lcd_params default_sim_lcd_params;
+static struct sim_lcd_params default_landscape_sim_lcd_params;
+static struct sim_lcd_params sim_lcd_params;
+
+void init_sim_lcd_params(void)
+{
+	default_sim_lcd_params = initial_default_sim_lcd_params;
+	default_landscape_sim_lcd_params = initial_default_landscape_sim_lcd_params;
+	sim_lcd_params = initial_default_sim_lcd_params;
+}
 
 void set_sim_lcd_params(struct sim_lcd_params *params)
 {

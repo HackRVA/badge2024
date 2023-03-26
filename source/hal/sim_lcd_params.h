@@ -15,6 +15,7 @@ struct sim_lcd_params {
 	int width, height; /* width and height in the SDL window */
 };
 
+void init_sim_lcd_params(void);
 void set_sim_lcd_params(struct sim_lcd_params *params);
 void set_sim_lcd_params_default(void);
 struct sim_lcd_params get_sim_lcd_params(void);
