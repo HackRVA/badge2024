@@ -83,8 +83,9 @@ You can use Ninja, if you like, as well. \(Specify `-G Ninja` instead of Makefil
 The simulator is intended to run on a Posix-y (that is, Linux or Mac) environment. Windows can build and run it, but
 using Windows Subsystem for Linux if your Linux subsystem has a desktop environment set up.
 
-But to build the simulator, you will need a C compiler for your computer, in addition to GTK2. The best way to install
-GTK2 is probably through a package manager.
+But to build the simulator, you will need a C compiler for your computer. The simulator relies on SDL2
+for graphics and keyboard/mouse/game controller support, so you will need to install SDL2
+("apt-get install sdl2-dev" package on Debian based distros).
 
 ### Visual Studio Code Setup
 
@@ -99,13 +100,13 @@ The build folder will be named `build-simulator` if using the VS Code variants.
 In a similar way to the hardware target, you can generate makefiles via CMake. Note that to make the simulator, there is
 an extra flag that gets passed in:
 
-`cmake -S . -B build_sim/ -DTARGET=SIMULATOR -G "Unix Makefiles"`
+`cmake -S . -B build_sdl_sim/ -DTARGET=SDL_SIMULATOR -G "Unix Makefiles"`
 
 or, if that's too hard to type or remember:
 
-`./run_cmake_sim.sh`
+`./run_cmake_sdl_sim.sh`
 
-After which, you can `cd` into the `build_sim/` directory and run `make` to build the simulator target. The output
+After which, you can `cd` into the `build_sdl_sim/` directory and run `make` to build the simulator target. The output
 program is called `build_sim/source/badge2023_c`, which you can run.
 
 
@@ -123,7 +124,8 @@ running `doxygen` in the `source` folder will create a folder called `docs` with
 ## Adding Your Own Apps
 
 Apps are mostly contained within a single .c/.h file in the apps folder. Take a look at the comments inside the
-`badge-app-template` files for help getting started.
+`badge-app-template` files for help getting started.  See also
+[BADGE-APP-HOWTO.md](https://github.com/HackRVA/badge2023/blob/main/BADGE-APP-HOWTO.md)
 
 # Current Status
 
