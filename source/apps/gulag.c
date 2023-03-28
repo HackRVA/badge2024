@@ -2672,6 +2672,9 @@ static int bullet_track(int x, int y, void *cookie)
 				if (!player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER)
 					go[j].tsd.soldier.health--;
 
+				if (bullet_source == BULLET_SOURCE_GRENADE)
+					go[j].tsd.soldier.health--;
+
 				if (go[j].tsd.soldier.health == 0) {
 
 					/* This will need fixing if soldiers can throw grenades */
@@ -3554,8 +3557,8 @@ static void draw_room(struct castle *c, int room)
 	if (has_bottom_door(c, room)) {
 		FbHorizontalLine(0, 127 - 16, 54, 127 - 16);
 		FbHorizontalLine(74, 127 - 16, 127, 127 - 16);
-		FbVerticalLine(54, 127 - 16, 54, 127 - 18);
-		FbVerticalLine(74, 127 - 16, 74, 127 - 18);
+		FbVerticalLine(54, 127 - 18, 54, 127 - 16);
+		FbVerticalLine(74, 127 - 18, 74, 127 - 16);
 	} else {
 		FbHorizontalLine(0, 127 - 16, 127, 127 - 16);
 	}
