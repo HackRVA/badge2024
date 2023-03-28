@@ -2934,7 +2934,7 @@ static void maybe_search_for_loot(void)
 			goto_search_cooldown();
 			return;
 		}
-		snprintf(player_message, sizeof(player_message), "TRYING KEY %d/%d", player.trying_key, player.keys);
+		snprintf(player_message, sizeof(player_message), "TRYING KEY %d/%d", player.trying_key + 1, player.keys);
 		display_message = 1;
 		if (player.search_timer > 0)
 			player.search_timer--;
