@@ -110,30 +110,38 @@ Updating the Screen
 Colors
 ------
 
-There are 8 colors.
-
-Actually there are more than 8 colors, but the above colors are those known by the
-linux badge emulator that also work on the actual badge.  If you need more than
-those colors, see
+There are a few named colors defined in
 [source/display/colors.h](https://github.com/HackRVA/badge2023/blob/main/source/display/colors.h)
+and a lot more named colors defined in
+[source/display/x11_colors.h](https://github.com/HackRVA/badge2023/blob/main/source/display/x11_colors.h)
+
 
 ```
-
-	BLUE
-	GREEN
-	RED
-	BLACK
-	WHITE
-	CYAN
-	YELLOW
-	MAGENTA
-
 	void FbColor(int color);
 		Sets the current foreground color, which subsequent drawing functions will then use.
 
 	void FbBackgroundColor(int color);
 		Sets the current background color, which subsequent drawing functions and FbClear()
 		will then use.
+```
+
+Example usage:
+
+```
+	FbColor(x11_goldenrod);
+	FbBackgroundColor(x11_firebrick1);
+```
+
+You can construct your own custom colors from RGB values.  There are 5 bits for red, 6 bits for green,
+and 5 bits for blue.  For example:
+
+```
+	unsigned char red = r; /* whatever arbitrary values */
+	unsigned char green = g;
+	unsigned char blue = b;
+
+	unsigned short random_color = ((red & 0xf8) << 8) | ((green & 0xfc) << 3) | ((blue & 0xf8) >> 3);
+	FbColor(random_color);
 ```
 
 Drawing Lines and Points and other things
