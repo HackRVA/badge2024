@@ -3538,24 +3538,32 @@ static void draw_room(struct castle *c, int room)
 	if (has_top_door(c, room)) {
 		FbHorizontalLine(0, 0, 54, 0);
 		FbHorizontalLine(74, 0, 127, 0);
+		FbVerticalLine(54, 0, 54, 2);
+		FbVerticalLine(74, 0, 74, 2);
 	} else {
 		FbHorizontalLine(0, 0, 127, 0);
 	}
 	if (has_left_door(c, room)) {
 		FbVerticalLine(0, 0, 0, 54);
 		FbVerticalLine(0, 74, 0, 127 - 16);
+		FbHorizontalLine(0, 54, 2, 54);
+		FbHorizontalLine(0, 74, 2, 74);
 	} else {
 		FbVerticalLine(0, 0, 0, 127 - 16);
 	}
 	if (has_bottom_door(c, room)) {
 		FbHorizontalLine(0, 127 - 16, 54, 127 - 16);
 		FbHorizontalLine(74, 127 - 16, 127, 127 - 16);
+		FbVerticalLine(54, 127 - 16, 54, 127 - 18);
+		FbVerticalLine(74, 127 - 16, 74, 127 - 18);
 	} else {
 		FbHorizontalLine(0, 127 - 16, 127, 127 - 16);
 	}
 	if (has_right_door(c, room)) {
 		FbVerticalLine(127, 0, 127, 54);
 		FbVerticalLine(127, 74, 127, 127 - 16);
+		FbHorizontalLine(125, 54, 127, 54);
+		FbHorizontalLine(125, 74, 125, 74);
 	} else {
 		FbVerticalLine(127, 0, 127, 127 - 16);
 	}
