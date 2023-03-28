@@ -28,4 +28,6 @@
 #define YELLOW  0b1111111111100000
 #define MAGENTA 0b1111100000011111
 
+#include "x11_colors.h"
+
 #endif
