@@ -71,6 +71,12 @@
 #include "rtc.h"
 #include "xorshift.h"
 
+#define SOLDIER_COLOR x11_olive_drab
+#define CHEST_COLOR x11_goldenrod 
+#define DESK_COLOR x11_chocolate
+#define SAFE_COLOR x11_light_slate_gray
+#define WALL_COLOR GREY16
+
 static struct dynmenu start_menu;
 #define START_MENU_SIZE 5
 static struct dynmenu_item start_menu_item[START_MENU_SIZE];
@@ -750,12 +756,14 @@ static const signed char muzzle_yoffset[] = { 2, 4, 8, 9, 8, 4, 1, 0, };
 
 static inline void draw_figures_head1(int x, int y)
 {
+	FbColor(x11_peach_puff);
 	FbHorizontalLine(x + 3, y, x + 4, y);
 	FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
 }
 
 static inline void draw_figures_head2(int x, int y)
 {
+	FbColor(x11_peach_puff);
 	FbHorizontalLine(x + 3, y + 1, x + 4, y + 1);
 	FbHorizontalLine(x + 3, y + 2, x + 4, y + 2);
 }
@@ -773,6 +781,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 	switch (anim_frame) {
 	case 0:
 		draw_figures_head1(x, y);
+		FbColor(color);
 		FbHorizontalLine(x + 2, y + 3, x + 5, y + 3);
 		FbVerticalLine(x + 1, y + 4, x + 1, y + 6);
 		FbVerticalLine(x + 6, y + 4, x + 6, y + 6);
@@ -787,6 +796,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 1:
 		draw_figures_head1(x, y);
+		FbColor(color);
 		FbHorizontalLine(x + 2, y + 3, x + 5, y + 3);
 		FbVerticalLine(x + 1, y + 4, x + 1, y + 6);
 		FbVerticalLine(x + 5, y + 4, x + 5, y + 5);
@@ -802,6 +812,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 2:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		FbHorizontalLine(x + 2, y + 4, x + 5, y + 4);
 		FbVerticalLine(x + 1, y + 5, x + 1, y + 6);
 		FbVerticalLine(x + 5, y + 5, x + 5, y + 6);
@@ -821,6 +832,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 3:
 		draw_figures_head1(x, y);
+		FbColor(color);
 		FbHorizontalLine(x + 2, y + 3, x + 5, y + 3);
 		FbPoint(x + 1, y + 4);
 		FbPoint(x, y + 5);
@@ -840,6 +852,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 4:
 		draw_figures_head1(x, y);
+		FbColor(color);
 		FbVerticalLine(x + 3, y + 3, x + 3, y + 8);
 		FbVerticalLine(x + 4, y + 3, x + 4, y + 8);
 		FbLine(x, y + 5, x + 2, y + 3);
@@ -858,6 +871,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 5:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		FbVerticalLine(x + 2, y + 4, x + 2, y + 7);
 		FbVerticalLine(x + 3, y + 4, x + 3, y + 9);
 		FbVerticalLine(x + 4, y + 4, x + 4, y + 12);
@@ -878,6 +892,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 6:
 		draw_figures_head1(x, y);
+		FbColor(color);
 		FbVerticalLine(x + 2, y + 3, x + 2, y + 6);
 		FbVerticalLine(x + 3, y + 3, x + 3, y + 15);
 		FbVerticalLine(x + 4, y + 3, x + 4, y + 15);
@@ -893,6 +908,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 7:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		draw_figures_vert_body(x, y);
 		FbLine(x + 5, y + 4, x + 7, y + 2);
 		FbPoint(x + 5, y + 3);
@@ -904,6 +920,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 8:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		draw_figures_vert_body(x, y);
 		FbHorizontalLine(x + 5, y + 4, x + 7, y + 4);
 		FbPoint(x + 5, y + 15);
@@ -914,6 +931,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 9:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		draw_figures_vert_body(x, y);
 		FbLine(x + 5, y + 6, x + 6, y + 7);
 		FbPoint(x + 5, y + 15);
@@ -924,6 +942,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 10:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		draw_figures_vert_body(x, y);
 		FbLine(x + 2, y + 4, x + 2, y + 8);
 		FbVerticalLine(x + 5, y + 4, x + 5, y + 5);
@@ -937,6 +956,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 11:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		draw_figures_vert_body(x, y);
 		FbPoint(x + 2, y + 4);
 		FbLine(x + 2, y + 5, x, y + 7);
@@ -950,6 +970,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 12:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		draw_figures_vert_body(x, y);
 		FbHorizontalLine(x, y + 4, x + 2, y + 4);
 		FbPoint(x + 2, y + 15);
@@ -960,6 +981,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 13:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		draw_figures_vert_body(x, y);
 		FbLine(x, y + 1, x + 2, y + 3);
 		FbPoint(x + 2, y + 4);
@@ -971,6 +993,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case 14:
 		draw_figures_head2(x, y);
+		FbColor(color);
 		draw_figures_vert_body(x, y);
 		FbLine(x + 2, y + 4, x + 2, y + 8);
 		FbVerticalLine(x + 5, y, x + 5, y + 5);
@@ -983,6 +1006,7 @@ static void draw_figure(int x, int y, int color, int anim_frame, int armband)
 		break;
 	case HANDSUP_FIGURE: /* 15 */
 		draw_figures_head1(x, y);
+		FbColor(color);
 		FbHorizontalLine(x + 2, y + 3, x + 5, y + 3);
 		FbVerticalLine(x + 1, y, x + 1, y + 3);
 		FbVerticalLine(x + 6, y, x + 6, y + 3);
@@ -1057,6 +1081,7 @@ static void draw_desk(struct gulag_object *o)
 	x = o->x >> 8;
 	y = o->y >> 8;
 
+	FbColor(DESK_COLOR);
 	FbHorizontalLine(x, y + 2, x + 16, y + 2);
 	FbHorizontalLine(x + 4, y, x + 12, y);
 	FbLine(x + 4, y, x, y + 2);
@@ -1084,8 +1109,8 @@ static int astary_to_8dot8y(int x);
 
 static void draw_soldier(struct gulag_object *o)
 {
-	FbColor(GREEN);
-	draw_figure(o->x >> 8, o->y >> 8, GREEN, o->tsd.soldier.anim_frame, o->tsd.soldier.spetsnaz);
+	FbColor(SOLDIER_COLOR);
+	draw_figure(o->x >> 8, o->y >> 8, SOLDIER_COLOR, o->tsd.soldier.anim_frame, o->tsd.soldier.spetsnaz);
 
 	if (o->tsd.soldier.on_fire) {
 		const int n = 1 + o->tsd.soldier.on_fire / 30;
@@ -1131,10 +1156,12 @@ static void draw_corpse(struct gulag_object *o)
 	int x = o->x >> 8;
 	int y = o->y >> 8;
 
-	FbColor(GREEN);
+	FbColor(SOLDIER_COLOR);
 	if (o->tsd.soldier.corpse_direction) { /* left corpse */
+		FbColor(x11_peach_puff);
 		FbHorizontalLine(x, y + 3, x + 1, y + 3);
 		FbHorizontalLine(x, y + 4, x + 1, y + 4);
+		FbColor(SOLDIER_COLOR);
 		FbPoint(x + 6, y + 1);
 		FbHorizontalLine(x + 3, y + 2, x + 5, y + 2);
 		FbPoint(x + 14, y + 2);
@@ -1150,8 +1177,10 @@ static void draw_corpse(struct gulag_object *o)
 			FbPoint(x + 4, y + 6); 
 		}
 	} else { /* right corpse */
+		FbColor(x11_peach_puff);
 		FbHorizontalLine(x + 14, y + 3, x + 15, y + 3);
 		FbHorizontalLine(x + 14, y + 4, x + 15, y + 4);
+		FbColor(SOLDIER_COLOR);
 		FbPoint(x + 9, y + 1);
 		FbHorizontalLine(x + 10, y + 2, x + 12, y + 2);
 		FbPoint(x + 1, y + 2);
@@ -1185,7 +1214,7 @@ static void draw_chest(struct gulag_object *o)
 	x = o->x >> 8;
 	y = o->y >> 8;
 
-	FbColor(YELLOW);
+	FbColor(CHEST_COLOR);
 	FbHorizontalLine(x + 3, y, x + 13, y);
 	FbHorizontalLine(x, y + 3, x + 15, y + 3);
 	FbLine(x + 3, y, x, y + 3);
@@ -3545,7 +3574,7 @@ static void draw_grenades(void)
 
 static void draw_safe(struct gulag_object *safe)
 {
-	FbColor(CYAN);
+	FbColor(SAFE_COLOR);
 	FbMove(safe->x >> 8, safe->y >> 8);
 	FbRectangle(16, 16);
 	FbMove((safe->x >> 8) + 3, (safe->y >> 8) + 3);
@@ -3643,7 +3672,7 @@ static void draw_screen(void)
 {
 	if (!screen_changed)
 		return;
-	FbColor(WHITE);
+	FbColor(WALL_COLOR);
 	draw_room(&castle, player.room);
 	draw_player(&player);
 	draw_grenades();
@@ -4257,7 +4286,7 @@ static void draw_safecracking_screen(struct gulag_object *s)
 	int angle = s->tsd.safe.angle;
 
 	FbClear();
-	FbColor(CYAN);
+	FbColor(SAFE_COLOR);
 	FbMove(3, 3);
 	FbWriteString("CRACK THE SAFE\n");
 	if (player.has_combo[get_room_floor(player.room)])
@@ -4296,7 +4325,7 @@ static void draw_safecracking_screen(struct gulag_object *s)
 		if (i == 48)
 			FbColor(WHITE);
 		else
-			FbColor(CYAN);
+			FbColor(SAFE_COLOR);
 		FbLine(x + dx1, y + dy1, x + dx2, y + dy2);
 	}
 	FbSwapBuffers();
