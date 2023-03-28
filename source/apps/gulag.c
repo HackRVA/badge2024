@@ -71,7 +71,9 @@
 #include "rtc.h"
 #include "xorshift.h"
 
+#define PLAYER_COLOR x11_orange
 #define SOLDIER_COLOR x11_olive_drab
+#define BURNED_COLOR x11_dim_gray
 #define CHEST_COLOR x11_goldenrod 
 #define DESK_COLOR x11_chocolate
 #define SAFE_COLOR x11_light_slate_gray
@@ -394,6 +396,7 @@ struct gulag_soldier_data {
 	uint16_t corpse_direction:1; /* left or right corpse variant */
 	uint16_t sees_player_now:1;
 	uint16_t disarmed:1;
+	uint16_t burned:1;
 	int on_fire;
 	char anim_frame;
 	/* Careful, char is *unsigned* by default on the badge! */
@@ -1155,13 +1158,21 @@ static void draw_corpse(struct gulag_object *o)
 {
 	int x = o->x >> 8;
 	int y = o->y >> 8;
+	int color;
 
-	FbColor(SOLDIER_COLOR);
+	if (o->tsd.soldier.burned)
+		color = BURNED_COLOR;
+	else
+		color = SOLDIER_COLOR;
+	FbColor(color);
 	if (o->tsd.soldier.corpse_direction) { /* left corpse */
-		FbColor(x11_peach_puff);
+		if (o->tsd.soldier.burned)
+			FbColor(x11_orange_red);
+		else
+			FbColor(x11_peach_puff);
 		FbHorizontalLine(x, y + 3, x + 1, y + 3);
 		FbHorizontalLine(x, y + 4, x + 1, y + 4);
-		FbColor(SOLDIER_COLOR);
+		FbColor(color);
 		FbPoint(x + 6, y + 1);
 		FbHorizontalLine(x + 3, y + 2, x + 5, y + 2);
 		FbPoint(x + 14, y + 2);
@@ -1169,18 +1180,23 @@ static void draw_corpse(struct gulag_object *o)
 		FbHorizontalLine(x + 3, y + 4, x + 15, y + 4);
 		FbPoint(x + 3, y + 5);
 		FbHorizontalLine(x + 4, y + 6, x + 6, y + 6);
-		FbColor(RED);
-		FbHorizontalLine(x + 5, y + 5, x + 10, y + 5);
+		if (!o->tsd.soldier.burned) {
+			FbColor(RED);
+			FbHorizontalLine(x + 5, y + 5, x + 10, y + 5);
+		}
 		if (o->tsd.soldier.spetsnaz) {
 			FbColor(SPETSNAZ_ARMBAND);
 			FbPoint(x + 4, y + 2);
 			FbPoint(x + 4, y + 6); 
 		}
 	} else { /* right corpse */
-		FbColor(x11_peach_puff);
+		if (o->tsd.soldier.burned)
+			FbColor(x11_orange_red);
+		else
+			FbColor(x11_peach_puff);
 		FbHorizontalLine(x + 14, y + 3, x + 15, y + 3);
 		FbHorizontalLine(x + 14, y + 4, x + 15, y + 4);
-		FbColor(SOLDIER_COLOR);
+		FbColor(color);
 		FbPoint(x + 9, y + 1);
 		FbHorizontalLine(x + 10, y + 2, x + 12, y + 2);
 		FbPoint(x + 1, y + 2);
@@ -1188,8 +1204,10 @@ static void draw_corpse(struct gulag_object *o)
 		FbHorizontalLine(x, y + 4, x + 12, y + 4);
 		FbPoint(x + 12, y + 5);
 		FbHorizontalLine(x + 9, y + 6, x + 11, y + 6);
-		FbColor(RED);
-		FbHorizontalLine(x + 5, y + 5, x + 10, y + 5);
+		if (!o->tsd.soldier.burned) {
+			FbColor(RED);
+			FbHorizontalLine(x + 5, y + 5, x + 10, y + 5);
+		}
 		if (o->tsd.soldier.spetsnaz) {
 			FbColor(SPETSNAZ_ARMBAND);
 			FbPoint(x + 11, y + 2);
@@ -3464,8 +3482,8 @@ static void draw_player(struct player *p)
 	x = p->x >> 8;
 	y = p->y >> 8;
 
-	FbColor(WHITE);
-	draw_figure(x - 4, y - 8, WHITE, p->anim_frame, 0);
+	FbColor(PLAYER_COLOR);
+	draw_figure(x - 4, y - 8, PLAYER_COLOR, p->anim_frame, 0);
 #if 0
 	/* Draw bounding box (debug) */
 	FbColor(GREEN);
@@ -3864,6 +3882,7 @@ static void move_soldier(struct gulag_object *s)
 		if (s->tsd.soldier.on_fire == 1) {
 			s->tsd.soldier.on_fire = FIRE_DURATION / 2;
 			s->tsd.soldier.health = 0;
+			s->tsd.soldier.burned = 1;
 			s->type = TYPE_CORPSE;
 			if ((s->x >> 8) > 64) {
 				s->tsd.soldier.corpse_direction = 1;
