@@ -81,6 +81,7 @@
 #define MAP_BACKGROUND x11_antique_white
 #define MAP_FOREGROUND x11_slate_gray
 #define KEY_ICON_COLOR YELLOW
+#define GRENADE_COLOR x11_DarkOliveGreen3
 #define GRENADE_ICON_COLOR x11_green
 #define BULLET_ICON_COLOR x11_gray
 #define CARTRIDGE_ICON_COLOR x11_gold
@@ -4269,7 +4270,7 @@ static void draw_grenade(struct grenade *o)
 		return;
 	if (y1 < 0 || y2 < 0 || y1 >= LCD_YSIZE || y2 >= LCD_YSIZE)
 		return;
-	FbColor(WHITE);
+	FbColor(GRENADE_COLOR);
 	FbMove(x1, y1);
 	FbRectangle(2, 2);
 }
