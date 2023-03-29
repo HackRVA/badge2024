@@ -213,6 +213,7 @@ static struct player {
 	unsigned char has_detonator;
 	unsigned char planted_bomb;
 	unsigned char has_c4;
+#define FLAMETHROWER_SHOTS 15
 	int has_flamethrower;
 	int flamethrower_counter;
 #define FIRE_DURATION (5 * 30)
@@ -3191,7 +3192,7 @@ static void maybe_search_for_loot(void)
 				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
 					"%s", "FLAMETHROWER");
 				if (player.search_item_num == nitems && player.search_timer == 0) {
-					player.has_flamethrower = 15;
+					player.has_flamethrower = FLAMETHROWER_SHOTS;
 					o->tsd.chest.flamethrower = 0;
 					took_item = 1;
 				}
@@ -3818,6 +3819,13 @@ static void draw_bullet_icons(int y, int n)
 {
 	char buf[10];
 
+	if (player.has_flamethrower) {
+		FbColor(x11_orange);
+		FbMove(0, y);
+		int w = (player.has_flamethrower * LCD_XSIZE) / FLAMETHROWER_SHOTS;
+		FbFilledRectangle(w, 4);
+		return;
+	}
 	if (n > 40) {
 		draw_bullet_icon(2, y);
 		FbMove(10, y);
