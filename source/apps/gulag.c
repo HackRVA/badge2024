@@ -91,13 +91,13 @@ static struct dynmenu_item start_menu_item[START_MENU_SIZE];
 static struct dynmenu quit_menu;
 static struct dynmenu_item quit_menu_item[2];
 
-/* Program states.  Initial state is GULAG_INIT */
+/* Program states.  Initial state is GULAG_INTRO */
 enum gulag_state_t {
-	GULAG_INIT,
 	GULAG_INTRO,
 	GULAG_SCROLL_TEXT,
 	GULAG_FLAG,
 	GULAG_START_MENU,
+	GULAG_INIT,
 	GULAG_RUN,
 	GULAG_SAFECRACKING,
 	GULAG_SAFE_CRACKED,
@@ -366,7 +366,7 @@ static struct castle {
 	int stairs_up[CASTLE_FLOORS];
 } castle;
 
-static enum gulag_state_t gulag_state = GULAG_INIT;
+static enum gulag_state_t gulag_state = GULAG_INTRO;
 static int screen_changed = 0;
 static int gulag_text_offset = 0;
 static int gulag_text_offset_limit = 425;
@@ -1995,7 +1995,7 @@ static void gulag_init(void)
 	print_castle(&castle, &player);
 	FbInit();
 	FbClear();
-	gulag_state = GULAG_INTRO;
+	gulag_state = GULAG_RUN;
 	screen_changed = 1;
 	gulag_text_offset = 0;
 	flag_offset = 0;
@@ -4412,10 +4412,10 @@ static void gulag_start_menu()
 		strcpy(start_menu.title2, "CHOOSE");
 		strcpy(start_menu.title3, "DIFICULTY");
 		dynmenu_set_colors(&start_menu, BLUE, YELLOW);
-		dynmenu_add_item(&start_menu, "EASY", GULAG_RUN, 0);
-		dynmenu_add_item(&start_menu, "MEDIUM", GULAG_RUN, 1);
-		dynmenu_add_item(&start_menu, "HARD", GULAG_RUN, 2);
-		dynmenu_add_item(&start_menu, "INSANE", GULAG_RUN, 3);
+		dynmenu_add_item(&start_menu, "EASY", GULAG_INIT, 0);
+		dynmenu_add_item(&start_menu, "MEDIUM", GULAG_INIT, 1);
+		dynmenu_add_item(&start_menu, "HARD", GULAG_INIT, 2);
+		dynmenu_add_item(&start_menu, "INSANE", GULAG_INIT, 3);
 		dynmenu_add_item(&start_menu, "QUIT", GULAG_EXIT, 4);
 		menu_initialized = 1;
 	}
@@ -4468,7 +4468,7 @@ static void gulag_maybe_exit()
 
 static void gulag_exit()
 {
-	gulag_state = GULAG_INIT; /* So that when we start again, we do not immediately exit */
+	gulag_state = GULAG_INTRO; /* So that when we start again, we do not immediately exit */
 	returnToMenus();
 }
 
@@ -4495,7 +4495,7 @@ static void gulag_player_died()
 	} else if (state > 255) {
 		if (state >= 512) {
 			state = 0;
-			gulag_state = GULAG_INIT;
+			gulag_state = GULAG_INTRO;
 		} else {
 			/* Fade screen brightness up */
 			led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, state - 256);
