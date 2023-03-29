@@ -80,6 +80,10 @@
 #define WALL_COLOR GREY16
 #define MAP_BACKGROUND x11_antique_white
 #define MAP_FOREGROUND x11_slate_gray
+#define KEY_ICON_COLOR YELLOW
+#define GRENADE_ICON_COLOR x11_green
+#define BULLET_ICON_COLOR x11_gray
+#define CARTRIDGE_ICON_COLOR x11_gold
 
 static struct dynmenu start_menu;
 #define START_MENU_SIZE 5
@@ -3752,14 +3756,87 @@ static void draw_munitions(struct gulag_object *o)
 			draw_munition(x + i * 8 + 1, y + j * 16 + 1);
 }
 
+static void draw_key_icon(int x, int y)
+{
+	FbColor(KEY_ICON_COLOR);
+	FbHorizontalLine(x + 1, y, x + 3, y);
+	FbHorizontalLine(x + 1, y + 2, x + 3, y + 2);
+	FbPoint(x, y + 1);
+	FbPoint(x + 4, y + 1);
+	FbHorizontalLine(x + 1, y + 2, x + 3, y + 2);
+	FbVerticalLine(x + 2, y + 2, x + 2, y + 7);
+	FbPoint(x + 1, y + 5);
+	FbPoint(x + 1, y + 7);
+}
+
+static void draw_key_icons(int y, int n)
+{
+	if (n > 12)
+		n = 12;
+	for (int i = 0; i < n; i++)
+		draw_key_icon(2 + i * 6, y);
+}
+
+static void draw_grenade_icon(int x, int y)
+{
+	FbColor(GRENADE_ICON_COLOR);
+	FbVerticalLine(x, y + 2, x, y + 4);
+	FbPoint(x + 1, y + 1);
+	FbPoint(x + 2, y);
+	FbVerticalLine(x + 2, y + 2, x + 2, y + 4);
+	FbVerticalLine(x + 3, y, x + 3, y + 5);
+	FbVerticalLine(x + 4, y, x + 4, y + 5);
+	FbVerticalLine(x + 5, y + 2, x + 5, y + 4);
+}
+
+static void draw_grenade_icons(int y, int n)
+{
+	char buf[10];
+	if (n > 18) {
+		draw_grenade_icon(1, y);
+		FbMove(10, y);
+		snprintf(buf, sizeof(buf), "%d", n);
+		FbColor(YELLOW);
+		FbWriteString(buf);
+		return;
+	}
+	for (int i = 0; i < n; i++)
+		draw_grenade_icon(1 + i * 7, y);
+}
+
+static void draw_bullet_icon(int x, int y)
+{
+	FbColor(BULLET_ICON_COLOR);
+	FbMove(x, y);
+	FbFilledRectangle(2, 2);
+	FbColor(CARTRIDGE_ICON_COLOR);
+	FbMove(x, y + 2);
+	FbFilledRectangle(2, 6);
+}
+
+static void draw_bullet_icons(int y, int n)
+{
+	char buf[10];
+
+	if (n > 40) {
+		draw_bullet_icon(2, y);
+		FbMove(10, y);
+		FbColor(YELLOW);
+		snprintf(buf, sizeof(buf), "%d", player.bullets);
+		FbWriteString(buf);
+		return;
+	}
+	for (int i = 0; i < n; i++)
+		draw_bullet_icon(2 + i * 3, y);
+}
+
 static void draw_player_data(void)
 {
-	char buf[100];
 	int blink = 0;
 
 	if (display_message) {
 		FbColor(YELLOW);
-		FbMove(3, 130);
+		FbMove(3, 125);
 		FbWriteString(player_message);
 		return;
 	}
@@ -3773,18 +3850,15 @@ static void draw_player_data(void)
 		else
 			FbColor(GREEN);
 	}
-	snprintf(buf, sizeof(buf), "H:%4d", player.health >> 8);
 	if (!blink) {
-		FbMove(3, 130);
-		FbWriteString(buf);
+		int w = ((player.health * 127) / 100) >> 8;
+		FbMove(0, 115);
+		FbFilledRectangle(w, 4);
 	}
 	FbColor(YELLOW);
-	snprintf(buf, sizeof(buf), "B:%4d", player.bullets);
-	FbMove(3, 140); FbWriteString(buf);
-	snprintf(buf, sizeof(buf), "G:%4d", player.grenades);
-	FbMove(3, 150); FbWriteString(buf);
-	snprintf(buf, sizeof(buf), "K:%4d", player.keys);
-	FbMove(64, 130); FbWriteString(buf);
+	draw_bullet_icons(130, player.bullets);
+	draw_grenade_icons(140, player.grenades);
+	draw_key_icons(150, player.keys);
 }
 
 static void maybe_draw_wasted(void)
