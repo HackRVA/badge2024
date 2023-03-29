@@ -39,13 +39,13 @@
  *   (X) Win condition/scene
  *   (X) Lose condition/scene
  *   (X) Safes, and safe-cracking mini game
- *   ( ) Flamethrowers
+ *   (X) Flamethrowers
  *
  * Quality of Life
  *   (X) Difficulty levels (easy/medium/hard/insane)
  *   ( ) Help screen
  *   (X) Quit confirmation screen
- *   ( ) Building map?
+ *   (X) Building map?
  *
  * Optimizations
  *   (X) Every soldier in the game does not need pathfinding memory,
