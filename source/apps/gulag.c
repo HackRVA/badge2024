@@ -78,6 +78,8 @@
 #define DESK_COLOR x11_chocolate
 #define SAFE_COLOR x11_light_slate_gray
 #define WALL_COLOR GREY16
+#define MAP_BACKGROUND x11_antique_white
+#define MAP_FOREGROUND x11_slate_gray
 
 static struct dynmenu start_menu;
 #define START_MENU_SIZE 5
@@ -100,6 +102,7 @@ enum gulag_state_t {
 	GULAG_PLAYER_WINS,
 	GULAG_PRINT_STATS,
 	GULAG_VIEW_COMBO,
+	GULAG_VIEW_MAP,
 	GULAG_MUNITIONS_ROOM,
 	GULAG_EXIT,
 };
@@ -131,11 +134,12 @@ struct difficulty_settings {
 	short soldier_grenade_chance;
 	short chest_first_aid_chance;
 	short num_desk_safe_combo;
+	short num_desk_maps;
 } difficulty[] = {
-	{ NUM_SOLDIERS / 2,		128, 30, 1 << 8, 1000,	300, 500, 10, }, /* easy */
-	{ (3 * NUM_SOLDIERS) / 2,	200, 25, 2 << 8, 800,	200, 400,  8, }, /* medium */
-	{ NUM_SOLDIERS,			256, 20, 3 << 8, 600,	200, 300,  5, }, /* hard */
-	{ NUM_SOLDIERS,			300, 15, 4 << 8, 300,	100, 200,  5, }, /* insane */
+	{ NUM_SOLDIERS / 2,		128, 30, 1 << 8, 1000,	300, 500, 10, 6, }, /* easy */
+	{ (3 * NUM_SOLDIERS) / 2,	200, 25, 2 << 8, 800,	200, 400,  8,  5, }, /* medium */
+	{ NUM_SOLDIERS,			256, 20, 3 << 8, 600,	200, 300,  5,  4, }, /* hard */
+	{ NUM_SOLDIERS,			300, 15, 4 << 8, 300,	100, 200,  5,  3, }, /* insane */
 };
 static int difficulty_level;
 
@@ -375,6 +379,7 @@ struct gulag_desk_data {
 	uint16_t vodka:1;
 	uint16_t locked:1;
 	uint16_t safe_combo:1;
+	uint16_t has_floor_map:1;
 	int on_fire;
 	int key;
 };
@@ -1357,13 +1362,16 @@ static void add_staircase(struct castle *c, int floor, int col, int row, int sta
 	c->room[room].nobjs++;
 }
 
+/* Returns 0 if no stairs, 1 if down stairs 2 if up stairs */
 static int contains_stairs(struct castle *c, int floor, int col, int row)
 {
 	int room = room_no(floor, col, row);
 	for (int i = 0; i < c->room[room].nobjs; i++) {
 		int j = c->room[room].obj[i];
-		if (go[j].type == TYPE_STAIRS_DOWN || go[j].type == TYPE_STAIRS_UP)
+		if (go[j].type == TYPE_STAIRS_DOWN)
 			return 1;
+		if (go[j].type == TYPE_STAIRS_UP)
+			return 2;
 	}
 	return 0;
 }
@@ -1461,7 +1469,7 @@ static int add_object_to_room(struct castle *c, int room, int object_type, int x
 	return n;
 }
 
-static void add_desk(struct castle *c, int floor, int has_combo)
+static void add_desk(struct castle *c, int floor, int has_combo, int has_floor_map)
 {
 	int col, row, room;
 
@@ -1483,6 +1491,7 @@ static void add_desk(struct castle *c, int floor, int has_combo)
 	go[n].tsd.desk.locked = (random_num(100) < 50);
 	go[n].tsd.desk.key = random_num(12);
 	go[n].tsd.desk.safe_combo = has_combo;
+	go[n].tsd.desk.has_floor_map = has_floor_map;
 	go[n].tsd.desk.on_fire = 0;
 }
 
@@ -1490,7 +1499,8 @@ static void add_desks(struct castle *c)
 {
 	for (int i = 0; i < NUM_DESKS; i++) {
 		int has_combo = i < difficulty[difficulty_level].num_desk_safe_combo;
-		add_desk(c, i % CASTLE_FLOORS, has_combo);
+		int has_floor_map = i < difficulty[difficulty_level].num_desk_maps;
+		add_desk(c, i % CASTLE_FLOORS, has_combo, has_floor_map);
 	}
 }
 
@@ -2163,6 +2173,100 @@ static void gulag_view_combo(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+		gulag_state = GULAG_RUN;
+	}
+}
+
+static void draw_castle_row(int row)
+{
+	int f = get_room_floor(player.room);
+	int x1, y1, x2, y2;
+	int room;
+	char buf[10];
+
+	for (int i = 0; i < CASTLE_COLS; i++) {
+		room = room_no(f, i, row);
+		x1 = i * 32;
+		if (i == 0)
+			x1 += 3;
+		if (i == CASTLE_COLS - 1)
+			x1 -= 3;
+		y1 = row * 32 + 20;
+		x2 = x1 + 31;
+		y2 = y1 + 31;
+		if (has_top_door(&castle, room)) {
+			FbHorizontalLine(x1, y1, x1 + 10, y1);
+			FbHorizontalLine(x1 + 20, y1, x2, y1);
+		} else {
+			FbHorizontalLine(x1, y1, x2, y1);
+		}
+		if (has_left_door(&castle, room)) {
+			FbVerticalLine(x1, y1, x1, y1 + 10);
+			FbVerticalLine(x1, y1 + 20, x1, y2);
+		} else {
+			FbVerticalLine(x1, y1, x1, y2);
+		}
+		int s = contains_stairs(&castle, f, i, row);
+		if (s == 1) {
+			FbMove(x1 + 3, y1 + 10);
+			FbWriteString("DWN");
+		}
+		if (s == 2) {
+			FbMove(x1 + 5, y1 + 10);
+			FbWriteString("UP");
+		}
+	}
+	if (has_right_door(&castle, room)) {
+		FbVerticalLine(x2, y1, x2, y1 + 10);
+		FbVerticalLine(x2, y1 + 20, x2, y2);
+	} else {
+		FbVerticalLine(x2, y1, x2, y2);
+	}
+	for (int i = 0; i < CASTLE_COLS; i++) {
+		room = room_no(f, i, CASTLE_ROWS - 1);
+		x1 = i * 32;
+		if (i == 0)
+			x1 += 3;
+		if (i == CASTLE_COLS - 1)
+			x1 -= 3;
+		y1 = (CASTLE_ROWS - 1) * 32 + 20;
+		x2 = x1 + 31;
+		y2 = y1 + 31;
+		if (has_bottom_door(&castle, room)) {
+			FbHorizontalLine(x1, y2, x1 + 10, y2);
+			FbHorizontalLine(x1 + 20, y2, x2, y2);
+		} else {
+			FbHorizontalLine(x1, y2, x2, y2);
+		}
+	}
+	room = player.room;
+	int cx = get_room_col(room) * 32 + 16;
+	int cy = get_room_row(room) * 32 + 16 + 20;
+	x1 = cx - 5;
+	y1 = cy - 5;
+	FbMove(x1, y1);
+	FbWriteString("X");
+	FbMove(3, 140);
+	snprintf(buf, sizeof(buf), "FLOOR %d", get_room_floor(player.room) + 1);
+	FbWriteString(buf);
+}
+
+static void gulag_view_map(void)
+{
+	FbBackgroundColor(MAP_BACKGROUND);
+	FbColor(MAP_FOREGROUND);
+	FbClear();
+	FbMove(3,3);
+	FbWriteString("YOU FOUND\nA MAP!\n\n");
+	for (int i = 0; i < CASTLE_ROWS; i++)
+		draw_castle_row(i);
+
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
 		gulag_state = GULAG_RUN;
 	}
 }
@@ -3065,6 +3169,14 @@ static void maybe_search_for_loot(void)
 					took_item = 1;
 					player.has_combo[get_room_floor(player.room)] = 1;
 					gulag_state = GULAG_VIEW_COMBO;
+				}
+				nitems++;
+			}
+			if (o->tsd.desk.has_floor_map > 0) {
+				snprintf(search_item_list[nitems].name, sizeof(search_item_list[nitems].name),
+					"%s", "FLOOR MAP");
+				if (player.search_item_num == nitems && player.search_timer == 0) {
+					gulag_state = GULAG_VIEW_MAP;
 				}
 				nitems++;
 			}
@@ -4532,6 +4644,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_VIEW_COMBO:
 		gulag_view_combo();
+		break;
+	case GULAG_VIEW_MAP:
+		gulag_view_map();
 		break;
 	case GULAG_MUNITIONS_ROOM:
 		gulag_munitions_room();
