@@ -87,7 +87,7 @@
 #define CARTRIDGE_ICON_COLOR x11_gold
 
 static struct dynmenu start_menu;
-#define START_MENU_SIZE 5
+#define START_MENU_SIZE 6
 static struct dynmenu_item start_menu_item[START_MENU_SIZE];
 static struct dynmenu quit_menu;
 static struct dynmenu_item quit_menu_item[2];
@@ -109,6 +109,7 @@ enum gulag_state_t {
 	GULAG_VIEW_COMBO,
 	GULAG_VIEW_MAP,
 	GULAG_MUNITIONS_ROOM,
+	GULAG_HELP_SCREEN,
 	GULAG_EXIT,
 };
 
@@ -2281,6 +2282,34 @@ static void gulag_view_map(void)
 	}
 }
 
+static void gulag_help_screen(void)
+{
+	FbBackgroundColor(MAP_BACKGROUND);
+	FbColor(MAP_FOREGROUND);
+	FbClear();
+	FbMove(3,3);
+
+	FbWriteString(
+		"UP: FORWARD\n"
+		"L: TURN LEFT\n"
+		"R: TURN RIGHT\n"
+		"A: SHOOT\n"
+		"B: GRENADE\n"
+		"RIGHT ROTARY\n"
+		"  TURN L/R\n"
+		"RIGHT ROTARY\n"
+		"BUTTON: FWD\n"
+		"LEFT ROTARY\n"
+		"BUTTON: QUIT\n");
+	FbSwapBuffers();
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
+		gulag_state = GULAG_START_MENU;
+	}
+}
+
 static void gulag_munitions_room()
 {
 	if (player.planted_bomb) {
@@ -4428,7 +4457,8 @@ static void gulag_start_menu()
 		dynmenu_add_item(&start_menu, "MEDIUM", GULAG_INIT, 1);
 		dynmenu_add_item(&start_menu, "HARD", GULAG_INIT, 2);
 		dynmenu_add_item(&start_menu, "INSANE", GULAG_INIT, 3);
-		dynmenu_add_item(&start_menu, "QUIT", GULAG_EXIT, 4);
+		dynmenu_add_item(&start_menu, "HELP", GULAG_HELP_SCREEN, 4);
+		dynmenu_add_item(&start_menu, "QUIT", GULAG_EXIT, 5);
 		menu_initialized = 1;
 	}
 	dynmenu_draw(&start_menu);
@@ -4440,7 +4470,7 @@ static void gulag_start_menu()
 	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_A, down_latches)) {
 		int choice = start_menu.item[start_menu.current_item].cookie;
-		if (choice >= 0 && choice < 4) {
+		if (choice >= 0 && choice < 5) {
 			difficulty_level = choice;
 			player.start_time_ms = rtc_get_ms_since_boot();
 		}
@@ -4745,6 +4775,9 @@ void gulag_cb(void)
 		break;
 	case GULAG_MUNITIONS_ROOM:
 		gulag_munitions_room();
+		break;
+	case GULAG_HELP_SCREEN:
+		gulag_help_screen();
 		break;
 	case GULAG_EXIT:
 		gulag_exit();
