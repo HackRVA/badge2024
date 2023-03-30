@@ -220,6 +220,14 @@ static struct player {
 	int has_flamethrower;
 	int flamethrower_counter;
 #define FIRE_DURATION (5 * 30)
+	short previous_room;
+	unsigned char previous_room_spetsnaz_timer;
+	unsigned char door_entered;
+#define DOOR_ENTERED_NONE 255
+#define DOOR_ENTERED_LEFT 0
+#define DOOR_ENTERED_RIGHT 1
+#define DOOR_ENTERED_TOP 2
+#define DOOR_ENTERED_BOTTOM 3
 } player;
 
 static char player_message[100] = { 0 };
@@ -1627,7 +1635,7 @@ static void add_safes(struct castle *c)
 		add_safe(c, i);
 }
 
-static void add_soldier_to_room(struct castle *c, int room)
+static int add_soldier_to_room(struct castle *c, int room)
 {
 	static int count = 0;
 	int x, y;
@@ -1636,7 +1644,7 @@ static void add_soldier_to_room(struct castle *c, int room)
 	y = random_num(111 - 18) + 1;
 	int n = add_object_to_room(c, room, TYPE_SOLDIER, x << 8, y << 8);
 	if (n < 0)
-		return;
+		return -1;
 	go[n].tsd.soldier.health = 1 + random_num(4);
 	go[n].tsd.soldier.bullets = random_num(4);
 	if (random_num(1000) < difficulty[difficulty_level].spetsnaz_chance) {
@@ -1659,6 +1667,7 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.on_fire = 0;
 	go[n].tsd.soldier.hit_timer = 0;
 	count++;
+	return n;
 }
 
 static void add_soldier_to_random_room(struct castle *c)
@@ -1666,7 +1675,7 @@ static void add_soldier_to_random_room(struct castle *c)
 	int f = random_num(CASTLE_FLOORS);
 	int col = random_num(CASTLE_COLS);
 	int row = random_num(CASTLE_ROWS);
-	add_soldier_to_room(c, room_no(f, col, row));
+	(void) add_soldier_to_room(c, room_no(f, col, row));
 }
 
 static void add_soldiers(struct castle *c)
@@ -1676,7 +1685,7 @@ static void add_soldiers(struct castle *c)
 		for (int col = 0; col < CASTLE_COLS; col++) {
 			for (int row = 0; row < CASTLE_ROWS; row++) {
 				int room = room_no(f, col, row);
-				add_soldier_to_room(c, room);
+				(void) add_soldier_to_room(c, room);
 				s++;
 			}
 		}
@@ -1909,6 +1918,9 @@ static void init_player(struct player *p, int start_room)
 	p->has_c4 = 0;
 	p->planted_bomb = 0;
 	p->has_flamethrower = 0;
+	p->previous_room = -1;
+	p->previous_room_spetsnaz_timer = 0;
+	p->door_entered = DOOR_ENTERED_NONE;
 	memset(player.has_combo, 0, sizeof(player.has_combo));
 }
 
@@ -2489,8 +2501,38 @@ static void reset_soldiers_in_room(struct castle *c, int room)
 	}
 }
 
+static int count_soldiers_in_room(int room, int spetsnaz_only)
+{
+	int c = 0;
+
+	if (room < 0)
+		return 0;
+
+	for (int i = 0; i < castle.room[room].nobjs; i++ ) {
+		int j = castle.room[room].obj[i];
+		if (go[j].type == TYPE_SOLDIER) {
+			if (spetsnaz_only) {
+				if (go[j].tsd.soldier.spetsnaz)
+					c++;
+			} else {
+				c++;
+			}
+		}
+	}
+	return c;
+}
+
 static void player_enter_room(struct player *p, int room, int x, int y)
 {
+	int spetsnaz = count_soldiers_in_room(p->room, 1);
+
+	if (spetsnaz) {
+		player.previous_room = p->room;
+		player.previous_room_spetsnaz_timer = random_num(90) + 90; 
+	} else {
+		player.previous_room = -1;
+		player.previous_room_spetsnaz_timer = 0;
+	}
 	p->room = room;
 
 	if (room == castle.munitions_room)
@@ -2544,6 +2586,7 @@ static void maybe_traverse_stairs(struct castle *c, struct player *p, struct gul
 	print_castle_floor(c, p, floor);
 #endif
 	p->angle = 32; /* down */
+	p->door_entered = DOOR_ENTERED_NONE;
 	player_enter_room(p, room_no(floor, col, row), stairs->x + (24 << 8), stairs->y + ((32 + 8) << 8));
 }
 
@@ -2587,6 +2630,7 @@ static void check_doors(struct castle *c, struct player *p)
 				gulag_state = GULAG_PLAYER_WINS;
 				return;
 			}
+			player.door_entered = DOOR_ENTERED_BOTTOM; /* exit via top, enter via bottom */
 			player_enter_room(p, room_no(f, col, row), p->x, (127 - 16 - 12) << 8);
 			return;
 		}
@@ -2598,6 +2642,7 @@ static void check_doors(struct castle *c, struct player *p)
 				gulag_state = GULAG_PLAYER_WINS;
 				return;
 			}
+			player.door_entered = DOOR_ENTERED_TOP; /* exit via bottom, enter via top */
 			player_enter_room(p, room_no(f, col, row), p->x, 18 << 8);
 			return;
 		}
@@ -2609,6 +2654,7 @@ static void check_doors(struct castle *c, struct player *p)
 				gulag_state = GULAG_PLAYER_WINS;
 				return;
 			}
+			player.door_entered = DOOR_ENTERED_RIGHT; /* exit via left, enter via right */
 			player_enter_room(p, room_no(f, col, row), 117 << 8, p->y);
 			return;
 		}
@@ -2620,6 +2666,7 @@ static void check_doors(struct castle *c, struct player *p)
 				gulag_state = GULAG_PLAYER_WINS;
 				return;
 			}
+			player.door_entered = DOOR_ENTERED_LEFT; /* exit via right, enter via left */
 			player_enter_room(p, room_no(f, col, row), 10 << 8, p->y);
 			return;
 		}
@@ -4480,12 +4527,91 @@ static void move_objects(void)
 	}
 }
 
+static int remove_one_spetsnaz(int room)
+{
+	int i;
+	int j = -1;
+	int h;
+
+	for (i = 0; i < castle.room[room].nobjs; i++ ) {
+		j = castle.room[room].obj[i];
+		if (go[j].type == TYPE_SOLDIER && go[j].tsd.soldier.spetsnaz)
+			goto doit;
+	}
+	return 0; /* didn't find any spetsnaz */
+doit:
+	h = go[j].tsd.soldier.health;
+	if (i == castle.room[room].nobjs - 1) {
+		castle.room[room].nobjs--;
+		return h;
+	}
+	int n = castle.room[room].nobjs - 1;
+	castle.room[room].obj[i] = castle.room[room].obj[n];
+	castle.room[room].nobjs--;
+	return h;
+}
+
+static void maybe_spetsnaz_chases(void)
+{
+	int c;
+
+	if (player.previous_room < 0)
+		return;
+	if (player.previous_room_spetsnaz_timer > 0)
+		player.previous_room_spetsnaz_timer--;
+	if (player.previous_room_spetsnaz_timer > 0)
+		return;
+	if (player.door_entered == DOOR_ENTERED_NONE)
+		return;
+	if (castle.room[player.room].nobjs >= GULAG_MAX_OBJS_PER_ROOM) {
+		player.previous_room_spetsnaz_timer = 0;
+		player.previous_room = -1;
+		return; /* no space in here for spetsnaz to enter */
+	}
+	c = count_soldiers_in_room(player.previous_room, 0);
+	if (c < 1) {
+		player.previous_room_spetsnaz_timer = 0;
+		player.previous_room = -1;
+		return;
+	}
+	int health = remove_one_spetsnaz(player.previous_room);
+	if (health == 0) {
+		return;
+	}
+	player.previous_room_spetsnaz_timer = 0;
+	player.previous_room = -1;
+	int n = add_soldier_to_room(&castle, player.room);
+	if (n < 0)
+		return;
+	go[n].tsd.soldier.spetsnaz = 1;
+	go[n].tsd.soldier.health = health;
+	switch (player.door_entered) {
+		case DOOR_ENTERED_LEFT: /* left */
+			go[n].x = (9 << 8);
+			go[n].y = (64 << 8);
+			break;
+		case DOOR_ENTERED_RIGHT: /* right */
+			go[n].x = ((LCD_XSIZE - 9) << 8);
+			go[n].y = (64 << 8);
+			break;
+		case DOOR_ENTERED_TOP: /* top */
+			go[n].x = (64 << 8);
+			go[n].y = (2 << 8);
+			break;
+		case DOOR_ENTERED_BOTTOM: /* bottom */
+			go[n].x = (64 << 8);
+			go[n].y = ((127 - 16 - 17) << 8);
+			break;
+	}
+}
+
 static void gulag_run()
 {
 	check_buttons();
 	if (gulag_state != GULAG_RUN)
 		return;
 	draw_screen();
+	maybe_spetsnaz_chases();
 	move_objects();
 	move_grenades();
 	move_flames();
