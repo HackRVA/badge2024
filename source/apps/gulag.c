@@ -407,6 +407,8 @@ struct gulag_soldier_data {
 	uint16_t sees_player_now:1;
 	uint16_t disarmed:1;
 	uint16_t burned:1;
+#define SOLDIER_HIT_FEAR_TIME 60
+	uint8_t hit_timer;
 	int on_fire;
 	char anim_frame;
 	/* Careful, char is *unsigned* by default on the badge! */
@@ -1606,6 +1608,7 @@ static void add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.shoot_cooldown = difficulty[difficulty_level].soldier_shoot_cooldown;
 	go[n].tsd.soldier.disarmed = 0;
 	go[n].tsd.soldier.on_fire = 0;
+	go[n].tsd.soldier.hit_timer = 0;
 	count++;
 }
 
@@ -2798,11 +2801,15 @@ static int bullet_track(int x, int y, void *cookie)
 					return 0; /* soldiers do not shoot themselves */
 				draw_bullet_debris(x, y);
 
-				if (!player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER)
+				if (!player.has_flamethrower && bullet_source == BULLET_SOURCE_PLAYER) {
+					go[j].tsd.soldier.hit_timer = SOLDIER_HIT_FEAR_TIME;
 					go[j].tsd.soldier.health--;
+				}
 
-				if (bullet_source == BULLET_SOURCE_GRENADE)
+				if (bullet_source == BULLET_SOURCE_GRENADE) {
+					go[j].tsd.soldier.hit_timer = SOLDIER_HIT_FEAR_TIME;
 					go[j].tsd.soldier.health--;
+				}
 
 				if (go[j].tsd.soldier.health == 0) {
 
@@ -4074,6 +4081,9 @@ static void move_soldier(struct gulag_object *s)
 	pd = &path_data[p];
 	int n = s - &go[0];
 
+	if (s->tsd.soldier.hit_timer > 0)
+		s->tsd.soldier.hit_timer--;
+
 	if (s->tsd.soldier.on_fire) {
 		if (s->tsd.soldier.on_fire == 1) {
 			s->tsd.soldier.on_fire = FIRE_DURATION / 2;
@@ -4099,12 +4109,13 @@ static void move_soldier(struct gulag_object *s)
 
 	switch (s->tsd.soldier.state) {
 	case SOLDIER_STATE_RESTING:
-		if (random_num(1000) < 950 && !s->tsd.soldier.on_fire) /* 95% chance he continues to do nothing */
+		if (random_num(1000) < 950 && !s->tsd.soldier.on_fire &&
+			!s->tsd.soldier.hit_timer) /* 95% continues nothing, unless hit or on fire */
 			break;						/* so long as he's not on fire. */
 		/* Or choose a destination and start moving there. */
 		do {
-			if (s->tsd.soldier.disarmed) {
-				/* Disarmed soldier can't shoot, so try to avoid the player */
+			if (s->tsd.soldier.disarmed || s->tsd.soldier.hit_timer) {
+				/* Disarmed or hit, so try to avoid the player */
 				int minx, miny;
 				if (s->tsd.soldier.last_seen_x < 0) {
 					/* No idea where player is, so choose destination randomly */
