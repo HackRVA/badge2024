@@ -1630,10 +1630,12 @@ static void add_soldier_to_room(struct castle *c, int room)
 		return;
 	go[n].tsd.soldier.health = 1 + random_num(4);
 	go[n].tsd.soldier.bullets = random_num(4);
-	if (random_num(1000) < 100)
+	if (random_num(1000) < 100) {
 		go[n].tsd.soldier.spetsnaz = 1;
-	else
+		go[n].tsd.soldier.health += 3;
+	} else {
 		go[n].tsd.soldier.spetsnaz = 0;
+	}
 	go[n].tsd.soldier.grenades = random_num(1000) < difficulty[difficulty_level].soldier_grenade_chance;
 	go[n].tsd.soldier.keys = random_num(1000) < 200;
 	go[n].tsd.soldier.weapon = 0;
