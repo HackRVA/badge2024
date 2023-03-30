@@ -4527,28 +4527,34 @@ static void move_objects(void)
 	}
 }
 
-static int remove_one_spetsnaz(int room)
+static int move_one_spetsnaz(int from_room, int to_room)
 {
 	int i;
 	int j = -1;
-	int h;
+	int n;
 
-	for (i = 0; i < castle.room[room].nobjs; i++ ) {
-		j = castle.room[room].obj[i];
+	for (i = 0; i < castle.room[from_room].nobjs; i++ ) {
+		j = castle.room[from_room].obj[i];
 		if (go[j].type == TYPE_SOLDIER && go[j].tsd.soldier.spetsnaz)
 			goto doit;
 	}
-	return 0; /* didn't find any spetsnaz */
+	return -1; /* didn't find any spetsnaz */
 doit:
-	h = go[j].tsd.soldier.health;
-	if (i == castle.room[room].nobjs - 1) {
-		castle.room[room].nobjs--;
-		return h;
+	if (i == castle.room[from_room].nobjs - 1) {
+		castle.room[from_room].nobjs--;
+		n = castle.room[to_room].nobjs;
+		castle.room[to_room].obj[n] = j;
+		castle.room[to_room].nobjs++;
+		return j;
 	}
-	int n = castle.room[room].nobjs - 1;
-	castle.room[room].obj[i] = castle.room[room].obj[n];
-	castle.room[room].nobjs--;
-	return h;
+	n = castle.room[from_room].nobjs - 1;
+	castle.room[from_room].obj[i] = castle.room[from_room].obj[n];
+	castle.room[from_room].nobjs--;
+	go[j].room = to_room;
+	n = castle.room[to_room].nobjs;
+	castle.room[to_room].obj[n] = j;
+	castle.room[to_room].nobjs++;
+	return j;
 }
 
 static void maybe_spetsnaz_chases(void)
@@ -4574,17 +4580,14 @@ static void maybe_spetsnaz_chases(void)
 		player.previous_room = -1;
 		return;
 	}
-	int health = remove_one_spetsnaz(player.previous_room);
-	if (health == 0) {
+	int n = move_one_spetsnaz(player.previous_room, player.room);
+	if (n < 0) {
+		player.previous_room_spetsnaz_timer = 0;
+		player.previous_room = -1;
 		return;
 	}
 	player.previous_room_spetsnaz_timer = 0;
 	player.previous_room = -1;
-	int n = add_soldier_to_room(&castle, player.room);
-	if (n < 0)
-		return;
-	go[n].tsd.soldier.spetsnaz = 1;
-	go[n].tsd.soldier.health = health;
 	switch (player.door_entered) {
 		case DOOR_ENTERED_LEFT: /* left */
 			go[n].x = (9 << 8);
