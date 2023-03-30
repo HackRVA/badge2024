@@ -73,6 +73,7 @@
 
 #define PLAYER_COLOR x11_orange
 #define SOLDIER_COLOR x11_olive_drab
+#define SPETSNAZ_COLOR x11_yellow_green
 #define BURNED_COLOR x11_dim_gray
 #define CHEST_COLOR x11_goldenrod 
 #define DESK_COLOR x11_chocolate
@@ -1159,8 +1160,13 @@ static int astary_to_8dot8y(int x);
 
 static void draw_soldier(struct gulag_object *o)
 {
-	FbColor(SOLDIER_COLOR);
-	draw_figure(o->x >> 8, o->y >> 8, SOLDIER_COLOR, o->tsd.soldier.anim_frame, o->tsd.soldier.spetsnaz);
+	int color;
+	if (o->tsd.soldier.spetsnaz)
+		color = SPETSNAZ_COLOR;
+	else
+		color = SOLDIER_COLOR;
+	FbColor(color);
+	draw_figure(o->x >> 8, o->y >> 8, color, o->tsd.soldier.anim_frame, o->tsd.soldier.spetsnaz);
 
 	if (o->tsd.soldier.on_fire) {
 		const int n = 1 + o->tsd.soldier.on_fire / 30;
@@ -1209,8 +1215,10 @@ static void draw_corpse(struct gulag_object *o)
 
 	if (o->tsd.soldier.burned)
 		color = BURNED_COLOR;
-	else
-		color = SOLDIER_COLOR;
+	else if (o->tsd.soldier.spetsnaz)
+			color = SPETSNAZ_COLOR;
+		else
+			color = SOLDIER_COLOR;
 	FbColor(color);
 	if (o->tsd.soldier.corpse_direction) { /* left corpse */
 		if (o->tsd.soldier.burned)
