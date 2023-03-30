@@ -140,11 +140,12 @@ struct difficulty_settings {
 	short chest_first_aid_chance;
 	short num_desk_safe_combo;
 	short num_desk_maps;
+	short spetsnaz_chance; /* out of 1000 */
 } difficulty[] = {
-	{ MAX_SOLDIERS / 3,	128, 30,  1 << 8, 800,	300, 300, 10,  6, }, /* easy */
-	{ MAX_SOLDIERS / 2,	200, 20,  5 << 8, 500,	200, 200,  8,  5, }, /* medium */
-	{ (3 * MAX_SOLDIERS) / 4, 256, 15,  7 << 8, 300,	200, 100,  5,  4, }, /* hard */
-	{ MAX_SOLDIERS,		300,  8, 10 << 8, 200,	100, 100,  5,  3, }, /* insane */
+	{ MAX_SOLDIERS / 3,	128, 30,  1 << 8, 800,	300, 300, 10,  6, 100, }, /* easy */
+	{ MAX_SOLDIERS / 2,	200, 20,  5 << 8, 500,	200, 200,  8,  5, 200, }, /* medium */
+	{ (3 * MAX_SOLDIERS) / 4, 256, 15,  7 << 8, 300,	200, 100,  5,  4, 300, }, /* hard */
+	{ MAX_SOLDIERS,		300,  8, 10 << 8, 200,	100, 100,  5,  3, 400, }, /* insane */
 };
 static int difficulty_level;
 
@@ -1630,7 +1631,7 @@ static void add_soldier_to_room(struct castle *c, int room)
 		return;
 	go[n].tsd.soldier.health = 1 + random_num(4);
 	go[n].tsd.soldier.bullets = random_num(4);
-	if (random_num(1000) < 100) {
+	if (random_num(1000) < difficulty[difficulty_level].spetsnaz_chance) {
 		go[n].tsd.soldier.spetsnaz = 1;
 		go[n].tsd.soldier.health += 3;
 	} else {
