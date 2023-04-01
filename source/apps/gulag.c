@@ -2845,7 +2845,7 @@ static int player_object_collision(struct castle *c, struct player *p, int newx,
 			break;
 		}
 	}
-	return 0;
+	return -1;
 }
 
 int shooting_frame(struct player *p)
@@ -3701,7 +3701,10 @@ static void check_buttons()
 				break;
 			}
 		} else {
-			player.search_object = -1;
+			if (player.search_object != -1) {
+				goto_search_cooldown();
+				player.search_object = -1;
+			}
 			display_message = 0;
 		}
 		/* if (player.search_object != -1 && player.search_state == search_state_idle)
