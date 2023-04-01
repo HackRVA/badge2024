@@ -262,6 +262,10 @@ static struct a_star_working_space astar_workspace = {
  * from the above or left row or column, respectively. (i.e. last column is 127,
  * last row is 111, or 8 * 16 - 1 or 7 * 16 - 1, respectively.
  *
+ * The order of the two points defining a wall is important, horizontal
+ * walls must be listed left to right and vertical walls must be listed
+ * top to bottom.
+ *
  *    0  1  2  3  4  5  6  7  8
  *    9 10 11 12 13 14 15 16 17
  *   18 19 20 21 22 23 24 25 26
@@ -335,13 +339,21 @@ static void sanity_check_wall_spec(const int8_t *ws, int n)
 		y2 = wall_spec_y(ws[i]);
 		if ((i % 2) != 1 || i == 0)
 			continue;
+		if (x1 == x2) {
+			if (y2 <= y1)
+				printf("walls_spec[%d] vertical wall %d coordinates reversed\n", n, i);
+		}
+		if (y1 == y2) {
+			if (x2 <= x1)
+				printf("walls_spec[%d] horizontal wall %d coordinates reversed\n", n, i);
+		}
 		if (x1 == x2 || y1 == y2)
 			continue;
-		printf("walls%d contains non-vertical and non-horizontal line segment at %d, (%d, %d)\n",
+		printf("wall_spec[%d] contains non-vertical and non-horizontal line segment at %d, (%d, %d)\n",
 				n, i - 1, ws[i - 1], ws[i]);
 	}
 	if ((i % 2) != 0)
-		printf("walls%d[] has an odd number of points, %d, should be even.\n", n, i);
+		printf("wall_spec[%d] has an odd number of points, %d, should be even.\n", n, i);
 }
 
 static void sanity_check_wall_specs(void)
@@ -610,10 +622,36 @@ static int bbox_interior_wall_collision(struct castle *c, int room, int bbx1, in
 		capacity = *nwallindices;
 	const int8_t *ws = wall_spec[n];
 	for (int i = 0; ws[i] != -1; i += 2) {
-		int x1 = wall_spec_x(ws[i]) << 8;
-		int y1 = wall_spec_y(ws[i]) << 8;
-		int x2 = wall_spec_x(ws[i + 1]) << 8;
-		int y2 = wall_spec_y(ws[i + 1]) << 8;
+		int x1 = wall_spec_x(ws[i]);
+		int y1 = wall_spec_y(ws[i]);
+		int x2 = wall_spec_x(ws[i + 1]);
+		int y2 = wall_spec_y(ws[i + 1]);
+
+		/* Shorten each wall.  If we don't do this, the player gets stuck at
+		 * outside corners when gliding against a wall.
+		 *
+		 *     +-------
+		 *     |
+		 *    X|
+		 *     |
+		 *
+		 * If 'X' is the player, travelling north-northeast, he would get stuck
+		 * at the corner because he would collide with the horizontal wall.
+		 * So we test for slightly shortened walls to avoid this.
+		 */
+		if (x1 == x2) {
+			y1++;
+			y2--;
+		} else {
+			if (y1 == y2) {
+				x1++;
+				x2--;
+			}
+		}
+		x1 = x1 << 8;
+		y1 = y1 << 8;
+		x2 = x2 << 8;
+		y2 = y2 << 8;
 		rc = bbox_wall_collides(bbx1, bby1, bbx2, bby2, x1, y1, x2, y2);
 		if (rc) {
 			accrc |= rc;
