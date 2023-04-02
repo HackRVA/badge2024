@@ -14,6 +14,10 @@ They need a few different things in order to set yourself up to build and run th
 
 In both cases, you will need **CMake**, which is a build system / build system generator. (Version 3.13 or higher)
 
+## Git Setup
+
+We're using `git` for version control, and there's one submodule being used. This means that after cloning the repository, you'll need to run the command `git submodule update --init --recursive` to get the submodule.
+
 ## Building for Hardware
 
 For more info, see the [Pico SDK README](https://github.com/raspberrypi/pico-sdk).
