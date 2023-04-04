@@ -16,7 +16,15 @@ enum {
     CONDUCTOR_EXIT
 };
 
-struct menu_t conductor_config_m[] = {
+static void set_conductor_top_note(void);
+static void set_exit(void);
+static void set_conductor_bottom_note(void);
+static void set_conductor_left_note(void);
+static void set_conductor_right_note(void);
+static void set_mode(void);
+static void set_go(void);
+
+static struct menu_t conductor_config_m[] = {
     {"Top: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_conductor_top_note} },
     {"Bottom: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_conductor_bottom_note} },
     {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
@@ -29,10 +37,10 @@ struct menu_t conductor_config_m[] = {
 };
 
 
-unsigned short top_note = 800;
-unsigned short bottom_note = 640;
-unsigned short left_note = 1280;
-unsigned short right_note = 5120;
+static unsigned short top_note = 800;
+static unsigned short bottom_note = 640;
+static unsigned short left_note = 1280;
+static unsigned short right_note = 5120;
 
 enum
 {
@@ -52,32 +60,32 @@ enum
     LOCAL_AND_BCAST
 };
 
-char con_state = INIT;
-char con_mode = LOCAL_ONLY;
+static char con_state = INIT;
+static char con_mode = LOCAL_ONLY;
 
-void set_conductor_top_note()
+static void set_conductor_top_note(void)
 {
     con_state = CONFIG_TOP;
 }
 
-void set_conductor_bottom_note()
+static void set_conductor_bottom_note(void)
 {
     con_state = CONFIG_BOTTOM;
 }
 
-void set_conductor_left_note()
+static void set_conductor_left_note(void)
 {
     con_state = CONFIG_LEFT;
 }
 
-void set_conductor_right_note()
+static void set_conductor_right_note(void)
 {
     con_state = CONFIG_RIGHT;
 }
 
-void populate_menu();
+static void populate_menu(void);
 
-void set_mode()
+static void set_mode(void)
 {
     if(con_mode == LOCAL_ONLY || con_mode == BCAST_ONLY)
         con_mode++;
@@ -87,18 +95,18 @@ void set_mode()
     populate_menu();
 }
 
-void set_go()
+static void set_go(void)
 {
     con_state = RUN_CONDUCTOR;
 }
 
-void set_exit()
+static void set_exit(void)
 {
     con_state = INIT;
     returnToMenus();
 }
 
-void populate_menu()
+static void populate_menu(void)
 {
 
     conductor_config_m[0].name[5] = '0' + (top_note/100) % 10;
@@ -150,7 +158,7 @@ void populate_menu()
 }
 
 
-void run_conductor(uint32_t down_latches)
+static void run_conductor(uint32_t down_latches)
 {
     unsigned short freq=0;
 
@@ -200,7 +208,7 @@ void run_conductor(uint32_t down_latches)
     }
 }
 
-void conductor_cb()
+void conductor_cb(void)
 {
     int down_latches = button_down_latches();
     switch(con_state)
