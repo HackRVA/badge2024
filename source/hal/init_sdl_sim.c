@@ -629,10 +629,10 @@ static void process_events(SDL_Window *window)
                 h = landscape_badge_image_height;
             }
             bcl = get_button_coords(&slp, w, h);
-            mouse_button_down_cb(&event, &bcl);
+            mouse_button_down_cb(&event.button, &bcl);
             break;
         case SDL_MOUSEBUTTONUP:
-            mouse_button_up_cb(&event);
+            mouse_button_up_cb(&event.button);
             break;
         case SDL_MOUSEMOTION:
             break;
@@ -646,7 +646,7 @@ static void process_events(SDL_Window *window)
                 h = landscape_badge_image_height;
             }
             bcl = get_button_coords(&slp, w, h);
-            mouse_scroll_cb(&event, &bcl);
+            mouse_scroll_cb(&event.wheel, &bcl);
             break;
         case SDL_JOYAXISMOTION:
         case SDL_JOYBALLMOTION:

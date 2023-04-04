@@ -1,19 +1,20 @@
 #ifndef BUTTON_UI_H_
 #define BUTTON_UI_H_
 
+#include "button_coords.h"
+
 /* This file defines functions/vars in button_sim.c or init_sdl_sim.c meant to allow these
  * two modules to communicate information back and forth.
  */
-
 /* Callbacks in button_sim.c called from init_sdl_sim.c */
 extern int time_to_quit;
-extern int key_press_cb();
-extern int key_release_cb();
-extern int mouse_button_down_cb();
-extern int mouse_button_up_cb();
-extern int mouse_scroll_cb();
-extern void handle_window_event();
-extern int joystick_event_cb();
+extern int key_press_cb(SDL_Keysym *keysym);
+extern int key_release_cb(SDL_Keysym *keysym);
+extern int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *bcl);
+extern int mouse_button_up_cb(SDL_MouseButtonEvent *event);
+extern int mouse_scroll_cb(SDL_MouseWheelEvent *event, struct button_coord_list *bcl);
+extern void handle_window_event(SDL_Window *window, SDL_Event event);
+extern int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event event);
 extern int quit_confirm_active;
 extern int quit_confirmed(int x, int y);
 
