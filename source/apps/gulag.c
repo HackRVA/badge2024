@@ -56,6 +56,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "colors.h"
 #include "menu.h"
@@ -777,6 +778,7 @@ static int random_num(int n)
 	int x;
 	static unsigned int state = 0;
 
+	assert(n != 0);
 	if (state == 0)
 		random_insecure_bytes((uint8_t *) &state, sizeof(state));
 	x = xorshift(&state);
