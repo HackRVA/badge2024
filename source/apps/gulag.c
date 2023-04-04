@@ -1426,7 +1426,7 @@ static void add_start_room(struct castle *c)
 static void add_exit_room(struct castle *c)
 {
 	/* Choose a side of the castle on which to place the exit */
-	int row, col, side = random_num(4);
+	int row, col = 0, side = random_num(4);
 	switch (side) {
 	case 0: /* north side */
 		row = 0;
