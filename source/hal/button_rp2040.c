@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "rtc.h"
+#include <utils.h>
 
 #define DEBOUNCE_DELAY_MS 3
 
@@ -163,12 +164,18 @@ void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
 }
 
-/* TODO: make this work with multiple rotary switches */
-int button_get_rotation(__attribute__((unused)) int which_rotary) {
+int button_get_rotation(unsigned int i) {
+    if (ARRAY_SIZE(rotation_count) < i) {
+        return 0;
+    }
+
     critical_section_enter_blocking(&critical_section);
-    int count = rotation_count;
-    rotation_count = 0;
+
+    int count = rotation_count[i];
+    rotation_count[i] = 0;
+
     critical_section_exit(&critical_section);
+
     return count;
 }
 

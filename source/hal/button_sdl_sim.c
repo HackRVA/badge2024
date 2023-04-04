@@ -679,7 +679,11 @@ void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
 }
 
-int button_get_rotation(int which_rotary) {
+int button_get_rotation(unsigned which_rotary) {
+	if (which_rotary > (sizeof(rotation_count)/sizeof(rotation_count[0]))) {
+		return 0;
+	}
+
     int count = rotation_count[which_rotary];
     rotation_count[which_rotary] = 0;
     return count;

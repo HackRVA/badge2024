@@ -161,7 +161,7 @@ void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
 }
 
-int button_get_rotation(__attribute__((unused)) int which_rotary) {
+int button_get_rotation(__attribute__((unused)) unsigned which_rotary) {
     int count = rotation_count;
     rotation_count = 0;
     return count;
