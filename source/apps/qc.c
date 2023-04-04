@@ -14,7 +14,6 @@
 
 #define LED_LVL 50
 
-// TODO write an IR callback that sets this variable!
 unsigned char QC_IR;
 
 enum {
@@ -24,13 +23,6 @@ enum {
 
 void ir_callback(const IR_DATA * ir_data) {
     QC_IR = ir_data->data[0];
-}
-
-
-static void led(int red, int green, int blue) {
-    led_pwm_enable(BADGE_LED_RGB_RED, red*255/100);
-    led_pwm_enable(BADGE_LED_RGB_GREEN, green*255/100);
-    led_pwm_enable(BADGE_LED_RGB_BLUE, blue*255/100);
 }
 
 struct qc_button {
@@ -80,7 +72,7 @@ static bool check_encoder(const struct qc_button *b)
     snprintf(msg, sizeof(msg), "%s %d\n", b->name, rotation);
     FbWriteString(msg);
     
-    audio_out_beep(220 * ((rotation > 0 ? 1 : 2) + (enc == 0 ? 1 : 2)), 100);
+    audio_out_beep(b->freq * (rotation > 0 ? 1 : 2), 100);
 
     return true;
 }
@@ -107,10 +99,10 @@ static const struct qc_button QC_BTN[] = {
     {BADGE_BUTTON_RIGHT, "RIGHT", 932, check_button},
 
     {BADGE_BUTTON_ENCODER_SW, "ENC", 698, check_button},
-    {BADGE_BUTTON_ENCODER_A, "ENC", 698, check_encoder},
+    {BADGE_BUTTON_ENCODER_A, "ENC", 440, check_encoder},
 
     {BADGE_BUTTON_ENCODER_2_SW, "ENC 2", 777, check_button},
-    {BADGE_BUTTON_ENCODER_2_A, "ENC 2", 777, check_encoder},
+    {BADGE_BUTTON_ENCODER_2_A, "ENC 2", 666, check_encoder},
 };
 
 void QC_cb()
@@ -139,13 +131,14 @@ void QC_cb()
             FbMove(15, 55);
             FbWriteLine("Do things");
             FbSwapBuffers();
-            led(0, 30, 0);
             QC_IR = 0;
             button_hold_count = 0;
             QC_state = RUN;
             break;
 
         case RUN:
+            FbMove(16, 16);
+
             if (button_poll(BADGE_BUTTON_ENCODER_SW)) {
                 button_hold_count ++;
             } else {
@@ -155,17 +148,12 @@ void QC_cb()
             if(button_hold_count > 20){
                 ir_remove_callback(ir_callback, IR_APP0);
                 QC_state = INIT;
-                FbMove(16, 26);
                 FbWriteLine("EXITING");
                 FbSwapBuffers();
                 sleep_ms(1000);
-                led(0,0,0);
-                QC_state = 0;
                 returnToMenus();
                 return;
             }
-
-            FbMove(16,16);
 
             if (check_buttons(QC_BTN, ARRAY_SIZE(QC_BTN)))
             {
@@ -177,25 +165,21 @@ void QC_cb()
                 audio_out_beep(698 * 2, 400);
                 FbMove(10, 40);
                 FbColor(GREEN);
-                //FbFilledRectangle(20, 20);
                 FbWriteString("Pinged!\n");
-                led(100, 0, 100);
                 QC_IR = 0;
                 data = 2;
                 ir_send_complete_message(&ir_packet);
                 redraw = 1;
             }
-            // Received a QC ping
+            // Received a QC ping response
             else if(QC_IR == 2){
                 audio_out_beep(698 * 4, 200);
                 FbColor(YELLOW);
-                FbWriteString("Ping resp!\n");
+                FbWriteString("Ping response!\n");
                 FbColor(GREEN);
-                led(100, 100, 0);
                 QC_IR = 0;
                 redraw = 1;
             }
-
 
             if (redraw)
                 FbSwapBuffers();
