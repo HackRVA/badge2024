@@ -4867,8 +4867,8 @@ static void gulag_safecracking()
 	n = abs(rotary_switch);
 	d = (rotary_switch < 0) ? -1 : 1;
 
+	angle = s->tsd.safe.angle;
 	for (i = 0; i < n; i++) {
-		angle = s->tsd.safe.angle;
 		angle += d;
 		while (angle < 0)
 			angle += 128;
