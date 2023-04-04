@@ -8,8 +8,8 @@
 #include "hardware/gpio.h"
 #include "hardware/spi.h"
 
-#define BADGE_GPIO_BTN_A (1)
-#define BADGE_GPIO_BTN_B (0)
+#define BADGE_GPIO_BTN_A (0)
+#define BADGE_GPIO_BTN_B (1)
 
 #define BADGE_GPIO_IR_RX (2)
 #define BADGE_GPIO_IR_TX (8)
