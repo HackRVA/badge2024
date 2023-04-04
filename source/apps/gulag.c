@@ -1524,7 +1524,6 @@ static int add_object_to_room(struct castle *c, int room, int object_type, int x
 	w = objconst[object_type].w;
 	h = objconst[object_type].h;
 
-	done = 0;
 	do {
 		go[n].x = x;
 		go[n].y = y;
