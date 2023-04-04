@@ -719,7 +719,6 @@ static void print_maze()
  */
 static void generate_maze(void)
 {
-    static int counter = 0;
     unsigned char *x, *y, *d;
     unsigned char nx, ny;
 
@@ -729,7 +728,6 @@ static void generate_maze(void)
     y = &maze_stack[maze_stack_ptr].y;
     d = &maze_stack[maze_stack_ptr].direction;
 
-    counter++;
     generation_iterations++;
 
     dig_maze_square(*x, *y);
@@ -1038,7 +1036,6 @@ static void maze_button_pressed(void)
     int droppable_object_count = 0;
     int grenade_count = 0;
     int grenade_number = -1;
-    int scroll_count = 0;
     int scroll_number = -1;
 
     if (game_is_won) {
@@ -1092,7 +1089,6 @@ static void maze_button_pressed(void)
 	}
 	if (maze_object[i].x == 255 &&
            maze_object_template[maze_object[i].type].category == MAZE_OBJECT_SCROLL) {
-           scroll_count++;
 	   scroll_number = i;
 	}
         if (maze_object[i].x == newx && maze_object[i].y == newy &&
