@@ -18,7 +18,7 @@ static void wait_until_ready() {
         dma_channel_wait_for_finish_blocking(dma_channel);
         dma_transfer_started = false;
     }
-    while (spi_is_busy(spi0));
+    while (spi_is_busy(BADGE_SPI_DISPLAY));
 }
 
 void lcd_delay(unsigned long int milliseconds) {
@@ -41,13 +41,13 @@ void lcd_spiWrite(unsigned char* buffer, size_t length) {
         length /= 2;
 
         dma_transfer_started = true;
-        spi_set_format(spi0, 16, 0, 0, SPI_MSB_FIRST);
+        spi_set_format(BADGE_SPI_DISPLAY, 16, 0, 0, SPI_MSB_FIRST);
         dma_channel_transfer_from_buffer_now(dma_channel, buffer, length);
     }
     else
     {
-        spi_set_format(spi0, 8, 0, 0, SPI_MSB_FIRST);
-        spi_write_blocking(spi0, buffer, length);
+        spi_set_format(BADGE_SPI_DISPLAY, 8, 0, 0, SPI_MSB_FIRST);
+        spi_write_blocking(BADGE_SPI_DISPLAY, buffer, length);
     }
 }
 
@@ -96,7 +96,7 @@ void display_init_gpio(void) {
     gpio_init(BADGE_GPIO_DISPLAY_RESET);
     gpio_set_dir(BADGE_GPIO_DISPLAY_RESET, true);
 
-    spi_init(spi0, 15000000);
+    spi_init(BADGE_SPI_DISPLAY, 15000000);
 
     if (dma_channel == -1) {
         dma_channel = dma_claim_unused_channel(true);
@@ -107,8 +107,8 @@ void display_init_gpio(void) {
     channel_config_set_transfer_data_size(&config, DMA_SIZE_16);
     channel_config_set_read_increment(&config, true);
     channel_config_set_write_increment(&config, false);
-    channel_config_set_dreq(&config, spi_get_dreq(spi0, true));
-    dma_channel_configure(dma_channel,  &config, &spi_get_hw(spi0)->dr, NULL, 0, false);
+    channel_config_set_dreq(&config, spi_get_dreq(BADGE_SPI_DISPLAY, true));
+    dma_channel_configure(dma_channel,  &config, &spi_get_hw(BADGE_SPI_DISPLAY)->dr, NULL, 0, false);
 }
 
 /** Perform init sequence on display */
@@ -190,5 +190,5 @@ void display_color(unsigned short pixel) {
 
 /** @brief Tell us if we're busy sending data to the display */
 bool display_busy(void) {
-    return spi_is_busy(spi0);
+    return spi_is_busy(BADGE_SPI_DISPLAY);
 }
