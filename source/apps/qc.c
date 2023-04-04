@@ -76,7 +76,6 @@ void QC_cb()
             led(0, 30, 0);
             QC_IR = 0;
             QC_state++;
-            redraw = 1;
             break;
 
         case RUN:
@@ -174,9 +173,7 @@ void QC_cb()
                 audio_out_beep(880, 100);
             }
 
-            if(redraw){
-                redraw = 0;
+            if (redraw)
                 FbSwapBuffers();
-            }
     }
 }
