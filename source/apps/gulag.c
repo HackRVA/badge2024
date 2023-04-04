@@ -1675,7 +1675,6 @@ static void add_safes(struct castle *c)
 
 static int add_soldier_to_room(struct castle *c, int room)
 {
-	static int count = 0;
 	int x, y;
 
 	x = random_num(127 - 10) + 1;
@@ -1704,7 +1703,6 @@ static int add_soldier_to_room(struct castle *c, int room)
 	go[n].tsd.soldier.disarmed = 0;
 	go[n].tsd.soldier.on_fire = 0;
 	go[n].tsd.soldier.hit_timer = 0;
-	count++;
 	return n;
 }
 
