@@ -14,15 +14,25 @@
 #define DEBOUNCE_DELAY_MS 3
 
 static const int8_t button_gpios[BADGE_BUTTON_MAX] = {
+    /* A/B buttons */    
+    BADGE_GPIO_BTN_A,
+    BADGE_GPIO_BTN_B,
+
+    /* D-Pad */
     BADGE_GPIO_DPAD_LEFT,
     BADGE_GPIO_DPAD_DOWN,
     BADGE_GPIO_DPAD_UP,
     BADGE_GPIO_DPAD_RIGHT,
-    // Rotary encoder button
+
+    /* Rotary encoder 1 */
     BADGE_GPIO_SW,
-    // Rotary encoder state
     BADGE_GPIO_ENCODER_A,
     BADGE_GPIO_ENCODER_B,
+    
+    /* Rotary encoder 2 */
+    BADGE_GPIO_2_SW,
+    BADGE_GPIO_ENCODER_2_A,
+    BADGE_GPIO_ENCODER_2_B,
 };
 
 static critical_section_t critical_section;
@@ -33,7 +43,7 @@ static uint32_t gpio_states;
 static uint32_t down_latches;
 static uint32_t up_latches;
 static uint32_t last_change;
-static int rotation_count;
+static int rotation_count[2];
 
 // callback
 static user_gpio_callback user_cb;
@@ -42,8 +52,21 @@ static user_gpio_callback user_cb;
 static void gpio_callback(uint gpio, uint32_t events);
 
 static void process_rotary_pin_state(uint gpio, int state) {
-    if (gpio == BADGE_BUTTON_ENCODER_A && state == 0) {
-        rotation_count += button_poll(BADGE_BUTTON_ENCODER_B) ? 1 : -1;
+    int idx;
+    int b;
+
+    if (gpio == BADGE_BUTTON_ENCODER_A) {
+        idx = 0;
+        b = BADGE_BUTTON_ENCODER_B;
+    } else if (gpio == BADGE_BUTTON_ENCODER_2_A) {
+        idx = 1;
+        b = BADGE_BUTTON_ENCODER_2_B;
+    } else {
+        return;
+    }
+
+    if (state == 0) {
+        rotation_count[idx] += button_poll(b) ? 1 : -1;
     }
 }
 

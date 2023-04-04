@@ -1185,7 +1185,7 @@ static void process_commands(void)
     base_direction = combat_mode ? 0 : player.direction;
 
     int down_latches = button_down_latches();
-    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
         maze_button_pressed();
     } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
         if (maze_menu.menu_active)

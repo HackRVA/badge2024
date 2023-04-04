@@ -105,7 +105,7 @@ int badge_app_cb(void)
 
 So, somewhere in those functions, you'll have something like this:
 
-   if (down_latches & (1<<BADGE_BUTTON_SW)) {
+   if (down_latches & (1<<BADGE_BUTTON_ENCODER_SW)) {
         button_pressed();
 
 and then...

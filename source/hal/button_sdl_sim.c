@@ -132,10 +132,10 @@ int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *
 	y = event->y;
 
 	if (mouse_close_enough(x, y, &bcl->a_button)) {
-            button = BADGE_BUTTON_SW;
+            button = BADGE_BUTTON_ENCODER_SW;
             sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->b_button)) {
-            button = BADGE_BUTTON_SW2;
+            button = BADGE_BUTTON_ENCODER_2_SW;
             sim_button_status.button_b = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->left_rotary)) {
             button = BADGE_BUTTON_ENCODER_A;
@@ -278,12 +278,12 @@ int key_press_cb(SDL_Keysym *keysym)
         case SDLK_SPACE:
         case SDLK_RETURN:
             if (!quit_confirm_active) {
-                button = BADGE_BUTTON_SW;
+                button = BADGE_BUTTON_ENCODER_SW;
                 sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
             }
         break;
         case SDLK_b:
-            button = BADGE_BUTTON_SW2;
+            button = BADGE_BUTTON_ENCODER_2_SW;
             sim_button_status.button_b = BUTTON_DISPLAY_DURATION;
         break;
         case SDLK_v:
@@ -366,7 +366,7 @@ int key_release_cb(SDL_Keysym *keysym)
             if (quit_confirm_active)
                 time_to_quit = 1;
             else
-                button = BADGE_BUTTON_SW;
+                button = BADGE_BUTTON_ENCODER_SW;
             break;
         case SDLK_q:
         case SDLK_ESCAPE:
@@ -376,7 +376,7 @@ int key_release_cb(SDL_Keysym *keysym)
 		control_key_pressed = 0;
 	break;
         case SDLK_b:
-            button = BADGE_BUTTON_SW2;
+            button = BADGE_BUTTON_ENCODER_2_SW;
         break;
         case SDLK_n:
             button = BADGE_BUTTON_ENCODER_B;
@@ -506,9 +506,9 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 			SDL_JoyButtonEvent e = event.jbutton;
 			if (e.button == 0) {
 				sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
-				button |= BADGE_BUTTON_SW;
-				down_latches &= ~(1 << BADGE_BUTTON_SW);
-				button_states &= ~(1 << BADGE_BUTTON_SW);
+				button |= BADGE_BUTTON_ENCODER_SW;
+				down_latches &= ~(1 << BADGE_BUTTON_ENCODER_SW);
+				button_states &= ~(1 << BADGE_BUTTON_ENCODER_SW);
 				button_pressed = 1;
 			} else if (e.button == 1) {
 				/* TODO: fill this in */
@@ -519,9 +519,9 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 			SDL_JoyButtonEvent e = event.jbutton;
 			if (e.button == 0) {
 				sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
-				button |= BADGE_BUTTON_SW;
-				down_latches |= (1 << BADGE_BUTTON_SW);
-				button_states |= (1 << BADGE_BUTTON_SW);
+				button |= BADGE_BUTTON_ENCODER_SW;
+				down_latches |= (1 << BADGE_BUTTON_ENCODER_SW);
+				button_states |= (1 << BADGE_BUTTON_ENCODER_SW);
 				button_pressed = 1;
 			} else if (e.button == 1) {
 				/* TODO: fill this in */

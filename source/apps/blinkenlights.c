@@ -177,7 +177,7 @@ void blinkenlights_cb()
             genericMenu((struct menu_t *)blinkenlights_config_m, MAIN_MENU_STYLE, down_latches);
             break;
         case CONFIG_RED:;
-            if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
                 led_pwm_enable(BADGE_LED_RGB_GREEN, 0);
@@ -208,7 +208,7 @@ void blinkenlights_cb()
             }
             break;
         case CONFIG_GREEN:
-            if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
                 led_pwm_enable(BADGE_LED_RGB_GREEN, 0);
@@ -239,7 +239,7 @@ void blinkenlights_cb()
             }
             break;
         case CONFIG_BLUE:
-            if(BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
                 led_pwm_enable(BADGE_LED_RGB_GREEN, 0);

@@ -702,7 +702,7 @@ static void check_buttons()
 	static int button_presses = 0;
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
 	{
 		button_presses++;
 
@@ -796,7 +796,7 @@ static void render_hackingsimulator_splash_screen()
 	render_splash_screen();
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
 		handle_splash_screen_btn();
 }
 
@@ -809,7 +809,7 @@ static void render_hackingsimulator_fail_screen()
 	FbSwapBuffers();
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
 		hacking_simulator_state = HACKINGSIMULATOR_EXIT;
 }
 
@@ -822,7 +822,7 @@ static void render_hackingsimulator_win_screen()
 	FbSwapBuffers();
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
 		hacking_simulator_state = HACKINGSIMULATOR_EXIT;
 }
 
@@ -1056,7 +1056,7 @@ static void hackingsimulator_quit_confirm(void)
 static void hackingsimulator_quit_input(void)
 {
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		hacking_simulator_state =
 			(enum hacking_simulator_state_t) quitmenu.item[quitmenu.current_item].next_state;
 		return;

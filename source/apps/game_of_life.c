@@ -269,7 +269,7 @@ static void render_end_game_screen(void)
 	}
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
 	{
 		game_of_life_state = GAME_OF_LIFE_EXIT;
 		already_rendered = 0;
@@ -345,7 +345,7 @@ static void game_of_life_splash_screen(void)
 		already_rendered_splash_screen = 1;
 	}
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
 	{
 		already_rendered_splash_screen = 0;
 		init_cells();

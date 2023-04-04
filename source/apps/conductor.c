@@ -162,7 +162,7 @@ static void run_conductor(uint32_t down_latches)
 {
     unsigned short freq=0;
 
-    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
     {
         //returnToMenus();
         con_state = SHOW_MENU;
@@ -221,7 +221,7 @@ void conductor_cb(void)
             genericMenu(conductor_config_m, MAIN_MENU_STYLE, down_latches);
             break;
         case CONFIG_TOP:
-            if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
             else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
@@ -240,7 +240,7 @@ void conductor_cb(void)
             }
             break;
         case CONFIG_BOTTOM:
-            if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
             else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
@@ -259,7 +259,7 @@ void conductor_cb(void)
             }
             break;
         case CONFIG_LEFT:
-            if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
             else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
@@ -278,7 +278,7 @@ void conductor_cb(void)
             }
             break;
         case CONFIG_RIGHT:
-            if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
             else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))

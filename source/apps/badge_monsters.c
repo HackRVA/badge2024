@@ -481,7 +481,7 @@ static void check_the_buttons(void)
 			BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
 			BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
 			BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 			trading_monsters_enabled = 0;
 			app_state = GAME_MENU;
 			return;
@@ -508,7 +508,7 @@ static void check_the_buttons(void)
             else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
             {
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 switch(menu.current_item){
                     case 0:
@@ -561,7 +561,7 @@ static void check_the_buttons(void)
                     show_message(monsters[current_monster].blurb);
                 }
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 #ifdef __linux__
                     print_menu_info();
@@ -593,7 +593,7 @@ static void check_the_buttons(void)
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }

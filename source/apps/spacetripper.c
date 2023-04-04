@@ -1029,7 +1029,7 @@ static void st_choose_angle_input(void)
 	gs.angle_chooser.old_angle = *gs.angle_chooser.angle;
 	gs.angle_chooser.old_new_angle = *gs.angle_chooser.new_angle;
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		int angle = *gs.angle_chooser.new_angle;
 		*gs.angle_chooser.angle = angle;
 		gs.angle_chooser.old_angle = angle;
@@ -1162,7 +1162,7 @@ static void st_process_input(void)
     int down_latches = button_down_latches();
     int rotary = button_get_rotation(0);
     int something_happened = 0;
-    if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
         button_pressed();
 	something_happened = 1;
     } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
@@ -2089,7 +2089,7 @@ static void st_warp_input(void)
 
 	int down_latches = button_down_latches();
 	int rotary = button_get_rotation(0);
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		gs.player.warp_factor = gs.player.new_warp_factor;
 		st_warp();
 		st_program_state = ST_PROCESS_INPUT;
@@ -2216,7 +2216,7 @@ static void st_shield_energy_input()
 
 	int down_latches = button_down_latches();
 	int rotary = button_get_rotation(0);
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		gs.player.shield_xfer = gs.player.new_shield_xfer;
 		st_program_state = ST_SHIELD_EXEC_ENERGY_XFER;
 		return;
@@ -2279,7 +2279,7 @@ static void st_phaser_power_input(void)
 	int rotary = button_get_rotation(0);
 	int old = gs.player.new_phaser_power;
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		gs.player.phaser_power = gs.player.new_phaser_power;
 		st_phaser_power();
 		st_program_state = ST_FIRE_PHASER;
@@ -2461,7 +2461,7 @@ static void st_player_won(void)
 static void st_alert(void)
 {
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
 		st_program_state = ST_CAPTAIN_MENU;
 }
 

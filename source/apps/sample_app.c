@@ -70,7 +70,7 @@ static void check_the_buttons(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		smiley_x += 1;
 		something_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		app_state = EXIT_APP;
 	}
 	if (smiley_x < left_limit)

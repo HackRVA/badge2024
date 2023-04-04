@@ -34,7 +34,7 @@ static void ghostdetector_init(void)
 static void check_buttons()
 {
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		/* Pressing the button exits the program. You probably want to change this. */
 		ghostdetector_state = GHOSTDETECTOR_EXIT;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {

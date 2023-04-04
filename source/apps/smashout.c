@@ -112,7 +112,7 @@ static void smashout_check_buttons()
 	int rotary_switch = button_get_rotation(0);
 	int down_latches = button_down_latches();
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
 		smashout_program_state = SMASHOUT_GAME_EXIT;
 	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
 		paddle.vx = -PADDLE_SPEED;

@@ -45,7 +45,7 @@ gint key_press_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointer 
         break;
         case GDK_space:
         case GDK_KEY_Return:
-            button = BADGE_BUTTON_SW;
+            button = BADGE_BUTTON_ENCODER_SW;
         break;
         case GDK_q:
         case GDK_KEY_Escape:
@@ -96,7 +96,7 @@ gint key_release_cb(UNUSED GtkWidget* widget, GdkEventKey* event, UNUSED gpointe
             break;
         case GDK_space:
         case GDK_KEY_Return:
-            button = BADGE_BUTTON_SW;
+            button = BADGE_BUTTON_ENCODER_SW;
             break;
         case GDK_q:
         case GDK_KEY_Escape:
