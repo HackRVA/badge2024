@@ -14,6 +14,7 @@ if (${TARGET} STREQUAL "PICO")
             pico_multicore
             hardware_adc
             hardware_dma
+            hardware_exception
             hardware_flash
             hardware_pio
             hardware_pwm
