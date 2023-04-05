@@ -71,7 +71,7 @@ static bool check_encoder(const struct qc_button *b)
     char msg[16] = {0};
     snprintf(msg, sizeof(msg), "%s %d\n", b->name, rotation);
     FbWriteString(msg);
-    
+
     audio_out_beep(b->freq * (rotation > 0 ? 1 : 2), 100);
 
     return true;
@@ -158,6 +158,20 @@ void QC_cb()
             if (check_buttons(QC_BTN, ARRAY_SIZE(QC_BTN)))
             {
                 redraw = 1;
+            }
+
+            if (button_poll(BADGE_BUTTON_B)
+                && button_poll(BADGE_BUTTON_DOWN)
+                && button_poll(BADGE_BUTTON_ENCODER_SW)
+                && button_poll(BADGE_BUTTON_ENCODER_2_SW)) {
+                /* Force hard fault */
+                data = *((uint8_t *) 0x8F000000);
+            }
+
+            // Send QC ping
+            if (BUTTON_PRESSED(BADGE_BUTTON_A, button_down_latches())) {
+                data = 1;
+                ir_send_complete_message(&ir_packet);
             }
 
             // Received a QC ping
