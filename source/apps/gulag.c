@@ -367,6 +367,7 @@ static inline void sanity_check_wall_specs(void) { } /* compiler will optimize a
 #endif
 
 struct room_spec {
+	int16_t obj[GULAG_MAX_OBJS_PER_ROOM]; /* indices into go[], below */
 	/* Each room has up to 4 doors (top, bottom, left, and right).
 	 * They are encoded into two bits.  Because the rooms are in a
 	 * grid, each room only stores the presence/absence of the left
@@ -374,10 +375,9 @@ struct room_spec {
 	 * and bottom doors by examining the neighboring room to the right
 	 * and below for left/top doors, respectively.
 	 */
-	int doors : 2;
+	char doors : 2;
 #define HAS_LEFT_DOOR (1 << 0)
 #define HAS_TOP_DOOR (1 << 1)
-	int16_t obj[GULAG_MAX_OBJS_PER_ROOM]; /* indices into go[], below */
 	char nobjs;
 	char interior_walls;
 };
