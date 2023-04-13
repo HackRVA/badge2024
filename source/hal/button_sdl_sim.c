@@ -132,16 +132,16 @@ int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *
 	y = event->y;
 
 	if (mouse_close_enough(x, y, &bcl->a_button)) {
-            button = BADGE_BUTTON_ENCODER_SW;
+            button = BADGE_BUTTON_A;
             sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->b_button)) {
-            button = BADGE_BUTTON_ENCODER_2_SW;
+            button = BADGE_BUTTON_B;
             sim_button_status.button_b = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->left_rotary)) {
-            button = BADGE_BUTTON_ENCODER_A;
+            button = BADGE_BUTTON_ENCODER_2_SW;
             sim_button_status.left_rotary_button = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->right_rotary)) {
-            button = BADGE_BUTTON_ENCODER_B;
+            button = BADGE_BUTTON_ENCODER_SW;
             sim_button_status.right_rotary_button = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->dpad_up)) {
                 button = BADGE_BUTTON_UP;
@@ -278,20 +278,20 @@ int key_press_cb(SDL_Keysym *keysym)
         case SDLK_SPACE:
         case SDLK_RETURN:
             if (!quit_confirm_active) {
-                button = BADGE_BUTTON_ENCODER_SW;
+                button = BADGE_BUTTON_A;
                 sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
             }
         break;
         case SDLK_b:
-            button = BADGE_BUTTON_ENCODER_2_SW;
+            button = BADGE_BUTTON_B;
             sim_button_status.button_b = BUTTON_DISPLAY_DURATION;
         break;
         case SDLK_v:
-            button = BADGE_BUTTON_ENCODER_A;
+            button = BADGE_BUTTON_ENCODER_2_SW; /* left encoder switch */
             sim_button_status.left_rotary_button = BUTTON_DISPLAY_DURATION;
         break;
         case SDLK_n:
-            button = BADGE_BUTTON_ENCODER_B;
+            button = BADGE_BUTTON_ENCODER_SW; /* right encoder switch */
             sim_button_status.right_rotary_button = BUTTON_DISPLAY_DURATION;
         break;
         case SDLK_q:
