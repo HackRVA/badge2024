@@ -192,14 +192,20 @@ static struct player {
 	unsigned char have_war_plans;
 	unsigned char keys;
 	unsigned char trying_key;
+	unsigned char current_room;
 	int kills;
 	unsigned char angle, oldangle; /* 0 - 127, 0 is to the left, 32 is down, 64 is right, 96 is up. */
-	unsigned char current_room;
 	char anim_frame;
 #define HANDSUP_FIGURE 15
 #define SURRENDER_DIST 15
 #define UNSURRENDER_DIST 50
 #define SURRENDER_CHANCE 100 /* out of 1000 */
+	unsigned char door_entered;
+#define DOOR_ENTERED_NONE 255
+#define DOOR_ENTERED_LEFT 0
+#define DOOR_ENTERED_RIGHT 1
+#define DOOR_ENTERED_TOP 2
+#define DOOR_ENTERED_BOTTOM 3
 	enum search_state search_state;
 	int search_timer;
 	int search_item_num;
@@ -208,10 +214,11 @@ static struct player {
 #define SAFECRACK_COOLDOWN_TIME 60
 	int current_safe;
 	uint16_t documents_collected;
+	short previous_room;
 	int has_won;
+	int shots_fired;
 	uint64_t start_time_ms;
 	uint64_t end_time_ms;
-	int shots_fired;
 	int grenades_thrown;
 	unsigned char has_combo[CASTLE_FLOORS];
 	unsigned char has_detonator;
@@ -221,14 +228,7 @@ static struct player {
 	int has_flamethrower;
 	int flamethrower_counter;
 #define FIRE_DURATION (5 * 30)
-	short previous_room;
 	unsigned char previous_room_spetsnaz_timer;
-	unsigned char door_entered;
-#define DOOR_ENTERED_NONE 255
-#define DOOR_ENTERED_LEFT 0
-#define DOOR_ENTERED_RIGHT 1
-#define DOOR_ENTERED_TOP 2
-#define DOOR_ENTERED_BOTTOM 3
 } player;
 
 static char player_message[100] = { 0 };
@@ -403,14 +403,14 @@ struct gulag_stairs_data {
 };
 
 struct gulag_desk_data {
+	int on_fire;
+	int key;
 	uint16_t keys:1;
 	uint16_t bullets:3;
 	uint16_t vodka:1;
 	uint16_t locked:1;
 	uint16_t safe_combo:1;
 	uint16_t has_floor_map:1;
-	int on_fire;
-	int key;
 };
 
 static struct path_data {
@@ -434,8 +434,8 @@ struct gulag_soldier_data {
 	uint16_t burned:1;
 #define SOLDIER_HIT_FEAR_TIME 60
 	uint8_t hit_timer;
-	int on_fire;
 	char anim_frame;
+	int on_fire;
 	/* Careful, char is *unsigned* by default on the badge! */
 	signed char last_seen_x, last_seen_y; /* location player was last seen at */
 	unsigned char angle; /* 0 - 127 */
@@ -468,7 +468,6 @@ struct gulag_safe_data {
 	uint8_t documents;
 	uint8_t combo[3]; /* R38, L16, R42, or whatever */
 	uint8_t opened;
-	int angle, first_angle, second_angle;
 	uint8_t right_rotations;
 	uint8_t left_rotations;
 	uint8_t state;
@@ -478,10 +477,13 @@ struct gulag_safe_data {
 #define COMBO_STATE_WAITING_FOR_LEFT_REV 3
 #define COMBO_STATE_GETTING_SECOND_NUMBER 4
 #define COMBO_STATE_GETTING_THIRD_NUMBER 5
+	int angle, first_angle, second_angle;
 	int on_fire;
 };
 
 struct gulag_chest_data {
+	int on_fire;
+	int key;
 	uint16_t bullets:3;
 	uint16_t grenades:3;
 	uint16_t first_aid:1;
@@ -493,8 +495,6 @@ struct gulag_chest_data {
 	uint16_t flamethrower:1;
 	uint16_t locked:1;
 	uint16_t opened:1;
-	int on_fire;
-	int key;
 };
 
 #define MAXLIVEGRENADES 10
@@ -511,7 +511,7 @@ static int ngrenades = 0;
 static struct flame {
 #define FLAME_NOT_IN_USE 255
 	unsigned char x, y; /* screen coords */
-	unsigned life; /* ticks until it dies */
+	unsigned char life; /* ticks until it dies */
 } flame[MAXFLAMES];
 static int nflames = 0;
 
@@ -686,20 +686,19 @@ static int bb_bb_collision(int bb1x1, int bb1y1, int bb1x2, int bb1y2,
 }
 
 struct gulag_object_typical_data {
-	char w, h; /* width, height of bounding box */
 	gulag_object_drawing_function draw;
 	gulag_object_moving_function move;
+	char w, h; /* width, height of bounding box */
 } objconst[] = {
-	{ 32, 32, draw_stairs_up, NULL },
-	{ 32, 32, draw_stairs_down, NULL },
-	{ 16, 8, draw_desk, NULL },
-	{ 8, 16, draw_soldier, move_soldier },
-	{ 16, 8, draw_chest, NULL },
-	{ 16, 8, draw_corpse, NULL, },
-	{ 16, 16, draw_safe, NULL, },
-	{ 20, 20, draw_munitions, NULL, },
+	{ draw_stairs_up, NULL, 32, 32 },
+	{ draw_stairs_down, NULL, 32, 32 },
+	{ draw_desk, NULL, 16, 8 },
+	{ draw_soldier, move_soldier, 8, 16 },
+	{ draw_chest, NULL, 16, 8 },
+	{ draw_corpse, NULL, 16, 8 },
+	{ draw_safe, NULL, 16, 16 },
+	{ draw_munitions, NULL, 20, 20 },
 };
-
 
 static void init_flames(void)
 {
@@ -4082,8 +4081,8 @@ static void draw_screen(void)
 struct soldier_eyeline_data {
 	struct player *p;
 	struct gulag_object *s;
-	char seen;
 	int target_x, target_y;
+	char seen;
 };
 
 static int soldier_eyeline(int x, int y, void *cookie)
