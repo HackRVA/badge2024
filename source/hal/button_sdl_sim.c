@@ -366,7 +366,7 @@ int key_release_cb(SDL_Keysym *keysym)
             if (quit_confirm_active)
                 time_to_quit = 1;
             else
-                button = BADGE_BUTTON_ENCODER_SW;
+                button = BADGE_BUTTON_A;
             break;
         case SDLK_q:
         case SDLK_ESCAPE:
@@ -376,13 +376,13 @@ int key_release_cb(SDL_Keysym *keysym)
 		control_key_pressed = 0;
 	break;
         case SDLK_b:
-            button = BADGE_BUTTON_ENCODER_2_SW;
+            button = BADGE_BUTTON_B;
         break;
         case SDLK_n:
-            button = BADGE_BUTTON_ENCODER_B;
+            button = BADGE_BUTTON_ENCODER_SW;
         break;
         case SDLK_v:
-            button = BADGE_BUTTON_ENCODER_A;
+            button = BADGE_BUTTON_ENCODER_2_SW;
         break;
         default:
             break;
