@@ -66,6 +66,8 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
             ${CMAKE_CURRENT_LIST_DIR}/sim_lcd_params.c
             ${CMAKE_CURRENT_LIST_DIR}/uid_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/png_utils.c
+            ${CMAKE_CURRENT_LIST_DIR}/vec3.c
+            ${CMAKE_CURRENT_LIST_DIR}/quat.c
             )
 
     cmake_policy(SET CMP0079 NEW)
@@ -83,6 +85,7 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
 
     find_package(Threads REQUIRED)
     target_link_libraries(${PRODUCT} Threads::Threads)
+    target_link_libraries(${PRODUCT} m)
 endif()
 
 target_include_directories(${PRODUCT} PUBLIC .)

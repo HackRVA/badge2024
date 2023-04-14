@@ -21,8 +21,10 @@
 #include "sim_lcd_params.h"
 #include "png_utils.h"
 #include "trig.h"
+#include "quat.h"
 
 #define UNUSED __attribute__((unused))
+#define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 static int sim_argc;
 static char** sim_argv;
@@ -382,6 +384,139 @@ static void maybe_draw_quit_confirmation(void)
 	SDL_RenderCopy(renderer, quit_confirm_image, NULL, &(SDL_Rect) { x1, y1, quit_confirm_width, quit_confirm_height });
 }
 
+static union quat badge_orientation = IDENTITY_QUAT_INITIALIZER;
+static union vec3 gravity_vector = { { 0.0f, 0.0f, 1.0f } };
+
+static union vec3 badge_orientation_points[] = {
+	{ { -100.0f, -50.0f, 0.0f } },
+	{ { 100.0f, -50.0f, 0.0f } },
+	{ { 100.0f, 50.0f, 0.0f } },
+	{ { -100.0f, 50.0f, 0.0f } },
+	{ { -100.0f, -50.0f, 0.0f } },
+
+	{ { -1, -1, -1 } },
+
+	{ { -50.0f, -40.0f, 0.0f } },
+	{ { 50.0f, -40.0f, 0.0f } },
+	{ { 50.0f, 45.0f, 0.0f } },
+	{ { -50.0f, 45.0f, 0.0f } },
+	{ { -50.0f, -40.0f, 0.0f } },
+
+	{ { -1, -1, -1 } },
+
+	{ { -90, -45, 0 } },
+	{ { -80, -45, 0 } },
+	{ { -80, -35, 0 } },
+	{ { -90, -35, 0 } },
+	{ { -90, -45, 0 } },
+
+	{ { -1, -1, -1 } },
+
+	{ { 90, -45, 0 } },
+	{ { 80, -45, 0 } },
+	{ { 80, -35, 0 } },
+	{ { 90, -35, 0 } },
+	{ { 90, -45, 0 } },
+
+	{ { -1, -1, -1 } },
+
+	{ { 60, 35, 0} },
+	{ { 70, 35, 0} },
+	{ { 70, 45, 0} },
+	{ { 60, 45, 0} },
+	{ { 60, 35, 0} },
+
+	{ { -1, -1, -1 } },
+
+	{ { 80, 25, 0} },
+	{ { 90, 25, 0} },
+	{ { 90, 35, 0} },
+	{ { 80, 35, 0} },
+	{ { 80, 25, 0} },
+
+	{ { -1, -1, -1 } },
+
+	{ { -80, 20, 0 } },
+	{ { -80, 45, 0 } },
+
+	{ { -1, -1, -1 } },
+
+	{ { -90, 33, 0 } },
+	{ { -70, 33, 0 } },
+};
+
+static union vec3 orientation_indicator_position = { { 0.0f, 0.0f, 100.0f } };
+
+static void draw_badge_orientation_indicator(SDL_Renderer *renderer, float x, float y, float scale, union vec3 *badge_position, union quat *orientation)
+{
+	const int n = ARRAYSIZE(badge_orientation_points);
+	const float camera_z = 100.0f;
+	union vec3 indicator[ARRAYSIZE(badge_orientation_points)];
+
+	/* Start with the original 3D orientation indicator coordinates */
+	memcpy(indicator, badge_orientation_points, sizeof(indicator));
+
+	/* Rotate the badge into its current 3D orientation */
+	for (int i = 0; i < n; i++)
+		quat_rot_vec_self(&indicator[i], orientation);
+
+	/* Translate the badge into its current 3D position */
+	for (int i = 0; i < n; i++) {
+		indicator[i].v.x += badge_position->v.x;
+		indicator[i].v.y += badge_position->v.y;
+		indicator[i].v.z += badge_position->v.z;
+	}
+
+	/* Do perspective transformation */
+	for (int i = 0; i < n; i++) {
+		indicator[i].v.x = (camera_z * indicator[i].v.x) / (camera_z + indicator[i].v.z);
+		indicator[i].v.y = (camera_z * indicator[i].v.y) / (camera_z + indicator[i].v.z);
+	}
+
+	/* translate and scale projected (x,y) coords */
+	for (int i = 0; i < n; i++) {
+		indicator[i].v.x = (scale * indicator[i].v.x) + x;
+		indicator[i].v.y = (scale * indicator[i].v.y) + y;
+	}
+
+	/* Check if we are seeing the front or the back side of the indicator */
+	union vec3 badge_normal = { { 0.0f, 0.0f, -1.0f } };
+	union vec3 to_camera = { { 0.0f, 0.0f, -1.0f } };
+	quat_rot_vec_self(&badge_normal, orientation);
+	float dot = vec3_dot(&badge_normal, &to_camera);
+
+	/* Compute the new gravity vector */
+	union quat inverse_rotation;
+	gravity_vector.v.x = 0.0f;
+	gravity_vector.v.y = 0.0f;
+	gravity_vector.v.z = 1.0f;
+	quat_inverse(&inverse_rotation, orientation);
+	quat_rot_vec_self(&gravity_vector, &inverse_rotation);
+
+	/* Draw the orientation indicator */
+	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
+	SDL_RenderFillRect(renderer, &(SDL_Rect) { 25, 25, 150, 150} );
+
+	if (dot >= 0) /* we see front of badge, blue */
+		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xff, 0xff);
+	else /* we see back of badge, red */
+		SDL_SetRenderDrawColor(renderer, 0xff, 0x00, 0x00, 0xff);
+	union vec3 *prev = &indicator[0];
+	for (int i = 1; i < n; i++) {
+		if (fabsf(badge_orientation_points[i].v.z - -1.0f) < 0.001) {
+			prev = &indicator[i + 1];
+			i++;
+			continue;
+		}
+		float x1 = prev->v.x;
+		float y1 = prev->v.y;
+		float x2 = indicator[i].v.x;
+		float y2 = indicator[i].v.y;
+		SDL_RenderDrawLine(renderer, x1, y1, x2, y2);
+		prev = &indicator[i];
+	}
+}
+
 static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture *landscape_texture)
 {
     extern uint8_t display_array[LCD_YSIZE][LCD_XSIZE][3];
@@ -461,6 +596,9 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
     SDL_RenderDrawLine(renderer, slp.xoffset + slp.width + 1, slp.yoffset - 1, slp.xoffset + slp.width + 1, slp.yoffset + slp.height + 1); /* right */
 
     draw_flare_led(&slp);
+
+    draw_badge_orientation_indicator(renderer, 100.0f, 100.0f, 1.0f,
+		&orientation_indicator_position, &badge_orientation);
 
     maybe_draw_quit_confirmation();
 
@@ -635,6 +773,30 @@ static void process_events(SDL_Window *window)
             mouse_button_up_cb(&event.button);
             break;
         case SDL_MOUSEMOTION:
+            if (!event.motion.state) /* button held? */
+                break;
+            /* Check if motion is inside orientation indicator */
+            if (event.motion.x < 25)
+                break;
+            if (event.motion.x > 150)
+                break;
+            if (event.motion.y < 25)
+                break;
+            if (event.motion.y > 150)
+                break;
+            /* We have mouse motion with button held, inside the orientation indicator... */
+	    union vec3 u, v;
+            u.v.x = 0.0f;
+            u.v.y = 0.0f;
+            u.v.z = -25.0f;
+            v.v.x = event.motion.xrel;
+            v.v.y = event.motion.yrel;
+            v.v.z = -25.0f;
+	    union quat q, new_orientation;
+            quat_from_u2v(&q, &u, &v);
+	    quat_mul(&new_orientation, &q, &badge_orientation);
+            quat_normalize_self(&new_orientation);
+            badge_orientation = new_orientation;
             break;
         case SDL_MOUSEWHEEL:
             slp = get_sim_lcd_params();
