@@ -3605,7 +3605,7 @@ static void check_buttons()
 			player.bullets--;
 		}
 	}
-        if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_B, down_latches)) {
+        if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		if (player.grenades > 0) {
 			throw_grenade(&player);
 			firing_timer = 10;
@@ -3614,7 +3614,7 @@ static void check_buttons()
 			player.grenades--;
 		}
 	}
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_A, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		gulag_state = GULAG_MAYBE_EXIT;
         }
 	if (button_poll(BADGE_BUTTON_LEFT)) {
@@ -4722,7 +4722,8 @@ static void gulag_maybe_exit()
 	int down_latches = button_down_latches();
 	int rotary_switch = button_get_rotation(0);
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		gulag_state = quit_menu.item[quit_menu.current_item].next_state;
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0)
 		dynmenu_change_current_selection(&quit_menu, 1);
