@@ -31,8 +31,8 @@ enum acceleration_direction {
 union acceleration {
     mG_t a[3];
     struct {
-        mG_t x;  /** Positive X on the badge faces up towards the battery */
-        mG_t y;  /** Positive Y on the badge faces left towards the audio jack */
+        mG_t x;  /** Positive X on the badge faces down towards the USB port */
+        mG_t y;  /** Positive Y on the badge faces right towards the hole */
         mG_t z;  /** Positive Z on the badge faces out towards the user */
     };
 };

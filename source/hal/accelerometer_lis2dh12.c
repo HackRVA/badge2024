@@ -1,5 +1,5 @@
 /**
- *  @file   accelerometer_rp2040.c
+ *  @file   accelerometer_lis2dh12.c
  *  @author Peter Maxwell Warasila
  *  @date   April 13, 2023
  *
