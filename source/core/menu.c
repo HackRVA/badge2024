@@ -280,7 +280,8 @@ void menus() {
     int down_latches = button_down_latches();
     int rotary = button_get_rotation(0);
     /* see if physical button has been clicked */
-    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
         // action happened that will result in menu redraw
         // do_animation = 1;
         switch (G_selectedMenu->type) {
@@ -394,7 +395,8 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
         return;
     }
 
-    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
         switch (L_selectedMenu->type) {
             case MORE: /* jump to next page of menu */
                 audio_out_beep(1000, NOTEDUR); /* a */
@@ -608,7 +610,8 @@ void rvasec_splash_cb(){
     // Sam: had some buzzer code here prior
     int down_latches = button_down_latches();
 
-    if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)){
+    if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+       BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)){
         returnToMenus();
     }
 }
