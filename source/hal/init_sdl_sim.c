@@ -785,13 +785,20 @@ static void process_events(SDL_Window *window)
             if (event.motion.y > 150)
                 break;
             /* We have mouse motion with button held, inside the orientation indicator... */
+            float vector_len;
+            if (event.motion.state & SDL_BUTTON_RMASK)
+                vector_len = 150.0f; /* fine control */
+            else if (event.motion.state & SDL_BUTTON_MMASK)
+                vector_len = 75.0f; /* medium control */
+            else
+                vector_len = 25.0f; /* coarse control */
 	    union vec3 u, v;
             u.v.x = 0.0f;
             u.v.y = 0.0f;
-            u.v.z = -25.0f;
+            u.v.z = -vector_len;
             v.v.x = event.motion.xrel;
             v.v.y = event.motion.yrel;
-            v.v.z = -25.0f;
+            v.v.z = -vector_len;
 	    union quat q, new_orientation;
             quat_from_u2v(&q, &u, &v);
 	    quat_mul(&new_orientation, &q, &badge_orientation);
