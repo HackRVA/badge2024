@@ -14,10 +14,11 @@ if (${TARGET} STREQUAL "PICO")
             ${CMAKE_CURRENT_LIST_DIR}/uid_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/display_st7735s_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/driver-ST7735S/source/st7735s.c
+            ${CMAKE_CURRENT_LIST_DIR}/accelerometer_lis2dh12.c
             )
 
     target_include_directories(${PRODUCT} PUBLIC ./driver-ST7735S/source)
-    
+
     add_subdirectory(ir_library)
 endif()
 
@@ -77,7 +78,7 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
     target_link_libraries(${PRODUCT} ${SDL2_LIBRARIES})
     # Add other flags to the compiler
     target_compile_definitions(${PRODUCT} PRIVATE ${SDL2_CFLAGS_OTHER})
-    
+
     find_package(PNG REQUIRED)
     target_include_directories(${PRODUCT} PRIVATE ${PNG_INCLUDE_DIRS})
     target_link_libraries(${PRODUCT} ${PNG_LIBRARIES})

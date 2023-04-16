@@ -9,6 +9,7 @@
 #include "audio.h"
 #include "led_pwm.h"
 #include "delay.h"
+#include <accelerometer.h>
 
 #include <utils.h>
 
@@ -105,6 +106,18 @@ static const struct qc_button QC_BTN[] = {
     {BADGE_BUTTON_ENCODER_2_A, "ENC 2", 666, check_encoder},
 };
 
+static bool qc_accel()
+{
+    union acceleration a = accelerometer_last_sample();
+
+    char msg[64] = {0};
+    snprintf(msg, sizeof(msg), "whoami:0x%02x\nx:%d\ny:%d\nz:%d\n",
+             accelerometer_whoami(), a.x, a.y, a.z);
+    FbWriteString(msg);
+
+    return true;
+}
+
 void QC_cb()
 {
     //static unsigned char call_count = 0;
@@ -155,6 +168,11 @@ void QC_cb()
                 return;
             }
 
+            if (qc_accel())
+            {
+                redraw = 1;
+            }
+
             if (check_buttons(QC_BTN, ARRAY_SIZE(QC_BTN)))
             {
                 redraw = 1;
@@ -177,7 +195,6 @@ void QC_cb()
             // Received a QC ping
             if(QC_IR == 1){
                 audio_out_beep(698 * 2, 400);
-                FbMove(10, 40);
                 FbColor(GREEN);
                 FbWriteString("Pinged!\n");
                 QC_IR = 0;

@@ -16,6 +16,7 @@
 #include "ir.h"
 #include "rtc.h"
 #include "audio.h"
+#include "accelerometer.h"
 
 #include <framebuffer.h>
 #include <colors.h>
@@ -94,6 +95,7 @@ static void _init_gpios(void) {
     led_pwm_init_gpio();
     button_init_gpio();
     audio_init_gpio();
+    accelerometer_init_gpio();
 }
 
 void hal_init(void) {
@@ -105,6 +107,7 @@ void hal_init(void) {
     display_reset();
     rtc_init_badge(0);
     audio_init();
+    accelerometer_init();
 
     exception_set_exclusive_handler(HARDFAULT_EXCEPTION, hard_fault_handler);
 
