@@ -210,9 +210,11 @@ int mouse_scroll_cb(SDL_MouseWheelEvent *event, struct button_coord_list *bcl)
 	if (mouse_close_enough(x, y, &bcl->left_rotary)) {
 		rotary_angle_delta(1, amount);
 		rotation_count[1] += amount;
+		last_change = rtc_get_ms_since_boot();
 	} else if (mouse_close_enough(x, y, &bcl->right_rotary)) {
 		rotary_angle_delta(0, amount);
 		rotation_count[0] += amount;
+		last_change = rtc_get_ms_since_boot();
 	}
 	return 1;
 }
