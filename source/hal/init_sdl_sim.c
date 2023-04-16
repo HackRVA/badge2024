@@ -447,6 +447,9 @@ static union vec3 badge_orientation_points[] = {
 
 static union vec3 orientation_indicator_position = { { 0.0f, 0.0f, 100.0f } };
 
+/* From accelerometer_sim.c */
+extern void set_simulated_accelerometer_values(float x, float y, float z);
+
 static void draw_badge_orientation_indicator(SDL_Renderer *renderer, float x, float y, float scale, union vec3 *badge_position, union quat *orientation)
 {
 	const int n = ARRAYSIZE(badge_orientation_points);
@@ -489,9 +492,10 @@ static void draw_badge_orientation_indicator(SDL_Renderer *renderer, float x, fl
 	union quat inverse_rotation;
 	gravity_vector.v.x = 0.0f;
 	gravity_vector.v.y = 0.0f;
-	gravity_vector.v.z = 1.0f;
+	gravity_vector.v.z = -1.0f;
 	quat_inverse(&inverse_rotation, orientation);
 	quat_rot_vec_self(&gravity_vector, &inverse_rotation);
+	set_simulated_accelerometer_values(gravity_vector.v.x, gravity_vector.v.y, -gravity_vector.v.z);
 
 	/* Draw the orientation indicator */
 	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);

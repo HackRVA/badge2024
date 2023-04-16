@@ -1,6 +1,25 @@
 #include <stdint.h>
 #include <accelerometer.h>
 
+static union acceleration a = {0};
+
+static int convert_to_accel_value(float gees)
+{
+	if (gees > 2.0)
+		gees = 2.0;
+	if (gees < -2.0)
+		gees = -2.0;
+
+	return 1000.0f * gees;
+}
+
+void set_simulated_accelerometer_values(float x, float y, float z)
+{
+	a.x = convert_to_accel_value(x);
+	a.y = convert_to_accel_value(y);
+	a.z = convert_to_accel_value(z);
+}
+
 void accelerometer_init_gpio()
 {
     return;
@@ -18,6 +37,5 @@ uint8_t accelerometer_whoami()
 
 union acceleration accelerometer_last_sample()
 {
-    union acceleration a = {0};
     return a;
 }
