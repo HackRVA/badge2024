@@ -775,7 +775,8 @@ static void slot_machine_bet()
 	{
 		/* TODO implement pay scale screen */
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+                 BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 	{
 		pull_handle();
 		render();
