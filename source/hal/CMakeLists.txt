@@ -69,6 +69,7 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
             ${CMAKE_CURRENT_LIST_DIR}/png_utils.c
             ${CMAKE_CURRENT_LIST_DIR}/vec3.c
             ${CMAKE_CURRENT_LIST_DIR}/quat.c
+            ${CMAKE_CURRENT_LIST_DIR}/accelerometer_sim.c
             )
 
     cmake_policy(SET CMP0079 NEW)
