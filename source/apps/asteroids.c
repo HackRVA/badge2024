@@ -149,6 +149,7 @@ static void remove_asteroid(int n)
 static void add_initial_asteroids(void)
 {
 	int x, y, vx, vy, form;
+	nasteroids = 0;
 	for (int i = 0; i < NUM_INITIAL_ASTEROIDS; i++) {
 		form = random_num(NUM_ASTEROID_FORMS);
 		x = random_num(LCD_XSIZE);
