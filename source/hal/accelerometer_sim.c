@@ -13,12 +13,14 @@ static int convert_to_accel_value(float gees)
 	return 1000.0f * gees;
 }
 
+#if TARGET_SIMULATOR
 void set_simulated_accelerometer_values(float x, float y, float z)
 {
 	a.x = convert_to_accel_value(x);
 	a.y = convert_to_accel_value(y);
 	a.z = convert_to_accel_value(z);
 }
+#endif
 
 void accelerometer_init_gpio()
 {

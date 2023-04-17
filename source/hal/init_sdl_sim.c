@@ -22,6 +22,7 @@
 #include "png_utils.h"
 #include "trig.h"
 #include "quat.h"
+#include "accelerometer.h"
 
 #define UNUSED __attribute__((unused))
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -446,9 +447,6 @@ static union vec3 badge_orientation_points[] = {
 };
 
 static union vec3 orientation_indicator_position = { { 0.0f, 0.0f, 100.0f } };
-
-/* From accelerometer_sim.c */
-extern void set_simulated_accelerometer_values(float x, float y, float z);
 
 static void draw_badge_orientation_indicator(SDL_Renderer *renderer, float x, float y, float scale, union vec3 *badge_position, union quat *orientation)
 {

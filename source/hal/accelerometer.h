@@ -56,4 +56,9 @@ void accelerometer_init();
 uint8_t accelerometer_whoami();
 union acceleration accelerometer_last_sample();
 
+#if TARGET_SIMULATOR
+void set_simulated_accelerometer_values(float x, float y, float z);
+#endif
+
+
 #endif /* BADGE_C_ACCELEROMTER_H */
