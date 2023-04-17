@@ -125,7 +125,7 @@ static void init_player(struct ship *player)
 	player->angle = 0;
 }
 
-static void add_asteroid(int x, int y, int vx, int vy, int form, int radius)
+static void add_asteroid(int x, int y, int vx, int vy, int radius)
 {
 	if (nasteroids >= MAXASTEROIDS)
 		return;
@@ -134,7 +134,7 @@ static void add_asteroid(int x, int y, int vx, int vy, int form, int radius)
 	a->p.y = y;
 	a->p.vx = vx;
 	a->p.vy = vy;
-	a->form = form;
+	a->form = nasteroids % NUM_ASTEROID_FORMS;
 	a->radius = radius;
 	nasteroids++;
 }
@@ -148,15 +148,14 @@ static void remove_asteroid(int n)
 
 static void add_initial_asteroids(void)
 {
-	int x, y, vx, vy, form;
+	int x, y, vx, vy;
 	nasteroids = 0;
 	for (int i = 0; i < NUM_INITIAL_ASTEROIDS; i++) {
-		form = random_num(NUM_ASTEROID_FORMS);
 		x = random_num(LCD_XSIZE);
 		y = random_num(LCD_YSIZE);
 		vx = random_num(1 << 8) - (1 << 7);
 		vy = random_num(1 << 8) - (1 << 7);
-		add_asteroid(x, y, vx, vy, form, 1 << 8);
+		add_asteroid(x, y, vx, vy, 1 << 8);
 	}
 }
 
@@ -387,12 +386,10 @@ static void check_bullet_asteroid_collision(struct bullet *b)
 			if (r > min_asteroid_radius) {
 				int vx = random_num(1 << 8) - (1 << 7);
 				int vy = random_num(1 << 8) - (1 << 7);
-				int form = random_num(NUM_ASTEROID_FORMS);
-				add_asteroid(a->p.x, a->p.y, vx, vy, form, r);
+				add_asteroid(a->p.x, a->p.y, vx, vy, r);
 				vx = random_num(1 << 8) - (1 << 7);
 				vy = random_num(1 << 8) - (1 << 7);
-				form = random_num(NUM_ASTEROID_FORMS);
-				add_asteroid(a->p.x, a->p.y, vx, vy, form, r);
+				add_asteroid(a->p.x, a->p.y, vx, vy, r);
 			}
 			remove_asteroid(i);
 			add_sparks(b->p.x, b->p.y, 2 << 8, 8);
