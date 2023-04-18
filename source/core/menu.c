@@ -130,11 +130,11 @@ struct menu_t *display_menu(struct menu_t *menu,
 
             FbColor(GREEN);
             FbMove(2,5);
-            FbRectangle(123, 120);
+            FbRectangle(LCD_XSIZE - 5, LCD_YSIZE - 8);
 
             FbColor(CYAN);
             FbMove(1,4);
-            FbRectangle(125, 122);
+            FbRectangle(LCD_XSIZE - 3, LCD_YSIZE - 6);
             break;
 
         case WHITE_ON_BLACK:
