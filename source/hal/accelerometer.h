@@ -41,7 +41,7 @@ static inline mG_t acceleration_magnitude(union acceleration a)
 {
     mG_t sum = 0;
     for (size_t i = 0; i < ARRAY_SIZE(a.a); i++) {
-        sum += a.a[i];
+        sum += (a.a[i] * a.a[i]);
     }
 
 #ifdef ACCELEROMETER_FLOATING_POINT
