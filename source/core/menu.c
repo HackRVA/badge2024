@@ -31,6 +31,7 @@
 #include "slot_machine.h"
 #include "gulag.h"
 #include "asteroids.h"
+#include "etch-a-sketch.h"
 
 /* TODO: remove this warning once we get new 134x162 display hardware working. */
 #if (LCD_XSIZE == 132 && LCD_YSIZE == 132)
@@ -484,6 +485,7 @@ const struct menu_t games_m[] = {
    {"Smashout",      VERT_ITEM, FUNCTION, {(struct menu_t *)smashout_cb} },
    {"Hacking Sim",   VERT_ITEM, FUNCTION, {(struct menu_t *)hacking_simulator_cb} },
    {"Asteroids", VERT_ITEM, FUNCTION, {(struct menu_t *)asteroids_cb} },
+   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, {(struct menu_t *)etch_a_sketch_cb} },
    {"Game of Life", VERT_ITEM, FUNCTION, {(struct menu_t *)game_of_life_cb} },
    {"Slot Machine", VERT_ITEM, FUNCTION, {(struct menu_t *)slot_machine_cb}},
    {"Goodbye Gulag", VERT_ITEM, FUNCTION, {(struct menu_t *)gulag_cb}},
