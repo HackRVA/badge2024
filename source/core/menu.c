@@ -19,6 +19,7 @@
 #include "about_badge.h"
 #include "badge_monsters.h"
 #include "blinkenlights.h"
+#include "clue.h"
 #include "conductor.h"
 #include "cube.h"
 #include "game_of_life.h"
@@ -489,6 +490,7 @@ const struct menu_t games_m[] = {
    {"Game of Life", VERT_ITEM, FUNCTION, {(struct menu_t *)game_of_life_cb} },
    {"Slot Machine", VERT_ITEM, FUNCTION, {(struct menu_t *)slot_machine_cb}},
    {"Goodbye Gulag", VERT_ITEM, FUNCTION, {(struct menu_t *)gulag_cb}},
+   {"Clue", VERT_ITEM, FUNCTION, {(struct menu_t *)clue_cb}},
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 
