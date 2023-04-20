@@ -263,11 +263,14 @@ static void add_sparks(int x, int y, int v, int n)
 
 static void check_buttons()
 {
-    int down_latches = button_down_latches();
+	int rotation = button_get_rotation(0);
+	int down_latches = button_down_latches();
 	if (game_over_counter || player_dead_counter)
 		return;
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		asteroids_state = ASTEROIDS_EXIT;
+	} else if (rotation) {
+		turn(&player, rotation);	
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		turn(&player, -player_rotation_speed);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
