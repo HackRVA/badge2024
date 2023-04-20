@@ -470,7 +470,7 @@ static void clue_evidence(void)
 		for (int i = 0; i < NCARDS; i++) {
 			if (evidence.from_who[i] != 255) {
 				nc++;
-				if (new_evidence == i) {
+				if (current_deck.card[new_evidence] == i) {
 					n = nc - 1;
 					ni = i;
 					new_evidence = -1;
@@ -790,7 +790,7 @@ static void clue_process_packet(IR_DATA* packet)
 		if (rs != clue_random_seed) {
 			printf("Got answer, but seed value is incorrect.\n");
 		}
-		which_card = payload & 0x1f;
+		which_card = payload & 0x1f; /* index into current_deck */
 		if (which_card == 0x1f) {
 			printf("Suspect doesn't know anything.\n");
 		} else {
@@ -798,7 +798,7 @@ static void clue_process_packet(IR_DATA* packet)
 			if (from_who < 0 || from_who > 5) {
 				printf("Bad answer, suspect is out of range\n");
 			} else {
-				new_evidence = which_card;
+				new_evidence = current_deck.card[which_card];
 				evidence.from_who[new_evidence] = from_who;
 				clue_state = CLUE_EVIDENCE;
 			}
