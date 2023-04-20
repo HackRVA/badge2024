@@ -166,8 +166,8 @@ static void deal_cards(unsigned int seed, struct deck *d)
 
 	/* Set up the crime */
 	murderer = random_num(NSUSPECTS);
-	murder_location = random_num(NLOCATIONS);
-	murder_weapon = random_num(NWEAPONS);
+	murder_location = random_num(NLOCATIONS) + NSUSPECTS;
+	murder_weapon = random_num(NWEAPONS) + NSUSPECTS + NLOCATIONS;
 
 	d->held_by[murderer] = 255;
 	d->held_by[murder_location] = 255;
@@ -722,8 +722,8 @@ static void clue_transmit_question(void)
 
 	question_packet = (uint64_t) clue_random_seed << 32;		/* 32 bits */
 	question_packet |= (question.person & 0x7);			/* 3 bits */
-	question_packet |= ((question.location & 0x0f) << 3);		/* 4 bits */
-	question_packet |= ((question.weapon & 0x07) << 7);		/* 3 bits */
+	question_packet |= (((question.location - NSUSPECTS) & 0x0f) << 3);	/* 4 bits */
+	question_packet |= (((question.weapon - NSUSPECTS - NLOCATIONS) & 0x07) << 7);		/* 3 bits */
 	question_packet |= ((CLUE_QUESTION_OPCODE & 0x3) << 10);	/* 2 bits */
 
 	counter++;
@@ -770,8 +770,8 @@ static void clue_process_packet(IR_DATA* packet)
 	if (opcode == CLUE_QUESTION_OPCODE) {
 		question_random_seed = (unsigned int) ((payload >> 32) & 0xffffffffllu);
 		remote_question.person = (payload & 0x7);
-		remote_question.location = (payload >> 3) & 0x0f;
-		remote_question.weapon = (payload >> 7) & 0x7;
+		remote_question.location = ((payload >> 3) & 0x0f) + NSUSPECTS;
+		remote_question.weapon = ((payload >> 7) & 0x7) + NSUSPECTS + NLOCATIONS;
 #if TARGET_SIMULATOR
 		if (remote_question.person < 0 || remote_question.person > 5)
 			printf("Bad question received, person = %d\n", remote_question.person);
