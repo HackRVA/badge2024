@@ -83,5 +83,9 @@ uint8_t ir_send_partial_message(const IR_DATA *data, uint8_t starting_sequence_n
 bool ir_messages_seen(bool reset);
 int ir_message_count(void);
 
+#if TARGET_SIMULATOR
+void disable_interrupts(void);
+void enable_interrupts(void);
+#endif
 
 #endif //BADGE_C_IR_H

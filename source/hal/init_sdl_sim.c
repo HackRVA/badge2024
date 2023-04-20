@@ -118,13 +118,15 @@ void hal_reboot(void) {
     exit(0);
 }
 
-uint32_t hal_disable_interrupts(void) {
-    printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
-    return 0;
+uint32_t hal_disable_interrupts(void)
+{
+	disable_interrupts();
+	return 0;
 }
 
-void hal_restore_interrupts(__attribute__((unused)) uint32_t state) {
-    printf("stub fn: %s in %s\n", __FUNCTION__, __FILE__);
+void hal_restore_interrupts(__attribute__((unused)) uint32_t state)
+{
+	enable_interrupts();
 }
 
 static char *badge_image_pixels, *landscape_badge_image_pixels, *badge_background_pixels;

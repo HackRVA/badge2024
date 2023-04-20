@@ -85,6 +85,7 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR")
     target_link_libraries(${PRODUCT} ${PNG_LIBRARIES})
     target_compile_definitions(${PRODUCT} PRIVATE ${PNG_CFLAGS_OTHER})
 
+    set(THREADS_PREFER_PTHREAD_FLAG ON)
     find_package(Threads REQUIRED)
     target_link_libraries(${PRODUCT} Threads::Threads)
     target_link_libraries(${PRODUCT} m)
