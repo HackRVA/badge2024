@@ -8,6 +8,9 @@
 #include <string.h>
 #include <pthread.h>
 #include <SDL.h>
+#include <unistd.h>
+#include <getopt.h>
+
 #include "framebuffer.h"
 #include "display.h"
 #include "led_pwm.h"
@@ -23,6 +26,7 @@
 #include "trig.h"
 #include "quat.h"
 #include "accelerometer.h"
+#include "uid.h"
 
 #define UNUSED __attribute__((unused))
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -51,6 +55,45 @@ void *main_in_thread(void* params) {
     return NULL;
 }
 
+static struct option long_options[] = {
+	{ "badge-id", required_argument, NULL, 'i' },
+	{ NULL, 0, 0, 0 },
+};
+
+static void usage(void)
+{
+	fprintf(stderr, "usage: badge [--badge-id 0x1234567812345678 ]\n");
+	exit(1);
+}
+
+static void process_options(int argc, char **argv)
+{
+	int c, rc;
+	uint64_t badge_id;
+
+	while (1) {
+		int option_index;
+		c = getopt_long(argc, argv, "i:", long_options, &option_index);
+		if (c == -1)
+			break;
+		switch (c) {
+		case 'i':
+			rc = sscanf(optarg, "%lx", &badge_id);
+			if (rc != 1) {
+				fprintf(stderr, "Failed to parse badge ID '%s', using default\n", optarg);
+			} else {
+				fprintf(stderr, "Using custom badge ID: 0x%016lx\n", badge_id);
+				set_custom_badge_id(badge_id);
+			}
+			break;
+		default:
+			usage();
+			__builtin_unreachable();
+			break;
+		}
+	}
+}
+
 int hal_run_main(int (*main_func)(int, char**), int argc, char** argv) {
 
     sim_argc = argc;
@@ -59,7 +102,7 @@ int hal_run_main(int (*main_func)(int, char**), int argc, char** argv) {
     pthread_t app_thread;
     pthread_create(&app_thread, NULL, main_in_thread, main_func);
 
-    // Should not return until GTK exits.
+    process_options(argc, argv);
     hal_start_sdl(&argc, &argv);
 
     return 0;

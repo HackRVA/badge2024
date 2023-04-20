@@ -15,7 +15,14 @@
 #define BADGE_ID_SIM (123456789ull)
 #endif
 
+static uint64_t badge_id = BADGE_ID_SIM;
+
 uint64_t uid_get()
 {
-    return BADGE_ID_SIM;
+    return badge_id;
+}
+
+void set_custom_badge_id(uint64_t id)
+{
+	badge_id = id;
 }

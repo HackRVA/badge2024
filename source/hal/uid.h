@@ -15,3 +15,9 @@
  *  @return 64-bit unique ID from flash.
  */
 uint64_t uid_get();
+
+#if TARGET_SIMULATOR
+
+void set_custom_badge_id(uint64_t id);
+
+#endif
