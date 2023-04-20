@@ -2,30 +2,30 @@
 #include "button_coords.h"
 
 /* "Landscape" and "Portrait" here refer to the LCD screen, not the badge as a whole */
-#define PORTRAITXY(x, y) { ((float) (x) / 1024.0f), ((float) (y) / 696.0f) }
-#define LANDSCAPEXY(x, y) { ((float) (x) / 696.0f), ((float) (y) / 1024.0f) }
+#define PORTRAITXY(x, y) { ((float) (x) / 1024.0f), ((float) (y) / 722.0f) }
+#define LANDSCAPEXY(x, y) { ((float) (x) / 722.0f), ((float) (y) / 1024.0f) }
 static const struct button_coord_list portrait_button_coords = {
-	.a_button = PORTRAITXY(830, 584),
-	.b_button = PORTRAITXY(925, 525),
-	.left_rotary = PORTRAITXY(132, 90),
-	.right_rotary = PORTRAITXY(870, 87),
-	.dpad_up = PORTRAITXY(140, 460),
-	.dpad_down = PORTRAITXY(140, 650),
-	.dpad_left = PORTRAITXY(45, 555),
-	.dpad_right = PORTRAITXY(235, 555),
-	.led = PORTRAITXY(809, 331),
+	.a_button = PORTRAITXY(811, 658),
+	.b_button = PORTRAITXY(956, 607),
+	.left_rotary = PORTRAITXY(112, 96),
+	.right_rotary = PORTRAITXY(960, 88),
+	.dpad_up = PORTRAITXY(142, 510),
+	.dpad_down = PORTRAITXY(146, 666),
+	.dpad_left = PORTRAITXY(59, 588),
+	.dpad_right = PORTRAITXY(230, 588),
+	.led = PORTRAITXY(867, 250),
 };
 
 static const struct button_coord_list landscape_button_coords = {
-	.a_button = LANDSCAPEXY(630, 176),
-	.b_button = LANDSCAPEXY(565, 70),
-	.left_rotary = LANDSCAPEXY(89, 940),
-	.right_rotary = LANDSCAPEXY(86, 130),
-	.dpad_right = LANDSCAPEXY(600, 830),
-	.dpad_left = LANDSCAPEXY(600, 1030),
-	.dpad_up = LANDSCAPEXY(500, 930),
-	.dpad_down = LANDSCAPEXY(700, 930),
-	.led = LANDSCAPEXY(360, 200),
+	.a_button = LANDSCAPEXY(659, 213),
+	.b_button = LANDSCAPEXY(608, 67),
+	.left_rotary = LANDSCAPEXY(91, 912),
+	.right_rotary = LANDSCAPEXY(84, 64),
+	.dpad_right = LANDSCAPEXY(582, 789),
+	.dpad_left = LANDSCAPEXY(590, 969),
+	.dpad_up = LANDSCAPEXY(493, 875),
+	.dpad_down = LANDSCAPEXY(874, 882),
+	.led = LANDSCAPEXY(245, 148),
 };
 
 static struct button_coord_list current_button_coords;
