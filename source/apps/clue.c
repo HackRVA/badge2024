@@ -23,7 +23,7 @@
 
 #ifdef TARGET_PICO
 /* printf?  What printf? */
-#define printf(...)
+#define printf(...) { }
 #endif
 
 /* These need to be protected from interrupts. */
@@ -766,12 +766,14 @@ static void clue_process_packet(IR_DATA* packet)
 		remote_question.person = (payload & 0x7);
 		remote_question.location = (payload >> 3) & 0x0f;
 		remote_question.weapon = (payload >> 7) & 0x7;
+#if TARGET_SIMULATOR
 		if (remote_question.person < 0 || remote_question.person > 5)
 			printf("Bad question received, person = %d\n", remote_question.person);
 		if (remote_question.location < 6 || remote_question.location > 6 + 9 - 1)
 			printf("Bad question received, location = %d\n", remote_question.location);
 		if (remote_question.weapon < 6 + 9 || remote_question.weapon > 20)
 			printf("Bad question received, weapon = %d\n", remote_question.weapon);
+#endif
 		clue_state = CLUE_ANSWER;
 	}
 
