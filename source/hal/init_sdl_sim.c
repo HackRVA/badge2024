@@ -755,7 +755,7 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
         fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
         exit(1);
     }
-    SDL_SetWindowSize(*window, 1000, 800);
+    SDL_SetWindowSize(*window, 1600, 1200);
     // SDL_SetWindowFullscreen(*window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     *renderer = SDL_CreateRenderer(*window, -1, 0);
