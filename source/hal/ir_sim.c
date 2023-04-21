@@ -17,8 +17,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <endian.h>
 
 #include "ir.h"
+#include "badge.h"
 
 #define DEBUG_UDP_TRAFFIC 0
 #if DEBUG_UDP_TRAFFIC
@@ -119,6 +121,7 @@ static const IR_DATA *ir_output_queue_dequeue(void)
 }
 
 struct network_data_packet {
+	uint64_t badge_id;
 	uint16_t recipient_address;
 	uint8_t app_address;
 	uint8_t data_length;
@@ -224,6 +227,7 @@ static void *write_udp_packets_thread_fn(void *thread_info)
 
 			/* Serialize data */
 			struct network_data_packet ndp;
+			ndp.badge_id = htobe64(badge_system_data()->badgeId);
 			ndp.recipient_address = htons(v->recipient_address);
 			ndp.app_address = v->app_address;
 			ndp.data_length = v->data_length;
@@ -293,6 +297,10 @@ static void *read_udp_packets_thread_fn(void *thread_info)
 		rc = recvfrom(bcast, &ndp, sizeof(ndp), 0, &remote_addr, &remote_addr_len);
 		if (rc < 0) {
 			fprintf(stderr, "recvfrom failed: %s\n", strerror(errno));
+			continue;
+		}
+		if (be64toh(ndp.badge_id) == badge_system_data()->badgeId) {
+			udpdebug(stderr, "Rejected packet we sent to ourself\n");
 			continue;
 		}
 		udpdebug(stderr, "Received incoming IR packet\n");
