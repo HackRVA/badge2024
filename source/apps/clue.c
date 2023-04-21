@@ -15,6 +15,7 @@
 #include "ir.h"
 #include "audio.h"
 #include "init.h"
+#include "clue_assets.h"
 
 #define BADGE_IR_CLUE_GAME_ADDRESS IR_APP3
 #define BADGE_IR_BROADCAST_ID 0
@@ -69,6 +70,7 @@ struct card {
 	char *name;
 	char *short_name;
 	enum card_type type;
+	const struct asset *pic;
 };
 
 struct notebook {
@@ -91,29 +93,29 @@ static struct question {
 #define NWEAPONS 6
 
 static const struct card card[] = {
-	{ "Miss Scarlett", "Scarlett", CARD_TYPE_SUSPECT, },
-	{ "Colonel Mustard", "Mustard", CARD_TYPE_SUSPECT, },
-	{ "Mrs. White", "White", CARD_TYPE_SUSPECT, },
-	{ "Mr. Green", "Green", CARD_TYPE_SUSPECT, },
-	{ "Mrs. Peacock", "Peacock", CARD_TYPE_SUSPECT, },
-	{ "Professor Plum", "Plum", CARD_TYPE_SUSPECT, },
+	{ "Miss Scarlett", "Scarlett", CARD_TYPE_SUSPECT, &clue_assets_miss_scarlett, },
+	{ "Colonel Mustard", "Mustard", CARD_TYPE_SUSPECT, &clue_assets_col_mustard, },
+	{ "Mrs. White", "White", CARD_TYPE_SUSPECT, &clue_assets_ms_white, },
+	{ "Mr. Green", "Green", CARD_TYPE_SUSPECT, &clue_assets_mr_green, },
+	{ "Mrs. Peacock", "Peacock", CARD_TYPE_SUSPECT, &clue_assets_mrs_peacock, },
+	{ "Professor Plum", "Plum", CARD_TYPE_SUSPECT, &clue_assets_prof_plum, },
 
-	{ "Kitchen", "Kitch", CARD_TYPE_ROOM, },
-	{ "Ballroom", "Ballrm", CARD_TYPE_ROOM, },
-	{ "Conservatory", "Consv", CARD_TYPE_ROOM, },
-	{ "Billiard Room", "Billrd", CARD_TYPE_ROOM, },
-	{ "Library", "Library", CARD_TYPE_ROOM, },
-	{ "Study", "Study", CARD_TYPE_ROOM, },
-	{ "Hall", "Hall", CARD_TYPE_ROOM, },
-	{ "Lounge", "Lounge", CARD_TYPE_ROOM, },
-	{ "Dining Room", "Dining", CARD_TYPE_ROOM, },
+	{ "Kitchen", "Kitch", CARD_TYPE_ROOM, &clue_assets_kitchen, },
+	{ "Ballroom", "Ballrm", CARD_TYPE_ROOM, &clue_assets_ballroom, },
+	{ "Conservatory", "Consv", CARD_TYPE_ROOM, &clue_assets_conservatory, },
+	{ "Billiard Room", "Billrd", CARD_TYPE_ROOM, &clue_assets_billiards_room, },
+	{ "Library", "Library", CARD_TYPE_ROOM, &clue_assets_library, },
+	{ "Study", "Study", CARD_TYPE_ROOM, &clue_assets_study, },
+	{ "Hall", "Hall", CARD_TYPE_ROOM, &clue_assets_hall, },
+	{ "Lounge", "Lounge", CARD_TYPE_ROOM, &clue_assets_lounge, },
+	{ "Dining Room", "Dining", CARD_TYPE_ROOM, &clue_assets_dining_room, },
 
-	{ "Rope", "Rope", CARD_TYPE_WEAPON, },
-	{ "Knife", "Knife", CARD_TYPE_WEAPON, },
-	{ "Wrench", "Wrench", CARD_TYPE_WEAPON, },
-	{ "Revolver", "Rvlvr", CARD_TYPE_WEAPON, },
-	{ "Candlestick", "Cndlstk", CARD_TYPE_WEAPON, },
-	{ "Lead Pipe", "Pipe", CARD_TYPE_WEAPON, },
+	{ "Rope", "Rope", CARD_TYPE_WEAPON, &clue_assets_rope, },
+	{ "Knife", "Knife", CARD_TYPE_WEAPON, &clue_assets_knife, },
+	{ "Wrench", "Wrench", CARD_TYPE_WEAPON, &clue_assets_wrench, },
+	{ "Revolver", "Rvlvr", CARD_TYPE_WEAPON, &clue_assets_revolver, },
+	{ "Candlestick", "Cndlstk", CARD_TYPE_WEAPON, &clue_assets_candlestick, },
+	{ "Lead Pipe", "Pipe", CARD_TYPE_WEAPON, &clue_assets_lead_pipe, },
 };
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -484,8 +486,12 @@ static void clue_evidence(void)
 	} else {
 		if (evidence.from_who[ni] != 255) {
 			snprintf(msg, sizeof(msg), "ITEM %d of %d\n\n", n + 1, count);
+			FbMove(14, 23);
+			FbImage(card[ni].pic, 0);
+			FbMove(1, 0);
 			FbWriteString(msg);
 			FbWriteString("ELIMINATED:\n");
+			FbMove(6, 123);
 			FbColor(YELLOW);
 			FbWriteString(card[ni].name);
 			FbColor(WHITE);

@@ -1,0 +1,65 @@
+name: clue_assets
+images:
+  - name: "ballroom"
+    filename: "ballroom.png"
+    bits: 8
+  - name: "billiards_room"
+    filename: "billiards-room.png"
+    bits: 8
+  - name: "candlestick"
+    filename: "candlestick.png"
+    bits: 8
+  - name: "col_mustard"
+    filename: "col-mustard.png"
+    bits: 8
+  - name: "conservatory"
+    filename: "conservatory.png"
+    bits: 8
+  - name: "dining_room"
+    filename: "dining-room.png"
+    bits: 8
+  - name: "hall"
+    filename: "hall.png"
+    bits: 8
+  - name: "kitchen"
+    filename: "kitchen.png"
+    bits: 8
+  - name: "knife"
+    filename: "knife.png"
+    bits: 8
+  - name: "lead_pipe"
+    filename: "lead-pipe.png"
+    bits: 8
+  - name: "library"
+    filename: "library.png"
+    bits: 8
+  - name: "lounge"
+    filename: "lounge.png"
+    bits: 8
+  - name: "miss_scarlett"
+    filename: "miss-scarlett.png"
+    bits: 8
+  - name: "mr_green"
+    filename: "mr-green.png"
+    bits: 8
+  - name: "mrs_peacock"
+    filename: "mrs-peacock.png"
+    bits: 8
+  - name: "ms_white"
+    filename: "ms-white.png"
+    bits: 8
+  - name: "prof_plum"
+    filename: "prof-plum.png"
+    bits: 8
+  - name: "revolver"
+    filename: "revolver.png"
+    bits: 8
+  - name: "rope"
+    filename: "rope.png"
+    bits: 8
+  - name: "study"
+    filename: "study.png"
+    bits: 8
+  - name: "wrench"
+    filename: "wrench.png"
+    bits: 8

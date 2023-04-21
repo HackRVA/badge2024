@@ -18,5 +18,5 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/gulag.c
         ${CMAKE_CURRENT_LIST_DIR}/slot_machine.c
         )
-
+add_subdirectory(clue_assets)
 target_include_directories(${PRODUCT} PUBLIC .)
