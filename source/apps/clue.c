@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <signal.h>
 
 #include "badge.h"
 #include "dynmenu.h"
@@ -19,8 +20,14 @@
 
 #define BADGE_IR_CLUE_GAME_ADDRESS IR_APP3
 #define BADGE_IR_BROADCAST_ID 0
-#define CLUE_QUESTION_OPCODE 0x01
-#define CLUE_ANSWER_OPCODE 0x03
+#define CLUESOE ((uint64_t) 0xC100050E << 32)
+
+#define DEBUG_UDP 1
+#if DEBUG_UDP
+#define udpdebug fprintf
+#else
+#define udpdebug(...) { }
+#endif
 
 #ifdef TARGET_PICO
 /* printf?  What printf? */
@@ -53,7 +60,7 @@ enum clue_state_t {
 	CLUE_NOTEBOOK,
 	CLUE_EVIDENCE,
 	CLUE_INTERVIEW,
-	CLUE_ANSWER,
+	CLUE_RECEIVED_ANSWER,
 	CLUE_ACCUSE,
 	CLUE_TRANSMIT_QUESTION,
 	CLUE_TRANSMIT_ANSWER,
@@ -127,13 +134,10 @@ struct deck {
 };
 
 static struct deck current_deck = { 0 };
-static struct deck scratch_deck = { 0 };
 
 static unsigned int random_num_state = 0;
-static unsigned int question_random_seed = 0;
 static int question_answer = -1;
 static int new_evidence = -1;
-static struct question remote_question = { 0 };
 
 static void init_random_state(void)
 {
@@ -255,7 +259,6 @@ static void clue_init_main_menu(void)
 	dynmenu_add_item(&game_menu, "NOTEBOOK", CLUE_NOTEBOOK, 0);
 	dynmenu_add_item(&game_menu, "EVIDENCE", CLUE_EVIDENCE, 1);
 	dynmenu_add_item(&game_menu, "QSTN SUSPECT", CLUE_INTERVIEW, 2);
-	dynmenu_add_item(&game_menu, "ANSWER QSTN", CLUE_ANSWER, 2);
 	dynmenu_add_item(&game_menu, "ACCUSE", CLUE_ACCUSE, 3);
 	dynmenu_add_item(&game_menu, "PAUSE GAME", CLUE_EXIT, 4);
 
@@ -465,20 +468,8 @@ static void clue_evidence(void)
 		}
 	}
 
-	if (new_evidence >= 0) {
-		int nc = 0;
-		for (int i = 0; i < NCARDS; i++) {
-			if (evidence.from_who[i] != 255) {
-				nc++;
-				if (current_deck.card[new_evidence] == i) {
-					n = nc - 1;
-					ni = i;
-					new_evidence = -1;
-					break;
-				}
-			}
-		}
-	}
+	if (new_evidence >= 0)
+		ni = new_evidence;
 
 	FbWriteString("EVIDENCE\n");
 	if (ni < 0) {
@@ -506,15 +497,18 @@ static void clue_evidence(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+		new_evidence = -1;
 		n++;
 		if (n > count - 1)
 			n = count - 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+		new_evidence = -1;
 		n--;
 		if (n < 0)
 			n = 0;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		new_evidence = -1;
 		clue_state = CLUE_RUN;
 	}
 }
@@ -622,26 +616,49 @@ static void clue_interview(void)
 	}
 }
 
-static void clue_answer(void)
+static void clue_received_answer(void)
 {
-	/* Replicate the remote deck */
-	deal_cards(question_random_seed, &scratch_deck);
-	int found;
+	FbColor(WHITE);
+	FbBackgroundColor(BLACK);
+	FbClear();
 
-	/* scan the deck to see if we have any cards in the question */
-	found = -1;
-	for (int i = 0; i < NCARDS; i++) {
-		if (scratch_deck.card[i] == question.person ||
-			scratch_deck.card[i] == question.location ||
-			scratch_deck.card[i] == question.weapon) {
-			if (scratch_deck.held_by[i] == playing_as_character) {
-				found = i;
-				break;
+	new_evidence = -1;
+	if (question_answer == -1) {
+		FbMove(0, 10);
+		FbWriteString(card[question_answer].name);
+		FbMoveX(0);
+		FbWriteString("KNOWS NOTHING");
+		FbWriteString("ABOUT THIS");
+		FbSwapBuffers();
+	} else {
+		for (int i = 0; i < NCARDS; i++) {
+			if (current_deck.held_by[i] == question_answer &&
+				(current_deck.card[i] == question.person ||
+				current_deck.card[i] == question.location ||
+				current_deck.card[i] == question.weapon)) {
+				evidence.from_who[current_deck.card[i]] = question_answer;
+				new_evidence = current_deck.card[i];
+				clue_state = CLUE_EVIDENCE;
+				return;
 			}
 		}
+		FbMove(0, 10);
+		FbWriteString(card[question_answer].name);
+		FbMoveX(0);
+		FbWriteString("KNOWS NOTHING");
+		FbWriteString("ABOUT THIS");
+		FbSwapBuffers();
 	}
-	question_answer = found;
-	clue_state = CLUE_TRANSMIT_ANSWER;
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		clue_state = CLUE_RUN;
+	}
 }
 
 static void clue_accuse(void)
@@ -686,15 +703,11 @@ static void clue_transmit_answer(void)
 	static int counter = 0;
 	uint64_t payload;
 
-	payload = (uint64_t) question_random_seed << 32;
-	payload |= ((CLUE_ANSWER_OPCODE & 0x3) << 10);
-	payload |= ((playing_as_character & 0x7) << 5);
-	payload |= (question_answer & 0x1f);
-
+	payload = CLUESOE | (uint64_t) playing_as_character;
 	counter++;
 	if ((counter % 10) == 0) { /* transmit IR packet */
 		build_and_send_packet(BADGE_IR_CLUE_GAME_ADDRESS, BADGE_IR_BROADCAST_ID, payload);
-	    audio_out_beep(500, 100);
+		audio_out_beep(500, 100);
 	}
 	FbClear();
 	FbMove(10, 60);
@@ -702,16 +715,7 @@ static void clue_transmit_answer(void)
 	FbWriteLine("ANSWER");
 	FbSwapBuffers();
 
-	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		clue_state = CLUE_RUN;
-	}
+	clue_state = CLUE_RUN;
 }
 
 static void clue_transmit_question(void)
@@ -719,17 +723,12 @@ static void clue_transmit_question(void)
 	uint64_t question_packet;
 	static int counter = 0;
 
-
-	question_packet = (uint64_t) clue_random_seed << 32;		/* 32 bits */
-	question_packet |= (question.person & 0x7);			/* 3 bits */
-	question_packet |= (((question.location - NSUSPECTS) & 0x0f) << 3);	/* 4 bits */
-	question_packet |= (((question.weapon - NSUSPECTS - NLOCATIONS) & 0x07) << 7);		/* 3 bits */
-	question_packet |= ((CLUE_QUESTION_OPCODE & 0x3) << 10);	/* 2 bits */
+	memcpy(&question_packet, "CLUE????", 8);
 
 	counter++;
 	if ((counter % 10) == 0) { /* transmit IR packet */
 		build_and_send_packet(BADGE_IR_CLUE_GAME_ADDRESS, BADGE_IR_BROADCAST_ID, question_packet);
-	    audio_out_beep(500, 100);
+		audio_out_beep(500, 100);
 	}
 	FbClear();
 	FbMove(10, 60);
@@ -760,50 +759,24 @@ static uint64_t clue_get_payload(IR_DATA* packet)
 static void clue_process_packet(IR_DATA* packet)
 {
 	uint64_t payload;
-	unsigned char opcode;
 
 	payload = clue_get_payload(packet);
-	opcode = (payload >> 10) & 0x03;
-
-	printf("Got IR packet: %016lx\n", payload);
-
-	if (opcode == CLUE_QUESTION_OPCODE) {
-		question_random_seed = (unsigned int) ((payload >> 32) & 0xffffffffllu);
-		remote_question.person = (payload & 0x7);
-		remote_question.location = ((payload >> 3) & 0x0f) + NSUSPECTS;
-		remote_question.weapon = ((payload >> 7) & 0x7) + NSUSPECTS + NLOCATIONS;
-#if TARGET_SIMULATOR
-		if (remote_question.person < 0 || remote_question.person > 5)
-			printf("Bad question received, person = %d\n", remote_question.person);
-		if (remote_question.location < 6 || remote_question.location > 6 + 9 - 1)
-			printf("Bad question received, location = %d\n", remote_question.location);
-		if (remote_question.weapon < 6 + 9 || remote_question.weapon > 20)
-			printf("Bad question received, weapon = %d\n", remote_question.weapon);
-#endif
-		clue_state = CLUE_ANSWER;
+	udpdebug(stderr, "Got IR packet: %016lx\n", payload);
+	if (memcmp(&payload, "CLUE????", 8) == 0) {
+		clue_state = CLUE_TRANSMIT_ANSWER;
+		return;
 	}
 
-	if (opcode == CLUE_ANSWER_OPCODE) {
-		int from_who;
-		int which_card;
-		unsigned int rs = (unsigned int) ((payload >> 32) & 0xffffffffllu);
-		if (rs != clue_random_seed) {
-			printf("Got answer, but seed value is incorrect.\n");
-		}
-		which_card = payload & 0x1f; /* index into current_deck */
-		if (which_card == 0x1f) {
-			printf("Suspect doesn't know anything.\n");
-		} else {
-			from_who = (payload >> 5) & 0x7;
-			if (from_who < 0 || from_who > 5) {
-				printf("Bad answer, suspect is out of range\n");
-			} else {
-				new_evidence = current_deck.card[which_card];
-				evidence.from_who[new_evidence] = from_who;
-				clue_state = CLUE_EVIDENCE;
-			}
-		}
+	if ((payload & 0xffffffff00000000ul) == CLUESOE) {
+		udpdebug(stderr, "Clue got answer payload\n");
+		question_answer = (payload & 0x7);
+		if (question_answer > NSUSPECTS - 1)
+			question_answer = -1;
+		udpdebug(stderr, "clue answer is suspect %d\n", question_answer);
+		clue_state = CLUE_RECEIVED_ANSWER;
+		return;
 	}
+	udpdebug(stderr, "Clue: got unexpected packet: 0x%016lx\n", payload);
 }
 
 static void clue_check_for_incoming_packets(void)
@@ -851,8 +824,8 @@ void clue_cb(void)
 	case CLUE_INTERVIEW:
 		clue_interview();
 		break;
-	case CLUE_ANSWER:
-		clue_answer();
+	case CLUE_RECEIVED_ANSWER:
+		clue_received_answer();
 		break;
 	case CLUE_ACCUSE:
 		clue_accuse();
