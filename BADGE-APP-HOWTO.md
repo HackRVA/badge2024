@@ -249,19 +249,24 @@ There is an enumerated type defining a value for each button:
 ```
 
 	typedef enum {
-    		BADGE_BUTTON_LEFT = 0,
-    		BADGE_BUTTON_DOWN,
-    		BADGE_BUTTON_UP,
-    		BADGE_BUTTON_RIGHT,
-    		BADGE_BUTTON_SW,
-    		BADGE_BUTTON_SW2,
-    		BADGE_BUTTON_ENCODER_A,
-    		BADGE_BUTTON_ENCODER_B,
-    		BADGE_BUTTON_MAX
+		BADGE_BUTTON_A,			/* The "A" button */
+		BADGE_BUTTON_B,			/* The "B" button */
+		BADGE_BUTTON_LEFT = 0,		/* Left dpad button */
+		BADGE_BUTTON_DOWN,		/* Down dpad button */
+		BADGE_BUTTON_UP,		/* Up dpad button */
+		BADGE_BUTTON_RIGHT,		/* Right dpad button */
+		BADGE_BUTTON_ENCODER_SW,	/* Push button on the Right rotary encoder */
+		BADGE_BUTTON_ENCODER_A,		/* You probably don't want to use this one */
+		BADGE_BUTTON_ENCODER_B,		/* You probably don't want to use this one */
+		BADGE_BUTTON_ENCODER_2_SW,	/* Push button on the Left rotary encoder */
+		BADGE_BUTTON_ENCODER_2_A,	/* You probably don't want to use this one */
+		BADGE_BUTTON_ENCODER_2_B,	/* You probably don't want to use this one */
+		BADGE_BUTTON_SW2,		/* Push button on the Left rotary encoder */
+		BADGE_BUTTON_MAX		/* sentinal value, does not correspond to a button */
 	} BADGE_BUTTON;
 ```
 
-There are three functions for getting the current state of the buttons
+There are three functions for getting and clearing the current state of the buttons
 all at once.
 
 ```
@@ -301,8 +306,8 @@ If you want the current state of all the buttons at once, you can use button_mas
 ```
 
 You can get a timestamp of the last button press, or reset the timestamp
-of the last button pressed. I believe these are used to implement the
-screensaver feature.
+of the last button pressed. You can periodically call
+button_reset_last_input_timestamp() to suppress the screensaver, if you need to.
 
 ```
 	unsigned int button_last_input_timestamp(void);
@@ -315,6 +320,24 @@ There are two rotary encoders, 0 and 1, which can be queried:
 	// Get rotary encoder rotations! Rotation count is automatically cleared between calls.
 	// Positive indicates CW, negative indicates CCW.
 	int button_get_rotation(int which_rotary);
+```
+
+The four enumeration values associated with the rotary encoders
+
+```
+	BADGE_BUTTON_ENCODER_A,		/* You probably don't want to use this one */
+	BADGE_BUTTON_ENCODER_B,		/* You probably don't want to use this one */
+	BADGE_BUTTON_ENCODER_2_A,	/* You probably don't want to use this one */
+	BADGE_BUTTON_ENCODER_2_B,	/* You probably don't want to use this one */
+```
+
+have to do with how the rotation information is encoded.  You should almost certainly not
+use these enumeration values directly but instead get the rotation information by calling
+button_get_rotation();
+
+```
+	int rot1 = button_get_rotation(0); /* get rotation info for the encoder on the right of the badge */
+	int rot2 = button_get_rotation(1); /* get rotation info for the encoder on the left of the badge */
 ```
 
 Display Related Functions
@@ -331,70 +354,192 @@ See: [source/hal/led_pwm.h](https://github.com/HackRVA/badge2023/blob/main/sourc
 Infrared Transmitter and Receiver
 ---------------------------------
 
+## Transmitting IR
+
+Transmitting IR is fairly simple. There is an IR_DATA type defined in source/hal/ir.h.
+
 ```
-		TODO: This documentation is not very good.
-
-		Look in badge_monsters.c and lasertag.c badge apps to see examples of the IR
-		system being used. The badge_monsters.c one is simpler, the lasertag.c one is
-		more complicated.
-
-		/* Emulate some stuff from ir.c */
-		extern int IRpacketOutNext;
-		extern int IRpacketOutCurr;
-		#define MAXPACKETQUEUE 16
-		#define IR_OUTPUT_QUEUE_FULL (((IRpacketOutNext+1) % MAXPACKETQUEUE) == IRpacketOutCurr)
-
-		struct IRpacket_t {
-			/* Note: this is different than what the badge code actually uses.
-			 * The badge code uses 32-bits worth of bitfields.  Bitfields are
-			 * not portable, nor are they clear, and *which* particular bits
-			 * any bitfields land in are completely up to the compiler.
-			 * Relying on the compiler using any particular bits is a programming
-			 * error, so don't actually use this. Instead always
-			 * use the "v" element of the IRpacket_u union.
-			 */
-			unsigned int v;
-		};
-
-		union IRpacket_u {
-			struct IRpacket_t p;		/* <---- DON'T USE THIS */
-			unsigned int v;			/* <---- USE THIS */
-		};
-
-
-		void IRqueueSend(union IRpacket_u pkt);
-			Queues an IR packet for transmission.
-
-		/* This is tentative.  Not really sure how the IR stuff works.
-		   For now, I will assume I register a callback to receive 32-bit
-		   packets incoming from IR sensor. */
-		void register_ir_packet_callback(void (*callback)(struct IRpacket_t));
-		void unregister_ir_packet_callback(void);
-
-		#define IR_APP1 19
-		#define IR_APP2 20
-		#define IR_APP3 21
-		#define IR_APP4 22
-		#define IR_APP5 23
-		#define IR_APP6 24
-		#define IR_APP7 25
+	typedef struct {
+	    uint16_t recipient_address;
+	    uint8_t app_address;
+	    uint8_t data_length;
+	    uint8_t *data;
+	} IR_DATA;
 ```
+
+The recipient_address is intended to hold the low 16 bits of the badge ID
+(obtained via a badge_system_data()-&gt;badgeId) to restrict receipt of the
+transmission to the intended badge. More likely you wish to broadcast to any
+badges nearby enough to receive, and in that case the value
+BADGE_IR_BROADCAST_ID should be used for the recipient address.
+
+The app_address is particular to the app, and is one of the IR_APP values
+defined in ir.h:
+
+```
+	typedef enum {
+
+	    IR_LED,
+	    IR_LIVEAUDIO,
+	    IR_PING,
+
+	    IR_APP0,
+	    IR_APP1,
+	    IR_APP2,
+	    IR_APP3,
+	    IR_APP4,
+	    IR_APP5,
+	    IR_APP6,
+	    IR_APP7,
+
+	    IR_MAX_ID
+
+	} IR_APP_ID;
+```
+
+The data_length is the length of the payload to be transmitted, and the maximum value is 64.
+The "data" field is a pointer to the payload buffer.
+
+The function ir_send_complete_message() is used to transmit IR packets.
+
+Here is an example from the "Clue" app showing how IR packets are transmitted:
+
+```
+	static void build_and_send_packet(unsigned char address, unsigned short badge_id, uint64_t payload)
+	{
+	    IR_DATA ir_packet = {
+		    .data_length = 8,
+		    .recipient_address = badge_id,
+		    .app_address = address,
+		    .data = (uint8_t *) &payload,
+	    };
+	    ir_send_complete_message(&ir_packet);
+	}
+
+	[... later on ... ]
+
+	uint64_t payload;
+	payload = CLUSOE | (uint64_t) playing_as_character;
+	build_and_send_packet(BADGE_IR_CLUE_GAME_ADDRESS, BADGE_IR_BROADCAST_ID, payload);
+```
+
+## Receiving IR Packets
+
+Receiving IR packets is a little trickier than transmitting them, because incoming
+packets are processed by an interrupt.
+
+Some excerpts from the "Clue" badge app illustrate how to do it. At the file
+scope we have some variables which maintain a queue of incoming requests.
+
+```
+	/* These need to be protected from interrupts. */
+	#define QUEUE_SIZE 5
+	#define QUEUE_DATA_SIZE 10
+	static int queue_in;
+	static int queue_out;
+	static IR_DATA packet_queue[QUEUE_SIZE] = { {0} };
+	static uint8_t packet_data[QUEUE_SIZE][QUEUE_DATA_SIZE] = {{0}};
+```
+
+In the initialization part of the app, we register a callback for IR packets:
+
+```
+        ir_add_callback(clue_ir_packet_callback, BADGE_IR_CLUE_GAME_ADDRESS);
+```
+
+Now "clue_ir_packet_callback" will be called whenever an IR packet arrives.
+This function looks like this:
+
+```
+	static void clue_ir_packet_callback(const IR_DATA *data)
+	{
+		// This is called in an interrupt context!
+		int next_queue_in;
+
+		next_queue_in = (queue_in + 1) % QUEUE_SIZE;
+		if (next_queue_in == queue_out) /* queue is full, drop packet */
+			return;
+		size_t data_size = data->data_length;
+		if (QUEUE_DATA_SIZE < data_size) {
+			data_size = QUEUE_DATA_SIZE;
+		}
+		memcpy(&packet_data[queue_in], data->data, data_size);
+		memcpy(&packet_queue[queue_in], data, sizeof(packet_queue[0]));
+		packet_queue[queue_in].data = packet_data[queue_in];
+
+		queue_in = next_queue_in;
+	}
+```
+
+The interrupt handler calls this callback function, passing the IR packet
+in as a parameter. This function then puts the packet into our queue if there
+is room (dropping the packet if there isn't) and advances the queue in counter.
+
+In our apps main callback function (the one menu.c calls), we monitor the
+queue of IR packets and process them:
+
+```
+void clue_cb(void)
+{
+        if (scan_for_incoming_packets)
+                clue_check_for_incoming_packets();
+        switch (clue_state) {
+        case CLUE_INIT:
+                clue_init();
+	[ ... rest omitted for brevity ... ]
+```
+
+The function to process the incoming packets from the queue looks like this:
+
+```
+	static void clue_check_for_incoming_packets(void)
+	{
+	    IR_DATA *new_packet;
+	    int next_queue_out;
+	    uint32_t interrupt_state = hal_disable_interrupts();
+	    while (queue_out != queue_in) {
+		next_queue_out = (queue_out + 1) % QUEUE_SIZE;
+		new_packet = &packet_queue[queue_out];
+		queue_out = next_queue_out;
+		hal_restore_interrupts(interrupt_state);
+		clue_process_packet(new_packet);
+		interrupt_state = hal_disable_interrupts();
+	    }
+	    hal_restore_interrupts(interrupt_state);
+	}
+```
+
+Note that it must disable interrupts while touching the queue to avoid
+a race condition with the interrupt handler.  clue_process_packet()
+does whatever it needs to with the data.
 
 Badge ID and User Name:
 -----------------------
 
-```
-	Each badge has a unique ID which is a 16-bit unsigned short burned into the firmware
-	at the time the badge is firmware is flashed, and a user assignable name (using the
-	username badge app).
+Each badge has a unique ID which is a uint64_t burned into the firmware
+at the time the badge is firmware is flashed, and a user assignable name (using the
+username badge app).
 
-		extern struct sysData_t {
-			char name[16];
-			unsigned short badgeId;
-			/* TODO: There is more stuff in the badge which we might want to expose if
-			 * an app needs it.
-			 */
-		} G_sysData;
+```
+	typedef struct {
+	    char name[16];
+	    uint64_t badgeId;
+	    char sekrits[8];
+	    char achievements[8];
+
+	    /*
+	       prefs
+	    */
+	    unsigned char ledBrightness;  /* 1 byte */
+	    unsigned char backlight;      /* 1 byte */
+	    bool mute;
+	    bool display_inverted;
+	    bool display_rotated;
+	    bool screensaver_inverted;
+	    bool screensaver_disabled;
+	} SYSTEM_DATA;
+
+
 ```
 
 Audio
@@ -565,4 +710,244 @@ Bresenham's algorithm visits.  An example using bline() can be found in
 [source/apps/gulag.c](https://github.com/HackRVA/badge2023/blob/main/source/apps/gulag.c#L2499)
 where it is used to do collision detection between bullets and walls.
 
+Some Common Video Game Programming Patterns
+-------------------------------------------
+
+## Fixed Point Math
+
+Our processor does not have floating point hardware. However, you may still want to keep track
+of things, such as the (x, y) coordinates of an onscreen spaceship, to a greater degree of
+precision than an integer would normally allow.  The easiest way to do this is with fixed point
+math.  Typically what you do is shift numbers right by 8 bits.  So to represent the value 1,
+you might do:
+
+```
+	int x = (1 << 8); /* fixed point value for 1. */
+```
+
+This amounts to having 8 bits of data that is to the right of the "decimal point" (or, in this
+case the "binary point").
+
+Some care must be taken, when adding two fixed point numbers, you can just add them, but when
+multiplying two numbers, the result must be shifted right 8 bits, and when dividing, the result
+must be shifted left 8 bits, and shifts should be done at appropriate times to keep the calculations
+in the "sweet spot", avoiding over- or underflows.
+
+Supposing that you have x, y coordinates of a spaceship in fixed point with 8 bits to the right
+of the "binary point", when it comes time to use these coordinates to draw the spaceship, you just
+shift the values right 8 bits before using them, like so:
+
+```
+	FbMove(x >> 8, y >> 8);
+	draw_spaceship();
+```
+
+Already discussed above are fixed point sine, cosine and square root functions.  And in these
+examples, I've used 8 bits to the right of the "binary point", but it could be any number of bits
+you decide it should be.
+
+## Arrays of Things
+
+When making a video game, it is often the case that you want to display and move a relatively
+large number of objects around on the screen. You would like to have some functions like:
+
+```
+	move_all_the_objects(); // Moves all the objects for one iteration of the main game loop
+	draw_all_the_objects(); // Draws all the objects in their current locations.
+```
+
+The simplest way to accomplish this is with an array.  You might have something like this:
+
+```
+	#define MAXOBJECTS 50
+	static struct my_game_object {
+		int x, y, vx, vy; /* .8 fixed point location and velocity */
+		int object_type;
+		void (*draw)(struct my_game_object *o);
+		void (*move)(struct my_game_object *o);
+	} my_object[MAX_OBJECTS];
+	static int num_objects = 0;
+```
+
+Here, my_object[] is an array of struct my_game_object, num_objects tracks how many objects
+are currently in the game (initialized to zero), and MAXOBJECTS is the maximum number of
+objects which may exist in the game.
+
+You may then implement move_all_the_objects() and draw_all_the_objects() like so:
+
+```
+static void move_all_the_objects(void)
+{
+	for (int i = 0; i < num_objects; i++)
+		my_object[i]->move(&my_object[i]);
+}
+
+static void draw_all_the_objects(void)
+{
+	for (int i = 0; i < num_objects; i++)
+		my_object[i]->draw(&my_object[i]);
+}
+```
+
+Of course the "move" and "draw" function pointers of these objects would have to
+be initialized.  Alternatively to using function pointers, you could have a "type" field
+in the objects and use a switch statement to call the correct move and draw functions.
+
+## Adding New Objects Into the Array
+
+To add new objects into the array, just add the new one onto the end and
+increment num_objects;
+
+```
+	int add_object(struct my_game_object o)
+	{
+		if (num_objects >= MAXOBJECTS)
+			return -1;
+		my_object[num_objects] = o;
+		num_objects++;
+	}
+```
+
+## Removing Objects from the Array
+
+To remove objects from the array, exchange the object to be deleted with
+the last object of the array, and decrement num_objects.
+
+```
+	void remove_object(int n)
+	{
+		if (n < 0 || n >= num_objects)
+			return;
+		my_object[n] = my_object[num_objects - 1];
+		num_objects--;
+	}
+```
+
+You might use a system like this for bullets for example.  Whenever an enemy,
+or the player fires a bullet, you add a new bullet into the array with the
+appropriate position and velocity.  Whenever a bullet leaves the screen, or
+hits something, and needs to be removed, you remove it from the array.
+
+## Arrays of Different Types of Things
+
+Sometimes having several different arrays, one array for each type
+of thing is fine.  For example, in a space invaders game, you might have
+one array for all the space invaders, and a second array for all the
+bullets.
+
+Other times, you may wish you could have an array which could contain
+many different things.  Perhaps you have many different kinds of space
+invaders with somewhat different behaviors and data, but you would still
+like to think of all of them as "invaders", and be able to call generic
+"move" and "draw" functions.
+
+One way to do this is with a "discriminated union".  Suppose
+we have three different types of space invaders:
+
+```
+	struct invader_1_data {
+		int a, b, c; /* some data specific to invader type 1 */
+	};
+
+	struct invader_2_data {
+		int x, y, n, z; /* some data specific to invader type 2 */
+	};
+
+	struct invader_3_data {
+		char data[25]; /* some data specific to invader type 3 */
+	};
+
+	/* Make a union to hold any of our 3 types of data */
+	union type_specific_data {
+		struct invader_crab_data crab;
+		struct invader_octopus_data octopus;
+		struct invader_stingray_data stingray;
+	};
+
+	static struct invader {
+		int x, y, vx, vy; /* Data common to all invader types */
+		int invader_type; /* 0, 1, or 2 */
+		union type_specific_data tsd;
+	} invader[MAXINVADERS];
+	static int num_invaders = 0;
+```
+
+Then, we can do different things depending on the invader_type:
+
+```
+	static void do_invader_stuff(struct invader *o)
+	{
+		/* stuff common to all invaders */
+		o->x += o->vx;
+		o->y += o->vy;
+
+		/* type specific stuff */
+		switch (o->type) {
+		case 0:
+			do_crab_stuff(o);
+			break;
+		case 1:
+			do_octopus_stuff(o);
+			break;
+		case 2:
+			do_stingray_stuff(o);
+			break;
+		}
+	}
+```
+		
+## Collision detection
+
+The simplest form of collision detection is just to check the distance between
+objects.  If the objects are 2D and roughly rectangular in shape, you can do
+bounding box checks.  Assuming that objects "a", and "b" are 10x10 squares
+centered on their .8 fixed point coordinates:
+
+```
+	static int collides(struct my_object *a, struct my_object *b)
+	{
+		int x1, y1, x2, y2, x3, y3, x4, y4;
+
+		x1 = (a->x >> 8) - 5;
+		y1 = (a->y >> 8) - 5;
+		x2 = (a->x >> 8) + 5;
+		y2 = (a->y >> 8) + 5;
+
+		x3 = (b->x >> 8) - 5;
+		y3 = (b->y >> 8) - 5;
+		x4 = (b->x >> 8) + 5;
+		y4 = (b->y >> 8) + 5;
+
+		if (x1 < x3 && x2 < x3) /* a is to the left of b */
+			return 0;
+		if (x1 > x4 && x2 > x4) /* a is to the right of b */
+			return 0;
+		if (y1 < y3 && y2 < y3) /* a is above b */
+			return 0;
+		if (y1 > y4 && y2 > y4) /* a is below b */
+			return 0;
+		return 1;
+	}
+```
+
+Or, maybe you want to calculate the distance between objects, and if the distance
+is below some threshold, count it as a collision.  As an optimization, you can
+avoid the square root and compare the squared distance to the squared threshold.
+
+```
+	static int proximity_collides(struct my_object *a, struct my_object *b, int min_dist)
+	{
+		int dx, dy, dx2, dy2, threshold2;
+
+		dx = a->x - b->x;
+		dy = a->y - b->y;
+
+		dx2 = (dx * dx) >> 8;
+		dy2 = (dy * dy) >> 8;
+
+		threshold2 = (min_dist * min_dist) >> 8;
+
+		return (dx2 + dy2) < threshold2;
+	}
+```
 
