@@ -17,6 +17,7 @@
 #include "audio.h"
 #include "init.h"
 #include "clue_assets.h"
+#include "rtc.h"
 
 #define BADGE_IR_CLUE_GAME_ADDRESS IR_APP3
 #define BADGE_IR_BROADCAST_ID 0
@@ -42,6 +43,7 @@ static int queue_out;
 static IR_DATA packet_queue[QUEUE_SIZE] = { {0} };
 static uint8_t packet_data[QUEUE_SIZE][QUEUE_DATA_SIZE] = {{0}};
 static int scan_for_incoming_packets = 0;
+static uint64_t start_time_ms_since_boot = 0;
 
 static int game_in_progress = 0;
 static signed char playing_as_character = -1;
@@ -265,6 +267,39 @@ static void clue_init_main_menu(void)
 	clue_state = CLUE_MAIN_MENU;
 }
 
+static void draw_elapsed_time(void)
+{
+	static char msg[15] = "TIME:         ";
+	static char lastmsg[15];
+	uint64_t current_time = rtc_get_ms_since_boot();
+	uint64_t elapsed_time_ms = current_time - start_time_ms_since_boot;
+	uint64_t elapsed_time_s = elapsed_time_ms / 1000;
+	uint64_t elapsed_time_min = elapsed_time_s / 60;
+	uint64_t elapsed_time_hours = elapsed_time_min / 60;
+
+	int hours = (int) elapsed_time_hours;
+	int mins = (int) (elapsed_time_min - (elapsed_time_hours * 60));
+	int secs = (int) (elapsed_time_s - (elapsed_time_hours * 3600) - (elapsed_time_min * 60));
+
+	memset(msg, 0, sizeof(msg));
+	snprintf(msg, sizeof(msg), "TIME: %02d:%02d:%02d", hours, mins, secs);
+	FbColor(YELLOW);
+	FbBackgroundColor(BLACK);
+	FbMove(8, 16 * 8);
+	FbWriteString(msg);
+	memcpy(lastmsg, msg, sizeof(lastmsg));
+}
+
+static void draw_question_count(void)
+{
+	char msg[15];
+	FbColor(YELLOW);
+	FbBackgroundColor(BLACK);
+	FbMove(8, 17 * 8);
+	snprintf(msg, sizeof(msg), "QUESTIONS: %d\n", questions_asked);
+	FbWriteString(msg);
+}
+
 static void clue_main_menu(void)
 {
 	dynmenu_draw(&main_menu);
@@ -284,6 +319,8 @@ static void clue_run()
 {
 	FbClear();
 	dynmenu_draw(&game_menu);
+	draw_elapsed_time();
+	draw_question_count();
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
@@ -611,6 +648,7 @@ static void clue_interview(void)
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (n == 3 && question.person >= 0 && question.weapon >= 6 + 9 && question.location >= 6) {
+			questions_asked++;
 			clue_state = CLUE_TRANSMIT_QUESTION;
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
@@ -685,6 +723,7 @@ static void clue_new_game(void)
 	init_evidence();
 	clue_state = CLUE_RUN;
 	questions_asked = 0;
+	start_time_ms_since_boot = rtc_get_ms_since_boot();
 }
 
 static void build_and_send_packet(unsigned char address, unsigned short badge_id, uint64_t payload)
