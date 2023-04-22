@@ -613,6 +613,8 @@ static void clue_interview(void)
 		if (n == 3 && question.person >= 0 && question.weapon >= 6 + 9 && question.location >= 6) {
 			clue_state = CLUE_TRANSMIT_QUESTION;
 		}
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		clue_state = CLUE_RUN;
 	}
 }
 
