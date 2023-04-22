@@ -845,16 +845,16 @@ One way to do this is with a "discriminated union".  Suppose
 we have three different types of space invaders:
 
 ```
-	struct invader_1_data {
-		int a, b, c; /* some data specific to invader type 1 */
+	struct invader_crab_data {
+		int a, b, c; /* some data specific to crab invaders */
 	};
 
-	struct invader_2_data {
-		int x, y, n, z; /* some data specific to invader type 2 */
+	struct invader_octopus_data {
+		int x, y, n, z; /* some data specific to octopus invaders */
 	};
 
-	struct invader_3_data {
-		char data[25]; /* some data specific to invader type 3 */
+	struct invader_stingray_data {
+		char data[25]; /* some data specific to stingray invaders */
 	};
 
 	/* Make a union to hold any of our 3 types of data */
@@ -882,7 +882,7 @@ Then, we can do different things depending on the invader_type:
 		o->y += o->vy;
 
 		/* type specific stuff */
-		switch (o->type) {
+		switch (o->invader_type) {
 		case 0:
 			do_crab_stuff(o);
 			break;
