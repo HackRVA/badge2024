@@ -629,8 +629,7 @@ static void clue_received_answer(void)
 		FbMove(0, 10);
 		FbWriteString(card[question_answer].name);
 		FbMoveX(0);
-		FbWriteString("KNOWS NOTHING");
-		FbWriteString("ABOUT THIS");
+		FbWriteString("\nKNOWS NOTHING\nABOUT THIS\n");
 		FbSwapBuffers();
 	} else {
 		for (int i = 0; i < NCARDS; i++) {
@@ -647,8 +646,7 @@ static void clue_received_answer(void)
 		FbMove(0, 10);
 		FbWriteString(card[question_answer].name);
 		FbMoveX(0);
-		FbWriteString("KNOWS NOTHING");
-		FbWriteString("ABOUT THIS");
+		FbWriteString("\nKNOWS NOTHING\nABOUT THIS\n");
 		FbSwapBuffers();
 	}
 	int down_latches = button_down_latches();
