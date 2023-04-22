@@ -670,9 +670,9 @@ static void init_evidence(void)
 	/* We start with all the evidence from the cards dealt to us and nothing else. */
 	for (int i = 0; i < NCARDS; i++) {
 		if (current_deck.held_by[i] == playing_as_character)
-			evidence.from_who[i] = playing_as_character;
+			evidence.from_who[current_deck.card[i]] = playing_as_character;
 		else
-			evidence.from_who[i] = 255;
+			evidence.from_who[current_deck.card[i]] = 255;
 	}
 }
 
