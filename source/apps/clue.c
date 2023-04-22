@@ -45,6 +45,7 @@ static uint8_t packet_data[QUEUE_SIZE][QUEUE_DATA_SIZE] = {{0}};
 static int scan_for_incoming_packets = 0;
 static uint64_t start_time_ms_since_boot = 0;
 static uint64_t final_time_ms_since_boot = 0;
+static uint64_t clue_run_idle_time = 0;
 
 static int game_in_progress = 0;
 static signed char playing_as_character = -1;
@@ -329,19 +330,37 @@ static void clue_main_menu(void)
 
 static void clue_run()
 {
+	int idle;
 	FbClear();
-	dynmenu_draw(&game_menu);
-	draw_elapsed_time();
-	draw_question_count();
+	uint64_t current_time = rtc_get_ms_since_boot();
+	if (((current_time - clue_run_idle_time) / 1000) > 30) {
+		idle = 1;
+		FbMove(0, 0);
+		FbWriteString("MY NAME IS:\n");
+		FbWriteString(card[playing_as_character].name);
+		FbMove(14, 30);
+		FbImage(card[playing_as_character].pic, 0);
+	} else {
+		idle = 0;
+		dynmenu_draw(&game_menu);
+		draw_elapsed_time();
+		draw_question_count();
+	}
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-		dynmenu_change_current_selection(&game_menu, 1);
+		if (!idle)
+			dynmenu_change_current_selection(&game_menu, 1);
+		clue_run_idle_time = rtc_get_ms_since_boot();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
-		dynmenu_change_current_selection(&game_menu, -1);
+		if (!idle)
+			dynmenu_change_current_selection(&game_menu, -1);
+		clue_run_idle_time = rtc_get_ms_since_boot();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		clue_state = game_menu.item[game_menu.current_item].next_state;
+		if (!idle)
+			clue_state = game_menu.item[game_menu.current_item].next_state;
+		clue_run_idle_time = rtc_get_ms_since_boot();
 	}
 }
 
@@ -492,6 +511,7 @@ static void clue_notebook()
 		}
 		notebook.k[row][col] = nc;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		clue_run_idle_time = rtc_get_ms_since_boot();
 		clue_state = CLUE_RUN;
 	}
 }
@@ -558,6 +578,7 @@ static void clue_evidence(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		new_evidence = -1;
+		clue_run_idle_time = rtc_get_ms_since_boot();
 		clue_state = CLUE_RUN;
 	}
 }
@@ -678,6 +699,7 @@ static void clue_interview(int making_accusation)
 			}
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		clue_run_idle_time = rtc_get_ms_since_boot();
 		clue_state = CLUE_RUN;
 	}
 }
@@ -721,6 +743,7 @@ static void clue_received_answer(void)
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		clue_run_idle_time = rtc_get_ms_since_boot();
 		clue_state = CLUE_RUN;
 	}
 }
@@ -740,6 +763,7 @@ static void clue_confirm_accuse(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		clue_run_idle_time = rtc_get_ms_since_boot();
 		clue_state = CLUE_RUN;
 		return;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
@@ -894,6 +918,7 @@ static void clue_new_game(void)
 	memset(&notebook, '?', sizeof(notebook));
 	deal_cards(random_num_state, &current_deck);
 	init_evidence();
+	clue_run_idle_time = rtc_get_ms_since_boot();
 	clue_state = CLUE_RUN;
 	questions_asked = 0;
 	start_time_ms_since_boot = rtc_get_ms_since_boot();
@@ -928,6 +953,7 @@ static void clue_transmit_answer(void)
 	FbWriteLine("ANSWER");
 	FbSwapBuffers();
 
+	clue_run_idle_time = rtc_get_ms_since_boot();
 	clue_state = CLUE_RUN;
 }
 
