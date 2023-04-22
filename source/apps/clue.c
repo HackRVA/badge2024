@@ -44,6 +44,7 @@ static IR_DATA packet_queue[QUEUE_SIZE] = { {0} };
 static uint8_t packet_data[QUEUE_SIZE][QUEUE_DATA_SIZE] = {{0}};
 static int scan_for_incoming_packets = 0;
 static uint64_t start_time_ms_since_boot = 0;
+static uint64_t final_time_ms_since_boot = 0;
 
 static int game_in_progress = 0;
 static signed char playing_as_character = -1;
@@ -63,9 +64,14 @@ enum clue_state_t {
 	CLUE_EVIDENCE,
 	CLUE_INTERVIEW,
 	CLUE_RECEIVED_ANSWER,
+	CLUE_CONFIRM_ACCUSE,
 	CLUE_ACCUSE,
+	CLUE_CHECK_ACCUSATION,
 	CLUE_TRANSMIT_QUESTION,
 	CLUE_TRANSMIT_ANSWER,
+	CLUE_LUCKY,
+	CLUE_CLEVER,
+	CLUE_WRONG_ACCUSATION,
 	CLUE_EXIT,
 };
 
@@ -179,6 +185,9 @@ static void deal_cards(unsigned int seed, struct deck *d)
 	d->held_by[murder_location] = 255;
 	d->held_by[murder_weapon] = 255;
 
+	printf("It was %s\nin the %s\nwith the %s!\n",
+		card[murderer].name, card[murder_location].name, card[murder_weapon].name);
+
 	/* Shuffle the deck */
 	for (int i = 0; i < NCARDS; i++) {
 		int n = random_num(NCARDS);
@@ -261,7 +270,7 @@ static void clue_init_main_menu(void)
 	dynmenu_add_item(&game_menu, "NOTEBOOK", CLUE_NOTEBOOK, 0);
 	dynmenu_add_item(&game_menu, "EVIDENCE", CLUE_EVIDENCE, 1);
 	dynmenu_add_item(&game_menu, "QSTN SUSPECT", CLUE_INTERVIEW, 2);
-	dynmenu_add_item(&game_menu, "ACCUSE", CLUE_ACCUSE, 3);
+	dynmenu_add_item(&game_menu, "ACCUSE", CLUE_CONFIRM_ACCUSE, 3);
 	dynmenu_add_item(&game_menu, "PAUSE GAME", CLUE_EXIT, 4);
 
 	clue_state = CLUE_MAIN_MENU;
@@ -272,10 +281,13 @@ static void draw_elapsed_time(void)
 	static char msg[15] = "TIME:         ";
 	static char lastmsg[15];
 	uint64_t current_time = rtc_get_ms_since_boot();
+	if (final_time_ms_since_boot != 0)
+		current_time = final_time_ms_since_boot;
 	uint64_t elapsed_time_ms = current_time - start_time_ms_since_boot;
 	uint64_t elapsed_time_s = elapsed_time_ms / 1000;
 	uint64_t elapsed_time_min = elapsed_time_s / 60;
 	uint64_t elapsed_time_hours = elapsed_time_min / 60;
+
 
 	int hours = (int) elapsed_time_hours;
 	int mins = (int) (elapsed_time_min - (elapsed_time_hours * 60));
@@ -550,7 +562,7 @@ static void clue_evidence(void)
 	}
 }
 
-static void clue_interview(void)
+static void clue_interview(int making_accusation)
 {
 	static int n = 0;
 	FbClear();
@@ -558,8 +570,12 @@ static void clue_interview(void)
 	FbMove(1, 1);
 	FbColor(WHITE);
 	FbBackgroundColor(BLACK);
-	FbWriteString("QUESTION:\n\n");
-	FbWriteString("I THINK\n");
+	if (!making_accusation) {
+		FbWriteString("QUESTION:\n\n");
+		FbWriteString("I THINK\n");
+	} else {
+		FbWriteString("I ACCUSE\n");
+	}
 	FbColor(n == 0 ? GREEN : YELLOW);
 	if (question.person == -1) {
 		FbWriteString("PERSON\n");
@@ -569,7 +585,10 @@ static void clue_interview(void)
 		FbWriteString("\n");
 	}
 	FbColor(WHITE);
-	FbWriteString("\nDID IT IN THE\n");
+	if (!making_accusation)
+		FbWriteString("\nDID IT IN THE\n");
+	else
+		FbWriteString("\nOF MURDER\nIN THE\n");
 	FbColor(n == 1 ? GREEN : YELLOW);
 	if (question.location == -1) {
 		FbWriteString("LOCATION\n");
@@ -589,7 +608,10 @@ static void clue_interview(void)
 		FbWriteString("\n");
 	}
 	FbColor(n == 3 ? GREEN : YELLOW);
-	FbWriteString("\n\nASK QUESTION");
+	if (making_accusation) 
+		FbWriteString("\n\nMAKE ACCUSATION");
+	else
+		FbWriteString("\n\nASK QUESTION");
 	FbColor(WHITE);
 	FbSwapBuffers();
 
@@ -648,8 +670,12 @@ static void clue_interview(void)
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (n == 3 && question.person >= 0 && question.weapon >= 6 + 9 && question.location >= 6) {
-			questions_asked++;
-			clue_state = CLUE_TRANSMIT_QUESTION;
+			if (!making_accusation) {
+				questions_asked++;
+				clue_state = CLUE_TRANSMIT_QUESTION;
+			} else {
+				clue_state = CLUE_CHECK_ACCUSATION;
+			}
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		clue_state = CLUE_RUN;
@@ -699,8 +725,155 @@ static void clue_received_answer(void)
 	}
 }
 
-static void clue_accuse(void)
+static void clue_confirm_accuse(void)
 {
+	FbColor(WHITE);
+	FbBackgroundColor(BLACK);
+	FbClear();
+
+	FbMove(8, 8);
+	FbWriteString("YOU ARE ABOUT\nTO MAKE A\nSERIOUS\nACCUSATION.\n\n");
+	FbWriteString("IF YOU ARE\nINCORRECT\nYOU WILL LOSE\nTHE GAME.\n\n");
+	FbWriteString("ARE YOU SURE\nYOU WANT TO\nPROCEED?\n");
+	FbWriteString("\nA: NO\nB: YES\n");
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		clue_state = CLUE_RUN;
+		return;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		clue_state = CLUE_ACCUSE;
+		return;
+	}
+}
+
+static int got_lucky(void)
+{
+	int count = 0;
+
+	/* Count up the gathered evidence.  If more than 3 things are
+	 * unaccounted for, then they guessed, rather than knew.
+	 */
+	for (int i = 0; i < NCARDS; i++) {
+		if (evidence.from_who[i] == 255)
+			count++;
+	}
+	return count > 3;
+}
+
+static void clue_check_accusation(void)
+{
+	int count = 0;
+	printf("clue_check_accusation\n");
+
+	for (int i = 0; i < NCARDS; i++) {
+		if ((current_deck.card[i] == question.person ||
+			current_deck.card[i] == question.location ||
+			current_deck.card[i] == question.weapon) &&
+			current_deck.held_by[i] == 255)
+			count++;
+	}
+	if (count == 3) {
+		/* They got the correct answer. */
+		final_time_ms_since_boot = rtc_get_ms_since_boot();
+		if (got_lucky())
+				clue_state = CLUE_LUCKY;
+			else
+				clue_state = CLUE_CLEVER;
+			return;
+	}
+	/* They got the wrong answer */
+	clue_state = CLUE_WRONG_ACCUSATION;
+}
+
+static void clue_end(int lucky)
+{
+	FbColor(WHITE);
+	FbBackgroundColor(BLACK);
+	FbMove(8, 8);
+	FbWriteString("YOUR ACCUSATION\nIS CORRECT!\n");
+	FbWriteString("YOU ARE VERY\n");
+	if (lucky)
+		FbWriteString("LUCKY.\n");
+	else
+		FbWriteString("CLEVER.\n");
+	draw_elapsed_time();
+	draw_question_count();
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+		clue_state = CLUE_INIT;
+	}
+}
+
+static void clue_lucky(void)
+{
+	clue_end(1);
+}
+
+static void clue_clever(void)
+{
+	clue_end(0);
+}
+
+static void print_murder_thing(enum card_type t)
+{
+	for (int i = 0; i < NCARDS; i++) {
+		if (current_deck.held_by[i] == 255) {
+			if (card[current_deck.card[i]].type == t) {
+				FbWriteString(card[current_deck.card[i]].name);
+				if (t == CARD_TYPE_WEAPON) {
+					FbWriteString("!\n");
+					FbMoveX(8);
+				} else {
+					FbWriteString("\n");
+					FbMoveX(8);
+				}
+				return;
+			}
+		}
+	}
+}
+
+static void print_murderer(void)
+{
+	print_murder_thing(CARD_TYPE_SUSPECT);
+}
+
+static void print_murder_location(void)
+{
+	print_murder_thing(CARD_TYPE_ROOM);
+}
+
+static void print_murder_weapon(void)
+{
+	print_murder_thing(CARD_TYPE_WEAPON);
+}
+
+static void clue_wrong_accusation(void)
+{
+	FbColor(WHITE);
+	FbBackgroundColor(BLACK);
+	FbMove(8, 8);
+	FbWriteString("YOUR ACCUSATION\nIS INCORRECT!\n\n");
+	FbWriteString("IT WAS\n");
+	print_murderer();
+	FbWriteString("IN THE\n");
+	print_murder_location();
+	FbWriteString("WITH THE\n");
+	print_murder_weapon();
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+		clue_state = CLUE_INIT;
+	}
 }
 
 static void init_evidence(void)
@@ -724,6 +897,7 @@ static void clue_new_game(void)
 	clue_state = CLUE_RUN;
 	questions_asked = 0;
 	start_time_ms_since_boot = rtc_get_ms_since_boot();
+	final_time_ms_since_boot = 0;
 }
 
 static void build_and_send_packet(unsigned char address, unsigned short badge_id, uint64_t payload)
@@ -861,19 +1035,34 @@ void clue_cb(void)
 		clue_evidence();
 		break;
 	case CLUE_INTERVIEW:
-		clue_interview();
+		clue_interview(0);
 		break;
 	case CLUE_RECEIVED_ANSWER:
 		clue_received_answer();
 		break;
+	case CLUE_CONFIRM_ACCUSE:
+		clue_confirm_accuse();
+		break;
 	case CLUE_ACCUSE:
-		clue_accuse();
+		clue_interview(1);
+		break;
+	case CLUE_CHECK_ACCUSATION:
+		clue_check_accusation();
 		break;
 	case CLUE_TRANSMIT_QUESTION:
 		clue_transmit_question();
 		break;
 	case CLUE_TRANSMIT_ANSWER:
 		clue_transmit_answer();
+		break;
+	case CLUE_LUCKY:
+		clue_lucky();
+		break;
+	case CLUE_CLEVER:
+		clue_clever();
+		break;
+	case CLUE_WRONG_ACCUSATION:
+		clue_wrong_accusation();
 		break;
 	case CLUE_EXIT:
 		clue_exit();
