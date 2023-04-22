@@ -17,6 +17,7 @@ extern void handle_window_event(SDL_Window *window, SDL_Event event);
 extern int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event event);
 extern int quit_confirm_active;
 extern int quit_confirmed(int x, int y);
+extern void simulator_zoom_ui(float factor);
 
 /* This is used for showing UI inputs on the badge simulator on screen.
  * They are counters that count down to zero when a button is pressed.

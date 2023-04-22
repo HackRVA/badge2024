@@ -542,7 +542,7 @@ static void draw_badge_orientation_indicator(SDL_Renderer *renderer, float x, fl
 
 	/* Draw the orientation indicator */
 	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
-	SDL_RenderFillRect(renderer, &(SDL_Rect) { 25, 25, 150, 150} );
+	SDL_RenderFillRect(renderer, &(SDL_Rect) { x - 75, y - 75, 150, 150} );
 
 	if (dot >= 0) /* we see front of badge, blue */
 		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0xff, 0xff);
@@ -644,7 +644,7 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
 
     draw_flare_led(&slp);
 
-    draw_badge_orientation_indicator(renderer, 100.0f, 100.0f, 1.0f,
+    draw_badge_orientation_indicator(renderer, 100.0f, 500.0f, 1.0f,
 		&orientation_indicator_position, &badge_orientation);
 
     maybe_draw_quit_confirmation();
@@ -755,7 +755,7 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
         fprintf(stderr, "Could not create window: %s\n", SDL_GetError());
         exit(1);
     }
-    SDL_SetWindowSize(*window, 1600, 1200);
+    SDL_SetWindowSize(*window, 800, 600);
     // SDL_SetWindowFullscreen(*window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 
     *renderer = SDL_CreateRenderer(*window, -1, 0);
@@ -889,7 +889,7 @@ static void wait_until_next_frame(void)
 
 void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
 {
-    int first_time = 1;
+    int first_time = 1, second_time = 0;
 
     program_title = strdup((*argv)[0]);
     if (start_sdl())
@@ -900,6 +900,11 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
     init_sim_lcd_params();
 
     while (!time_to_quit) {
+	if (second_time) {
+            /* Not sure why I need to wait for the 2nd time for this to work. */
+            simulator_zoom_ui(0.5);
+	    second_time = 0;
+	}
 	draw_window(renderer, pix_buf, landscape_pix_buf);
 
 	if (first_time) {
@@ -908,6 +913,7 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
             adjust_sim_lcd_params_defaults(sx, sy);
             set_sim_lcd_params_default();
             first_time = 0;
+	    second_time = 1;
         }
 
 	process_events(window);

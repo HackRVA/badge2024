@@ -56,7 +56,7 @@ void sim_button_status_countdown(void)
 	countdown_to_zero(&sim_button_status.dpad_left);
 }
 
-static void zoom(float factor)
+void simulator_zoom_ui(float factor)
 {
 	int cx, cy, x1, y1, x2, y2;
 
@@ -86,12 +86,12 @@ static void zoom(float factor)
 
 static void zoom_in(void)
 {
-	zoom(1.1);
+	simulator_zoom_ui(1.1);
 }
 
 static void zoom_out(void)
 {
-	zoom(0.9);
+	simulator_zoom_ui(0.9);
 }
 
 static void rotate_simulator(void)
