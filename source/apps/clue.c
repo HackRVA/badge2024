@@ -185,9 +185,10 @@ static void deal_cards(unsigned int seed, struct deck *d)
 	d->held_by[murderer] = 255;
 	d->held_by[murder_location] = 255;
 	d->held_by[murder_weapon] = 255;
-
+#if 0
 	printf("It was %s\nin the %s\nwith the %s!\n",
 		card[murderer].name, card[murder_location].name, card[murder_weapon].name);
+#endif
 
 	/* Shuffle the deck */
 	for (int i = 0; i < NCARDS; i++) {
