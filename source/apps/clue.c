@@ -328,6 +328,11 @@ static void clue_main_menu(void)
 	}
 }
 
+static void suppress_screensaver(void)
+{
+	button_reset_last_input_timestamp();
+}
+
 static void clue_run()
 {
 	int idle;
@@ -340,6 +345,7 @@ static void clue_run()
 		FbWriteString(card[playing_as_character].name);
 		FbMove(14, 30);
 		FbImage(card[playing_as_character].pic, 0);
+		suppress_screensaver();
 	} else {
 		idle = 0;
 		dynmenu_draw(&game_menu);
