@@ -185,9 +185,7 @@ static void *write_udp_packets_thread_fn(void *thread_info)
 			continue;
 		s = ((struct sockaddr_in *) a->ifa_addr)->sin_addr;
 		bcast_addr = *(struct sockaddr_in *) a->ifa_addr;
-		fprintf(stderr, "comparing ipaddr %08x to %08x\n", s.s_addr, localhost_ip.s_addr);
 		if (s.s_addr == localhost_ip.s_addr) {
-			fprintf(stderr, "Matched IP address %08x\n", (uint32_t) localhost_ip.s_addr);
 			netmask = ((struct sockaddr_in *) a->ifa_netmask)->sin_addr.s_addr;
 			found_netmask = 1;
 			break;

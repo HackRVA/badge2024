@@ -728,7 +728,6 @@ static void load_badge_images(void)
 			&led_width, &led_height);
 	load_image("../images/really-quit.png", &quit_confirm_pixels,
 			&quit_confirm_width, &quit_confirm_height);
-	printf("quit_confirm_ w,h = %d, %d\n", quit_confirm_width, quit_confirm_height);
 }
 
 void toggle_fullscreen_mode(void)
@@ -928,9 +927,9 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
     SDL_Quit();
 
 
-    printf("\n\n\n\n\n\n\n\n\n\n\n");
-    printf("If you seak leak sanitizer complaining about memory and _XlcDefaultMapModifiers\n");
+    printf("\n\n\n");
+    printf("If you see leak sanitizer complaining about memory and _XlcDefaultMapModifiers\n");
     printf("it's because SDL is programmed by monkeys.\n");
-    printf("\n\n\n\n\n\n\n\n\n\n\n");
+    printf("\n\n\n");
     exit(0);
 }
