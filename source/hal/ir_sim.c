@@ -17,7 +17,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <endian.h>
 
 #include "ir.h"
 #include "badge.h"
@@ -118,6 +117,25 @@ static const IR_DATA *ir_output_queue_dequeue(void)
 	ir_output_queue_output = (ir_output_queue_output + 1) % IR_OUTPUT_QUEUE_SIZE;
 	IRpacketOutCurr = (IRpacketOutCurr + 1) % IR_OUTPUT_QUEUE_SIZE;
 	return v;
+}
+
+static uint64_t cpu_to_be64(uint64_t v)
+{
+	/* This works whether the native byte order is big or little endian.  Think about it. */
+	unsigned char *x = (unsigned char *) &v;
+	return	((uint64_t) x[0] << 56) |
+		((uint64_t) x[1] << 48) |
+		((uint64_t) x[2] << 40) |
+		((uint64_t) x[3] << 32) |
+		((uint64_t) x[4] << 24) |
+		((uint64_t) x[5] << 16) |
+		((uint64_t) x[6] << 8) |
+		((uint64_t) x[7] << 0);
+}
+
+static uint64_t be64_to_cpu(uint64_t v)
+{
+	return cpu_to_be64(v);
 }
 
 struct network_data_packet {
@@ -225,7 +243,7 @@ static void *write_udp_packets_thread_fn(void *thread_info)
 
 			/* Serialize data */
 			struct network_data_packet ndp;
-			ndp.badge_id = htobe64(badge_system_data()->badgeId);
+			ndp.badge_id = cpu_to_be64(badge_system_data()->badgeId);
 			ndp.recipient_address = htons(v->recipient_address);
 			ndp.app_address = v->app_address;
 			ndp.data_length = v->data_length;
@@ -297,7 +315,7 @@ static void *read_udp_packets_thread_fn(void *thread_info)
 			fprintf(stderr, "recvfrom failed: %s\n", strerror(errno));
 			continue;
 		}
-		if (be64toh(ndp.badge_id) == badge_system_data()->badgeId) {
+		if (be64_to_cpu(ndp.badge_id) == badge_system_data()->badgeId) {
 			udpdebug(stderr, "Rejected packet we sent to ourself\n");
 			continue;
 		}
