@@ -284,6 +284,7 @@ static void clue_init_main_menu(void)
 
 static void draw_elapsed_time(void)
 {
+	static int last_second = -1;
 	static char msg[15] = "TIME:         ";
 	static char lastmsg[15];
 	uint64_t current_time = rtc_get_ms_since_boot();
@@ -298,6 +299,10 @@ static void draw_elapsed_time(void)
 	int hours = (int) elapsed_time_hours;
 	int mins = (int) (elapsed_time_min - (elapsed_time_hours * 60));
 	int secs = (int) (elapsed_time_s - (elapsed_time_hours * 3600) - (elapsed_time_min * 60));
+	if (last_second != secs) {
+		last_second = secs;
+		screen_changed = 1;
+	}
 
 	memset(msg, 0, sizeof(msg));
 	snprintf(msg, sizeof(msg), "TIME: %02d:%02d:%02d", hours, mins, secs);
@@ -318,16 +323,26 @@ static void draw_question_count(void)
 	FbWriteString(msg);
 }
 
+static void update_screen(void)
+{
+	if (screen_changed)
+		FbSwapBuffers();
+	screen_changed = 0;
+}
+
 static void clue_main_menu(void)
 {
 	dynmenu_draw(&main_menu);
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		dynmenu_change_current_selection(&main_menu, 1);
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		dynmenu_change_current_selection(&main_menu, -1);
+		screen_changed = 1;
+		
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		change_clue_state(main_menu.item[main_menu.current_item].next_state);
 	}
@@ -340,10 +355,12 @@ static void suppress_screensaver(void)
 
 static void clue_run()
 {
-	int idle;
+	static int idle = 0;
 	FbClear();
 	uint64_t current_time = rtc_get_ms_since_boot();
 	if (((current_time - clue_run_idle_time) / 1000) > 30) {
+		if (!idle)
+			screen_changed = 1;
 		idle = 1;
 		FbMove(0, 0);
 		FbWriteString("MY NAME IS:\n");
@@ -352,22 +369,26 @@ static void clue_run()
 		FbImage(card[playing_as_character].pic, 0);
 		suppress_screensaver();
 	} else {
+		if (idle)
+			screen_changed = 1;
 		idle = 0;
 		dynmenu_draw(&game_menu);
 		draw_elapsed_time();
 		draw_question_count();
 	}
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		if (!idle)
 			dynmenu_change_current_selection(&game_menu, 1);
 		clue_run_idle_time = rtc_get_ms_since_boot();
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		if (!idle)
 			dynmenu_change_current_selection(&game_menu, -1);
 		clue_run_idle_time = rtc_get_ms_since_boot();
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (!idle)
 			change_clue_state(game_menu.item[game_menu.current_item].next_state);
@@ -476,7 +497,7 @@ static void clue_notebook()
 
 	FbClear();
 	draw_notebook(top_item, row, col);
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
@@ -488,20 +509,24 @@ static void clue_notebook()
 			if (top_item > 11)
 				top_item = 11;
 		}
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		row--;
 		if (row < 0)
 			row = 0;
 		if (row < top_item)
 			top_item = row;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		col++;
 		if (col > 5)
 			col = 5;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		col--;
 		if (col < 0)
 			col = 0;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		unsigned char nc = '?';
 		switch (notebook.k[row][col]) {
@@ -521,6 +546,7 @@ static void clue_notebook()
 			nc = '?';
 		}
 		notebook.k[row][col] = nc;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
 		change_clue_state(CLUE_RUN);
@@ -573,7 +599,7 @@ static void clue_evidence(void)
 			FbColor(WHITE);
 		}
 	}
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
@@ -581,11 +607,13 @@ static void clue_evidence(void)
 		n++;
 		if (n > count - 1)
 			n = count - 1;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		new_evidence = -1;
 		n--;
 		if (n < 0)
 			n = 0;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		new_evidence = -1;
@@ -645,17 +673,19 @@ static void clue_interview(int making_accusation)
 	else
 		FbWriteString("\n\nASK QUESTION");
 	FbColor(WHITE);
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		n++;
 		if (n > 3)
 			n = 3;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		n--;
 		if (n < 0)
 			n = 0;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		switch (n) {
 		case 0:
@@ -676,6 +706,7 @@ static void clue_interview(int making_accusation)
 		default:
 			break;
 		}
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		switch (n) {
 		case 0:
@@ -700,6 +731,7 @@ static void clue_interview(int making_accusation)
 		default:
 			break;
 		}
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (n == 3 && question.person >= 0 && question.weapon >= 6 + 9 && question.location >= 6) {
 			if (!making_accusation) {
@@ -709,6 +741,7 @@ static void clue_interview(int making_accusation)
 				change_clue_state(CLUE_CHECK_ACCUSATION);
 			}
 		}
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
 		change_clue_state(CLUE_RUN);
@@ -727,7 +760,7 @@ static void clue_received_answer(void)
 		FbWriteString(card[question_answer].name);
 		FbMoveX(0);
 		FbWriteString("\nKNOWS NOTHING\nABOUT THIS\n");
-		FbSwapBuffers();
+		update_screen();
 	} else {
 		for (int i = 0; i < NCARDS; i++) {
 			if (current_deck.held_by[i] == question_answer &&
@@ -744,7 +777,7 @@ static void clue_received_answer(void)
 		FbWriteString(card[question_answer].name);
 		FbMoveX(0);
 		FbWriteString("\nKNOWS NOTHING\nABOUT THIS\n");
-		FbSwapBuffers();
+		update_screen();
 	}
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
@@ -770,7 +803,7 @@ static void clue_confirm_accuse(void)
 	FbWriteString("IF YOU ARE\nINCORRECT\nYOU WILL LOSE\nTHE GAME.\n\n");
 	FbWriteString("ARE YOU SURE\nYOU WANT TO\nPROCEED?\n");
 	FbWriteString("\nA: NO\nB: YES\n");
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
@@ -826,6 +859,7 @@ static void clue_end(int lucky)
 {
 	FbColor(WHITE);
 	FbBackgroundColor(BLACK);
+	FbClear();
 	FbMove(8, 8);
 	FbWriteString("YOUR ACCUSATION\nIS CORRECT!\n");
 	FbWriteString("YOU ARE VERY\n");
@@ -835,7 +869,7 @@ static void clue_end(int lucky)
 		FbWriteString("CLEVER.\n");
 	draw_elapsed_time();
 	draw_question_count();
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
@@ -893,6 +927,7 @@ static void clue_wrong_accusation(void)
 {
 	FbColor(WHITE);
 	FbBackgroundColor(BLACK);
+	FbClear();
 	FbMove(8, 8);
 	FbWriteString("YOUR ACCUSATION\nIS INCORRECT!\n\n");
 	FbWriteString("IT WAS\n");
@@ -901,7 +936,7 @@ static void clue_wrong_accusation(void)
 	print_murder_location();
 	FbWriteString("WITH THE\n");
 	print_murder_weapon();
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
@@ -962,7 +997,7 @@ static void clue_transmit_answer(void)
 	FbMove(10, 60);
 	FbWriteLine("TRANSMITTING\n");
 	FbWriteLine("ANSWER");
-	FbSwapBuffers();
+	update_screen();
 
 	clue_run_idle_time = rtc_get_ms_since_boot();
 	change_clue_state(CLUE_RUN);
@@ -985,7 +1020,7 @@ static void clue_transmit_question(void)
 	FbWriteLine("ASKING");
 	FbMove(10, 70);
 	FbWriteLine("QUESTION");
-	FbSwapBuffers();
+	update_screen();
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
