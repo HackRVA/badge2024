@@ -266,7 +266,10 @@ static void clue_init_main_menu(void)
 	if (game_in_progress)
 		dynmenu_add_item(&main_menu, "RESUME GAME", CLUE_RUN, 0);
 	dynmenu_add_item(&main_menu, "START NEW GAME", CLUE_NEW_GAME, 1);
-	dynmenu_add_item(&main_menu, "PAUSE_GAME", CLUE_EXIT, 2);
+	if (game_in_progress)
+		dynmenu_add_item(&main_menu, "PAUSE_GAME", CLUE_EXIT, 2);
+	else
+		dynmenu_add_item(&main_menu, "QUIT", CLUE_EXIT, 2);
 
 	dynmenu_init(&game_menu, game_menu_item, ARRAYSIZE(game_menu_item));
 	dynmenu_clear(&game_menu);
@@ -875,6 +878,7 @@ static void clue_end(int lucky)
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+		game_in_progress = 0;
 		change_clue_state(CLUE_INIT);
 	}
 }
@@ -942,6 +946,7 @@ static void clue_wrong_accusation(void)
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+		game_in_progress = 0;
 		change_clue_state(CLUE_INIT);
 	}
 }
