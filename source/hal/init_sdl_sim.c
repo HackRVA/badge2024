@@ -492,6 +492,8 @@ static union vec3 badge_orientation_points[] = {
 };
 
 static union vec3 orientation_indicator_position = { { 0.0f, 0.0f, 100.0f } };
+#define BADGE_ORIENTATION_X (100.0f)
+#define BADGE_ORIENTATION_Y (500.0f)
 
 static void draw_badge_orientation_indicator(SDL_Renderer *renderer, float x, float y, float scale, union vec3 *badge_position, union quat *orientation)
 {
@@ -644,7 +646,7 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
 
     draw_flare_led(&slp);
 
-    draw_badge_orientation_indicator(renderer, 100.0f, 500.0f, 1.0f,
+    draw_badge_orientation_indicator(renderer, BADGE_ORIENTATION_X, BADGE_ORIENTATION_Y, 1.0f,
 		&orientation_indicator_position, &badge_orientation);
 
     maybe_draw_quit_confirmation();
@@ -822,13 +824,13 @@ static void process_events(SDL_Window *window)
             if (!event.motion.state) /* button held? */
                 break;
             /* Check if motion is inside orientation indicator */
-            if (event.motion.x < 25)
+            if (event.motion.x < BADGE_ORIENTATION_X - 65)
                 break;
-            if (event.motion.x > 150)
+            if (event.motion.x > BADGE_ORIENTATION_X + 65)
                 break;
-            if (event.motion.y < 25)
+            if (event.motion.y < BADGE_ORIENTATION_Y - 65)
                 break;
-            if (event.motion.y > 150)
+            if (event.motion.y > BADGE_ORIENTATION_Y + 65)
                 break;
             /* We have mouse motion with button held, inside the orientation indicator... */
             float vector_len;
