@@ -481,9 +481,13 @@ static void check_the_buttons(void)
 			BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
 			BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
 			BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 			trading_monsters_enabled = 0;
 			app_state = GAME_MENU;
+			screen_changed = 1;
 			return;
 		}
     }
@@ -508,7 +512,8 @@ static void check_the_buttons(void)
             else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
             {
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
                 switch(menu.current_item){
                     case 0:
@@ -545,7 +550,8 @@ static void check_the_buttons(void)
                 current_monster = menu.item[menu.current_item].cookie;
                 render_monster();
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
                 change_menu_level(MAIN_MENU);
                 something_changed = 1;
@@ -561,7 +567,8 @@ static void check_the_buttons(void)
                     show_message(monsters[current_monster].blurb);
                 }
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
                 #ifdef __linux__
                     print_menu_info();
@@ -585,7 +592,8 @@ static void check_the_buttons(void)
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)|
+			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
@@ -593,7 +601,8 @@ static void check_the_buttons(void)
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
