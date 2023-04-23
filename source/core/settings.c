@@ -131,6 +131,7 @@ struct menu_t backlight_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
 
+#if 0
 /*
    rotate screen
 */
@@ -143,6 +144,7 @@ void rotate_cb(__attribute__((unused)) struct menu_t *h) {
 
     returnToMenus();
 };
+#endif
 
 static void invert_cb(__attribute__((unused)) struct menu_t *h) {
 
@@ -161,8 +163,6 @@ static void invert_cb(__attribute__((unused)) struct menu_t *h) {
 }
 
 const struct menu_t rotate_m[] = {
-    {"Default",   0|VERT_ITEM, FUNCTION, {(struct menu_t *)rotate_cb} },
-    {"Rotated",   1|VERT_ITEM, FUNCTION, {(struct menu_t *)rotate_cb} },
     {"Inverted",   1|VERT_ITEM, FUNCTION, {(struct menu_t *)invert_cb} },
     {"Back",      VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
