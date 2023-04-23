@@ -495,14 +495,20 @@ The function to process the incoming packets from the queue looks like this:
 	static void clue_check_for_incoming_packets(void)
 	{
 	    IR_DATA *new_packet;
+	    IR_DATA new_packet_copy;
+	    uint8_t packet_data[64];
 	    int next_queue_out;
 	    uint32_t interrupt_state = hal_disable_interrupts();
 	    while (queue_out != queue_in) {
 		next_queue_out = (queue_out + 1) % QUEUE_SIZE;
 		new_packet = &packet_queue[queue_out];
 		queue_out = next_queue_out;
+		assert(new_packet->data_length <= 64);
+		memcpy(&new_packet_copy, new_packet, sizeof(new_packet_copy));
+		new_packet_copy.data = packet_data;
+		memcpy(packet_data, new_packet->data, new_packet->data_length);
 		hal_restore_interrupts(interrupt_state);
-		clue_process_packet(new_packet);
+		clue_process_packet(&new_packet_copy);
 		interrupt_state = hal_disable_interrupts();
 	    }
 	    hal_restore_interrupts(interrupt_state);
