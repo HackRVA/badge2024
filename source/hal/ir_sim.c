@@ -348,12 +348,14 @@ static void *read_udp_packets_thread_fn(void *thread_info)
 	return NULL;
 }
 
+#ifdef linux
 /* This extern should not be needed with #define _GNU_SOUCE #include <pthread.h>
  * but for some unknown reason (cmake problem?) I'm getting implicit
  * declaration of pthread_setname_np() without this.
  * TODO: figure this out properly.
  */
 extern int pthread_setname_np(pthread_t thread, const char *name);
+#endif
 
 static void setup_ir_sensor(unsigned short port_to_recv_from)
 {
