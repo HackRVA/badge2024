@@ -51,8 +51,7 @@ static int game_in_progress = 0;
 static signed char playing_as_character = -1;
 static int questions_asked = 0;
 static unsigned int clue_random_seed = 0;
-
-
+static int screen_changed = 0;
 
 /* Program states.  Initial state is CLUE_INIT */
 enum clue_state_t {
@@ -213,7 +212,12 @@ static void deal_cards(unsigned int seed, struct deck *d)
 }
 
 static enum clue_state_t clue_state = CLUE_INIT;
-static int screen_changed = 0;
+
+static void change_clue_state(enum clue_state_t new_state)
+{
+	screen_changed = 1;
+	clue_state = new_state;
+}
 
 static struct dynmenu main_menu;
 static struct dynmenu_item menu_item[15];
@@ -243,7 +247,7 @@ static void clue_init(void)
 {
 	FbInit();
 	FbClear();
-	clue_state = CLUE_INIT_MAIN_MENU;
+	change_clue_state(CLUE_INIT_MAIN_MENU);
 	screen_changed = 1;
 	playing_as_character = (signed char) badge_system_data()->badgeId & 0x0F;
 	playing_as_character = playing_as_character % 6;
@@ -275,7 +279,7 @@ static void clue_init_main_menu(void)
 	dynmenu_add_item(&game_menu, "ACCUSE", CLUE_CONFIRM_ACCUSE, 3);
 	dynmenu_add_item(&game_menu, "PAUSE GAME", CLUE_EXIT, 4);
 
-	clue_state = CLUE_MAIN_MENU;
+	change_clue_state(CLUE_MAIN_MENU);
 }
 
 static void draw_elapsed_time(void)
@@ -325,7 +329,7 @@ static void clue_main_menu(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		dynmenu_change_current_selection(&main_menu, -1);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		clue_state = main_menu.item[main_menu.current_item].next_state;
+		change_clue_state(main_menu.item[main_menu.current_item].next_state);
 	}
 }
 
@@ -366,14 +370,14 @@ static void clue_run()
 		clue_run_idle_time = rtc_get_ms_since_boot();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (!idle)
-			clue_state = game_menu.item[game_menu.current_item].next_state;
+			change_clue_state(game_menu.item[game_menu.current_item].next_state);
 		clue_run_idle_time = rtc_get_ms_since_boot();
 	}
 }
 
 static void clue_exit()
 {
-	clue_state = CLUE_INIT; /* So that when we start again, we do not immediately exit */
+	change_clue_state(CLUE_INIT); /* So that when we start again, we do not immediately exit */
 	ir_remove_callback(clue_ir_packet_callback, BADGE_IR_CLUE_GAME_ADDRESS);
 	scan_for_incoming_packets = 0;
 	returnToMenus();
@@ -519,7 +523,7 @@ static void clue_notebook()
 		notebook.k[row][col] = nc;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
-		clue_state = CLUE_RUN;
+		change_clue_state(CLUE_RUN);
 	}
 }
 
@@ -586,7 +590,7 @@ static void clue_evidence(void)
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		new_evidence = -1;
 		clue_run_idle_time = rtc_get_ms_since_boot();
-		clue_state = CLUE_RUN;
+		change_clue_state(CLUE_RUN);
 	}
 }
 
@@ -700,14 +704,14 @@ static void clue_interview(int making_accusation)
 		if (n == 3 && question.person >= 0 && question.weapon >= 6 + 9 && question.location >= 6) {
 			if (!making_accusation) {
 				questions_asked++;
-				clue_state = CLUE_TRANSMIT_QUESTION;
+				change_clue_state(CLUE_TRANSMIT_QUESTION);
 			} else {
-				clue_state = CLUE_CHECK_ACCUSATION;
+				change_clue_state(CLUE_CHECK_ACCUSATION);
 			}
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
-		clue_state = CLUE_RUN;
+		change_clue_state(CLUE_RUN);
 	}
 }
 
@@ -732,7 +736,7 @@ static void clue_received_answer(void)
 				current_deck.card[i] == question.weapon)) {
 				evidence.from_who[current_deck.card[i]] = question_answer;
 				new_evidence = current_deck.card[i];
-				clue_state = CLUE_EVIDENCE;
+				change_clue_state(CLUE_EVIDENCE);
 				return;
 			}
 		}
@@ -751,7 +755,7 @@ static void clue_received_answer(void)
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
-		clue_state = CLUE_RUN;
+		change_clue_state(CLUE_RUN);
 	}
 }
 
@@ -771,10 +775,10 @@ static void clue_confirm_accuse(void)
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
-		clue_state = CLUE_RUN;
+		change_clue_state(CLUE_RUN);
 		return;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		clue_state = CLUE_ACCUSE;
+		change_clue_state(CLUE_ACCUSE);
 		return;
 	}
 }
@@ -809,13 +813,13 @@ static void clue_check_accusation(void)
 		/* They got the correct answer. */
 		final_time_ms_since_boot = rtc_get_ms_since_boot();
 		if (got_lucky())
-				clue_state = CLUE_LUCKY;
+				change_clue_state(CLUE_LUCKY);
 			else
-				clue_state = CLUE_CLEVER;
+				change_clue_state(CLUE_CLEVER);
 			return;
 	}
 	/* They got the wrong answer */
-	clue_state = CLUE_WRONG_ACCUSATION;
+	change_clue_state(CLUE_WRONG_ACCUSATION);
 }
 
 static void clue_end(int lucky)
@@ -837,7 +841,7 @@ static void clue_end(int lucky)
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
-		clue_state = CLUE_INIT;
+		change_clue_state(CLUE_INIT);
 	}
 }
 
@@ -903,7 +907,7 @@ static void clue_wrong_accusation(void)
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
-		clue_state = CLUE_INIT;
+		change_clue_state(CLUE_INIT);
 	}
 }
 
@@ -926,7 +930,7 @@ static void clue_new_game(void)
 	deal_cards(random_num_state, &current_deck);
 	init_evidence();
 	clue_run_idle_time = rtc_get_ms_since_boot();
-	clue_state = CLUE_RUN;
+	change_clue_state(CLUE_RUN);
 	questions_asked = 0;
 	start_time_ms_since_boot = rtc_get_ms_since_boot();
 	final_time_ms_since_boot = 0;
@@ -961,7 +965,7 @@ static void clue_transmit_answer(void)
 	FbSwapBuffers();
 
 	clue_run_idle_time = rtc_get_ms_since_boot();
-	clue_state = CLUE_RUN;
+	change_clue_state(CLUE_RUN);
 }
 
 static void clue_transmit_question(void)
@@ -991,7 +995,7 @@ static void clue_transmit_question(void)
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		clue_state = CLUE_INTERVIEW;
+		change_clue_state(CLUE_INTERVIEW);
 	}
 }
 
@@ -1009,7 +1013,7 @@ static void clue_process_packet(IR_DATA* packet)
 	payload = clue_get_payload(packet);
 	udpdebug(stderr, "Got IR packet: %016lx\n", payload);
 	if (memcmp(&payload, "CLUE????", 8) == 0) {
-		clue_state = CLUE_TRANSMIT_ANSWER;
+		change_clue_state(CLUE_TRANSMIT_ANSWER);
 		return;
 	}
 
@@ -1019,7 +1023,7 @@ static void clue_process_packet(IR_DATA* packet)
 		if (question_answer > NSUSPECTS - 1)
 			question_answer = -1;
 		udpdebug(stderr, "clue answer is suspect %d\n", question_answer);
-		clue_state = CLUE_RECEIVED_ANSWER;
+		change_clue_state(CLUE_RECEIVED_ANSWER);
 		return;
 	}
 	udpdebug(stderr, "Clue: got unexpected packet: 0x%016lx\n", payload);
