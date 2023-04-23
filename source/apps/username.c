@@ -163,8 +163,30 @@ static int row_col_to_letter(int row, int col)
 static void check_the_buttons(void)
 {
 	int action;
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
+	int rotation = button_get_rotation(0);
 
+	if (rotation < 0) {
+		if (current_col == 5 && current_row == 4) /* special case for exit */
+			current_col--;
+		current_col--;
+		if (current_col < 0) {
+			current_col = 5;
+			current_row--;
+			if (current_row < 0)
+				current_row = 4;
+		}
+		something_changed = 1;
+	} else if (rotation > 0) {
+		current_col++;
+		if (current_col > 5) {
+			current_col = 0;
+			current_row++;
+			if (current_row > 4)
+				current_row = 0;
+		}
+		something_changed = 1;
+	}
 	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		current_row--;
 		if (current_row < 0)
