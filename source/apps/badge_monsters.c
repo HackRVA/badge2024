@@ -753,9 +753,8 @@ static void app_init(void)
     enable_monster(initial_mon);
 }
 
-int badge_monsters_cb(void)
+void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
 {
     state_to_function_map[app_state]();
-    return 0;
 }
 

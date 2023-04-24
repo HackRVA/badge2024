@@ -258,8 +258,7 @@ static void app_init(void)
 	app_state = DRAW_SCREEN;
 }
 
-int username_cb(void)
+void username_cb(__attribute__((unused)) struct menu_t *m)
 {
 	state_to_function_map[app_state]();
-	return 0;
 }

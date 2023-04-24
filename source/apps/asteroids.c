@@ -564,7 +564,7 @@ static void asteroids_exit()
 	returnToMenus();
 }
 
-void asteroids_cb(void)
+void asteroids_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (asteroids_state) {
 	case ASTEROIDS_INIT:

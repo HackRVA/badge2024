@@ -860,7 +860,7 @@ static void slot_machine_exit()
 	returnToMenus();
 }
 
-void slot_machine_cb(void)
+void slot_machine_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (slot_machine_state) {
 	case SLOT_MACHINE_INIT:

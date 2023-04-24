@@ -254,7 +254,7 @@ void returnToMenus() {
     (void) button_down_latches();
 
     if (G_currMenu == NULL) {
-        G_currMenu = (struct menu_t *)main_m;
+        G_currMenu = (struct menu_t *) main_m;
         G_selectedMenu = NULL;
         G_menuStack[G_menuCnt].currMenu = G_currMenu;
         G_menuStack[G_menuCnt].selectedMenu = G_selectedMenu;
@@ -272,7 +272,7 @@ void menus() {
 
     if (G_currMenu == NULL || (redraw_main_menu)){
         redraw_main_menu = 0;
-        G_menuStack[G_menuCnt].currMenu = (struct menu_t *)main_m;
+        G_menuStack[G_menuCnt].currMenu = (struct menu_t *) main_m;
         G_menuStack[G_menuCnt].selectedMenu = NULL;
         G_currMenu = (struct menu_t *)main_m;
         //selectedMenu = G_currMenu;
@@ -479,38 +479,38 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
 }
 
 const struct menu_t games_m[] = {
-   {"Blinkenlights", VERT_ITEM|DEFAULT_ITEM, FUNCTION, {(struct menu_t *)blinkenlights_cb}}, // Set other badges LED
-   {"Conductor",     VERT_ITEM, FUNCTION, {(struct menu_t *)conductor_cb}}, // Tell other badges to play notes
-   {"Lunar Rescue",  VERT_ITEM, FUNCTION, {(struct menu_t *)lunarlander_cb} },
-   {"Badge Monsters",VERT_ITEM, FUNCTION, {(struct menu_t *)badge_monsters_cb} },
-   {"Smashout",      VERT_ITEM, FUNCTION, {(struct menu_t *)smashout_cb} },
-   {"Hacking Sim",   VERT_ITEM, FUNCTION, {(struct menu_t *)hacking_simulator_cb} },
-   {"Asteroids", VERT_ITEM, FUNCTION, {(struct menu_t *)asteroids_cb} },
-   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, {(struct menu_t *)etch_a_sketch_cb} },
-   {"Game of Life", VERT_ITEM, FUNCTION, {(struct menu_t *)game_of_life_cb} },
-   {"Slot Machine", VERT_ITEM, FUNCTION, {(struct menu_t *)slot_machine_cb}},
-   {"Goodbye Gulag", VERT_ITEM, FUNCTION, {(struct menu_t *)gulag_cb}},
-   {"Clue", VERT_ITEM, FUNCTION, {(struct menu_t *)clue_cb}},
-   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"Blinkenlights", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = blinkenlights_cb }, }, // Set other badges LED
+   {"Conductor",     VERT_ITEM, FUNCTION, { .func = conductor_cb }, }, // Tell other badges to play notes
+   {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
+   {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
+   {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, },
+   {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, },
+   {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, },
+   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, },
+   {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, },
+   {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, },
+   {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
+   {"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, },
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
 };
 
 const struct menu_t settings_m[] = {
-   {"Backlight", VERT_ITEM, MENU, {(struct menu_t *)backlight_m}},
-   {"Led", VERT_ITEM, MENU, {(struct menu_t *)LEDlight_m}},  /* coerce/cast to a menu_t data pointer */
-   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, {(struct menu_t *)buzzer_m}},
-   {"Invert Display", VERT_ITEM, MENU, {(struct menu_t *)rotate_m}},
-   {"User Name", VERT_ITEM, FUNCTION, {(struct menu_t *)username_cb} },
-   {"Screensaver", VERT_ITEM, MENU, {(struct menu_t *)screen_lock_m} },
-   {"ID", VERT_ITEM, MENU, {(struct menu_t *)myBadgeid_m}},
-   {"QC",  VERT_ITEM, FUNCTION, {(struct menu_t *)QC_cb}},
+   {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, },
+   {"Led", VERT_ITEM, MENU, { .menu = LEDlight_m }, },
+   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, },
+   {"Invert Display", VERT_ITEM, MENU, { .menu = rotate_m, }},
+   {"User Name", VERT_ITEM, FUNCTION, { .func = username_cb }, },
+   {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, },
+   {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, },
+   {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, },
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 
 const struct menu_t main_m[] = {
-   {"Schedule",    VERT_ITEM, MENU, {schedule_m}},
-   {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, {games_m}},
-   {"Settings",    VERT_ITEM, MENU, {settings_m}},
-   {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, {(struct menu_t *) about_badge_cb}},
+   {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, },
+   {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = games_m }, },
+   {"Settings",    VERT_ITEM, MENU, { .menu = settings_m }, },
+   {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, { .func = about_badge_cb }, },
 } ;
 
 const char splash_words1[] = "Loading";

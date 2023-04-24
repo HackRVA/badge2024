@@ -2,6 +2,6 @@
 #define GULAG__
 
 
-void gulag_cb(void);
+void gulag_cb(struct menu_t *m);
 
 #endif

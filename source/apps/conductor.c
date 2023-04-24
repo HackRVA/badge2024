@@ -208,7 +208,7 @@ static void run_conductor(uint32_t down_latches)
     }
 }
 
-void conductor_cb(void)
+void conductor_cb(__attribute__((unused)) struct menu_t *m)
 {
     int down_latches = button_down_latches();
     switch(con_state)

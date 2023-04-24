@@ -4953,7 +4953,7 @@ static void gulag_safe_cracked(void)
 		gulag_state = GULAG_RUN;
 }
 
-void gulag_cb(void)
+void gulag_cb(__attribute__((unused)) struct menu_t *m)
 {
 	game_timer++;
 	switch (gulag_state) {

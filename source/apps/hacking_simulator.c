@@ -1071,7 +1071,7 @@ static void hackingsimulator_quit_input(void)
 	}
 }
 
-int hacking_simulator_cb(void)
+void hacking_simulator_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (hacking_simulator_state)
 	{
@@ -1102,6 +1102,5 @@ int hacking_simulator_cb(void)
 	default:
 		break;
 	}
-	return 0;
 }
 

@@ -164,7 +164,7 @@ void set_local_leds()
     led_pwm_enable(BADGE_LED_RGB_BLUE, bl_blue * 255 / 100);
 }
 
-void blinkenlights_cb()
+void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
 {
     int down_latches = button_down_latches();
     switch(bl_state)

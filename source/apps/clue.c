@@ -1091,7 +1091,7 @@ static void clue_check_for_incoming_packets(void)
     hal_restore_interrupts(interrupt_state);
 }
 
-void clue_cb(void)
+void clue_cb(__attribute__((unused)) struct menu_t *m)
 {
 	if (scan_for_incoming_packets)
 		clue_check_for_incoming_packets();

@@ -1,7 +1,7 @@
 #ifndef BADGE_MONSTERS_H__
 #define BADGE_MONSTERS_H__
 
-int badge_monsters_cb(void);
+void badge_monsters_cb(struct menu_t *m);
 
 /* We have 16 bits of payload. Let's say the high order 4 bits are the opcode.
  * That gives us 16 opcodes, with 12 bits of payload per opcode for single

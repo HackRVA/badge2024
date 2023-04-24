@@ -137,7 +137,7 @@ static void etch_a_sketch_exit()
 	returnToMenus();
 }
 
-void etch_a_sketch_cb(void)
+void etch_a_sketch_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (etch_a_sketch_state) {
 	case ETCH_A_SKETCH_INIT:

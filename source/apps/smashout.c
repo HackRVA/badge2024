@@ -408,7 +408,7 @@ static void smashout_game_exit()
 	returnToMenus();
 }
 
-int smashout_cb(void)
+void smashout_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (smashout_program_state) {
 	case SMASHOUT_GAME_INIT:
@@ -423,6 +423,5 @@ int smashout_cb(void)
 	default:
 		break;
 	}
-	return 0;
 }
 

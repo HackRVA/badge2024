@@ -370,7 +370,7 @@ static void game_of_life_exit(void)
 	returnToMenus();
 }
 
-int game_of_life_cb(void)
+void game_of_life_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (game_of_life_state)
 	{
@@ -392,7 +392,6 @@ int game_of_life_cb(void)
 	default:
 		break;
 	}
-	return 0;
 }
 
 

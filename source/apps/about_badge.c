@@ -61,7 +61,7 @@ static void about_badge_exit()
 	returnToMenus();
 }
 
-int about_badge_cb(void)
+void about_badge_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (about_badge_state) {
 	case ABOUT_BADGE_INIT:
@@ -76,6 +76,5 @@ int about_badge_cb(void)
 	default:
 		break;
 	}
-	return 0;
 }
 
