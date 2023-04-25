@@ -229,9 +229,13 @@ static void check_buttons()
 		if (camera.orientation > 127)
 			camera.orientation = 0;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+		/* This seems "off", but... works?  Something's screwy about the coord system
+		 * I think. */
 		camera.z -= cosine(camera.orientation);
 		camera.x -= sine(camera.orientation);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+		/* This seems "off", but... works?  Something's screwy about the coord system
+		 * I think. */
 		camera.z += cosine(camera.orientation);
 		camera.x += sine(camera.orientation);
 	}
@@ -243,10 +247,8 @@ static void project_vertex(struct camera *c, struct bz_vertex *v, struct bz_obje
 
 	a = o->orientation;
 
-	printf("x, y, z = %d, %d, %d\n", v->x, v->y, v->z);
-
 	/* Rotate for object orientation */
-	nx = ((v->x * cosine(a)) / 256) - ((v->z * sine(a)) / 256);
+	nx = ((-v->x * cosine(a)) / 256) - ((v->z * sine(a)) / 256);
 	ny = v->y;
 	nz = ((v->z * cosine(a)) / 256) - ((v->x * sine(a)) / 256); 
 	x = nx;
@@ -269,35 +271,6 @@ static void project_vertex(struct camera *c, struct bz_vertex *v, struct bz_obje
 	x = nx;
 	y = ny;
 	z = nz;
-
-#if 0
-	/* Reject stuff behind us or even just too close to us */
-	if (z > -5 * 256) {
-		v->px = -1;
-		v->py = -1;
-		return;
-	}
-#endif
-
-#if 0
-	/* Calculate distance from camera to vertex */
-	int dx2 = ((c->x - x) * (c->x - x)) / 256;
-	int dy2 = ((c->y - y) * (c->y - y)) / 256;
-	int dz2 = ((c->z - z) * (c->z - z)) / 256;
-	int d = fxp_sqrt(dx2 + dy2 + dz2);
-
-	/* Perspective projection */
-	if (d == 0) {
-		v->px = -1;
-		v->py = -1;
-		return;
-	}
-	v->px = ((c->eyedist * x)) / d; 
-	v->py = ((c->eyedist * y)) / d; 
-
-	v->px = v->px + (64 * 256);
-	v->py = (160 * 256) - (v->py + (80 * 256));
-#endif
 
 	if (z >= 0) {
 		v->px = -1;
