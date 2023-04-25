@@ -731,7 +731,7 @@ static int onscreen(int x, int y)
 {
 	if (x < 0 || x >= 128)
 		return 0;
-	if (y < 0 || y >= 159)
+	if (y < 0 || y >= 160)
 		return 0;
 	return 1;
 }
