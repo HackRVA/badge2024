@@ -421,11 +421,56 @@ static void draw_objects(struct camera *c)
 		draw_object(c, i);
 }
 
+static void draw_radar(void)
+{
+	static int radar_angle = 0;
+	const int rx = 64;
+	const int ry = 10;
+
+	radar_angle++;
+	if (radar_angle >= 128)
+		radar_angle = 0;
+	int x = (cosine(radar_angle) * 10) >> 8;
+	int y = (sine(radar_angle) * 10) >> 8;
+	FbColor(x11_dark_red);
+	FbLine(rx, ry, rx + x, ry + y);
+	FbVerticalLine(64, 0, 64, 2);
+	FbVerticalLine(64, 18, 64, 20);
+	FbHorizontalLine(54, 10, 56, 10);
+	FbHorizontalLine(72, 10, 74, 10);
+
+	if ((radar_angle & 0x03) == 0x03)
+		return; /* Make radar blips blink by not drawing them every few frames */
+
+	for (int i = 0; i < nbz_objects; i++) {
+		if (bzo[i].model != TANK_MODEL)
+			continue;
+		int dx, dz, d, tx, tz;
+		dx = (bzo[i].x - camera.x) >> 8;
+		dz = (bzo[i].z - camera.z) >> 8;
+
+		d = ((dx * dx >> 8)) + ((dz * dz) >> 8);
+		if (d > 200)
+			continue;
+		/* Rotate for camera */
+		int a = 128 - camera.orientation;
+		if (a > 127)
+			a = a - 128;
+		int nx = ((-dx * cosine(a)) / 256) - ((dz * sine(a)) / 256);
+		int nz = ((dz * cosine(a)) / 256) - ((dx * sine(a)) / 256);
+		tx = (7 * nx) >> 8;
+		tz = (7 * nz) >> 8;
+		FbColor(WHITE);
+		FbPoint((unsigned char) (rx + tx), (unsigned char) (ry + tz));
+	}
+}
+
 static void draw_screen()
 {
 	char buf[15];
 	draw_horizon();
 	draw_objects(&camera);
+	draw_radar();
 	FbColor(WHITE);
 	snprintf(buf, sizeof(buf), "%d %d %d", camera.orientation, camera.x / 256, camera.z / 256);	
 	FbMove(0, 150);
