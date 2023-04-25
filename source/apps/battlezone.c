@@ -35,6 +35,9 @@ struct bz_object {
 	int orientation;
 	int alive;
 	int vx, vy, vz;
+	int parent_obj;
+#define NO_PARENT_OBJ (-2)
+#define PLAYER_PARENT_OBJ (-1)
 	uint16_t color;
 	unsigned char model;
 };
@@ -355,6 +358,7 @@ static int add_object(int x, int y, int z, int orientation, uint8_t model, uint1
 	bzo[nbz_objects].vy = 0;
 	bzo[nbz_objects].vz = 0;
 	bzo[nbz_objects].alive = 1;
+	bzo[nbz_objects].parent_obj = NO_PARENT_OBJ;
 	nbz_objects++;
 	return nbz_objects - 1;
 }
@@ -418,6 +422,37 @@ static void bump_player()
 	camera.y = CAMERA_GROUND_LEVEL + (4 * 256);
 }
 
+static int shell_collision(struct bz_object *s)
+{
+	int dx, dz;
+	for (int i = 0; i < nbz_objects; i++) {
+		if (s == &bzo[i]) /* can't collide with self */
+			continue;
+		dx = s->x - bzo[i].x;
+		dz = s->z - bzo[i].z;
+		if (dx < 0)
+			dx = -dx;
+		if (dz < 0)
+			dz = -dz;
+		 if (dx < (8 << 8) &&  dz < (8 << 8))
+			return i + 1;
+	}
+
+	if (s->parent_obj == PLAYER_PARENT_OBJ) /* player can't hit themselves */
+		return 0;
+
+	/* Check if we hit the player */
+	dx = s->x - camera.x;
+	dz = s->z - camera.z;
+	if (dx < 0)
+		dx = -dx;
+	if (dz < 0)
+		dz = -dz;
+	 if (dx < (8 << 8) &&  dz < (8 << 8))
+		return -1;
+	return 0;
+}
+
 static int player_obstacle_collision(int nx, int nz)
 {
 	for (int i = 0; i < nbz_objects; i++) {
@@ -443,14 +478,14 @@ static void fire_gun(void)
 
 	int n;
 
-	n = add_object(camera.x, camera.y, camera.z, 0, ARTILLERY_SHELL_MODEL, YELLOW);
+	n = add_object(camera.x, camera.y, camera.z, camera.orientation, ARTILLERY_SHELL_MODEL, YELLOW);
 	if (n < 0)
 		return;
-	bzo[n].orientation = camera.orientation;
 	bzo[n].alive = SHELL_LIFETIME;
-	bzo[n].vx = SHELL_SPEED * camera.x - sine(camera.orientation);
-	bzo[n].vz = SHELL_SPEED * camera.z - cosine(camera.orientation);
+	bzo[n].vx = -SHELL_SPEED * sine(camera.orientation);
+	bzo[n].vz = -SHELL_SPEED * cosine(camera.orientation);
 	bzo[n].vy = 0;
+	bzo[n].parent_obj = PLAYER_PARENT_OBJ;
 }
 
 static void check_buttons()
@@ -640,6 +675,8 @@ static void draw_radar(void)
 
 static void move_object(struct bz_object *o)
 {
+	int n;
+
 	switch (o->model) {
 	case TANK_MODEL:
 		o->orientation++;
@@ -651,6 +688,20 @@ static void move_object(struct bz_object *o)
 		o->z += o->vz;
 		if (o->alive > 0)
 			o->alive--;
+		if ((n = shell_collision(o)) != 0) {
+			n--; /* shell_collision returns 0 if no collision, object index + 1 if collision */
+			if (n < 0) {
+				printf("Hit player!\n");
+				o->alive = 0;
+				break;
+			}
+			if (bzo[n].model == TANK_MODEL) {
+				printf("Hit tank!\n");
+			} else {
+				printf("Hit obstacle\n");
+			}
+			o->alive = 0;
+		}
 		break;
 	default:
 		return;
