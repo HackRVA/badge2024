@@ -70,6 +70,20 @@ static int16_t bz_pyramid_vlist[] = {
 	4, 3,
 };
 
+static struct bz_vertex bz_narrow_pyramid_verts[] = {
+	{ -5,   0,  5, 0, 0, },
+	{  5,   0,  5, 0, 0, },
+	{  5,   0, -5, 0, 0, },
+	{ -5,   0, -5, 0, 0, },
+	{   0,  20,   0, 0, 0, },
+};
+
+static int16_t bz_narrow_pyramid_vlist[] = {
+	0, 1, 2, 3, 0, 4, 1, -1,
+	4, 2, -1,
+	4, 3,
+};
+
 static struct bz_vertex bz_horiz_line_verts[] = {
 	{ -10, 0, 0, 0, 0 },
 	{  10, 0, 0, 0, 0 },
@@ -168,6 +182,15 @@ static struct bz_model bz_pyramid_model = {
 	.prescale_denominator = 1,
 };
 
+static struct bz_model bz_narrow_pyramid_model = {
+	.nvertices = ARRAYSIZE(bz_narrow_pyramid_verts),
+	.nsegs = ARRAYSIZE(bz_narrow_pyramid_vlist),
+	.vert = bz_narrow_pyramid_verts,
+	.vlist = bz_narrow_pyramid_vlist,
+	.prescale_numerator = 1 * 256,
+	.prescale_denominator = 1,
+};
+
 static struct bz_model bz_horiz_line_model = {
 	.nvertices = 2,
 	.nsegs = 2,
@@ -198,6 +221,7 @@ static struct bz_model bz_tank_model = {
 static const struct bz_model *bz_model[] = {
 	&bz_cube_model,
 	&bz_pyramid_model,
+	&bz_narrow_pyramid_model,
 	&bz_horiz_line_model,
 	&bz_vert_line_model,
 	&bz_tank_model,
@@ -207,9 +231,10 @@ static const int nmodels = ARRAYSIZE(bz_model);
 
 #define CUBE_MODEL 0
 #define PYRAMID_MODEL 1
-#define HORIZ_LINE_MODEL 2
-#define VERT_LINE_MODEL 3
-#define TANK_MODEL 4
+#define NARROW_PYRAMID_MODEL 2
+#define HORIZ_LINE_MODEL 3
+#define VERT_LINE_MODEL 4
+#define TANK_MODEL 5
 
 #define MAX_BZ_OBJECTS 100
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
@@ -275,6 +300,7 @@ static void add_initial_objects(void)
 {
 	add_object( 100 * 256, 0,    0, 0, CUBE_MODEL, GREEN);
 	add_object(-100 * 256, 0,    0, 0, PYRAMID_MODEL, CYAN);
+	add_object(-200 * 256, 0,    100 * 256, 0, NARROW_PYRAMID_MODEL, MAGENTA);
 	add_object(   0, 0,  100 * 256, 0, CUBE_MODEL, WHITE);
 	add_object(   0, 0, -100 * 256, 0, TANK_MODEL, GREEN);
 }
