@@ -203,6 +203,37 @@ static int16_t bz_artillery_shell_vlist[] = {
 	1, 4, 3, 5, 1,
 };
 
+static struct bz_vertex bz_chunk0_vert[] = {
+	{ -3, 1, 2, 0, 0 },
+	{  3, 4, 0, 0, 0 },
+	{  4, -1, 4, 0, 0 }, 
+	{  1, -2, -1, 0, 0 },
+};
+
+static int16_t bz_chunk0_vlist[] = {
+	0, 1, 2, 0, 3, 2, -1, 3, 1,
+};
+
+static struct bz_vertex bz_chunk1_vert[] = {
+	{ -3, 3, 0, 0, 0 },
+	{  0, -2, 0, 0, 0 },
+	{  3, -1, 0, 0, 0 },
+};
+
+static int16_t bz_chunk1_vlist[] = {
+	0, 1, 2, 0,
+};
+
+static struct bz_vertex bz_chunk2_vert[] = {
+	{ -4, 2, 0, 0, 0 },
+	{  1, -3, 0, 0, 0 },
+	{  2, -2, 0, 0, 0 },
+};
+
+static int16_t bz_chunk2_vlist[] = {
+	0, 1, 2, 0,
+};
+
 static struct bz_model bz_cube_model = {
 	.nvertices = ARRAYSIZE(bz_cube_verts),
 	.nsegs = ARRAYSIZE(bz_cube_vlist),
@@ -275,6 +306,33 @@ static struct bz_model bz_artillery_shell_model = {
 	.prescale_denominator = 4,
 };
 
+static struct bz_model bz_chunk0_model = {
+	.nvertices = ARRAYSIZE(bz_chunk0_vert),
+	.nsegs = ARRAYSIZE(bz_chunk0_vlist),
+	.vert = bz_chunk0_vert,
+	.vlist = bz_chunk0_vlist,
+	.prescale_numerator = 256,
+	.prescale_denominator = 1,
+};
+
+static struct bz_model bz_chunk1_model = {
+	.nvertices = ARRAYSIZE(bz_chunk1_vert),
+	.nsegs = ARRAYSIZE(bz_chunk1_vlist),
+	.vert = bz_chunk1_vert,
+	.vlist = bz_chunk1_vlist,
+	.prescale_numerator = 256,
+	.prescale_denominator = 1,
+};
+
+static struct bz_model bz_chunk2_model = {
+	.nvertices = ARRAYSIZE(bz_chunk2_vert),
+	.nsegs = ARRAYSIZE(bz_chunk2_vlist),
+	.vert = bz_chunk2_vert,
+	.vlist = bz_chunk2_vlist,
+	.prescale_numerator = 256,
+	.prescale_denominator = 1,
+};
+
 static const struct bz_model *bz_model[] = {
 	&bz_cube_model,
 	&bz_short_cube_model,
@@ -284,6 +342,9 @@ static const struct bz_model *bz_model[] = {
 	&bz_vert_line_model,
 	&bz_tank_model,
 	&bz_artillery_shell_model,
+	&bz_chunk0_model,
+	&bz_chunk1_model,
+	&bz_chunk2_model,
 };
 
 static const int nmodels = ARRAYSIZE(bz_model);
@@ -296,6 +357,9 @@ static const int nmodels = ARRAYSIZE(bz_model);
 #define VERT_LINE_MODEL 5
 #define TANK_MODEL 6
 #define ARTILLERY_SHELL_MODEL 7
+#define CHUNK0_MODEL 8
+#define CHUNK1_MODEL 9
+#define CHUNK2_MODEL 10 
 
 #define MAX_BZ_OBJECTS 100
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
@@ -338,6 +402,7 @@ static struct camera {
 #define MAX_SPARKS 100
 #define SPARKS_PER_EXPLOSION (MAX_SPARKS / 4)
 #define SPARK_GRAVITY (-10)
+#define TANK_CHUNK_COUNT (10)
 static struct bz_spark {
 	int x, y, z, life, vx, vy, vz;
 } spark[MAX_SPARKS] = { 0 };
@@ -460,6 +525,7 @@ static void add_initial_objects(void)
 		add_object((m->x - 128) * 512, 0, (m->z - 128) * 512, 0, m->type, x11_dark_green);
 	}
 	add_object(   0, 0, -100 * 256, 0, TANK_MODEL, GREEN);
+	add_object(   100 * 256, 0, -100 * 256, 0, CHUNK0_MODEL, RED);
 }
 
 static void battlezone_init(void)
@@ -493,6 +559,16 @@ static int shell_collision(struct bz_object *s)
 	for (int i = 0; i < nbz_objects; i++) {
 		if (s == &bzo[i]) /* can't collide with self */
 			continue;
+
+		switch (bzo[i].model) {
+		case CHUNK0_MODEL: /* Can't collide with "chunks" */
+		case CHUNK1_MODEL:
+		case CHUNK2_MODEL:
+			continue;
+		default:
+			break;
+		}
+
 		dx = s->x - bzo[i].x;
 		dz = s->z - bzo[i].z;
 		if (dx < 0)
@@ -522,6 +598,15 @@ static int player_obstacle_collision(int nx, int nz)
 {
 	for (int i = 0; i < nbz_objects; i++) {
 		int dx, dz;
+
+		switch (bzo[i].model) {
+		case CHUNK0_MODEL: /* can't collide with "chunks" */
+		case CHUNK1_MODEL:
+		case CHUNK2_MODEL:
+			continue;
+		default:
+			break;
+		}
 
 		dx = nx - bzo[i].x;
 		dz = nz - bzo[i].z;
@@ -777,7 +862,7 @@ static void draw_radar(void)
 	}
 }
 
-static void explosion(int x, int y, int z, int count)
+static void explosion(int x, int y, int z, int count, int chunks)
 {
 	static unsigned int state = 0xa5a5a5a5;
 
@@ -791,6 +876,24 @@ static void explosion(int x, int y, int z, int count)
 		life = ((int) (xorshift(&state) % 30) + 50);
 		add_spark(x, y, z, vx, vy, vz, life); 
 	}
+
+	for (int i = 0; i < chunks; i++) {
+		int n, vx, vy, vz, life, c;
+
+		vx = ((int) (xorshift(&state) % 600) - 300);
+		vy = ((int) (xorshift(&state) % 600));
+		vz = ((int) (xorshift(&state) % 600) - 300);
+		life = ((int) (xorshift(&state) % 30) + 150);
+		c = ((int) (xorshift(&state) % 3)) + CHUNK0_MODEL;
+
+		n = add_object(x, y, z, 0, c, GREEN); 
+		if (n < 0)
+			return;
+		bzo[n].vx = vx;
+		bzo[n].vy = vy;
+		bzo[n].vz = vz;
+		bzo[n].alive = life;
+	}
 }
 
 static void move_object(struct bz_object *o)
@@ -803,6 +906,26 @@ static void move_object(struct bz_object *o)
 		if (o->orientation >= 128)
 			o->orientation = 0;
 		break;
+	case CHUNK0_MODEL:
+	case CHUNK1_MODEL:
+	case CHUNK2_MODEL:
+		o->x += o->vx;
+		o->y += o->vy;
+		o->z += o->vz;
+		o->vy += SPARK_GRAVITY;
+		if (o->alive > 0)
+			o->alive--;
+		if (o->y < 0)
+			o->alive = 0; 
+		n = ((o - &bzo[0]) % 6) - 3;
+		if (n == 0)
+			n = 1;
+		o->orientation = o->orientation + n;
+		if (o->orientation < 0)
+			o->orientation += 128;
+		if (o->orientation >= 128)
+			o->orientation -= 128;
+		break;
 	case ARTILLERY_SHELL_MODEL:
 		o->x += o->vx;
 		o->z += o->vz;
@@ -811,16 +934,15 @@ static void move_object(struct bz_object *o)
 		if ((n = shell_collision(o)) != 0) {
 			n--; /* shell_collision returns 0 if no collision, object index + 1 if collision */
 			if (n < 0) {
-				printf("Hit player!\n");
+				// printf("Hit player!\n");
 				o->alive = 0;
 				break;
 			}
 			if (bzo[n].model == TANK_MODEL) {
-				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION);
-				printf("Hit tank!\n");
+				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION, TANK_CHUNK_COUNT);
+				bzo[n].alive = 0;
 			} else {
-				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION);
-				printf("Hit obstacle\n");
+				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION, 0);
 			}
 			o->alive = 0;
 		}
