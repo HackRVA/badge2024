@@ -270,6 +270,32 @@ static const int nmodels = ARRAYSIZE(bz_model);
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
 static int nbz_objects = 0;
 
+/* Approximate replica of the arcade game map */
+static const struct bz_map_entry {
+	int x, z, type;
+} battlezone_map[] = {
+	{ 172, 4, SHORT_CUBE_MODEL },
+	{ 219, 13, CUBE_MODEL },
+	{ 120, 60, NARROW_PYRAMID_MODEL },
+	{ 200, 60, PYRAMID_MODEL },
+	{ 247, 60, SHORT_CUBE_MODEL },
+	{ 39, 76, CUBE_MODEL },
+	{ 132, 82, CUBE_MODEL },
+	{ 189, 90, NARROW_PYRAMID_MODEL },
+	{ 56, 124, SHORT_CUBE_MODEL },
+	{ 251, 126, PYRAMID_MODEL },
+	{ 54, 135, PYRAMID_MODEL },
+	{ 148, 150, NARROW_PYRAMID_MODEL },
+	{ 235, 164, CUBE_MODEL },
+	{ 56, 181, NARROW_PYRAMID_MODEL },
+	{ 95, 188, SHORT_CUBE_MODEL },
+	{ 108, 233, SHORT_CUBE_MODEL },
+	{ 147, 230, PYRAMID_MODEL },
+	{ 57, 253, NARROW_PYRAMID_MODEL },
+	{ 120, 253, CUBE_MODEL },
+	{ 251, 253, PYRAMID_MODEL },
+};
+
 static struct camera {
 	int32_t x, y, z;
 	int orientation;
@@ -328,11 +354,10 @@ static void prescale_models(void)
 
 static void add_initial_objects(void)
 {
-	add_object( 100 * 256, 0,    0, 0, CUBE_MODEL, GREEN);
-	add_object( 200 * 256, 0,    200 * 256, 0, SHORT_CUBE_MODEL, BLUE);
-	add_object(-100 * 256, 0,    0, 0, PYRAMID_MODEL, CYAN);
-	add_object(-200 * 256, 0,    100 * 256, 0, NARROW_PYRAMID_MODEL, MAGENTA);
-	add_object(   0, 0,  100 * 256, 0, CUBE_MODEL, WHITE);
+	for (size_t i = 0; i < ARRAYSIZE(battlezone_map); i++) {
+		const struct bz_map_entry *m = &battlezone_map[i];
+		add_object((m->x - 128) * 512, 0, (m->z - 128) * 512, 0, m->type, x11_dark_green);
+	}
 	add_object(   0, 0, -100 * 256, 0, TANK_MODEL, GREEN);
 }
 
