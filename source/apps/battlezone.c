@@ -296,10 +296,12 @@ static const struct bz_map_entry {
 	{ 251, 253, PYRAMID_MODEL },
 };
 
+#define CAMERA_GROUND_LEVEL (6 * 256)
 static struct camera {
 	int32_t x, y, z;
 	int orientation;
 	int eyedist;
+	int vy;
 } camera;
 
 /* Program states.  Initial state is BATTLEZONE_INIT */
@@ -367,8 +369,9 @@ static void battlezone_init(void)
 	add_initial_objects();
 
 	camera.x = 0;
-	camera.y = 6 * 256;
+	camera.y = CAMERA_GROUND_LEVEL;
 	camera.z = 0;
+	camera.vy = 0;
 	camera.orientation = 0;
 	camera.eyedist = 100 * 256;
 
@@ -376,6 +379,28 @@ static void battlezone_init(void)
 	FbClear();
 	battlezone_state = BATTLEZONE_RUN;
 	screen_changed = 1;
+}
+
+static void bump_player()
+{
+	camera.y = CAMERA_GROUND_LEVEL + (4 * 256);
+}
+
+static int player_obstacle_collision(int nx, int nz)
+{
+	for (int i = 0; i < nbz_objects; i++) {
+		int dx, dz;
+
+		dx = nx - bzo[i].x;
+		dz = nz - bzo[i].z;
+		if (dx < 0)
+			dx = -dx;
+		if (dz < 0)
+			dz = -dz;
+		 if (dx < (15 << 8) &&  dz < (15 << 8))
+			return 1;
+	}
+	return 0;
 }
 
 static void check_buttons()
@@ -394,13 +419,27 @@ static void check_buttons()
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		/* This seems "off", but... works?  Something's screwy about the coord system
 		 * I think. */
-		camera.z -= cosine(camera.orientation);
-		camera.x -= sine(camera.orientation);
+		int nx, nz;
+		nx = camera.x - sine(camera.orientation);
+		nz = camera.z - cosine(camera.orientation);
+		if (!player_obstacle_collision(nx, nz)) {
+			camera.x = nx;
+			camera.z = nz;
+		} else {
+			bump_player();
+		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		/* This seems "off", but... works?  Something's screwy about the coord system
 		 * I think. */
-		camera.z += cosine(camera.orientation);
-		camera.x += sine(camera.orientation);
+		int nx, nz;
+		nz = camera.z + cosine(camera.orientation);
+		nx = camera.x + sine(camera.orientation);
+		if (!player_obstacle_collision(nx, nz)) {
+			camera.x = nx;
+			camera.z = nz;
+		} else {
+			bump_player();
+		}
 	}
 }
 
@@ -560,6 +599,16 @@ static void move_objects(void)
 {
 	for (int i = 0; i < nbz_objects; i++)
 		move_object(&bzo[i]);
+
+	/* If camera is above normal ground level, make it fall */
+	if (camera.y > CAMERA_GROUND_LEVEL) {
+		camera.vy -= 5;
+		camera.y += camera.vy;
+		if (camera.y <= CAMERA_GROUND_LEVEL) {
+			camera.y = CAMERA_GROUND_LEVEL;
+			camera.vy = 0;
+		}
+	}
 }
 
 static void draw_screen()
