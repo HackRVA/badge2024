@@ -364,6 +364,7 @@ static const int nmodels = ARRAYSIZE(bz_model);
 #define MAX_BZ_OBJECTS 100
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
 static int nbz_objects = 0;
+static unsigned int xorshift_state = 0xa5a5a5a5;
 
 /* Approximate replica of the arcade game map */
 static const struct bz_map_entry {
@@ -864,27 +865,26 @@ static void draw_radar(void)
 
 static void explosion(int x, int y, int z, int count, int chunks)
 {
-	static unsigned int state = 0xa5a5a5a5;
 
 	for (int i = 0; i < count; i++) {
 		int vx, vy, vz, life;
 
-		vx = ((int) (xorshift(&state) % 600) - 300);
-		vy = ((int) (xorshift(&state) % 600));
-		vz = ((int) (xorshift(&state) % 600) - 300);
+		vx = ((int) (xorshift(&xorshift_state) % 600) - 300);
+		vy = ((int) (xorshift(&xorshift_state) % 600));
+		vz = ((int) (xorshift(&xorshift_state) % 600) - 300);
 
-		life = ((int) (xorshift(&state) % 30) + 50);
+		life = ((int) (xorshift(&xorshift_state) % 30) + 50);
 		add_spark(x, y, z, vx, vy, vz, life); 
 	}
 
 	for (int i = 0; i < chunks; i++) {
 		int n, vx, vy, vz, life, c;
 
-		vx = ((int) (xorshift(&state) % 600) - 300);
-		vy = ((int) (xorshift(&state) % 600));
-		vz = ((int) (xorshift(&state) % 600) - 300);
-		life = ((int) (xorshift(&state) % 30) + 150);
-		c = ((int) (xorshift(&state) % 3)) + CHUNK0_MODEL;
+		vx = ((int) (xorshift(&xorshift_state) % 600) - 300);
+		vy = ((int) (xorshift(&xorshift_state) % 600));
+		vz = ((int) (xorshift(&xorshift_state) % 600) - 300);
+		life = ((int) (xorshift(&xorshift_state) % 30) + 150);
+		c = ((int) (xorshift(&xorshift_state) % 3)) + CHUNK0_MODEL;
 
 		n = add_object(x, y, z, 0, c, GREEN); 
 		if (n < 0)
@@ -952,10 +952,29 @@ static void move_object(struct bz_object *o)
 	}
 }
 
+static void regenerate_tank(void)
+{
+	int x, z, orientation;
+
+	x = (((int) xorshift(&xorshift_state)) % 256);
+	z = (((int) xorshift(&xorshift_state)) % 256);
+	orientation = (((int) xorshift(&xorshift_state)) % 128);
+
+	add_object((x - 128) * 256, 0, (z - 128) * 256, orientation, TANK_MODEL, GREEN);
+}
+
 static void move_objects(void)
 {
-	for (int i = 0; i < nbz_objects; i++)
+	int tank_count = 0;
+
+	for (int i = 0; i < nbz_objects; i++) {
 		move_object(&bzo[i]);
+		if (bzo[i].model == TANK_MODEL)
+			tank_count++;
+	}
+
+	if (tank_count == 0)
+		regenerate_tank();
 
 	/* If camera is above normal ground level, make it fall */
 	if (camera.y > CAMERA_GROUND_LEVEL) {
