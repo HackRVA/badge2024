@@ -9,6 +9,7 @@
 #include "framebuffer.h"
 #include "trig.h"
 #include "fxp_sqrt.h"
+#include "xorshift.h"
 
 #if TARGET_PICO
 #define printf(...)
@@ -334,6 +335,68 @@ static struct camera {
 	int vy;
 } camera;
 
+#define MAX_SPARKS 100
+#define SPARKS_PER_EXPLOSION (MAX_SPARKS / 4)
+#define SPARK_GRAVITY (-10)
+static struct bz_spark {
+	int x, y, z, life, vx, vy, vz;
+} spark[MAX_SPARKS] = { 0 };
+static int nsparks = 0;
+
+static void add_spark(int x, int y, int z, int vx, int vy, int vz, int life)
+{
+	if (nsparks >= MAX_SPARKS)
+		return;
+	struct bz_spark *s = &spark[nsparks];
+	s->x = x;
+	s->y = y;
+	s->z = z;
+	s->vx = vx;
+	s->vy = vy;
+	s->vz = vz;
+	s->life = life;
+	nsparks++;
+}
+
+static void remove_spark(int n)
+{
+	if (n < nsparks - 1)
+		spark[n] = spark[nsparks - 1];
+	nsparks--;
+}
+
+static void move_spark(struct bz_spark *s)
+{
+	s->x += s->vx;
+	s->y += s->vy;
+	s->z += s->vz;
+	s->vy += SPARK_GRAVITY;
+	if (s->y < 0)
+		s->life = 0;
+	if (s->life > 0)
+		s->life--;
+}
+
+static void move_sparks(void)
+{
+	for (int i = 0; i < nsparks; i++)
+		move_spark(&spark[i]);
+}
+
+static void remove_dead_sparks(void)
+{
+	for (int i = 0;;) {
+		if (i >= nsparks)
+			break;
+		struct bz_spark *s = &spark[i];
+		if (s->life > 0) {
+			i++;
+			continue;
+		}
+		remove_spark(i);
+	}
+}
+
 /* Program states.  Initial state is BATTLEZONE_INIT */
 enum battlezone_state_t {
 	BATTLEZONE_INIT,
@@ -478,7 +541,7 @@ static void fire_gun(void)
 
 	int n;
 
-	n = add_object(camera.x, camera.y, camera.z, camera.orientation, ARTILLERY_SHELL_MODEL, YELLOW);
+	n = add_object(camera.x, camera.y, camera.z, camera.orientation, ARTILLERY_SHELL_MODEL, x11_orange);
 	if (n < 0)
 		return;
 	bzo[n].alive = SHELL_LIFETIME;
@@ -629,6 +692,45 @@ static void draw_objects(struct camera *c)
 		draw_object(c, i);
 }
 
+static void draw_spark(struct camera *c, struct bz_spark *s)
+{
+	int x, y, z, nx, ny, nz, a, sx, sy;
+
+	/* Translate for +object position and -camera position */
+	x = s->x - c->x;
+	y = s->y - c->y;
+	z = s->z - c->z;
+
+	/* Rotate for camera */
+	a = 128 - c->orientation;
+	if (a > 127)
+		a = a - 128;
+
+	nx = ((-x * cosine(a)) / 256) - ((z * sine(a)) / 256);
+	ny = y;
+	nz = ((z * cosine(a)) / 256) - ((x * sine(a)) / 256); 
+	x = nx;
+	y = ny;
+	z = nz;
+
+	if (z >= 0)
+		return;
+
+	sx = (c->eyedist * x) / -z;
+	sy = (c->eyedist * y) / -z;
+	sx = sx + (64 * 256);
+	sy = (160 * 256) - (sy + (80 * 256));
+	if (onscreen(sx >> 8, sy >> 8))
+		FbPoint(sx >> 8, sy >> 8);
+}
+
+static void draw_sparks(struct camera *c)
+{
+	FbColor(YELLOW);
+	for (int i = 0; i < nsparks; i++)
+		draw_spark(c, &spark[i]);
+}
+
 static void draw_radar(void)
 {
 	static int radar_angle = 0;
@@ -673,6 +775,22 @@ static void draw_radar(void)
 	}
 }
 
+static void explosion(int x, int y, int z, int count)
+{
+	static unsigned int state = 0xa5a5a5a5;
+
+	for (int i = 0; i < count; i++) {
+		int vx, vy, vz, life;
+
+		vx = ((int) (xorshift(&state) % 600) - 300);
+		vy = ((int) (xorshift(&state) % 600));
+		vz = ((int) (xorshift(&state) % 600) - 300);
+
+		life = ((int) (xorshift(&state) % 30) + 50);
+		add_spark(x, y, z, vx, vy, vz, life); 
+	}
+}
+
 static void move_object(struct bz_object *o)
 {
 	int n;
@@ -696,8 +814,10 @@ static void move_object(struct bz_object *o)
 				break;
 			}
 			if (bzo[n].model == TANK_MODEL) {
+				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION);
 				printf("Hit tank!\n");
 			} else {
+				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION);
 				printf("Hit obstacle\n");
 			}
 			o->alive = 0;
@@ -741,10 +861,15 @@ static void remove_dead_objects(void)
 static void draw_screen()
 {
 	char buf[15];
-	draw_horizon();
+
 	move_objects();
 	remove_dead_objects();
+	move_sparks();
+	remove_dead_sparks();
+
+	draw_horizon();
 	draw_objects(&camera);
+	draw_sparks(&camera);
 	draw_radar();
 	FbColor(WHITE);
 	snprintf(buf, sizeof(buf), "%d %d %d", camera.orientation, camera.x / 256, camera.z / 256);	
