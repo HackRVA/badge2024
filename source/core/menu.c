@@ -18,6 +18,7 @@
 // Apps
 #include "about_badge.h"
 #include "badge_monsters.h"
+#include "battlezone.h"
 #include "blinkenlights.h"
 #include "clue.h"
 #include "conductor.h"
@@ -479,7 +480,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
 }
 
 const struct menu_t games_m[] = {
-   {"Blinkenlights", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = blinkenlights_cb }, }, // Set other badges LED
+   {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, },
    {"Conductor",     VERT_ITEM, FUNCTION, { .func = conductor_cb }, }, // Tell other badges to play notes
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
    {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
