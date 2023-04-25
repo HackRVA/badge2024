@@ -26,7 +26,7 @@ struct bz_model {
 	int nsegs;
 	struct bz_vertex *vert;
 	int16_t *vlist;
-	int prescale;
+	int prescale_numerator, prescale_denominator;
 };
 
 struct bz_object {
@@ -93,7 +93,8 @@ static struct bz_model bz_cube_model = {
 	.nsegs = ARRAYSIZE(bz_cube_vlist),
 	.vert = bz_cube_verts,
 	.vlist = bz_cube_vlist,
-	.prescale = 1 * 256,
+	.prescale_numerator = 1 * 256,
+	.prescale_denominator = 1,
 };
 
 static struct bz_model bz_pyramid_model = {
@@ -101,7 +102,8 @@ static struct bz_model bz_pyramid_model = {
 	.nsegs = ARRAYSIZE(bz_pyramid_vlist),
 	.vert = bz_pyramid_verts,
 	.vlist = bz_pyramid_vlist,
-	.prescale = 1 * 256,
+	.prescale_numerator = 1 * 256,
+	.prescale_denominator = 1,
 };
 
 static struct bz_model bz_horiz_line_model = {
@@ -109,7 +111,8 @@ static struct bz_model bz_horiz_line_model = {
 	.nsegs = 2,
 	.vert = bz_horiz_line_verts,
 	.vlist = bz_horiz_line_vlist,
-	.prescale = 256,
+	.prescale_numerator = 256,
+	.prescale_denominator = 1,
 };
 
 static struct bz_model bz_vert_line_model = {
@@ -117,7 +120,8 @@ static struct bz_model bz_vert_line_model = {
 	.nsegs = 2,
 	.vert = bz_vert_line_verts,
 	.vlist = bz_vert_line_vlist,
-	.prescale = 256,
+	.prescale_numerator = 256,
+	.prescale_denominator = 1,
 };
 
 static const struct bz_model *bz_model[] = {
@@ -183,9 +187,12 @@ static void prescale_models(void)
 
 	for (int i = 0; i < nmodels; i++) {
 		for (int j = 0; j < bz_model[i]->nvertices; j++) {
-			bz_model[i]->vert[j].x *= bz_model[i]->prescale;
-			bz_model[i]->vert[j].y *= bz_model[i]->prescale;
-			bz_model[i]->vert[j].z *= bz_model[i]->prescale;
+			bz_model[i]->vert[j].x *= bz_model[i]->prescale_numerator;
+			bz_model[i]->vert[j].y *= bz_model[i]->prescale_numerator;
+			bz_model[i]->vert[j].z *= bz_model[i]->prescale_numerator;
+			bz_model[i]->vert[j].x /= bz_model[i]->prescale_denominator;
+			bz_model[i]->vert[j].y /= bz_model[i]->prescale_denominator;
+			bz_model[i]->vert[j].z /= bz_model[i]->prescale_denominator;
 		}
 	}
 }
