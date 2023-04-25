@@ -56,6 +56,25 @@ static int16_t bz_cube_vlist[] = {
 	3, 7,
 };
 
+static struct bz_vertex bz_short_cube_verts[] = {
+	{ -10,  10,  10, 0, 0 },
+	{  10,  10,  10, 0, 0 },
+	{  10,  10, -10, 0, 0 },
+	{ -10,  10, -10, 0, 0 },
+	{ -10,   0,  10, 0, 0 },
+	{  10,   0,  10, 0, 0 },
+	{  10,   0, -10, 0, 0 },
+	{ -10,   0, -10, 0, 0 },
+};
+
+static int16_t bz_short_cube_vlist[] = {
+	0, 1, 2, 3, 0,
+	4, 5, 6, 7, 4, -1,
+	1, 5, -1,
+	2, 6, -1,
+	3, 7,
+};
+
 static struct bz_vertex bz_pyramid_verts[] = {
 	{ -10,   0,  10, 0, 0, },
 	{  10,   0,  10, 0, 0, },
@@ -173,6 +192,15 @@ static struct bz_model bz_cube_model = {
 	.prescale_denominator = 1,
 };
 
+static struct bz_model bz_short_cube_model = {
+	.nvertices = ARRAYSIZE(bz_short_cube_verts),
+	.nsegs = ARRAYSIZE(bz_short_cube_vlist),
+	.vert = bz_short_cube_verts,
+	.vlist = bz_short_cube_vlist,
+	.prescale_numerator = 1 * 256,
+	.prescale_denominator = 1,
+};
+
 static struct bz_model bz_pyramid_model = {
 	.nvertices = ARRAYSIZE(bz_pyramid_verts),
 	.nsegs = ARRAYSIZE(bz_pyramid_vlist),
@@ -220,6 +248,7 @@ static struct bz_model bz_tank_model = {
 
 static const struct bz_model *bz_model[] = {
 	&bz_cube_model,
+	&bz_short_cube_model,
 	&bz_pyramid_model,
 	&bz_narrow_pyramid_model,
 	&bz_horiz_line_model,
@@ -230,11 +259,12 @@ static const struct bz_model *bz_model[] = {
 static const int nmodels = ARRAYSIZE(bz_model);
 
 #define CUBE_MODEL 0
-#define PYRAMID_MODEL 1
-#define NARROW_PYRAMID_MODEL 2
-#define HORIZ_LINE_MODEL 3
-#define VERT_LINE_MODEL 4
-#define TANK_MODEL 5
+#define SHORT_CUBE_MODEL 1
+#define PYRAMID_MODEL 2
+#define NARROW_PYRAMID_MODEL 3
+#define HORIZ_LINE_MODEL 4
+#define VERT_LINE_MODEL 5
+#define TANK_MODEL 6
 
 #define MAX_BZ_OBJECTS 100
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
@@ -299,6 +329,7 @@ static void prescale_models(void)
 static void add_initial_objects(void)
 {
 	add_object( 100 * 256, 0,    0, 0, CUBE_MODEL, GREEN);
+	add_object( 200 * 256, 0,    200 * 256, 0, SHORT_CUBE_MODEL, BLUE);
 	add_object(-100 * 256, 0,    0, 0, PYRAMID_MODEL, CYAN);
 	add_object(-200 * 256, 0,    100 * 256, 0, NARROW_PYRAMID_MODEL, MAGENTA);
 	add_object(   0, 0,  100 * 256, 0, CUBE_MODEL, WHITE);
