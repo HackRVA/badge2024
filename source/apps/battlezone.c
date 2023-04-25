@@ -10,6 +10,7 @@
 #include "trig.h"
 #include "fxp_sqrt.h"
 #include "xorshift.h"
+#include "random.h"
 
 #if TARGET_PICO
 #define printf(...)
@@ -364,7 +365,7 @@ static const int nmodels = ARRAYSIZE(bz_model);
 #define MAX_BZ_OBJECTS 100
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
 static int nbz_objects = 0;
-static unsigned int xorshift_state = 0xa5a5a5a5;
+static unsigned int xorshift_state = 0;
 
 /* Approximate replica of the arcade game map */
 static const struct bz_map_entry {
@@ -531,6 +532,8 @@ static void add_initial_objects(void)
 
 static void battlezone_init(void)
 {
+	if (xorshift_state == 0)
+		random_insecure_bytes((uint8_t *) &xorshift_state, sizeof(xorshift_state));
 	nbz_objects = 0;
 	nsparks = 0;
 	prescale_models();
