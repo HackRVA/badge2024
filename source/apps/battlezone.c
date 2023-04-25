@@ -88,6 +88,68 @@ static int16_t bz_vert_line_vlist[] = {
 	0, 1,
 };
 
+static struct bz_vertex bz_tank_verts[] = {
+	/* Bottom */
+	{ -100, 0, 50, 0, 0 }, /* 0 */
+	{  100, 0, 50, 0, 0 },
+	{  100, 0, -50, 0, 0 },
+	{  -100, 0, -50, 0, 0 },
+
+	/* Mid section */
+	{ -120, 30, 60, 0, 0 }, /* 4 */
+	{  120, 30, 60, 0, 0 },
+	{  120, 30, -60, 0, 0 },
+	{  -120, 30, -60, 0, 0 },
+
+	/* Top */
+	{ -80, 50, 50, 0, 0 }, /* 8 */
+	{  50, 50, 50, 0, 0 },
+	{  50, 50, -50, 0, 0 },
+	{  -80, 50, -50, 0, 0 },
+
+	/* Turret top */
+	{ -60, 80, 25, 0, 0 }, /* 12 */
+	{  -15, 80, 25, 0, 0 },
+	{  -15, 80, -25, 0, 0 },
+	{  -60, 80, -25, 0, 0 },
+
+	/* Vertical parts of turret */
+	{ -70, 50, 30, 0, 0 }, /* 16 */
+	{  0, 50, 30, 0, 0 },
+	{  0, 50, -30, 0, 0 },
+	{  -70, 50, -30, 0, 0 },
+
+	/* barrel */
+	{ 0, 60, 0, 0, 0 }, /* 20 */
+	{ 100, 70, 0, 0, 0 },
+	{ 0, 55, -5, 0, 0 },
+	{ 100, 65, -5, 0, 0 },
+	{ 0, 55, 5, 0, 0 },
+	{ 100, 65, 5, 0, 0 },
+};
+
+static int16_t bz_tank_vlist[] = {
+	0, 1, 2, 3, 0,
+	4, 5, 6, 7, 4, -1,
+	1, 5, -1,
+	2, 6, -1,
+	3, 7, -1,
+	8, 9, 10, 11, 8,
+	4, -1,
+	9, 5, -1,
+	10, 6, -1,
+	11, 7, -1,
+	12, 13, 14, 15, 12,
+	16, -1,
+	13, 17, -1,
+	14, 18, -1,
+	15, 19, -1,
+	20, 21, -1,
+	22, 23, -1,
+	24, 25, -1,
+	21, 23, 25,
+};
+
 static struct bz_model bz_cube_model = {
 	.nvertices = ARRAYSIZE(bz_cube_verts),
 	.nsegs = ARRAYSIZE(bz_cube_vlist),
@@ -124,18 +186,30 @@ static struct bz_model bz_vert_line_model = {
 	.prescale_denominator = 1,
 };
 
+static struct bz_model bz_tank_model = {
+	.nvertices = ARRAYSIZE(bz_tank_verts),
+	.nsegs = ARRAYSIZE(bz_tank_vlist),
+	.vert = bz_tank_verts,
+	.vlist = bz_tank_vlist,
+	.prescale_numerator = 256,
+	.prescale_denominator = 10,
+};
+
 static const struct bz_model *bz_model[] = {
 	&bz_cube_model,
 	&bz_pyramid_model,
 	&bz_horiz_line_model,
 	&bz_vert_line_model,
+	&bz_tank_model,
 };
+
 static const int nmodels = ARRAYSIZE(bz_model);
 
 #define CUBE_MODEL 0
 #define PYRAMID_MODEL 1
 #define HORIZ_LINE_MODEL 2
 #define VERT_LINE_MODEL 3
+#define TANK_MODEL 4
 
 #define MAX_BZ_OBJECTS 100
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
@@ -202,7 +276,7 @@ static void add_initial_objects(void)
 	add_object( 100 * 256, 0,    0, 0, CUBE_MODEL, GREEN);
 	add_object(-100 * 256, 0,    0, 0, PYRAMID_MODEL, CYAN);
 	add_object(   0, 0,  100 * 256, 0, CUBE_MODEL, WHITE);
-	add_object(   0, 0, -100 * 256, 0, VERT_LINE_MODEL, YELLOW);
+	add_object(   0, 0, -100 * 256, 0, TANK_MODEL, GREEN);
 }
 
 static void battlezone_init(void)
@@ -211,7 +285,7 @@ static void battlezone_init(void)
 	add_initial_objects();
 
 	camera.x = 0;
-	camera.y = 10 * 256;
+	camera.y = 6 * 256;
 	camera.z = 0;
 	camera.orientation = 0;
 	camera.eyedist = 100 * 256;
