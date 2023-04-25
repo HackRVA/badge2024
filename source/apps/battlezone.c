@@ -409,6 +409,12 @@ static void draw_object(struct camera *c, int n)
 	}
 }
 
+static void draw_horizon()
+{
+	FbColor(x11_dark_green);
+	FbHorizontalLine(0, 80, 128, 80);
+}
+
 static void draw_objects(struct camera *c)
 {
 	for (int i = 0; i < nbz_objects; i++)
@@ -418,6 +424,7 @@ static void draw_objects(struct camera *c)
 static void draw_screen()
 {
 	char buf[15];
+	draw_horizon();
 	draw_objects(&camera);
 	FbColor(WHITE);
 	snprintf(buf, sizeof(buf), "%d %d %d", camera.orientation, camera.x / 256, camera.z / 256);	
