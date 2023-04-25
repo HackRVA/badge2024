@@ -33,6 +33,8 @@ struct bz_object {
 	int32_t x, y, z;
 	int scale;
 	int orientation;
+	int alive;
+	int vx, vy, vz;
 	uint16_t color;
 	unsigned char model;
 };
@@ -183,6 +185,20 @@ static int16_t bz_tank_vlist[] = {
 	21, 23, 25,
 };
 
+static struct bz_vertex bz_artillery_shell_vert[] = {
+	{ 0, 0, 1, 0, 0 },
+	{ 0, 1, 0, 0, 0 },
+	{ 0, 0, -1, 0, 0 },
+	{ 0, -1, 0, 0, 0 },
+	{ -1, 0, 0, 0, 0 },
+	{ 1, 0, 0, 0, 0 },
+};
+
+static int16_t bz_artillery_shell_vlist[] = {
+	0, 1, 2, 3, 0, 4, 2, 5, 0, -1,
+	1, 4, 3, 5, 1,
+};
+
 static struct bz_model bz_cube_model = {
 	.nvertices = ARRAYSIZE(bz_cube_verts),
 	.nsegs = ARRAYSIZE(bz_cube_vlist),
@@ -246,6 +262,15 @@ static struct bz_model bz_tank_model = {
 	.prescale_denominator = 10,
 };
 
+static struct bz_model bz_artillery_shell_model = {
+	.nvertices = ARRAYSIZE(bz_artillery_shell_vert),
+	.nsegs = ARRAYSIZE(bz_artillery_shell_vlist),
+	.vert = bz_artillery_shell_vert,
+	.vlist = bz_artillery_shell_vlist,
+	.prescale_numerator = 256,
+	.prescale_denominator = 4,
+};
+
 static const struct bz_model *bz_model[] = {
 	&bz_cube_model,
 	&bz_short_cube_model,
@@ -254,6 +279,7 @@ static const struct bz_model *bz_model[] = {
 	&bz_horiz_line_model,
 	&bz_vert_line_model,
 	&bz_tank_model,
+	&bz_artillery_shell_model,
 };
 
 static const int nmodels = ARRAYSIZE(bz_model);
@@ -265,6 +291,7 @@ static const int nmodels = ARRAYSIZE(bz_model);
 #define HORIZ_LINE_MODEL 4
 #define VERT_LINE_MODEL 5
 #define TANK_MODEL 6
+#define ARTILLERY_SHELL_MODEL 7
 
 #define MAX_BZ_OBJECTS 100
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
@@ -314,17 +341,22 @@ enum battlezone_state_t {
 static enum battlezone_state_t battlezone_state = BATTLEZONE_INIT;
 static int screen_changed = 0;
 
-static void add_object(int x, int y, int z, int orientation, uint8_t model, uint16_t color)
+static int add_object(int x, int y, int z, int orientation, uint8_t model, uint16_t color)
 {
 	if (nbz_objects >= MAX_BZ_OBJECTS)
-		return;
+		return -1;
 	bzo[nbz_objects].x = x;
 	bzo[nbz_objects].y = y;
 	bzo[nbz_objects].z = z;
 	bzo[nbz_objects].orientation = orientation;
 	bzo[nbz_objects].model = model;
 	bzo[nbz_objects].color = color;
+	bzo[nbz_objects].vx = 0;
+	bzo[nbz_objects].vy = 0;
+	bzo[nbz_objects].vz = 0;
+	bzo[nbz_objects].alive = 1;
 	nbz_objects++;
+	return nbz_objects - 1;
 }
 
 static void remove_object(int n)
@@ -403,11 +435,31 @@ static int player_obstacle_collision(int nx, int nz)
 	return 0;
 }
 
+static void fire_gun(void)
+{
+
+#define SHELL_SPEED 5
+#define SHELL_LIFETIME 50
+
+	int n;
+
+	n = add_object(camera.x, camera.y, camera.z, 0, ARTILLERY_SHELL_MODEL, YELLOW);
+	if (n < 0)
+		return;
+	bzo[n].orientation = camera.orientation;
+	bzo[n].alive = SHELL_LIFETIME;
+	bzo[n].vx = SHELL_SPEED * camera.x - sine(camera.orientation);
+	bzo[n].vz = SHELL_SPEED * camera.z - cosine(camera.orientation);
+	bzo[n].vy = 0;
+}
+
 static void check_buttons()
 {
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		battlezone_state = BATTLEZONE_EXIT;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		fire_gun();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		camera.orientation--;
 		if (camera.orientation < 0)
@@ -588,11 +640,21 @@ static void draw_radar(void)
 
 static void move_object(struct bz_object *o)
 {
-	if (o->model != TANK_MODEL)
+	switch (o->model) {
+	case TANK_MODEL:
+		o->orientation++;
+		if (o->orientation >= 128)
+			o->orientation = 0;
+		break;
+	case ARTILLERY_SHELL_MODEL:
+		o->x += o->vx;
+		o->z += o->vz;
+		if (o->alive > 0)
+			o->alive--;
+		break;
+	default:
 		return;
-	o->orientation++;
-	if (o->orientation >= 128)
-		o->orientation = 0;
+	}
 }
 
 static void move_objects(void)
@@ -611,11 +673,26 @@ static void move_objects(void)
 	}
 }
 
+static void remove_dead_objects(void)
+{
+	for (int i = 0;;) {
+		if (i >= nbz_objects)
+			break;
+		struct bz_object *o = &bzo[i];
+		if (o->alive > 0) {
+			i++;
+			continue;
+		}
+		remove_object(i);
+	}
+}
+
 static void draw_screen()
 {
 	char buf[15];
 	draw_horizon();
 	move_objects();
+	remove_dead_objects();
 	draw_objects(&camera);
 	draw_radar();
 	FbColor(WHITE);
