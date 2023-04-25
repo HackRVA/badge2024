@@ -464,6 +464,41 @@ static void remove_dead_sparks(void)
 	}
 }
 
+char mountain[128];
+
+static void fractal_mountain(int start, int middle, int end)
+{
+	int m;
+	if (middle - start > 1) {
+		int d = (abs(mountain[middle] - mountain[start]) * 30) / 100;
+		if (d > 0)
+			m = ((mountain[start] + mountain[middle]) / 2) - (d / 2) + (xorshift(&xorshift_state) % d);
+		else
+			m = mountain[start];
+		int i = (middle - start) / 2 + start;
+		mountain[i] = m;
+		fractal_mountain(start, i, middle);
+	}
+	if (end - middle > 1) {
+		int d = (abs(mountain[end] - mountain[middle]) * 30) / 100;
+		if (d > 0)
+			m = ((mountain[middle] + mountain[end]) / 2) - (d / 2) + (xorshift(&xorshift_state) % d);
+		else
+			m = mountain[middle];
+		int i = (end - middle) / 2 + middle;
+		mountain[i] = m;
+		fractal_mountain(middle, i, end);
+	}
+}
+
+static void init_mountains(void)
+{
+	for (int i = 0; i < 128; i++)
+		mountain[i] = 80;
+	mountain[32] = 20;
+	fractal_mountain(0, 32, 96);
+}
+
 /* Program states.  Initial state is BATTLEZONE_INIT */
 enum battlezone_state_t {
 	BATTLEZONE_INIT,
@@ -532,8 +567,11 @@ static void add_initial_objects(void)
 
 static void battlezone_init(void)
 {
-	if (xorshift_state == 0)
+	if (xorshift_state == 0) {
 		random_insecure_bytes((uint8_t *) &xorshift_state, sizeof(xorshift_state));
+		init_mountains();
+	}
+
 	nbz_objects = 0;
 	nsparks = 0;
 	prescale_models();
@@ -780,6 +818,29 @@ static void draw_object(struct camera *c, int n)
 	}
 }
 
+static void draw_mountains(void)
+{
+	int x1 = 0;
+	int y1, x2, y2;
+	int j;
+
+	FbColor(x11_dark_green);
+	for (int i = 0; i < 22; i++) {
+		j = i + camera.orientation;
+		if (j > 127)
+			j -= 128;
+		y1 = mountain[j];
+		j++;
+		if (j > 127)
+			j -= 128;
+		y2 = mountain[j];
+		x2 = x1 + 1423;
+		FbLine(x1 >> 8, y1, x2 >> 8, y2);
+		x1 = x2;
+		y1 = y2;
+	}
+}
+
 static void draw_horizon()
 {
 	FbColor(x11_dark_green);
@@ -1023,6 +1084,7 @@ static void draw_screen()
 	remove_dead_sparks();
 
 	draw_horizon();
+	draw_mountains();
 	draw_objects(&camera);
 	draw_sparks(&camera);
 	draw_radar();
