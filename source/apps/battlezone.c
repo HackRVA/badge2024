@@ -465,10 +465,26 @@ static void draw_radar(void)
 	}
 }
 
+static void move_object(struct bz_object *o)
+{
+	if (o->model != TANK_MODEL)
+		return;
+	o->orientation++;
+	if (o->orientation >= 128)
+		o->orientation = 0;
+}
+
+static void move_objects(void)
+{
+	for (int i = 0; i < nbz_objects; i++)
+		move_object(&bzo[i]);
+}
+
 static void draw_screen()
 {
 	char buf[15];
 	draw_horizon();
+	move_objects();
 	draw_objects(&camera);
 	draw_radar();
 	FbColor(WHITE);
