@@ -464,6 +464,8 @@ static void add_initial_objects(void)
 
 static void battlezone_init(void)
 {
+	nbz_objects = 0;
+	nsparks = 0;
 	prescale_models();
 	add_initial_objects();
 
