@@ -15,11 +15,19 @@ static const int16_t sine_array[] = {
 
 short sine(int a)
 {
+#if TARGET_SIMULATOR
+	if (a < 0 || a > 127)
+		fprintf(stderr, "sine(): Bad argument %d, should be in the range [0 - 127]\n", a);
+#endif
 	return sine_array[a];
 }
 
 short cosine(int a)
 {
+#if TARGET_SIMULATOR
+	if (a < 0 || a > 127)
+		fprintf(stderr, "cosine(): Bad argument %d, should be in the range [0 - 127]\n", a);
+#endif
 	return sine_array[(a + 32) & 127];
 }
 
