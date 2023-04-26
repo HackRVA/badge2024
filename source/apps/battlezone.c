@@ -396,6 +396,8 @@ static const int nmodels = ARRAYSIZE(bz_model);
 static struct bz_object bzo[MAX_BZ_OBJECTS] = { 0 };
 static int nbz_objects = 0;
 static unsigned int xorshift_state = 0;
+static int bz_kills = 0;
+static int bz_deaths = 0;
 
 /* Approximate replica of the arcade game map */
 static const struct bz_map_entry {
@@ -1370,11 +1372,13 @@ static void move_object(struct bz_object *o)
 				o->alive = 0;
 				player_has_been_hit = 1;
 				explosion(camera.x, camera.y, camera.z, SPARKS_PER_EXPLOSION, 0);
+				bz_deaths++;
 				break;
 			}
 			if (bzo[n].model == TANK_MODEL) {
 				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION, TANK_CHUNK_COUNT);
 				bzo[n].alive = 0;
+				bz_kills++;
 			} else {
 				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION, 0);
 			}
@@ -1462,10 +1466,17 @@ static void draw_screen()
 	draw_objects(&camera);
 	draw_sparks(&camera);
 	draw_radar();
+#if 0
 	FbColor(WHITE);
 	snprintf(buf, sizeof(buf), "%d %d %d", camera.orientation, camera.x / 256, camera.z / 256);	
 	FbMove(0, 150);
 	FbWriteString(buf);
+#endif
+	FbColor(GREEN);
+	snprintf(buf, sizeof(buf), "%d/%d", bz_kills, bz_deaths);
+	FbMove(0, 0);
+	FbWriteString(buf);
+
 	FbSwapBuffers();
 }
 
