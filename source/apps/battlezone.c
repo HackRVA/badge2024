@@ -17,6 +17,8 @@
 #define printf(...)
 #endif
 
+#define DEBUG_MARKERS 0
+
 #define TANK_COLOR x11_green
 #define TERRAIN_COLOR x11_dark_green
 #define OBSTACLE_COLOR x11_forest_green
@@ -25,6 +27,26 @@
 #define RADAR_BLIP_COLOR WHITE
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
+
+enum tank_mode {
+	TANK_MODE_IDLE,
+	TANK_MODE_AVOIDING_OBSTACLE,
+	TANK_MODE_DRIVING,
+	TANK_MODE_COMPUTE_STEERING, /* figuring which way to turn */
+	TANK_MODE_STEERING,		/* turning */
+	TANK_MODE_AIMING,
+	TANK_MODE_SHOOTING,
+	TANK_MODE_SHOOTING_COOLDOWN,
+};
+
+static struct tank_brain {
+	enum tank_mode mode;
+	int dest_x, dest_z;
+	int desired_orientation;
+	int cooldown;
+	int obstacle_timer;
+#define TANK_DEST_ARRIVE_DIST (10 << 8)
+} tank_brain = { 0 };
 
 struct bz_vertex {
 	int32_t x, y, z; /* 3d coord */
@@ -570,6 +592,8 @@ static void add_initial_objects(void)
 		add_object((m->x - 128) * 512, 0, (m->z - 128) * 512, 0, m->type, OBSTACLE_COLOR);
 	}
 	add_object(   0, 0, -100 * 256, 0, TANK_MODEL, TANK_COLOR);
+	tank_brain.mode = TANK_MODE_IDLE;
+	tank_brain.cooldown = 0;
 }
 
 static void battlezone_init(void)
@@ -614,6 +638,10 @@ static int shell_collision(struct bz_object *s)
 		case CHUNK1_MODEL:
 		case CHUNK2_MODEL:
 			continue;
+		case TANK_MODEL:
+			if (i == s->parent_obj) /* tank can't shoot itself */
+				continue;
+			break;
 		default:
 			break;
 		}
@@ -626,7 +654,7 @@ static int shell_collision(struct bz_object *s)
 			dz = -dz;
 		 if (dx < (8 << 8) &&  dz < (8 << 8))
 			return i + 1;
-	}
+		}
 
 	if (s->parent_obj == PLAYER_PARENT_OBJ) /* player can't hit themselves */
 		return 0;
@@ -669,11 +697,51 @@ static int player_obstacle_collision(int nx, int nz)
 	return 0;
 }
 
+static int tank_obstacle_collision(struct bz_object *tank, int nx, int nz)
+{
+	for (int i = 0; i < nbz_objects; i++) {
+		int dx, dz;
+
+		if (&bzo[i] == tank) /* Can't collide with self */
+			continue;
+
+		switch (bzo[i].model) {
+		case CHUNK0_MODEL: /* can't collide with "chunks" */
+		case CHUNK1_MODEL:
+		case CHUNK2_MODEL:
+			continue;
+		case ARTILLERY_SHELL_MODEL:
+			continue; /* shell_move will get the collision, if any */
+#if DEBUG_MARKERS
+		case NARROW_PYRAMID_MODEL:
+			if (bzo[i].color == RED)
+				continue;
+			break;
+#endif
+		default:
+			break;
+		}
+
+		dx = nx - bzo[i].x;
+		dz = nz - bzo[i].z;
+		if (dx < 0)
+			dx = -dx;
+		if (dz < 0)
+			dz = -dz;
+		 if (dx < (15 << 8) &&  dz < (15 << 8))
+			return 1;
+	}
+	return 0;
+}
+
+static int player_has_been_hit = 0;
 static void fire_gun(void)
 {
 
 #define SHELL_SPEED 5
 #define SHELL_LIFETIME 50
+#define IDEAL_TARGET_DIST ((SHELL_SPEED * SHELL_LIFETIME * 180) / 256)
+#define TANK_SHOOT_COOLDOWN_TIME_MS (3000)
 
 	int n;
 
@@ -978,15 +1046,297 @@ static void explosion(int x, int y, int z, int count, int chunks)
 	}
 }
 
+#if DEBUG_MARKERS
+static int find_debug_marker(void)
+{
+	for (int i = 0; i < nbz_objects; i++)
+		if (bzo[i].model == NARROW_PYRAMID_MODEL && bzo[i].color == RED)
+			return i;
+	return 0;
+}
+#endif
+
+static void tank_mode_idle(__attribute__((unused)) struct bz_object *o)
+{
+#if DEBUG_MARKERS
+	static int debug_marker = -1;
+#endif
+	int x1, z1, x2, z2, a;
+	int dx1, dz1, dx2, dz2;
+
+	/* Maybe we are already close enough? */
+	dx1 = (camera.x - o->x);
+	dz1 = (camera.z - o->z);
+	if ((((dx1 * dx1) / 256) + ((dz1 * dz1) / 256) / 256) < (IDEAL_TARGET_DIST * IDEAL_TARGET_DIST)) {
+		tank_brain.mode = TANK_MODE_AIMING;
+		return;
+	}
+
+	/* Pick two points off either flank of player tank and head for the closest one */
+	a = camera.orientation;
+	a = a + 32;
+	if (a >= 128)
+		a -= 128;
+	if (a < 0)
+		a += 128;
+	x1 = camera.x - ((IDEAL_TARGET_DIST * sine(a)));
+	z1 = camera.z - ((IDEAL_TARGET_DIST * cosine(a)));
+	x2 = camera.x + ((IDEAL_TARGET_DIST * sine(a)));
+	z2 = camera.z + ((IDEAL_TARGET_DIST * cosine(a)));
+	dx1 = x1 - o->x;
+	dz1 = z1 - o->z;
+	dx2 = x2 - o->x;
+	dz2 = z2 - o->z;
+	if (dx1 + dz1 < dx2 + dz2) {  /* pick the closest one by manhattan distance */
+		tank_brain.dest_x = x1;
+		tank_brain.dest_z = z1;
+	} else {
+		tank_brain.dest_x = x2;
+		tank_brain.dest_z = z2;
+	}
+
+	tank_brain.mode = TANK_MODE_COMPUTE_STEERING;
+
+#if DEBUG_MARKERS
+	if (debug_marker == -1) {
+		debug_marker = add_object(tank_brain.dest_x, 0, tank_brain.dest_z, 0, NARROW_PYRAMID_MODEL, RED);
+	} else {
+		debug_marker = find_debug_marker();
+		if (debug_marker >= 0) {
+			bzo[debug_marker].x = tank_brain.dest_x;
+			bzo[debug_marker].y = 0;
+			bzo[debug_marker].z = tank_brain.dest_z;
+		}
+	}
+#endif
+}
+
+static void tank_mode_compute_steering(struct bz_object *o)
+{
+	int dx, dz;
+	signed short sdx, sdz;
+
+	dx = tank_brain.dest_x - o->x;
+	dz = tank_brain.dest_z - o->z;
+
+	/* This prevents taking arctan2(0, 0); */
+	if (abs(dx) < TANK_DEST_ARRIVE_DIST && abs(dz) < TANK_DEST_ARRIVE_DIST) {
+		tank_brain.mode = TANK_MODE_AIMING;
+		return;
+	}
+
+	if (abs(dx) > 32000 || abs(dz) > 32000) {
+		dx = dx >> 8;
+		dz = dz >> 8;
+	}
+	sdx = (signed short) dx;
+	sdz = (signed short) dz;
+	
+	int a = arctan2(-sdx, -sdz);
+	if (a < 0)
+		a += 128;
+	tank_brain.desired_orientation = a;
+	tank_brain.mode = TANK_MODE_STEERING;
+}
+
+static void tank_mode_steering(struct bz_object *o)
+{
+	int turning_direction;
+
+	int da = tank_brain.desired_orientation - o->orientation;
+
+	if (da == 0) {
+		tank_brain.mode = TANK_MODE_DRIVING;
+		return;
+	}
+
+
+	if (da < -64 || (da > 0 && da <= 64))
+		turning_direction = 1;
+	else
+		turning_direction = -1;
+	o->orientation += turning_direction;
+	if (o->orientation < 0)
+		o->orientation += 128;
+	if (o->orientation >= 128)
+		o->orientation -= 128;
+}
+
+static void tank_mode_driving(struct bz_object *o)
+{
+	static int steering_counter = 0;
+
+	int nx, nz;
+	int dx, dz;
+
+	dx = camera.x - o->x;
+	dz = camera.z - o->z;
+
+	if ((((dx * dx) / 256) + ((dz * dz) / 256) / 256) < (IDEAL_TARGET_DIST * IDEAL_TARGET_DIST)) {
+		tank_brain.mode = TANK_MODE_AIMING;
+		return;
+	}
+
+	dx = tank_brain.dest_x - o->x;
+	dz = tank_brain.dest_z - o->z;
+
+	if (abs(dx) < TANK_DEST_ARRIVE_DIST && abs(dz) < TANK_DEST_ARRIVE_DIST) {
+		tank_brain.mode = TANK_MODE_AIMING;
+		return;
+	}
+
+	nx = o->x - (sine(o->orientation));
+	nz = o->z - (cosine(o->orientation));
+	if (!tank_obstacle_collision(o, nx, nz)) {
+		o->x = nx;
+		o->z = nz;
+	} else {
+		tank_brain.mode = TANK_MODE_AVOIDING_OBSTACLE;
+		tank_brain.obstacle_timer = 20;
+		return;
+	}
+
+	/* When we begin steering from far away, we might miss our destination
+	 * if we don't course correct every so often
+	 */
+	steering_counter++;
+	if (steering_counter == 10) {
+		steering_counter = 0;
+		tank_brain.mode = TANK_MODE_COMPUTE_STEERING;
+	}
+}
+
+static void tank_mode_avoiding_obstacle(__attribute__((unused)) struct bz_object *o)
+{
+	/* Move backwards, and turn */
+	o->x = o->x + (sine(o->orientation));
+	o->z = o->z + (cosine(o->orientation));
+	if (tank_brain.obstacle_timer & 0x01) {
+		o->orientation++;
+		if (o->orientation >= 128)
+			o->orientation -= 128;
+	}
+	if (tank_brain.obstacle_timer > 0)
+		tank_brain.obstacle_timer--;
+	if (tank_brain.obstacle_timer <= 0) {
+		tank_brain.obstacle_timer = 0;
+		tank_brain.mode = TANK_MODE_IDLE;
+	}
+}
+
+static void tank_mode_aiming(__attribute__((unused)) struct bz_object *o)
+{
+	int dx, dz;
+	signed short sdx, sdz;
+
+	dx = camera.x - o->x;
+	dz = camera.z - o->z;
+
+	/* This prevents taking arctan2(0, 0); */
+	if (abs(dx) < TANK_DEST_ARRIVE_DIST && abs(dz) < TANK_DEST_ARRIVE_DIST) {
+		tank_brain.mode = TANK_MODE_IDLE; /* FIXME... what to do here? */
+		return;
+	}
+
+	if (abs(dx) > 32000 || abs(dz) > 32000) {
+		dx = dx >> 8;
+		dz = dz >> 8;
+	}
+	sdx = (signed short) dx;
+	sdz = (signed short) dz;
+	
+	int a = arctan2(-sdx, -sdz);
+	if (a < 0)
+		a += 128;
+	tank_brain.desired_orientation = a;
+
+	int turning_direction;
+
+	int da = tank_brain.desired_orientation - o->orientation;
+
+	if (da == 0) {
+		tank_brain.mode = TANK_MODE_SHOOTING;
+		return;
+	}
+
+	if (da < -64 || (da > 0 && da <= 64))
+		turning_direction = 1;
+	else
+		turning_direction = -1;
+	o->orientation += turning_direction;
+	if (o->orientation < 0)
+		o->orientation += 128;
+	if (o->orientation >= 128)
+		o->orientation -= 128;
+}
+
+static void tank_mode_shooting(struct bz_object *o)
+{
+	int n;
+	n = add_object(o->x, camera.y, o->z, o->orientation, ARTILLERY_SHELL_MODEL, x11_orange);
+	if (n < 0) {
+		tank_brain.mode = TANK_MODE_SHOOTING_COOLDOWN;
+		tank_brain.cooldown = rtc_get_ms_since_boot() + TANK_SHOOT_COOLDOWN_TIME_MS;
+		return;
+	}
+	bzo[n].alive = SHELL_LIFETIME;
+	bzo[n].vx = -SHELL_SPEED * sine(o->orientation);
+	bzo[n].vz = -SHELL_SPEED * cosine(o->orientation);
+	bzo[n].vy = 0;
+	bzo[n].parent_obj = o - &bzo[0];
+	tank_brain.mode = TANK_MODE_SHOOTING_COOLDOWN;
+	tank_brain.cooldown = rtc_get_ms_since_boot() + TANK_SHOOT_COOLDOWN_TIME_MS;
+}
+
+static void tank_mode_shooting_cooldown(void)
+{
+	int n = rtc_get_ms_since_boot();
+	if (n > tank_brain.cooldown) {
+		tank_brain.cooldown = 0;
+		tank_brain.mode = TANK_MODE_IDLE;
+	}
+}
+
+static void move_tank(struct bz_object *o)
+{
+	switch (tank_brain.mode) {
+	case TANK_MODE_IDLE:
+		tank_mode_idle(o);
+		break;
+	case TANK_MODE_AVOIDING_OBSTACLE:
+		tank_mode_avoiding_obstacle(o);
+		break;
+	case TANK_MODE_DRIVING:
+		tank_mode_driving(o);
+		break;
+	case TANK_MODE_COMPUTE_STEERING:
+		tank_mode_compute_steering(o);
+		break;
+	case TANK_MODE_STEERING:
+		tank_mode_steering(o);
+		break;
+	case TANK_MODE_AIMING:
+		tank_mode_aiming(o);
+		break;
+	case TANK_MODE_SHOOTING:
+		tank_mode_shooting(o);
+		break;
+	case TANK_MODE_SHOOTING_COOLDOWN:
+		tank_mode_shooting_cooldown();
+		break;
+	default:
+		tank_brain.mode = TANK_MODE_IDLE;
+		break;
+	}
+}
+
 static void move_object(struct bz_object *o)
 {
 	int n;
 
 	switch (o->model) {
 	case TANK_MODEL:
-		o->orientation++;
-		if (o->orientation >= 128)
-			o->orientation = 0;
+		move_tank(o);
 		break;
 	case CHUNK0_MODEL:
 	case CHUNK1_MODEL:
@@ -1018,6 +1368,8 @@ static void move_object(struct bz_object *o)
 			if (n < 0) {
 				// printf("Hit player!\n");
 				o->alive = 0;
+				player_has_been_hit = 1;
+				explosion(camera.x, camera.y, camera.z, SPARKS_PER_EXPLOSION, 0);
 				break;
 			}
 			if (bzo[n].model == TANK_MODEL) {
@@ -1045,6 +1397,8 @@ static void regenerate_tank(void)
 		orientation = - orientation;
 
 	add_object((x - 128) * 256, 0, (z - 128) * 256, orientation, TANK_MODEL, TANK_COLOR);
+	tank_brain.mode = TANK_MODE_IDLE;
+	tank_brain.cooldown = 0;
 }
 
 static void move_objects(void)
@@ -1089,10 +1443,19 @@ static void draw_screen()
 {
 	char buf[15];
 
+	player_has_been_hit = 0;
 	move_objects();
 	remove_dead_objects();
 	move_sparks();
 	remove_dead_sparks();
+
+	if (player_has_been_hit) {
+		FbBackgroundColor(WHITE);
+		FbClear();
+		FbBackgroundColor(BLACK);
+		FbSwapBuffers();
+		return;
+	}
 
 	draw_horizon();
 	draw_mountains();
