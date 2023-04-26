@@ -784,15 +784,6 @@ static void draw_projected_line(struct bz_vertex *v1, struct bz_vertex *v2)
 	y2 = v2->py / 256;
 	if (!onscreen(x1, y1) || !onscreen(x2, y2))
 		return;
-
-	/* Suppress most of the "lasershow" bug. Need to fix this properly */
-	if (x1 == 0 && y1 == 0) {
-		return;
-	}
-	if (x2 == 0 && y2 == 0) {
-		return;
-	}
-
 	FbLine(x1, y1, x2, y2);
 }
 
@@ -1032,6 +1023,8 @@ static void regenerate_tank(void)
 	x = (((int) xorshift(&xorshift_state)) % 256);
 	z = (((int) xorshift(&xorshift_state)) % 256);
 	orientation = (((int) xorshift(&xorshift_state)) % 128);
+	if (orientation < 0)
+		orientation = - orientation;
 
 	add_object((x - 128) * 256, 0, (z - 128) * 256, orientation, TANK_MODEL, GREEN);
 }
