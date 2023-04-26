@@ -16,6 +16,13 @@
 #define printf(...)
 #endif
 
+#define TANK_COLOR x11_green
+#define TERRAIN_COLOR x11_dark_green
+#define OBSTACLE_COLOR x11_forest_green
+#define SPARK_COLOR YELLOW
+#define RADAR_COLOR x11_red
+#define RADAR_BLIP_COLOR WHITE
+
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 struct bz_vertex {
@@ -559,10 +566,9 @@ static void add_initial_objects(void)
 {
 	for (size_t i = 0; i < ARRAYSIZE(battlezone_map); i++) {
 		const struct bz_map_entry *m = &battlezone_map[i];
-		add_object((m->x - 128) * 512, 0, (m->z - 128) * 512, 0, m->type, x11_dark_green);
+		add_object((m->x - 128) * 512, 0, (m->z - 128) * 512, 0, m->type, OBSTACLE_COLOR);
 	}
-	add_object(   0, 0, -100 * 256, 0, TANK_MODEL, GREEN);
-	add_object(   100 * 256, 0, -100 * 256, 0, CHUNK0_MODEL, RED);
+	add_object(   0, 0, -100 * 256, 0, TANK_MODEL, TANK_COLOR);
 }
 
 static void battlezone_init(void)
@@ -815,7 +821,7 @@ static void draw_mountains(void)
 	int y1, x2, y2;
 	int j;
 
-	FbColor(x11_dark_green);
+	FbColor(TERRAIN_COLOR);
 	for (int i = 0; i < 22; i++) {
 		j = i + camera.orientation;
 		if (j > 127)
@@ -834,7 +840,7 @@ static void draw_mountains(void)
 
 static void draw_horizon()
 {
-	FbColor(x11_dark_green);
+	FbColor(TERRAIN_COLOR);
 	FbHorizontalLine(0, 80, 128, 80);
 }
 
@@ -878,7 +884,7 @@ static void draw_spark(struct camera *c, struct bz_spark *s)
 
 static void draw_sparks(struct camera *c)
 {
-	FbColor(YELLOW);
+	FbColor(SPARK_COLOR);
 	for (int i = 0; i < nsparks; i++)
 		draw_spark(c, &spark[i]);
 }
@@ -894,7 +900,7 @@ static void draw_radar(void)
 		radar_angle = 0;
 	int x = (cosine(radar_angle) * 10) >> 8;
 	int y = (sine(radar_angle) * 10) >> 8;
-	FbColor(x11_dark_red);
+	FbColor(RADAR_COLOR);
 	FbLine(rx, ry, rx + x, ry + y);
 	FbVerticalLine(64, 0, 64, 2);
 	FbVerticalLine(64, 18, 64, 20);
@@ -922,7 +928,7 @@ static void draw_radar(void)
 		int nz = ((dz * cosine(a)) / 256) - ((dx * sine(a)) / 256);
 		tx = (7 * nx) >> 8;
 		tz = (7 * nz) >> 8;
-		FbColor(WHITE);
+		FbColor(RADAR_BLIP_COLOR);
 		FbPoint((unsigned char) (rx + tx), (unsigned char) (ry + tz));
 	}
 }
@@ -950,7 +956,7 @@ static void explosion(int x, int y, int z, int count, int chunks)
 		life = ((int) (xorshift(&xorshift_state) % 30) + 150);
 		c = ((int) (xorshift(&xorshift_state) % 3)) + CHUNK0_MODEL;
 
-		n = add_object(x, y, z, 0, c, GREEN); 
+		n = add_object(x, y, z, 0, c, TANK_COLOR);
 		if (n < 0)
 			return;
 		bzo[n].vx = vx;
@@ -1026,7 +1032,7 @@ static void regenerate_tank(void)
 	if (orientation < 0)
 		orientation = - orientation;
 
-	add_object((x - 128) * 256, 0, (z - 128) * 256, orientation, TANK_MODEL, GREEN);
+	add_object((x - 128) * 256, 0, (z - 128) * 256, orientation, TANK_MODEL, TANK_COLOR);
 }
 
 static void move_objects(void)
