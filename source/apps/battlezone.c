@@ -464,7 +464,7 @@ static void remove_dead_sparks(void)
 	}
 }
 
-char mountain[128];
+static signed char mountain[128];
 
 static void fractal_mountain(int start, int middle, int end)
 {
