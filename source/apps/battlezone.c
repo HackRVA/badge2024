@@ -688,20 +688,25 @@ static void fire_gun(void)
 
 static void check_buttons()
 {
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		battlezone_state = BATTLEZONE_EXIT;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		return;
+	}
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		fire_gun();
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+	}
+	if (button_poll(BADGE_BUTTON_LEFT)) {
 		camera.orientation--;
 		if (camera.orientation < 0)
 			camera.orientation = 127;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
+	}
+	if (button_poll(BADGE_BUTTON_RIGHT)) {
 		camera.orientation++;
 		if (camera.orientation > 127)
 			camera.orientation = 0;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	}
+	if (button_poll(BADGE_BUTTON_UP)) {
 		/* This seems "off", but... works?  Something's screwy about the coord system
 		 * I think. */
 		int nx, nz;
@@ -713,7 +718,8 @@ static void check_buttons()
 		} else {
 			bump_player();
 		}
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	}
+	if (button_poll(BADGE_BUTTON_DOWN)) {
 		/* This seems "off", but... works?  Something's screwy about the coord system
 		 * I think. */
 		int nx, nz;
