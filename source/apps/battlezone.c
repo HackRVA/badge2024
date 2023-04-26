@@ -739,6 +739,11 @@ static void project_vertex(struct camera *c, struct bz_vertex *v, struct bz_obje
 	int32_t x, y, z, a, nx, ny, nz;
 
 	a = o->orientation;
+	a = -a;
+	if (a < 0)
+		a = a + 128;
+	if (a >= 128)
+		a = a - 128;
 
 	/* Rotate for object orientation */
 	nx = ((-v->x * cosine(a)) / 256) - ((v->z * sine(a)) / 256);
