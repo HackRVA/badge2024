@@ -11,6 +11,7 @@
 #include "fxp_sqrt.h"
 #include "xorshift.h"
 #include "random.h"
+#include "rtc.h"
 
 #if TARGET_PICO
 #define printf(...)
@@ -1107,8 +1108,19 @@ static void draw_screen()
 
 static void battlezone_run()
 {
-	check_buttons();
-	draw_screen();
+#if REGULATE_FRAMERATE
+	static uint64_t last_frame_time = (uint64_t) -1;
+	uint64_t diff_time;
+
+	diff_time = rtc_get_ms_since_boot() - last_frame_time;
+	if (diff_time >= 33) {
+#endif
+		check_buttons();
+		draw_screen();
+#if REGULATE_FRAMERATE
+		last_frame_time = rtc_get_ms_since_boot();
+	}
+#endif
 }
 
 static void battlezone_exit()
