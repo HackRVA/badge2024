@@ -65,6 +65,10 @@ void FbPoint(unsigned char x, unsigned char y);
 void FbHorizontalLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2);
 void FbVerticalLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2);
 void FbLine(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1);
+
+/* Draw a line clipped to the display.  At least 1 of (x0, y0), (x1, y1) must be on the display */
+void FbClippedLine(signed short x0, signed short y0, signed short x1, signed short y1);
+
 void FbWriteLine(const char *string);
 void FbWriteString(const char *string);
 void FbRectangle(unsigned char width, unsigned char height);

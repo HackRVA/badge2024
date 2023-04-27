@@ -562,6 +562,39 @@ void FbLine(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char 
     G_Fb.changed = 1;
 }
 
+/* Draw a line clipped to the display.  At least one of the points must be on the display */
+void FbClippedLine(signed short x0, signed short y0, signed short x1, signed short y1)
+{
+    /* If (x0, y0) is offscreen, assume (x1, y1) is onscreen and start drawing with (x1, y1) */
+    if (x0 < 0 || y0 < 0 || x0 >= LCD_XSIZE || y0 >= LCD_YSIZE) {
+	/* swap (x0, y0) and (x1, y1) */
+        unsigned short x, y;
+	x = x0;
+	y = y0;
+	x0 = x1;
+	y0 = y1;
+	x1 = x;
+	y1 = y;
+    }
+
+    int dx = abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    int dy = abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    int err = (dx > dy ? dx : -dy)/2, e2;
+
+    for(;;) {
+       if (x0 < 0 || y0 < 0 || x0 >= LCD_XSIZE || y0 >= LCD_YSIZE)
+		break;
+        FbPoint(x0, y0); /* optimise this: join multiple y==y points into one segments */
+
+        if (x0==x1 && y0==y1) break;
+
+        e2 = err;
+        if (e2 > -dx) { err -= dy; x0 += sx; }
+        if (e2 < dy) { err += dx; y0 += sy; }
+    }
+    G_Fb.changed = 1;
+}
+
 void FbWriteLine(const char *string)
 {
     unsigned char j, x, y;
