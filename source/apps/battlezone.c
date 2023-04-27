@@ -25,6 +25,7 @@
 #define SPARK_COLOR YELLOW
 #define RADAR_COLOR x11_red
 #define RADAR_BLIP_COLOR WHITE
+#define RETICLE_COLOR GREEN
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -1048,6 +1049,15 @@ static void draw_radar(void)
 	}
 }
 
+static void draw_reticle(void)
+{
+	FbColor(RETICLE_COLOR);
+	FbLine(50, 80, 55, 80);
+	FbLine(75, 80, 80, 80);
+	FbLine(64, 70, 64, 75);
+	FbLine(64, 85, 64, 90);
+}
+
 static void explosion(int x, int y, int z, int count, int chunks)
 {
 
@@ -1499,6 +1509,7 @@ static void draw_screen()
 	draw_objects(&camera);
 	draw_sparks(&camera);
 	draw_radar();
+	draw_reticle();
 #if 0
 	FbColor(WHITE);
 	snprintf(buf, sizeof(buf), "%d %d %d", camera.orientation, camera.x / 256, camera.z / 256);	
