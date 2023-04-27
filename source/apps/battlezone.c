@@ -926,10 +926,38 @@ static void draw_horizon()
 	FbHorizontalLine(0, 80, 128, 80);
 }
 
+static int inside_view_frustum(struct camera *c, struct bz_object *o)
+{
+	int dx, dz;
+	signed short sdx, sdz;
+
+	dx = o->x - c->x;
+	dz = o->z - c->z;
+
+	if (abs(dx) > 32000 || abs(dz) > 32000) {
+		dx = dx >> 8;
+		dz = dz >> 8;
+	}
+	sdx = (signed short) dx;
+	sdz = (signed short) dz;
+	int a = arctan2(-sdx, -sdz);
+	if (a < 0)
+		a += 128;
+	if (a > 127)
+		a -= 128;
+	a = a - c->orientation;
+	if (a < 0)
+		a += 128;
+	if (a > 127)
+		a -= 128;
+	return (a < 15 && a >= 0) || (a > 128 - 15 && a < 128);
+}
+
 static void draw_objects(struct camera *c)
 {
 	for (int i = 0; i < nbz_objects; i++)
-		draw_object(c, i);
+		if (inside_view_frustum(c, &bzo[i]))
+			draw_object(c, i);
 }
 
 static void draw_spark(struct camera *c, struct bz_spark *s)
