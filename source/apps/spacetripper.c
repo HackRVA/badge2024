@@ -1292,9 +1292,9 @@ static int player_is_next_to(unsigned char object_type)
 			continue;
 		if (sy != coord_to_sector(o->y))
 			continue;
-		if (abs(qx - coord_to_quadrant(o->x) > 1))
+		if (abs(qx - coord_to_quadrant(o->x)) > 1)
 			continue;
-		if (abs(qy - coord_to_quadrant(o->y) > 1))
+		if (abs(qy - coord_to_quadrant(o->y)) > 1)
 			continue;
 		return i + 1; /* Add 1 so that we never return 0 here and result can be used as boolean */
 	}
