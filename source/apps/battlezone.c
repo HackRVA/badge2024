@@ -870,9 +870,9 @@ static void draw_projected_line(struct bz_vertex *v1, struct bz_vertex *v2)
 	y1 = v1->py / 256;
 	x2 = v2->px / 256;
 	y2 = v2->py / 256;
-	if (!onscreen(x1, y1) || !onscreen(x2, y2))
+	if (!onscreen(x1, y1) && !onscreen(x2, y2))
 		return;
-	FbLine(x1, y1, x2, y2);
+	FbClippedLine(x1, y1, x2, y2);
 }
 
 static void draw_object(struct camera *c, int n)
@@ -904,7 +904,7 @@ static void draw_mountains(void)
 	int j;
 
 	FbColor(TERRAIN_COLOR);
-	for (int i = 0; i < 22; i++) {
+	for (int i = 0; i < 23; i++) {
 		j = i + camera.orientation;
 		if (j > 127)
 			j -= 128;
@@ -914,7 +914,7 @@ static void draw_mountains(void)
 			j -= 128;
 		y2 = mountain[j];
 		x2 = x1 + 1423;
-		FbLine(x1 >> 8, y1, x2 >> 8, y2);
+		FbClippedLine(x1 >> 8, y1, x2 >> 8, y2);
 		x1 = x2;
 		y1 = y2;
 	}
