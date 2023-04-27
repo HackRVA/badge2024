@@ -864,15 +864,20 @@ static int onscreen(int x, int y)
 
 static void draw_projected_line(struct bz_vertex *v1, struct bz_vertex *v2)
 {
-	int x1, y1, x2, y2;
+	int x1, y1, x2, y2, onscreen1, onscreen2;
 
 	x1 = v1->px / 256;
 	y1 = v1->py / 256;
 	x2 = v2->px / 256;
 	y2 = v2->py / 256;
-	if (!onscreen(x1, y1) && !onscreen(x2, y2))
+	onscreen1 = onscreen(x1, y1);
+	onscreen2 = onscreen(x2, y2);
+	if (!onscreen1 && !onscreen2)
 		return;
-	FbClippedLine(x1, y1, x2, y2);
+	if (!onscreen1 || !onscreen2)
+		FbClippedLine(x1, y1, x2, y2);
+	else
+		FbLine(x1, y1, x2, y2);
 }
 
 static void draw_object(struct camera *c, int n)
