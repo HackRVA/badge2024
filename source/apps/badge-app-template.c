@@ -132,7 +132,7 @@ static void myprogram_exit()
 }
 
 /* You will need to rename myprogram_cb() something else. */
-void myprogram_cb(__attribute__((unused) struct menu_t *m)
+void myprogram_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (myprogram_state) {
 	case MYPROGRAM_INIT:
