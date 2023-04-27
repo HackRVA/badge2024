@@ -955,7 +955,7 @@ static int inside_view_frustum(struct camera *c, struct bz_object *o)
 		a += 128;
 	if (a > 127)
 		a -= 128;
-	return (a < 15 && a >= 0) || (a > 128 - 15 && a < 128);
+	return (a < 18 && a >= 0) || (a > 128 - 18 && a < 128);
 }
 
 static void draw_objects(struct camera *c)
