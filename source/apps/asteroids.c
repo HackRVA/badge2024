@@ -18,6 +18,8 @@
 #define MAXASTEROIDS 100
 #define NUM_ASTEROID_FORMS 10
 #define NUM_INITIAL_ASTEROIDS 4
+#define FIRE_COOLDOWN 5
+static int fire_cooldown = 0;
 static const short player_rotation_speed = 3;
 static const short player_thrust_amount = 64;
 static const int max_speed = (10 << 8);
@@ -236,6 +238,7 @@ static void fire(struct ship *player)
 	vx += player->p.vx;
 	vy += player->p.vy;
 	add_bullet(player->p.x , player->p.y, vx, vy, bullet_life);
+	fire_cooldown = FIRE_COOLDOWN;
 }
 
 static void add_random_spark(int x, int y, int v)
@@ -263,6 +266,8 @@ static void add_sparks(int x, int y, int v, int n)
 
 static void check_buttons()
 {
+	static int first_time = 1;
+
 	int rotation = button_get_rotation(0);
 	int down_latches = button_down_latches();
 	if (game_over_counter || player_dead_counter)
@@ -276,11 +281,18 @@ static void check_buttons()
 		turn(&player, -player_rotation_speed);
 	if (button_poll(BADGE_BUTTON_RIGHT))
 		turn(&player, player_rotation_speed);
-	if (button_poll(BADGE_BUTTON_A) ||
-		button_poll(BADGE_BUTTON_UP))
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
 		thrust(&player, player_thrust_amount);
-	if (button_poll(BADGE_BUTTON_B))
+	if (button_poll(BADGE_BUTTON_B) && fire_cooldown == 0)
 		fire(&player);
+
+	if (fire_cooldown)
+		fire_cooldown--;
+
+	if (first_time)
+		first_time = 0;
+
 }
 
 static int onscreen(int x, int y)
