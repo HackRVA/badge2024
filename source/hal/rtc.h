@@ -2,7 +2,7 @@
 // Created by Samuel Jones on 2/11/22.
 //
 
-#include <time.h>
+#include <sys/time.h>
 #include <stdint.h>
 
 #ifndef BADGE_C_TIME_H
