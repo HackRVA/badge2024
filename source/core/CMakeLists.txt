@@ -19,7 +19,7 @@ target_sources(${PRODUCT} PUBLIC
 # Define a test executable for the off-target key-value storage test
 # and a_star.
 
-if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
+if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR" OR ${TARGET} STREQUAL "WASM")
 	add_executable(test_key_value_storage
 		${CMAKE_CURRENT_LIST_DIR}/key_value_storage_test.c
 		${CMAKE_CURRENT_LIST_DIR}/key_value_storage.c

@@ -18,11 +18,15 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 enable_testing()
 
+if (${TARGET} STREQUAL "WASM")
+	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif()
+
 # Initialize the SDK
 if (${TARGET} STREQUAL "PICO")
     add_compile_definitions(TARGET_PICO)
     pico_sdk_init()
-elseif(${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
+elseif(${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR" OR ${TARGET} STREQUAL "WASM")
     add_compile_definitions(TARGET_SIMULATOR)
 endif()
 
@@ -40,6 +44,10 @@ if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
     # Suppress GTK deprecated declarations
     add_compile_options(-Wno-deprecated-declarations -fsanitize=address)
     add_link_options(-fsanitize=address)
+endif()
+
+if (${TARGET} STREQUAL "WASM")
+	add_compile_options(-sUSE_SDL=2 -sUSE_LIBPNG)
 endif()
 
 add_subdirectory(source)

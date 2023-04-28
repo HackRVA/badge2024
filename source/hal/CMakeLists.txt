@@ -50,7 +50,7 @@ if (${TARGET} STREQUAL "SIMULATOR")
     target_link_libraries(${PRODUCT} Threads::Threads)
 endif()
 
-if (${TARGET} STREQUAL "SDL_SIMULATOR")
+if (${TARGET} STREQUAL "SDL_SIMULATOR" OR ${TARGET} STREQUAL "WASM")
     target_sources(${PRODUCT} PUBLIC
             ${CMAKE_CURRENT_LIST_DIR}/button_coords.c
             ${CMAKE_CURRENT_LIST_DIR}/delay_sim.c
