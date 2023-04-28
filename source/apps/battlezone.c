@@ -429,9 +429,9 @@ static const struct bz_map_entry {
 #define CAMERA_GROUND_LEVEL (6 * 256)
 static struct camera {
 	int32_t x, y, z;
+	int32_t vx, vy, vz;
 	int orientation;
 	int eyedist;
-	int vy;
 } camera;
 
 #define MAX_SPARKS 100
@@ -614,6 +614,7 @@ static void battlezone_init(void)
 	camera.x = 0;
 	camera.y = CAMERA_GROUND_LEVEL;
 	camera.z = 0;
+	camera.vx = 0;
 	camera.vy = 0;
 	camera.orientation = 0;
 	camera.eyedist = 100 * 256;
@@ -657,7 +658,7 @@ static int shell_collision(struct bz_object *s)
 			dz = -dz;
 		 if (dx < (8 << 8) &&  dz < (8 << 8))
 			return i + 1;
-		}
+	}
 
 	if (s->parent_obj == PLAYER_PARENT_OBJ) /* player can't hit themselves */
 		return 0;
@@ -1408,22 +1409,33 @@ static void move_object(struct bz_object *o)
 		o->z += o->vz;
 		if (o->alive > 0)
 			o->alive--;
-		if ((n = shell_collision(o)) != 0) {
-			n--; /* shell_collision returns 0 if no collision, object index + 1 if collision */
-			if (n < 0) {
-				// printf("Hit player!\n");
+		if ((n = shell_collision(o)) != 0) { /* shell_collision returns 0 if no collision,
+							object index + 1 if collision,
+							-1 if collision with player */
+			if (n < 0) { /* collision with player */
+				int direction = o->orientation;
+				direction += 64;
+				if (direction > 127)
+					direction -= 128;
 				o->alive = 0;
 				player_has_been_hit = 1;
-				explosion(camera.x, camera.y, camera.z, SPARKS_PER_EXPLOSION, 0);
+				explosion(camera.x, camera.y, camera.z, SPARKS_PER_EXPLOSION, TANK_CHUNK_COUNT);
+				camera.vx = (2 * sine(direction));
+				camera.vy = 2 << 8;
+				camera.vz = (2 * cosine(direction));
+				bump_player();
 				bz_deaths++;
 				break;
-			}
-			if (bzo[n].model == TANK_MODEL) {
-				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION, TANK_CHUNK_COUNT);
-				bzo[n].alive = 0;
-				bz_kills++;
 			} else {
-				explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION, 0);
+				/* Collision with an object, subtract one to get index */
+				n--;
+				if (bzo[n].model == TANK_MODEL) { /* collision with tank */
+					explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION, TANK_CHUNK_COUNT);
+					bzo[n].alive = 0;
+					bz_kills++;
+				} else { /* collision with obstacle */
+					explosion(o->x, o->y, o->z, SPARKS_PER_EXPLOSION, 0);
+				}
 			}
 			o->alive = 0;
 		}
@@ -1463,11 +1475,15 @@ static void move_objects(void)
 
 	/* If camera is above normal ground level, make it fall */
 	if (camera.y > CAMERA_GROUND_LEVEL) {
-		camera.vy -= 5;
+		camera.vy -= (1 << 4);
+		camera.x += camera.vx;
 		camera.y += camera.vy;
+		camera.z += camera.vz;
 		if (camera.y <= CAMERA_GROUND_LEVEL) {
 			camera.y = CAMERA_GROUND_LEVEL;
+			camera.vx = 0;
 			camera.vy = 0;
+			camera.vz = 0;
 		}
 	}
 }
