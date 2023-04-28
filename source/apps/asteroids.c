@@ -269,18 +269,18 @@ static void check_buttons()
 		return;
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		asteroids_state = ASTEROIDS_EXIT;
-	} else if (rotation) {
-		turn(&player, rotation);	
-	} else if (button_poll(BADGE_BUTTON_LEFT)) {
-		turn(&player, -player_rotation_speed);
-	} else if (button_poll(BADGE_BUTTON_RIGHT)) {
-		turn(&player, player_rotation_speed);
-	} else if (button_poll(BADGE_BUTTON_A) ||
-			button_poll(BADGE_BUTTON_UP)) {
-		thrust(&player, player_thrust_amount);
-	} else if (button_poll(BADGE_BUTTON_B)) {
-		fire(&player);
 	}
+	if (rotation)
+		turn(&player, rotation);	
+	if (button_poll(BADGE_BUTTON_LEFT))
+		turn(&player, -player_rotation_speed);
+	if (button_poll(BADGE_BUTTON_RIGHT))
+		turn(&player, player_rotation_speed);
+	if (button_poll(BADGE_BUTTON_A) ||
+		button_poll(BADGE_BUTTON_UP))
+		thrust(&player, player_thrust_amount);
+	if (button_poll(BADGE_BUTTON_B))
+		fire(&player);
 }
 
 static int onscreen(int x, int y)
