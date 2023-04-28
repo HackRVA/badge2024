@@ -498,6 +498,7 @@ static void draw_sparks(void)
 static void draw_asteroid(struct asteroid *a)
 {
 	int x0, y0, x1, y1, x2, y2;
+	int o1, o2;
 	struct asteroid_form *f = &asteroid_form[a->form];
 
 	x1 = (a->p.x >> 8) + ((f->x[0] * a->radius) >> 16);
@@ -507,8 +508,13 @@ static void draw_asteroid(struct asteroid *a)
 	for (int i = 1; i < 10; i++) {
 		x2 = (a->p.x >> 8) + ((f->x[i] * a->radius) >> 16);
 		y2 = (a->p.y >> 8) + ((f->y[i] * a->radius) >> 16);
-		if (onscreen(x1, y1) && onscreen(x2, y2))
+		o1 = onscreen(x1, y1);
+		o2 = onscreen(x2, y2);
+		if (o1 && o2) {
 			FbLine(x1, y1, x2, y2);
+		} else if (o1 || o2) {
+			FbClippedLine(x1, y1, x2, y2);
+		}
 		x1 = x2;
 		y1 = y2;
 	}
