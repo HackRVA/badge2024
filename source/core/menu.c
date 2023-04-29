@@ -19,21 +19,18 @@
 #include "about_badge.h"
 #include "badge_monsters.h"
 #include "battlezone.h"
-#include "blinkenlights.h"
 #include "clue.h"
-#include "conductor.h"
-#include "cube.h"
 #include "game_of_life.h"
 #include "hacking_simulator.h"
 #include "lunarlander.h"
 #include "qc.h"
-#include "spacetripper.h"
 #include "smashout.h"
 #include "username.h"
 #include "slot_machine.h"
 #include "gulag.h"
 #include "asteroids.h"
 #include "etch-a-sketch.h"
+#include "magic-8-ball.h"
 
 /* TODO: remove this warning once we get new 134x162 display hardware working. */
 #if (LCD_XSIZE == 132 && LCD_YSIZE == 132)
@@ -481,7 +478,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
 
 const struct menu_t games_m[] = {
    {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, },
-   {"Conductor",     VERT_ITEM, FUNCTION, { .func = conductor_cb }, }, // Tell other badges to play notes
+   {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, },
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
    {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
    {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, },
