@@ -112,6 +112,7 @@ static void magic_8_ball_init(void)
 	FbClear();
 	magic_8_ball_state = MAGIC8BALL_RUN;
 	screen_changed = 1;
+	current_message = -1;
 }
 
 static void check_buttons()
