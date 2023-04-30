@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 bool flipped = false;
 bool rotated = false;
@@ -35,14 +36,14 @@ void display_reset(void) {
 void display_rect(int x, int y, int width, int height) {
     rect_x = x;
     rect_y = y;
-    max_x = x+width;
-    max_y = y+height;
+    max_x = x + width - 1;
+    max_y = y + height - 1;
     if (rotated) {
-        cur_y = y + height;
+        cur_y = y + height - 1;
         cur_x = x;
     } else if (flipped) {
-        cur_y = y + height;
-        cur_x = x + width;
+        cur_y = y + height - 1;
+        cur_x = x + width - 1;
     } else {
         cur_y = y;
         cur_x = x;

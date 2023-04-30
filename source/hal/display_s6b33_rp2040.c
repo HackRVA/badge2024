@@ -284,11 +284,11 @@ void display_rect(int x, int y, int width, int height)
 
     display_send_command(X_ADDR_AREA);
     display_send_command(x);
-    display_send_command(x + width);
+    display_send_command(x + width - 1);
 
     display_send_command(Y_ADDR_AREA);
     display_send_command(y);
-    display_send_command(y + height);
+    display_send_command(y + height - 1);
 }
 
 void display_bias(unsigned char data)

@@ -685,7 +685,7 @@ void FbSwapBuffers()
 {
     if (G_Fb.changed == 0) return;
 
-    display_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
+    display_rect(0, 0, LCD_XSIZE, LCD_YSIZE);
     display_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
 
     if (G_Fb.buffer == LCDbufferA) {
@@ -737,7 +737,7 @@ void FbPushBuffer()
 {
     if (G_Fb.changed == 0)
         return;
-    display_rect(0, 0, LCD_XSIZE-1, LCD_YSIZE-1);
+    display_rect(0, 0, LCD_XSIZE, LCD_YSIZE);
     display_pixels(G_Fb.buffer, LCD_XSIZE*LCD_YSIZE);
     G_Fb.changed = 0;
 }
