@@ -411,8 +411,12 @@ void menus() {
                     && G_selectedMenu > G_currMenu) {
                 G_selectedMenu--;
             }
+            if (G_selectedMenu->attrib & SKIP_ITEM) { /* It seems the first item is a SKIP_ITEM */
+		    while (!(G_selectedMenu->attrib & LAST_ITEM)) { /* Move to the last item */
+			G_selectedMenu++;
+		    }
+            }
 	    maybe_scroll_to(G_selectedMenu, G_currMenu); /* Scroll up if necessary */
-
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         } else {
             /* Move to the last item if press UP from the first item */
