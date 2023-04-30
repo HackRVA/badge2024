@@ -380,7 +380,7 @@ static void lunarlander_init(void)
 	place_lunar_base();
 	lunarlander_state = LUNARLANDER_RUN;
 	lander.x = 100 << 8;
-	lander.y = (terrain_y[9] - 60) << 8;
+	lander.y = (terrain_y[9] - 60) * 256;
 	lander.vx = 0;
 	lander.vy = 0;
 	lander.fuel = FULL_FUEL;
