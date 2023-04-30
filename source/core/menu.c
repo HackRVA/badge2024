@@ -88,12 +88,13 @@ static void rvasec_splash_cb();
 struct menuStack_t {
    struct menu_t *selectedMenu;
    struct menu_t *currMenu;
+   int menu_scroll_start_item;
 };
 
 #define MAX_MENU_DEPTH 8
 static unsigned char G_menuCnt=0; // index for G_menuStack
 
-static struct menuStack_t G_menuStack[MAX_MENU_DEPTH] = { {0,0} }; // track user traversing menus
+static struct menuStack_t G_menuStack[MAX_MENU_DEPTH] = { {0, 0, 0} }; // track user traversing menus
 
 static struct menu_t *G_selectedMenu = NULL; /* item the cursor is on */
 static struct menu_t *G_currMenu = NULL; /* init */
@@ -141,15 +142,25 @@ static int menu_scroll_start_item = 0;
 /* Upon moving the menu selection, scroll to make selection visible if necessary */
 static void maybe_scroll_to(struct menu_t *selected, struct menu_t *current_menu)
 {
-	/* I think HIDDEN_ITEMs breaks this, but I don't think we use any HIDDEN_ITEMs
-	 * and we should probably just delete the concept of HIDDEN_ITEMs */
-	int position = selected - current_menu;
+	int position;
+
+	if (selected == NULL) {
+		position = 0;
+	} else {
+		/* I think HIDDEN_ITEMs breaks this, but I don't think we use any HIDDEN_ITEMs
+		 * and we should probably just delete the concept of HIDDEN_ITEMs */
+		position = selected - current_menu;
+	}
 	if (position < menu_scroll_start_item)
 		menu_scroll_start_item = position;
 	if (position > menu_scroll_start_item + MENU_MAX_ITEMS_DISPLAYABLE - 1)
 		menu_scroll_start_item = position - MENU_MAX_ITEMS_DISPLAYABLE + 1;
 }
 
+/* The reason that display_menu returns a menu_t * instead of void
+   as you might expect is because sometimes it skips over unselectable
+   items
+ */
 struct menu_t *display_menu(struct menu_t *menu,
                             struct menu_t *selected,
                             MENU_STYLE style) {
@@ -200,7 +211,6 @@ struct menu_t *display_menu(struct menu_t *menu,
             } else {
                 menu++;
             }
-
             continue;
         }
 
@@ -279,12 +289,35 @@ struct menu_t *display_menu(struct menu_t *menu,
 /* for this increment the units are menu items */
 #define PAGESIZE 8
 
-void closeMenuAndReturn() {
+static void push_menu(const struct menu_t *menu)
+{
+	if (G_menuCnt == MAX_MENU_DEPTH)
+		return;
+	/* Push current menu and selection onto stack */
+	G_menuStack[G_menuCnt].currMenu = G_currMenu;
+	G_menuStack[G_menuCnt].selectedMenu = G_selectedMenu;
+	G_menuStack[G_menuCnt].menu_scroll_start_item = menu_scroll_start_item;
+	G_menuCnt++;
+	G_currMenu = (struct menu_t *) menu; /* go into this menu */
+	G_selectedMenu = (struct menu_t *) menu; /* first item of current menu */
+}
+
+static void pop_menu(void)
+{
+	if (G_menuCnt == 0)
+		return; /* stack is empty, error or main menu */
+	G_menuCnt--;
+	G_currMenu = G_menuStack[G_menuCnt].currMenu;
+	G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu;
+	menu_scroll_start_item = G_menuStack[G_menuCnt].menu_scroll_start_item;
+        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+}
+
+void closeMenuAndReturn(void) {
     if (G_menuCnt == 0) return; /* stack is empty, error or main menu */
     G_menuCnt--;
     G_currMenu = G_menuStack[G_menuCnt].currMenu ;
     G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu ;
-
     G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
     runningApp = NULL;
 }
@@ -342,11 +375,9 @@ void menus() {
 
             case BACK: /* return from menu */
                 audio_out_beep(1200, NOTEDUR);
-                if (G_menuCnt == 0) return; /* stack is empty, error or main menu */
-                G_menuCnt--;
-                G_currMenu = G_menuStack[G_menuCnt].currMenu ;
-                G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu ;
-                //G_selectedMenu = G_currMenu;
+		pop_menu();
+                if (G_menuCnt == 0)
+			return; /* stack is empty, error or main menu */
                 break;
 
             case TEXT: /* maybe highlight if clicked?? */
@@ -355,19 +386,12 @@ void menus() {
 
             case MENU: /* drills down into menu if clicked */
                 audio_out_beep(1600, NOTEDUR); /* d */
-                G_menuStack[G_menuCnt].currMenu = G_currMenu; /* push onto stack  */
-                G_menuStack[G_menuCnt].selectedMenu = G_selectedMenu;
-                G_menuCnt++;
-                if (G_menuCnt == MAX_MENU_DEPTH) G_menuCnt--; /* too deep, undo */
-                G_currMenu = (struct menu_t *)G_selectedMenu->data.menu; /* go into this menu */
-                //selectedMenu = G_currMenu;
-                G_selectedMenu = NULL;
+		push_menu(G_selectedMenu->data.menu);
                 break;
 
             case FUNCTION: /* call the function pointer if clicked */
                 audio_out_beep(1800, NOTEDUR); /* e */
                 runningApp = G_selectedMenu->data.func;
-                //(*selectedMenu->data.func)();
                 break;
 
             default:
@@ -404,6 +428,7 @@ void menus() {
         /* make sure not on last menu item */
         if (!(G_selectedMenu->attrib & LAST_ITEM)) {
             G_selectedMenu++;
+
 
             //Last item should never be a skipped item!!
             while ( ((G_selectedMenu->attrib & SKIP_ITEM) || (G_selectedMenu->attrib & HIDDEN_ITEM))
