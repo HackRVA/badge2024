@@ -154,7 +154,7 @@ bool ir_remove_callback(ir_data_callback data_cb, IR_APP_ID app_id) {
     for (int i=0; i<IR_MAX_HANDLERS_PER_ID; i++) {
         // Once we identify the handler to remove, shuffle all later ones to the left
         if (removed || (cb[app_id][i] == data_cb)) {
-            if (i != IR_MAX_HANDLERS_PER_ID) {
+            if (i < IR_MAX_HANDLERS_PER_ID - 1) {
                 cb[app_id][i] = cb[app_id][i+1];
             } else {
                 cb[app_id][i] = NULL;
