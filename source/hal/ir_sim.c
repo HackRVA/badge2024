@@ -65,12 +65,11 @@ bool ir_remove_callback(ir_data_callback data_cb, IR_APP_ID app_id) {
             } else {
                 cb[app_id][i] = NULL;
             }
-            if (active_callbacks) {
-                active_callbacks--;
-            }
             removed = true;
         }
     }
+    if (removed && active_callbacks)
+        active_callbacks--;
     return removed;
 }
 
