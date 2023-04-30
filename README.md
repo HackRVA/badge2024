@@ -89,7 +89,7 @@ using Windows Subsystem for Linux if your Linux subsystem has a desktop environm
 
 But to build the simulator, you will need a C compiler for your computer. The simulator relies on SDL2
 for graphics and keyboard/mouse/game controller support, so you will need to install SDL2.  For images,
-libpng is needed.  ("apt-get install sdl2-dev" package on Debian based distros, libpng is usually already
+libpng is needed.  ("apt-get install libsdl2-dev" package on Debian based distros, libpng-dev is usually already
 present, on Mac, "brew install sdl2" and "brew install libpng").
 
 ### Visual Studio Code Setup
