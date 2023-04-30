@@ -1,0 +1,9 @@
+---
+name: new_badge_monsters
+images:
+  - name: "godzilla"
+    filename: "godzicon.png"
+    bits: 4
+  - name: "gopher"
+    filename: "gopher.png"
+    bits: 4

@@ -25,4 +25,6 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/test-screensavers.c
         )
 add_subdirectory(clue_assets)
+add_subdirectory(new_badge_monsters_assets)
+add_subdirectory(new_badge_monsters)
 target_include_directories(${PRODUCT} PUBLIC .)
