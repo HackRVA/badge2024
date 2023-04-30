@@ -849,8 +849,8 @@ static void project_vertex(struct camera *c, struct bz_vertex *v, struct bz_obje
 		return;
 	}
 
-	v->px = (c->eyedist * x) / -z;
-	v->py = (c->eyedist * y) / -z;
+	v->px = (int) (((int64_t) c->eyedist * (int64_t) x) / -z);
+	v->py = (int) (((int64_t) c->eyedist * (int64_t) y) / -z);
 	v->px = v->px + (64 * 256);
 	v->py = (160 * 256) - (v->py + (80 * 256));
 }
@@ -1113,7 +1113,10 @@ static void tank_mode_idle(__attribute__((unused)) struct bz_object *o)
 	/* Maybe we are already close enough? */
 	dx1 = (camera.x - o->x);
 	dz1 = (camera.z - o->z);
-	if ((((dx1 * dx1) / 256) + ((dz1 * dz1) / 256) / 256) < (IDEAL_TARGET_DIST * IDEAL_TARGET_DIST)) {
+	int64_t dxsq, dzsq;
+	dxsq = (int64_t) dx1 * (int64_t) dx1;
+	dzsq = (int64_t) dz1 * (int64_t) dz1;
+	if (((dxsq/ 256) + (dzsq / 256) / 256) < (IDEAL_TARGET_DIST * IDEAL_TARGET_DIST)) {
 		tank_brain.mode = TANK_MODE_AIMING;
 		return;
 	}
@@ -1218,7 +1221,12 @@ static void tank_mode_driving(struct bz_object *o)
 	dx = camera.x - o->x;
 	dz = camera.z - o->z;
 
-	if ((((dx * dx) / 256) + ((dz * dz) / 256) / 256) < (IDEAL_TARGET_DIST * IDEAL_TARGET_DIST)) {
+	int64_t dxsq, dzsq;
+
+	dxsq = (int64_t) dx * (int64_t) dx;
+	dzsq = (int64_t) dz * (int64_t) dz;
+
+	if (((dxsq / 256) + (dzsq / 256) / 256) < (IDEAL_TARGET_DIST * IDEAL_TARGET_DIST)) {
 		tank_brain.mode = TANK_MODE_AIMING;
 		return;
 	}
