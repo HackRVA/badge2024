@@ -35,6 +35,7 @@ static const char *magic_msg[] = {
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 #define NMSGS (ARRAYSIZE(magic_msg))
 static int current_message = -1;
+static int screen_brightness = 255;
 
 /* Program states.  Initial state is MAGIC8BALL_INIT */
 enum magic_8_ball_state_t {
@@ -67,7 +68,6 @@ static int random_num(int n)
 static void check_accelerometer(void)
 {
 	static int n = 0;
-	static int brightness = 255;
 	union acceleration a;
 
 	union acceleration acceleration = accelerometer_last_sample();
@@ -89,20 +89,20 @@ static void check_accelerometer(void)
 	a.y /= NSAMPLES;
 	a.z /= NSAMPLES;
 
-	if (a.z < -900) { /* screen facing floor, more or less, erase everything */
+	if (a.z < -800) { /* screen facing floor, more or less, erase everything */
 		/* turn screen brightness to zero */
 		led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 0);
-		brightness = 0;
+		screen_brightness = 0;
 		/* choose a new random message */
 		current_message = random_num(NMSGS);
 		screen_changed = 1;
 	}
 
-	if (a.z > 900) { /* screen facing up, more or less, fade in the brightness */
-		led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, brightness);
-		brightness++;
-		if (brightness > 255)
-			brightness = 255;
+	if (a.z > 800) { /* screen facing up, more or less, fade in the brightness */
+		led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, screen_brightness);
+		screen_brightness++;
+		if (screen_brightness > 255)
+			screen_brightness = 255;
 	}
 }
 
@@ -113,6 +113,8 @@ static void magic_8_ball_init(void)
 	magic_8_ball_state = MAGIC8BALL_RUN;
 	screen_changed = 1;
 	current_message = -1;
+	screen_brightness = 0;
+	led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 0);
 }
 
 static void check_buttons()
@@ -198,6 +200,12 @@ static void magic_8_ball_run()
 static void magic_8_ball_exit()
 {
 	magic_8_ball_state = MAGIC8BALL_INIT; /* So that when we start again, we do not immediately exit */
+	FbColor(WHITE);
+	FbBackgroundColor(BLACK);
+	FbClear();
+	FbSwapBuffers();
+	/* Make sure the screen brightness is turned back up */
+	led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 255);
 	returnToMenus();
 }
 
