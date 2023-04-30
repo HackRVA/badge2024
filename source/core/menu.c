@@ -37,17 +37,17 @@ extern const struct menu_t schedule_m[]; /* defined in core/schedule.c */
 
 static const struct menu_t games_m[] = {
    {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, },
+   {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, },
+   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, },
    {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, },
+   {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
+   {"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, },
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
    {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
    {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, },
    {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, },
-   {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, },
-   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, },
    {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, },
    {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, },
-   {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
-   {"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, },
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
 };
 
