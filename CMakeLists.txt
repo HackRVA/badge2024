@@ -42,7 +42,7 @@ endif()
 
 if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
     # Suppress GTK deprecated declarations
-    add_compile_options(-Wno-deprecated-declarations -fsanitize=address -fsanitize=undefined)
+    add_compile_options(-fsanitize=address -fsanitize=undefined)
     add_link_options(-fsanitize=address -fsanitize=undefined)
 endif()
 
