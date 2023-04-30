@@ -88,8 +88,9 @@ The simulator is intended to run on a Posix-y (that is, Linux or Mac) environmen
 using Windows Subsystem for Linux if your Linux subsystem has a desktop environment set up.
 
 But to build the simulator, you will need a C compiler for your computer. The simulator relies on SDL2
-for graphics and keyboard/mouse/game controller support, so you will need to install SDL2
-("apt-get install sdl2-dev" package on Debian based distros).
+for graphics and keyboard/mouse/game controller support, so you will need to install SDL2.  For images,
+libpng is needed.  ("apt-get install sdl2-dev" package on Debian based distros, libpng is usually already
+present, on Mac, "brew install sdl2" and "brew install libpng").
 
 ### Visual Studio Code Setup
 
@@ -111,8 +112,7 @@ or, if that's too hard to type or remember:
 `./run_cmake_sdl_sim.sh`
 
 After which, you can `cd` into the `build_sdl_sim/` directory and run `make` to build the simulator target. The output
-program is called `build_sim/source/badge2023_c`, which you can run.
-
+program is called `build_sdl_sim/source/badge2023_c`, which you can run.
 
 ## Off-Target Unit Tests
 
@@ -156,17 +156,15 @@ Here's a list of major functional blocks and their current availability in softw
 | LCD Display      | :heavy_check_mark: | :heavy_check_mark: |
 | 3-Color LED      | :heavy_check_mark: | :heavy_check_mark: |
 | D-Pad            | :heavy_check_mark: | :heavy_check_mark: |
-| IR Tx/RX         | :heavy_check_mark: | :x:                |
+| IR Tx/RX         | :heavy_check_mark: | :heavy_check_mark: |
 | Rotary Encoder   | :heavy_check_mark: | :heavy_check_mark: |
-| Audio Output     | :x:                | :x:                |
+| Audio Output     | :x:                | :heavy_check_mark: |
 | Audio/Jack Input | :x:                | :x:                |
 
 # To Do:
 
 Basic Bringup:
 * Add audio driver
-* Port app how-to from old repository
-* Add IR to simulator
 
 Other Extensions:
 * Add a unit test framework (perhaps for mocks?)
@@ -174,5 +172,6 @@ Other Extensions:
 * MicroPython setup for badge hardware?
 * Improve documentation for beginners
 * GitHub Actions integration (build firmware/run tests/build docs)
+* Add audio to simulator
 
 [//]: # (MetaCTF{stop_asking_about_badge_problems})
