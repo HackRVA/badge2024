@@ -89,7 +89,6 @@ unsigned short popup_time = POPUP_LENGTH;
 unsigned char brightScreen = 1;
 extern unsigned short anim_cnt;
 unsigned char current_screen_saver = 0;
-extern unsigned char redraw_main_menu;
 
 #define HIGH_PROB_THRESH 100
 #define MEDIUM_PROB_THRESH 30
@@ -208,7 +207,7 @@ uint64_t ProcessIO(void)
             led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, G_sysData.backlight);
             popup_time = POPUP_LENGTH;
             screen_save_popup_cnt = SCREEN_SAVE_POPUP_DELAY;
-            redraw_main_menu = 1;//hack
+            menu_redraw_main_menu = 1; //hack
             //reset timer
             button_reset_last_input_timestamp();
             

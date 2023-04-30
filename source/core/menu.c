@@ -32,26 +32,48 @@
 #include "etch-a-sketch.h"
 #include "magic-8-ball.h"
 
-/* TODO: remove this warning once we get new 134x162 display hardware working. */
-#if (LCD_XSIZE == 132 && LCD_YSIZE == 132)
-#warning "Using old display size of 132x132, badge apps designed for new 134x162 display will likely crash."
- /* Adding a warning here so that if people write badge apps for the new display
-  * size and try to run them on an old badge, they'll have a big fat clue why it's
-  * likely crashing.  The warning is here instead of in display/framebuffer.h
-  * so that it appears only once during compilation.
- */
-#endif
-
 #define MAIN_MENU_BKG_COLOR GREY2
 
-unsigned char redraw_main_menu = 0;
+extern const struct menu_t schedule_m[]; /* defined in core/schedule.c */
 
-void rvasec_splash_cb();
+static const struct menu_t games_m[] = {
+   {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, },
+   {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, },
+   {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
+   {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
+   {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, },
+   {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, },
+   {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, },
+   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, },
+   {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, },
+   {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, },
+   {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
+   {"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, },
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
+};
 
-extern const struct menu_t games_m[];
-extern const struct menu_t main_m[] ;
-extern const struct menu_t settings_m[];
-extern const struct menu_t schedule_m[];
+static const struct menu_t settings_m[] = {
+   {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, },
+   {"Led", VERT_ITEM, MENU, { .menu = LEDlight_m }, },
+   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, },
+   {"Invert Display", VERT_ITEM, MENU, { .menu = rotate_m, }},
+   {"User Name", VERT_ITEM, FUNCTION, { .func = username_cb }, },
+   {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, },
+   {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, },
+   {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, },
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+};
+
+static const struct menu_t main_m[] = {
+   {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, },
+   {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = games_m }, },
+   {"Settings",    VERT_ITEM, MENU, { .menu = settings_m }, },
+   {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, { .func = about_badge_cb }, },
+};
+
+/* hack for badge.c to trigger redraw of menu on transition from dormant -> not dormant */
+unsigned char menu_redraw_main_menu = 0;
+static void rvasec_splash_cb();
 
 #define NOTEDUR 100
 
@@ -72,10 +94,10 @@ struct menuStack_t {
 #define MAX_MENU_DEPTH 8
 static unsigned char G_menuCnt=0; // index for G_menuStack
 
-struct menuStack_t G_menuStack[MAX_MENU_DEPTH] = { {0,0} }; // track user traversing menus
+static struct menuStack_t G_menuStack[MAX_MENU_DEPTH] = { {0,0} }; // track user traversing menus
 
-struct menu_t *G_selectedMenu = NULL; /* item the cursor is on */
-struct menu_t *G_currMenu = NULL; /* init */
+static struct menu_t *G_selectedMenu = NULL; /* item the cursor is on */
+static struct menu_t *G_currMenu = NULL; /* init */
 
 
 struct menu_t *getSelectedMenu() {
@@ -103,7 +125,6 @@ struct menu_t *getSelectedMenuStack(unsigned char item) {
   so 1st Y position has to offset down CHAR_HEIGHT to account for that
 */
 
-extern struct framebuffer_t G_Fb;
 unsigned char menu_left=5;
 
 /* these should all be variables or part of a theme */
@@ -268,8 +289,8 @@ void menus() {
         return;
     }
 
-    if (G_currMenu == NULL || (redraw_main_menu)){
-        redraw_main_menu = 0;
+    if (G_currMenu == NULL || (menu_redraw_main_menu)){
+        menu_redraw_main_menu = 0;
         G_menuStack[G_menuCnt].currMenu = (struct menu_t *) main_m;
         G_menuStack[G_menuCnt].selectedMenu = NULL;
         G_currMenu = (struct menu_t *)main_m;
@@ -476,44 +497,9 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
     }
 }
 
-const struct menu_t games_m[] = {
-   {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, },
-   {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, },
-   {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
-   {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
-   {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, },
-   {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, },
-   {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, },
-   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, },
-   {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, },
-   {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, },
-   {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
-   {"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, },
-   {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
-};
-
-const struct menu_t settings_m[] = {
-   {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, },
-   {"Led", VERT_ITEM, MENU, { .menu = LEDlight_m }, },
-   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, },
-   {"Invert Display", VERT_ITEM, MENU, { .menu = rotate_m, }},
-   {"User Name", VERT_ITEM, FUNCTION, { .func = username_cb }, },
-   {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, },
-   {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, },
-   {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, },
-   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
-};
-
-const struct menu_t main_m[] = {
-   {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, },
-   {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = games_m }, },
-   {"Settings",    VERT_ITEM, MENU, { .menu = settings_m }, },
-   {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, { .func = about_badge_cb }, },
-} ;
-
-const char splash_words1[] = "Loading";
+static const char splash_words1[] = "Loading";
 #define NUM_WORD_THINGS 18
-const char *splash_word_things[] = {"Cognition Module",
+static const char *splash_word_things[] = {"Cognition Module",
     "useless bits",
     "backdoor.sh",
     "exploit inside",
@@ -529,11 +515,11 @@ const char *splash_word_things[] = {"Cognition Module",
     "Key logger",
     "badgedows defender", "sshd", "cryptolocker", };
     
-const char splash_words_btn1[] = "Press the button";
-const char splash_words_btn2[] = "to continue!";
+static const char splash_words_btn1[] = "Press the button";
+static const char splash_words_btn2[] = "to continue!";
 
 #define SPLASH_SHIFT_DOWN 85
-void rvasec_splash_cb(){
+static void rvasec_splash_cb(){
     static unsigned short wait = 0;
     static unsigned char loading_txt_idx = 0,
     load_bar = 0;
