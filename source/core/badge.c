@@ -87,7 +87,6 @@ unsigned int screen_save_popup_cnt = SCREEN_SAVE_POPUP_DELAY;
 unsigned short popup_time = POPUP_LENGTH;
 
 unsigned char brightScreen = 1;
-extern unsigned short anim_cnt;
 unsigned char current_screen_saver = 0;
 
 #define HIGH_PROB_THRESH 100
@@ -147,7 +146,7 @@ void do_screen_save_popup(){
         FbClear();
         popup_time = POPUP_LENGTH;
         screen_save_popup_cnt = SCREEN_SAVE_POPUP_DELAY;
-        anim_cnt = 0;
+        screensaver_set_animation_count(0);
         led_pwm_disable(BADGE_LED_RGB_RED);
         led_pwm_disable(BADGE_LED_RGB_GREEN);
         led_pwm_disable(BADGE_LED_RGB_BLUE);

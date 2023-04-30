@@ -26,3 +26,4 @@ void for_president();
 void smiley();
 void matrix();
 void bluescreen();
+void screensaver_set_animation_count(unsigned short count);

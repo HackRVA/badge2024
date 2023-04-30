@@ -11,8 +11,11 @@
 extern unsigned short popup_time;
 extern void render_screen_save_monsters(void);
 
-unsigned short anim_cnt = 0;
-
+static unsigned short animation_count = 0;
+void screensaver_set_animation_count(unsigned short count)
+{
+	animation_count = count;
+}
 
 #define IB1 1
 #define IB2 2
@@ -33,12 +36,12 @@ static unsigned int irbit2(unsigned int iseed) {
 
 void disp_asset_saver(){
     static unsigned char imgnum = 0;
-    if(!anim_cnt){
+    if(!animation_count){
         uint8_t random;
         random_insecure_bytes(&random, sizeof(int8_t));
 
         imgnum = random % 3;
-        anim_cnt++;
+        animation_count++;
     }
 
     switch(imgnum){
@@ -82,9 +85,9 @@ void hack_the_dragon(){
 void stupid_rects(){
     unsigned int rnd;
     random_insecure_bytes((uint8_t*)&rnd, sizeof(unsigned int));
-    anim_cnt++;
+    animation_count++;
 
-    if(anim_cnt==1){
+    if(animation_count==1){
         FbColor(YELLOW);
         FbMove(rnd%20+rnd%20,rnd%70+rnd%30);
 
@@ -93,7 +96,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_disable(BADGE_LED_RGB_BLUE);
     }
-    else if(anim_cnt == 5){
+    else if(animation_count == 5){
         FbColor(GREEN);
         FbMove(rnd%60+rnd%60,rnd%55+rnd%10);
 
@@ -102,7 +105,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_disable(BADGE_LED_RGB_BLUE);
     }
-    else if(anim_cnt == 10){
+    else if(animation_count == 10){
         FbColor(CYAN);
         FbMove(rnd%70+rnd%45,rnd%45+rnd%33);
 
@@ -111,7 +114,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 15){
+    else if(animation_count == 15){
 
         FbColor(WHITE);
         FbMove(rnd%30+rnd%10,rnd%30+rnd%30);
@@ -121,7 +124,7 @@ void stupid_rects(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 20){
+    else if(animation_count == 20){
 
         FbColor(BLUE);
         FbMove(rnd%50+rnd%30,rnd%10+rnd%15);
@@ -131,7 +134,7 @@ void stupid_rects(){
         led_pwm_disable(BADGE_LED_RGB_GREEN);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 25){
+    else if(animation_count == 25){
 
         FbColor(MAGENTA);
         FbMove(rnd%33+rnd%47,rnd%65+rnd%33);
@@ -141,18 +144,17 @@ void stupid_rects(){
         led_pwm_disable(BADGE_LED_RGB_GREEN);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt > 25)
-        anim_cnt = 0;
+    else if(animation_count > 25)
+        animation_count = 0;
 
     FbPushBuffer();
 }
 
 #define TUNNEL_COLOR CYAN
 void carzy_tunnel_animator(){
-    //static unsigned short anim_cnt = 0;
-    anim_cnt++;
+    animation_count++;
 
-    if(!anim_cnt){
+    if(!animation_count){
         FbColor(TUNNEL_COLOR);
         FbMove(65,65);
 
@@ -161,7 +163,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt == 5){
+    else if(animation_count == 5){
         FbColor(TUNNEL_COLOR);
         FbMove(64,64);
 
@@ -170,7 +172,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 5*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 5*255/100);
     }
-    else if(anim_cnt == 10){
+    else if(animation_count == 10){
         FbColor(TUNNEL_COLOR);
         FbMove(62,62);
 
@@ -179,7 +181,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 20*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 20*255/100);
     }
-    else if(anim_cnt == 15){
+    else if(animation_count == 15){
         FbColor(TUNNEL_COLOR);
         FbMove(58,58);
 
@@ -188,7 +190,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 45*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 45*255/100);
     }
-    else if(anim_cnt == 20){
+    else if(animation_count == 20){
         FbColor(TUNNEL_COLOR);
         FbMove(50,50);
 
@@ -197,7 +199,7 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 75*255/100);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 75*255/100);
     }
-    else if(anim_cnt == 25){
+    else if(animation_count == 25){
         FbColor(TUNNEL_COLOR);
         FbMove(34,34);
 
@@ -206,8 +208,8 @@ void carzy_tunnel_animator(){
         led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
         led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
     }
-    else if(anim_cnt > 30)
-        anim_cnt = 0 - 1;
+    else if(animation_count > 30)
+        animation_count = 0 - 1;
 
     FbSwapBuffers();
 }
@@ -216,15 +218,15 @@ void dotty(){
 
     unsigned int rnd;
     random_insecure_bytes((uint8_t*)&rnd, sizeof(unsigned int));
-    if(anim_cnt == 0){
+    if(animation_count == 0){
         FbClear();
     }
 
-    //if(anim_cnt%5){
+    //if(animation_count%5){
     unsigned char i = 0;
     for(i = 0; i < 200; i++)
     {
-        FbColor(BLUE << (anim_cnt>>4));
+        FbColor(BLUE << (animation_count>>4));
         //FbPoint(rnd%130, irbit2(~timestamp)%130);
         //FbPoint(irbit2(get_rand_char(0, 132) + timestamp + i),
         //        irbit2(get_rand_char(0, 132) + ~timestamp + i));
@@ -239,7 +241,7 @@ void dotty(){
     }
 
     FbPushBuffer();
-    anim_cnt += 2;
+    animation_count += 2;
 
 }
 
@@ -259,7 +261,7 @@ void for_president(){
     if(popup_time > 3){
         unsigned char i = 0;
         for(i=0; i<8; i++){
-            FbColor((i+(anim_cnt/15))%2 ? WHITE: RED);
+            FbColor((i+(animation_count/15))%2 ? WHITE: RED);
             FbMove(0, 50 + (i*10));
             FbFilledRectangle(132, 10);
         }
@@ -272,7 +274,7 @@ void for_president(){
         FbMove(12, 80);
         FbWriteLine(president4);
     }
-    anim_cnt++;
+    animation_count++;
     FbSwapBuffers();
     led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
 
@@ -381,11 +383,11 @@ const char badgetips_header[] = "--Badge Tip--";
 //const unsigned char badgetip_more_you_know = 
 void just_the_badge_tips(){
     static unsigned char tipnum = 0;
-    if(!anim_cnt){
+    if(!animation_count){
         int random;
         random_insecure_bytes((uint8_t*)&random, sizeof(int));
         tipnum = random % 19;
-        anim_cnt++;
+        animation_count++;
     }
 
     FbBackgroundColor(BLACK);
