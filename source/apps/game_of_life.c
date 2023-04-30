@@ -323,7 +323,7 @@ static void render_splash_screen(void)
 {
 	FbColor(WHITE);
 	FbMove(10, 30);
-	FbWriteString("Game of Life\n\n\n\nLeft/Right Dpad\nto exit");
+	FbWriteString("Game of Life\n\nPress A\nTo Start\n\nLeft/Right Dpad\nto exit");
 	FbSwapBuffers();
 }
 
@@ -345,7 +345,8 @@ static void game_of_life_splash_screen(void)
 		already_rendered_splash_screen = 1;
 	}
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 	{
 		already_rendered_splash_screen = 0;
 		init_cells();
