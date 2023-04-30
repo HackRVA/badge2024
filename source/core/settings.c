@@ -69,6 +69,7 @@ const struct menu_t ping_m[] = {
 /*
     set badge Id
 */
+static const char *hextab = "0123456789ABCDEF";
 void myBadgeid_cb(__attribute__((unused)) struct menu_t *h) {
     struct menu_t *selectedMenu;
 

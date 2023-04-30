@@ -17,7 +17,6 @@
 /*
   inital system data, will be save/restored from flash
 */
-const char hextab[16]={"0123456789ABCDEF"};
 
 SYSTEM_DATA G_sysData = {
 	.name={"               "}, 

@@ -26,6 +26,4 @@ SYSTEM_DATA* badge_system_data(void);
 void UserInit(void);
 uint64_t ProcessIO(void);
 
-extern const char hextab[16];
-
 #endif
