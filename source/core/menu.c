@@ -3,7 +3,6 @@
    Author: Paul Bruggeman
    paul@Killercats.com
 */
-
 #include "menu.h"
 #include "settings.h"
 #include "colors.h"
@@ -135,12 +134,29 @@ unsigned char menu_left=5;
 #define TEXTRECT_OFFSET 1 /* text offset within rectangle */
 
 #define RGBPACKED(R,G,B) ( ((unsigned short)(R)<<11) | ((unsigned short)(G)<<6) | (unsigned short)(B) )
+
+static int menu_scroll_start_item = 0;
+#define MENU_MAX_ITEMS_DISPLAYABLE 14 /* how many menu items fit on screen */
+
+/* Upon moving the menu selection, scroll to make selection visible if necessary */
+static void maybe_scroll_to(struct menu_t *selected, struct menu_t *current_menu)
+{
+	/* I think HIDDEN_ITEMs breaks this, but I don't think we use any HIDDEN_ITEMs
+	 * and we should probably just delete the concept of HIDDEN_ITEMs */
+	int position = selected - current_menu;
+	if (position < menu_scroll_start_item)
+		menu_scroll_start_item = position;
+	if (position > menu_scroll_start_item + MENU_MAX_ITEMS_DISPLAYABLE - 1)
+		menu_scroll_start_item = position - MENU_MAX_ITEMS_DISPLAYABLE + 1;
+}
+
 struct menu_t *display_menu(struct menu_t *menu,
                             struct menu_t *selected,
                             MENU_STYLE style) {
     static unsigned char cursor_x, cursor_y;
     unsigned char c;
     struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
+    int menu_item_number = 0;
 
     root_menu = menu;
 
@@ -187,6 +203,13 @@ struct menu_t *display_menu(struct menu_t *menu,
 
             continue;
         }
+
+	/* Skip menu items until we get to the part of the menu we've scrolled to */
+	if (menu_item_number < menu_scroll_start_item) {
+		menu++;
+		menu_item_number++;
+		continue;
+	}
 
         for (c=0, rect_w=0; (menu->name[c] != 0); c++) rect_w += CHAR_WIDTH;
 
@@ -238,6 +261,9 @@ struct menu_t *display_menu(struct menu_t *menu,
         cursor_x += (rect_w + CHAR_WIDTH);
         if (menu->attrib & LAST_ITEM) break;
         menu++;
+	menu_item_number++;
+	if (menu_item_number - menu_scroll_start_item >= MENU_MAX_ITEMS_DISPLAYABLE)
+		break;
     } // END WHILE
 
     /* in case last menu item is a skip */
@@ -361,6 +387,7 @@ void menus() {
                     && G_selectedMenu > G_currMenu) {
                 G_selectedMenu--;
             }
+	    maybe_scroll_to(G_selectedMenu, G_currMenu); /* Scroll up if necessary */
 
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         } else {
@@ -368,6 +395,7 @@ void menus() {
             while (!(G_selectedMenu->attrib & LAST_ITEM)) {
                 G_selectedMenu++;
             }
+	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         }
     } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
@@ -383,12 +411,14 @@ void menus() {
                 G_selectedMenu++;
             }
 
+	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         } else {
             /* Move to the first item if press DOWN from the last item */
             while (G_selectedMenu > G_currMenu) {
                 G_selectedMenu--;
             }
+	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         }
     }
