@@ -42,8 +42,8 @@ endif()
 
 if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
     # Suppress GTK deprecated declarations
-    add_compile_options(-Wno-deprecated-declarations -fsanitize=address)
-    add_link_options(-fsanitize=address)
+    add_compile_options(-Wno-deprecated-declarations -fsanitize=address -fsanitize=undefined)
+    add_link_options(-fsanitize=address -fsanitize=undefined)
 endif()
 
 if (${TARGET} STREQUAL "WASM")
