@@ -68,10 +68,14 @@ After this, the file to flash on the device is at `build/source/badge2023_c.uf2`
 
 You can clean the build by running `make clean`.
 
-A note for Windows users: [This link](https://community.element14.com/products/raspberry-pi/b/blog/posts/working-with-the-raspberry-pi-pico-with-windows-and-c-c)
+### A note for Windows users
+[This link](https://community.element14.com/products/raspberry-pi/b/blog/posts/working-with-the-raspberry-pi-pico-with-windows-and-c-c)
 has a bunch of useful information for getting started and installing prerequisites. Note that you don't need to do the
 `PICO_SDK_PATH` setting portion, and when running and building this repository, you will want to use "NMake Makefiles"
 instead of "Unix Makefiles" (unless you want to install and use `make` as well).
+
+### Alternatively for Windows users
+ Installing the development environment on Ubuntu, or another distro of your choice in WSL2 has been successfully accomplished, and was a fairly straightforward process. The best docs, surprisingly, came from [Microsoft](https://learn.microsoft.com/en-us/windows/wsl/). Don't skip the [VS Code integration with WSL](https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode).
 
 ## Flashing the Badge
 
