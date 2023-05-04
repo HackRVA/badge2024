@@ -72,6 +72,7 @@ enum clue_state_t {
 	CLUE_LUCKY,
 	CLUE_CLEVER,
 	CLUE_WRONG_ACCUSATION,
+	CLUE_HOW_TO_PLAY,
 	CLUE_EXIT,
 };
 
@@ -281,6 +282,7 @@ static void clue_init_main_menu(void)
 	dynmenu_add_item(&game_menu, "QSTN SUSPECT", CLUE_INTERVIEW, 2);
 	dynmenu_add_item(&game_menu, "ACCUSE", CLUE_CONFIRM_ACCUSE, 3);
 	dynmenu_add_item(&game_menu, "PAUSE GAME", CLUE_EXIT, 4);
+	dynmenu_add_item(&game_menu, "HOW TO PLAY", CLUE_HOW_TO_PLAY, 5);
 
 	change_clue_state(CLUE_MAIN_MENU);
 }
@@ -399,7 +401,46 @@ static void clue_run()
 	}
 }
 
-static void clue_exit()
+static void clue_how_to_play(void)
+{
+	if (screen_changed) {
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
+		FbClear();
+		FbWriteString(
+			"ONCE A GAME IS\n"
+			"BEGUN, RECORD\n"
+			"EVIDENCE IN\n"
+			"NOTEBOOK.\n"
+			"QUESTION\n"
+			"SUSPECTS\n"
+			"VIA INFRARED\n"
+			"TRANSCEIVER\n"
+			"TO OBTAIN\n"
+			"NEW EVIDENCE.\n"
+			"DEDUCE THE\n"
+			"KILLER'S\n"
+			"IDENTITY, THE\n"
+			"MURDER WEAPON,\n"
+			"AND MURDER\n"
+			"LOCATION BY\n"
+			"PROCESS OF\n"
+			"ELIMINATION.");
+		FbSwapBuffers();
+	}
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+		change_clue_state(CLUE_RUN);
+	}
+}
+
+static void clue_exit(void)
 {
 	change_clue_state(CLUE_INIT); /* So that when we start again, we do not immediately exit */
 	ir_remove_callback(clue_ir_packet_callback, BADGE_IR_CLUE_GAME_ADDRESS);
@@ -1146,6 +1187,9 @@ void clue_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case CLUE_WRONG_ACCUSATION:
 		clue_wrong_accusation();
+		break;
+	case CLUE_HOW_TO_PLAY:
+		clue_how_to_play();
 		break;
 	case CLUE_EXIT:
 		clue_exit();
