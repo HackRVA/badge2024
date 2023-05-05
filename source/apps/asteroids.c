@@ -297,7 +297,7 @@ static void check_buttons()
 
 static int onscreen(int x, int y)
 {
-	return (x >= 0 && x < LCD_XSIZE << 8) && (y >= 0 && y < LCD_YSIZE << 8);
+	return (x >= 0 && x < LCD_XSIZE) && (y >= 0 && y < LCD_YSIZE);
 }
 
 static void draw_player(struct ship *player)
@@ -480,8 +480,8 @@ static void draw_bullets(void)
 {
 	for (int i = 0; i < nbullets; i++) {
 		struct bullet *b = &bullet[i];
-		if (onscreen(b->p.x, b->p.y))
-			FbPoint(b->p.x >> 8, b->p.y >> 8);
+		if (onscreen(b->p.x / 256, b->p.y / 256))
+			FbPoint(b->p.x / 256, b->p.y / 256);
 	}
 }
 
@@ -490,8 +490,8 @@ static void draw_sparks(void)
 	FbColor(YELLOW);
 	for (int i = 0; i < nsparks; i++) {
 		struct spark *s = &spark[i];
-		if (onscreen(s->p.x, s->p.y))
-			FbPoint(s->p.x >> 8, s->p.y >> 8);
+		if (onscreen(s->p.x / 256, s->p.y / 256))
+			FbPoint(s->p.x / 256, s->p.y / 256);
 	}
 }
 
@@ -501,13 +501,13 @@ static void draw_asteroid(struct asteroid *a)
 	int o1, o2;
 	struct asteroid_form *f = &asteroid_form[a->form];
 
-	x1 = (a->p.x >> 8) + ((f->x[0] * a->radius) >> 16);
-	y1 = (a->p.y >> 8) + ((f->y[0] * a->radius) >> 16);
+	x1 = (a->p.x / 256) + ((f->x[0] * a->radius) / (256 * 256));
+	y1 = (a->p.y / 256) + ((f->y[0] * a->radius) / (256 * 256));
 	x0 = x1;
 	y0 = y1;
 	for (int i = 1; i < 10; i++) {
-		x2 = (a->p.x >> 8) + ((f->x[i] * a->radius) >> 16);
-		y2 = (a->p.y >> 8) + ((f->y[i] * a->radius) >> 16);
+		x2 = (a->p.x / 256) + ((f->x[i] * a->radius) / (256 * 256));
+		y2 = (a->p.y / 256) + ((f->y[i] * a->radius) / (256 * 256));
 		o1 = onscreen(x1, y1);
 		o2 = onscreen(x2, y2);
 		if (o1 && o2) {
