@@ -776,11 +776,13 @@ you decide it should be.
 ## Arrays of Things
 
 When making a video game, it is often the case that you want to display and move a relatively
-large number of objects around on the screen. You would like to have some functions like:
+large number of objects around on the screen. The main function for advancing the game through
+one frame in your badge app callback function will probably look something like this:
 
 ```
-	move_all_the_objects(); // Moves all the objects for one iteration of the main game loop
-	draw_all_the_objects(); // Draws all the objects in their current locations.
+	check_for_user_input(); // check which buttons are pressed and change simulation state accordingly
+	move_all_the_objects(); // Move all the objects for one iteration of the main game loop
+	draw_all_the_objects(); // Draw all the objects in their current locations.
 ```
 
 The simplest way to accomplish this is with an array.  You might have something like this:
