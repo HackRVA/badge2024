@@ -191,7 +191,8 @@ integer types (e.g. "int") as these will be wrapped into the range 0-255.
 		as well as allowing scaling.
 ```
 
-The following are also available: however they are not well documented.
+The following are also available for displaying images or "sprites",
+however they are not very well documented.
 
 ```
 	void FbImage(unsigned char assetId, unsigned char seqNum);
@@ -199,8 +200,13 @@ The following are also available: however they are not well documented.
 	void FbImage4bit(unsigned char assetId, unsigned char seqNum);
 	void FbImage2bit(unsigned char assetId, unsigned char seqNum);
 	void FbImage1bit(unsigned char assetId, unsigned char seqNum
-
 ```
+
+Take a look at [tools/README.md](tools/README.md) which explains how to
+convert images to a form usable by the badge software.
+Look at source/apps/clue.c and source/apps/clue_assets/ to see an example
+of a badge app that uses the images produced by the process described
+int tools/README.md
 
 Moving the "Cursor"
 -------------------
