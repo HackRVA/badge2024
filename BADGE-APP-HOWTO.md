@@ -728,9 +728,17 @@ Some Common Video Game Programming Patterns
 
 Our processor does not have floating point hardware. However, you may still want to keep track
 of things, such as the (x, y) coordinates of an onscreen spaceship, to a greater degree of
-precision than an integer would normally allow.  The easiest way to do this is with fixed point
-math.  Typically what you do is shift numbers right by 8 bits.  So to represent the value 1,
-you might do:
+precision than an integer would normally allow.  If you use simple integers to track (x, y)
+coordinates and velocity vx, vy in a naive way that corresponds directly to screen pixels,
+then the slowest speed an object can move is 1 pixel per frame.  The next slowest speed which
+may be represented is 2 pixels per frame, which is twice as fast. This situation is not very
+precise or satisfactory.  The easiest way to deal with this is with fixed point math. You can
+imagine that you could multiply all numbers by 100, and then "just know" that there are two
+decimal digits that are implicitly to the right of the decimal point.  This is the basic
+idea behind "fixed point math", with one major difference.  To humans using decimal, 100 is a nice
+round number.  To the computer using binary, 100 is not a round number.  But 256 is a round
+number to the computer.  So we multiply by 256 to shift the "binary point" so that we have 8 bits
+implicitly to the right of the "binary point".  So to represent the value 1, you might do:
 
 ```
 	int x = (1 * 256); /* fixed point value for 1. */
@@ -739,11 +747,13 @@ you might do:
 This amounts to having 8 bits of data that is to the right of the "decimal point" (or, in this
 case the "binary point").
 
-Note that we multiply by 256 rather than explicitly shifting left 8 bits.  This is because
-technically, shifting signed integers left can lead to undefined behavior.  The compiler is
-smart enough to notice that 256 is a power of 2 and will convert this multiplication to an
-arithmetic shift left instruction anyway. Likewise a shift right by 8 bits is better
-accomplished by dividing by 256.
+Note that we multiply by 256 rather than explicitly shifting left 8 bits with the "<<" operator.
+This is because technically, shifting negative signed integers left is [undefined behavior](https://blog.regehr.org/archives/738).
+In any case, the compiler is smart enough to notice that 256 is a power of 2 and will convert this multiplication
+to an arithmetic shift left instruction anyway. Likewise a shift right by 8 bits is better
+accomplished by dividing by 256, which the compiler will convert to an arithmetic shift right.
+(If you forget and use "<<" or ">>" anyway, the badge simulator is compiled with -fsanitize=undefined,
+which should catch your mistake and produce a warning at run time.)
 
 Some care must be taken with arithmetic operations.  When adding two fixed point numbers, you can
 just add them, but when multiplying two numbers, the result must be shifted right 8 bits (divided by 256),
