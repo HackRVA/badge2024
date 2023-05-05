@@ -985,3 +985,14 @@ avoid the square root and compare the squared distance to the squared threshold.
 	}
 ```
 
+Note: If you need to test each object for collisions with every other object, this can
+be problematic depending on how many objects you have.  To explicitly test each object
+against every other object is an O(N<sup>2</sup>) algorithm.  If you only have a few objects,
+say 10, this would mean 100 collision tests, which is probably ok.  If you have say, 100 objects,
+then this would lead to 10000 collision tests, which is probably not ok. If you need to
+collision test a large number of objects against a large number of objects, then you will
+need some sort of space partitioning scheme to reduce the total number of tests by essentially
+caching information about which objects are "near" eachother and only collision testing
+"near" objects with each other. Exactly how to do this will depend on the application and is
+beyond the scope of this document. Google "space partitioning collision detection".
+
