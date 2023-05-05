@@ -733,23 +733,29 @@ math.  Typically what you do is shift numbers right by 8 bits.  So to represent 
 you might do:
 
 ```
-	int x = (1 << 8); /* fixed point value for 1. */
+	int x = (1 * 256); /* fixed point value for 1. */
 ```
 
 This amounts to having 8 bits of data that is to the right of the "decimal point" (or, in this
 case the "binary point").
 
-Some care must be taken, when adding two fixed point numbers, you can just add them, but when
-multiplying two numbers, the result must be shifted right 8 bits, and when dividing, the result
-must be shifted left 8 bits, and shifts should be done at appropriate times to keep the calculations
-in the "sweet spot", avoiding over- or underflows.
+Note that we multiply by 256 rather than explicitly shifting left 8 bits.  This is because
+technically, shifting signed integers left can lead to undefined behavior.  The compiler is
+smart enough to notice that 256 is a power of 2 and will convert this multiplication to an
+arithmetic shift left instruction anyway. Likewise a shift right by 8 bits is better
+accomplished by dividing by 256.
+
+Some care must be taken with arithmetic operations.  When adding two fixed point numbers, you can
+just add them, but when multiplying two numbers, the result must be shifted right 8 bits (divided by 256),
+and when dividing, the result must be shifted left 8 bits (multiplied by 256), and shifts should be done
+at appropriate times to keep the calculations in the "sweet spot", avoiding over- or underflows.
 
 Supposing that you have x, y coordinates of a spaceship in fixed point with 8 bits to the right
 of the "binary point", when it comes time to use these coordinates to draw the spaceship, you just
 shift the values right 8 bits before using them, like so:
 
 ```
-	FbMove(x >> 8, y >> 8);
+	FbMove(x / 256, y / 256);
 	draw_spaceship();
 ```
 
@@ -838,6 +844,11 @@ You might use a system like this for bullets for example.  Whenever an enemy,
 or the player fires a bullet, you add a new bullet into the array with the
 appropriate position and velocity.  Whenever a bullet leaves the screen, or
 hits something, and needs to be removed, you remove it from the array.
+
+This all assumes that the order of objects within the array does not matter.
+If it does matter in your use case, then you will need to use memmove(), or a
+"for" loop to manually shift elements of the array around when deleting
+elements to maintain the order.
 
 ## Arrays of Different Types of Things
 
