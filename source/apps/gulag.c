@@ -71,6 +71,7 @@
 #include "led_pwm.h"
 #include "rtc.h"
 #include "xorshift.h"
+#include "audio.h"
 
 #define PLAYER_COLOR x11_orange
 #define SOLDIER_COLOR x11_olive_drab
@@ -3038,10 +3039,33 @@ static int bullet_track(int x, int y, void *cookie)
 	return 0;
 }
 
+static int audio_left = 0;
+static void random_1ms_beep(void)
+{
+	if (audio_left <= 0)
+		return;
+	audio_left--;
+	audio_out_beep_with_cb(random_num(3000) + 2000, 1, random_1ms_beep);
+}
+
+static void explosion_sound(void)
+{
+	audio_left = 200;
+	audio_out_beep_with_cb(random_num(1000) + 3000, 1, random_1ms_beep);
+}
+
+static void gunshot_sound(void)
+{
+	audio_left = 100;
+	audio_out_beep_with_cb(random_num(1000) + 3000, 1, random_1ms_beep);
+}
+
 static void fire_bullet(__attribute__((unused)) struct player *p, int x, int y, int angle, int bullet_source)
 {
 	int tx, ty;
 
+	if (bullet_source != BULLET_SOURCE_GRENADE)
+		gunshot_sound();
 	draw_muzzle_flash(x, y, angle, 5);
 	tx = ((-cosine(angle) * 400) >> 8) + x; /* 400 will put target tx,ty offscreen, guaranteed */
 	ty = ((sine(angle) * 400) >> 8) + y;
@@ -4437,8 +4461,10 @@ static void explode_grenade(struct grenade *o)
 		int angle = random_num(127);
 		fire_bullet(&player, o->x >> 8, o->y >> 8, angle, BULLET_SOURCE_GRENADE);
 		screen_changed = 1;
+		explosion_sound();
 	}
 }
+
 
 static void draw_grenade(struct grenade *o)
 {
