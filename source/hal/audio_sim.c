@@ -21,6 +21,12 @@ int audio_out_beep(__attribute__((__unused__)) uint16_t freq,  __attribute__((__
     return 0;
 }
 
+int audio_out_beep_with_cb(__attribute__((__unused__)) uint16_t freq,  __attribute__((__unused__)) uint16_t duration,
+    __attribute__((unused)) void (*beep_finished)(void))
+{
+    return 0;
+}
+
 void audio_stby_ctl( __attribute__((__unused__)) bool enabled)
 {
     return;

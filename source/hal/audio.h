@@ -47,6 +47,16 @@ void audio_init();
 int audio_out_beep(uint16_t freq, uint16_t duration);
 
 /*!
+ *  @brief  Play an old fashioned beep on the speaker.
+ *
+ *  @param  frequency      Frequency in Hertz
+ *  @param  duration       Duration in milliseconds
+ *  @param  beep_finished  function to call when beep is finished playing.
+ *
+ */
+int audio_out_beep_with_cb(uint16_t freq, uint16_t duration, void (*beep_finished)(void));
+
+/*!
  *  @brief  Request the opamp standby pin take a certain state.
  *
  *  @param  enable  Request the standby mode be enabled

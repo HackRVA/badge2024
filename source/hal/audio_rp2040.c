@@ -170,8 +170,10 @@ void audio_stby_ctl(bool enable)
 
 /*- Output -------------------------------------------------------------------*/
 static int64_t audio_out_beep_alarm(__attribute__((unused)) alarm_id_t id,
-                                    __attribute__((unused)) void* user_data)
+                                    void* user_data)
 {
+    void (*beep_finished)(void) = user_data;
+
     if (audio_out_mode != AUDIO_OUT_MODE_BEEP)
     {
         return 0;
@@ -180,11 +182,12 @@ static int64_t audio_out_beep_alarm(__attribute__((unused)) alarm_id_t id,
     audio_out_mode = AUDIO_OUT_MODE_OFF;
     pwm_set_enabled(slice, false);
     audio_stby_ctl(true);
-
+    if (beep_finished)
+        beep_finished();
     return 0;
 }
 
-int audio_out_beep(uint16_t freqHz, uint16_t durMs)
+int audio_out_beep_with_cb(uint16_t freqHz, uint16_t durMs, void (*beep_finished)(void))
 {
     if ((freqHz < AUDIO_BEEP_FREQ_HZ_MIN)
         || (freqHz > AUDIO_BEEP_FREQ_HZ_MAX)
@@ -209,9 +212,14 @@ int audio_out_beep(uint16_t freqHz, uint16_t durMs)
     prev_alarm = alarm_pool_add_alarm_in_ms(alarm_pool_get_default(),
                                             durMs,
                                             audio_out_beep_alarm,
-                                            NULL,
+                                            beep_finished,
                                             true);
     return 0;
+}
+
+int audio_out_beep(uint16_t freqHz, uint16_t durMs)
+{
+	return audio_out_beep_with_cb(freqHz, durMs, NULL);
 }
 
 bool audio_is_playing(void) {
