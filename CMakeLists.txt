@@ -5,6 +5,7 @@ set(PICO_SDK_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK from Git. Default o
 set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git. Default on.")
 set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
 set(PRODUCT "badge2023_c")
+set(SIMULATOR_AUDIO "yes") # change to "no" to avoid compiling audio code in simulator
 
 if (${TARGET} STREQUAL "PICO")
     # Pull in SDK (must be before project).
@@ -28,6 +29,9 @@ if (${TARGET} STREQUAL "PICO")
     pico_sdk_init()
 elseif(${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR" OR ${TARGET} STREQUAL "WASM")
     add_compile_definitions(TARGET_SIMULATOR)
+    if (${SIMULATOR_AUDIO} STREQUAL "yes")
+        add_compile_definitions(SIMULATOR_AUDIO)
+    endif()
 endif()
 
 add_compile_options(-Wall -Wextra)
@@ -43,7 +47,11 @@ endif()
 if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
     # Note: cmake doesn't know about portaudio, so we cram -lportaudio -lasound -lm -lpthread in here
     add_compile_options(-fsanitize=address -fsanitize=undefined)
-    add_link_options(-fsanitize=address -fsanitize=undefined -lportaudio -lasound -lm -lpthread)
+    if (${SIMULATOR_AUDIO} STREQUAL "yes")
+	    add_link_options(-fsanitize=address -fsanitize=undefined -lportaudio -lasound -lm -lpthread)
+    else()
+	    add_link_options(-fsanitize=address -fsanitize=undefined)
+    endif()
 endif()
 
 if (${TARGET} STREQUAL "WASM")

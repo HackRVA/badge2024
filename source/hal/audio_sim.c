@@ -6,13 +6,16 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
+#ifdef SIMULATOR_AUDIO
 #include <portaudio.h>
+#endif
 #include <string.h>
 #include <pthread.h>
 
 #include "badge.h"
 #include "audio.h"
 
+#ifdef SIMULATOR_AUDIO
 #define SAMPLE_RATE (48000)
 /* 48 frames = 1 ms */
 #define FRAMES_PER_BUFFER (48)
@@ -27,12 +30,14 @@ static float audio_buffer[AUDIO_BUFFER_SIZE] = { 0 };
 static int audio_buffer_index = 0;
 static int samples_left_to_play = 0;
 static pthread_mutex_t audio_lock = PTHREAD_MUTEX_INITIALIZER;
+#endif
 
 void audio_init_gpio()
 {
     return;
 }
 
+#ifdef SIMULATOR_AUDIO
 static void decode_paerror(PaError rc)
 {
 	if (rc == paNoError)
@@ -87,9 +92,11 @@ static int mixer_loop(__attribute__ ((unused)) const void *inputBuffer,
 	pthread_mutex_unlock(&audio_lock);
 	return 0; /* we're never finished */
 }
+#endif
 
 void audio_init(void)
 {
+#ifdef SIMULATOR_AUDIO
 	printf("Initializing portaudio..."); fflush(stdout);
 
 	PaStreamParameters outparams;
@@ -144,10 +151,12 @@ void audio_init(void)
 error:
 	terminate_portaudio(rc);
 	return;
+#endif
 }
 
 int audio_out_beep_with_cb(uint16_t freq,  uint16_t duration, void (*beep_finished)(void))
 {
+#ifdef SIMULATOR_AUDIO
 	float value = -0.025;
 	int count = AUDIO_BUFFER_SIZE / freq;
 
@@ -165,6 +174,7 @@ int audio_out_beep_with_cb(uint16_t freq,  uint16_t duration, void (*beep_finish
 	if (samples_left_to_play > AUDIO_BUFFER_SIZE)
 		samples_left_to_play = AUDIO_BUFFER_SIZE; 
 	pthread_mutex_unlock(&audio_lock);
+#endif
 	return 0;
 }
 
