@@ -33,7 +33,7 @@ input_path = Path(args.folder)
 with open(input_path.joinpath("images.yaml"), 'r') as f:
     image_yaml = yaml.safe_load(f)
 
-asset_header_name = f"{image_yaml['name']}.h"
+asset_header_name = f"{image_yaml['name']}.h".replace(" ", "_")
 asset_header = open(input_path.joinpath(asset_header_name), 'w')
 
 asset_header.write(f"""
@@ -143,8 +143,8 @@ for asset in image_yaml["images"]:
         else:
             array_len, image_bytes = bytes_for_color_image(rgb_image, asset["bits"])
 
-    image_source_name = f"{asset['name']}.c"
-    struct_name = f"{image_yaml['name']}_{asset['name']}"
+    image_source_name = f"{asset['name']}.c".replace(" ", "_")
+    struct_name = f"{image_yaml['name']}_{asset['name']}".replace(" ", "_")
 
     with open(input_path.joinpath(image_source_name), 'w') as image_f:
         image_f.write(f"#include \"{asset_header_name}\"\n\n")

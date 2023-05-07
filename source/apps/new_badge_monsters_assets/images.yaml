@@ -1,9 +1,24 @@
 ---
-name: new_badge_monsters
+name: new_badge_monsters_assets
 images:
-  - name: "godzilla"
-    filename: "godzicon.png"
+  - name: "Access Control Alligator"
+    filename: "AccessControlAlligator.png"
     bits: 4
-  - name: "gopher"
-    filename: "gopher.png"
+  - name: "Crypto Raptor"
+    filename: "CryptoRaptor.png"
+    bits: 4
+  - name: "Firewall Flyer"
+    filename: "FirewallFlyer.png"
+    bits: 4
+  - name: "Intrusion Detection Iguana"
+    filename: "IntrusionDetectionIguana.png"
+    bits: 4
+  - name: "PenTest Penguin"
+    filename: "PenTestPenguin.png"
+    bits: 4
+  - name: "Proxy Porcupine"
+    filename: "ProxyPorcupine.png"
+    bits: 4
+  - name: "Spam Spider"
+    filename: "SpamSpider.png"
     bits: 4
