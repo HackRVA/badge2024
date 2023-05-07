@@ -9,9 +9,9 @@
 #include "rtc.h"
 #include "xorshift.h"
 #include "trig.h"
+#include "new_badge_monsters/new_badge_monsters.h"
 
 extern unsigned short popup_time;
-extern void render_screen_save_monsters(void);
 
 static unsigned short animation_count = 0;
 void screensaver_set_animation_count(unsigned short count)
