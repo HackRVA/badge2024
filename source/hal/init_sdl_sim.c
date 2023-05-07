@@ -27,6 +27,7 @@
 #include "quat.h"
 #include "accelerometer.h"
 #include "uid.h"
+#include "audio.h"
 
 #define UNUSED __attribute__((unused))
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -103,6 +104,7 @@ int hal_run_main(int (*main_func)(int, char**), int argc, char** argv) {
     pthread_create(&app_thread, NULL, main_in_thread, main_func);
 
     process_options(argc, argv);
+    audio_init();
     hal_start_sdl(&argc, &argv);
 
     return 0;

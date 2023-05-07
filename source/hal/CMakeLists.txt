@@ -89,6 +89,7 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR" OR ${TARGET} STREQUAL "WASM")
     find_package(Threads REQUIRED)
     target_link_libraries(${PRODUCT} Threads::Threads)
     target_link_libraries(${PRODUCT} m)
+
 endif()
 
 target_include_directories(${PRODUCT} PUBLIC .)

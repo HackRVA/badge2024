@@ -162,7 +162,7 @@ Here's a list of major functional blocks and their current availability in softw
 | D-Pad            | :heavy_check_mark: | :heavy_check_mark: |
 | IR Tx/RX         | :heavy_check_mark: | :heavy_check_mark: |
 | Rotary Encoder   | :heavy_check_mark: | :heavy_check_mark: |
-| Audio Output     | :x:                | :heavy_check_mark: |
+| Audio Output     | :heavy_check_mark: | :heavy_check_mark: |
 | Audio/Jack Input | :x:                | :x:                |
 
 # To Do:
