@@ -72,6 +72,7 @@
 #include "rtc.h"
 #include "xorshift.h"
 #include "audio.h"
+#include "music.h"
 
 #define PLAYER_COLOR x11_orange
 #define SOLDIER_COLOR x11_olive_drab
@@ -539,6 +540,63 @@ struct gulag_object {
 	union gulag_type_specific_data tsd;
 } go[GULAG_MAXOBJS];
 int gulag_nobjs = 0;
+
+#define whole_note 3200 
+#define half_note 1600  
+#define quarter_note 800 
+#define dotted_quarter 1200
+#define eighth_note 400 
+#define sixteenth_note 200 
+#define thirtysecond_note 100 
+
+static struct note natl_anthem_notes[] = {
+	{ NOTE_D5, dotted_quarter, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_Ef5, eighth_note, },
+
+	{ NOTE_F5, dotted_quarter, },
+	{ NOTE_Ef5, eighth_note, },
+	{ NOTE_D5, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+
+	{ NOTE_Bf4, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+	{ NOTE_A4, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+
+	{ NOTE_G4, dotted_quarter, },
+	{ NOTE_A4, eighth_note, },
+	{ NOTE_Bf4, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+
+	{ NOTE_D5, dotted_quarter, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_Ef5, eighth_note, },
+
+	{ NOTE_F5, dotted_quarter, },
+	{ NOTE_Ef5, eighth_note, },
+	{ NOTE_D5, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+
+	{ NOTE_Bf4, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+	{ NOTE_A4, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+
+	{ NOTE_G4, half_note },
+	{ NOTE_REST, half_note },
+};
+
+static struct tune ukrainian_natl_anthem = {
+	.num_notes = ARRAYSIZE(natl_anthem_notes),
+	.note = &natl_anthem_notes[0],
+};
 
 typedef void (*gulag_object_drawing_function)(struct gulag_object *o);
 typedef void (*gulag_object_moving_function)(struct gulag_object *o);
@@ -2255,6 +2313,7 @@ static void gulag_intro(void)
 	gulag_text_scroll_lines = ARRAYSIZE(intro_text);
 	gulag_text_offset = 0;
 	gulag_text_offset_limit = 425;
+	play_tune(&ukrainian_natl_anthem, NULL);
 	gulag_state = GULAG_SCROLL_TEXT;
 }
 
@@ -2266,6 +2325,7 @@ static void gulag_player_wins(void)
 	gulag_text_scroll_lines = ARRAYSIZE(win_text);
 	gulag_text_offset = 0;
 	gulag_text_offset_limit = 275;
+	play_tune(&ukrainian_natl_anthem, NULL);
 	gulag_state = GULAG_SCROLL_TEXT;
 }
 
