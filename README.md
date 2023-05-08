@@ -94,7 +94,25 @@ using Windows Subsystem for Linux if your Linux subsystem has a desktop environm
 But to build the simulator, you will need a C compiler for your computer. The simulator relies on SDL2
 for graphics and keyboard/mouse/game controller support, so you will need to install SDL2.  For images,
 libpng is needed.  ("apt-get install libsdl2-dev" package on Debian based distros, libpng-dev is usually already
-present, on Mac, "brew install sdl2" and "brew install libpng").
+present, on Mac, "brew install sdl2" and "brew install libpng").  In addition, portaudio is needed, the
+debian package names might be lipportaudio2 and portaudio19-dev. If you want to compile the simulator
+without audio support, in the top level CMakelists.txt, make the following change:
+
+```
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4b58925e..8c7eab01 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -5,7 +5,7 @@ set(PICO_SDK_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK from Git. Default o
+ set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git. Default on.")
+ set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
+ set(PRODUCT "badge2023_c")
+-set(SIMULATOR_AUDIO "yes") # change to "no" to avoid compiling audio code in simulator
++set(SIMULATOR_AUDIO "no") # change to "no" to avoid compiling audio code in simulator
+ 
+ if (${TARGET} STREQUAL "PICO")
+     # Pull in SDK (must be before project).
+```
 
 ### Visual Studio Code Setup
 
