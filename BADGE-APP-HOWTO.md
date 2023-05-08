@@ -562,11 +562,55 @@ username badge app).
 Audio
 -----
 
-TODO: Elaborate on this
-
 See: [source/hal/audio.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/audio.h)
 
-Note: The badge simulator does not currently provide any audio functionality
+There are two main audio functions:
+
+```
+void audio_out_beep(uint16_t frequency, uint16_t duration_ms);
+void audio_out_beep_with_cb(uint16_t frequency, uint16_t duration_ms, void (*callback)(void));
+```
+
+The first one, audio_out_beep() plays a note of the specified frequency for the specified
+duration in milliseconds.  It returns immediately, before the sound has completed playing.
+The second function, audio_out_beep_with_callback() does the same, but when the sound finishes
+the specified callback function is called.  In this way, you can get the badge to play a
+sequence of notes "in the background" like so:
+
+```
+static struct note {
+	uint16_t frequency;
+	uint16_t duration;
+} scale[] = {
+	{ 440, 100 }, /* A */
+	{ 494, 100 }, /* B */
+	{ 523, 100 }, /* C */
+	{ 587, 100 }, /* D */
+	{ 659, 100 }, /* E */
+	{ 698, 100 }, /* F */
+	{ 784, 100 }, /* G */
+	{ 880, 100 }, /* A */
+};
+
+static int current_note = 0;
+static void next_note(void)
+{
+	if (current_note >= 7) {
+		current_note = 0;
+		return;
+	}
+	current_note++;
+	audio_out_beep_with_cb(scale[current_note].frequency, scale[current_note].duration, next_note);
+}
+
+static void play_scale(void)
+{
+	audio_out_beep_with_cb(scale[current_note].frequency, scale[current_note].duration, next_note);
+}
+```
+
+Look into gulag.c for an example of how to create a kind of "explosiony" sound.
+
 
 Setting the Flair LED Color
 ---------------------------
