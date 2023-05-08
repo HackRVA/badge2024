@@ -158,7 +158,6 @@ int audio_out_beep_with_cb(uint16_t freq,  uint16_t duration, void (*beep_finish
 {
 #ifdef SIMULATOR_AUDIO
 	float value = -0.025;
-	int count = AUDIO_BUFFER_SIZE / freq;
 
 	if (duration <= 0)
 		return 0;
@@ -175,6 +174,7 @@ int audio_out_beep_with_cb(uint16_t freq,  uint16_t duration, void (*beep_finish
 		return 0;
 	}
 
+	int count = AUDIO_BUFFER_SIZE / freq;
 	pthread_mutex_lock(&audio_lock);
 	for (int i = 0; i < AUDIO_BUFFER_SIZE; i++) {
 		audio_buffer[i] = value;

@@ -8,6 +8,7 @@ target_sources(${PRODUCT} PUBLIC
 	${CMAKE_CURRENT_LIST_DIR}/fxp_sqrt.c
         ${CMAKE_CURRENT_LIST_DIR}/key_value_storage.c
         ${CMAKE_CURRENT_LIST_DIR}/menu.c
+        ${CMAKE_CURRENT_LIST_DIR}/music.c
         ${CMAKE_CURRENT_LIST_DIR}/schedule.c
         ${CMAKE_CURRENT_LIST_DIR}/screensavers.c
         ${CMAKE_CURRENT_LIST_DIR}/settings.c

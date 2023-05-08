@@ -609,6 +609,38 @@ static void play_scale(void)
 }
 ```
 
+Music
+-----
+
+The above pattern for playing music is already coded for you
+in source/core/music.c and [source/core/music.h](https://github.com/HackRVA/badge2023/blob/main/source/core/music.h)
+
+You could play the scale with this code:
+
+```
+	#include "music.h"
+
+	static struct scale_notes = {
+		{ NOTE_A3, 100 },
+		{ NOTE_B3, 100 },
+		{ NOTE_C4, 100 },
+		{ NOTE_D4, 100 },
+		{ NOTE_E4, 100 },
+		{ NOTE_F4, 100 },
+		{ NOTE_G4, 100 },
+		{ NOTE_A4, 100 },
+	};
+
+	static struct tune scale = {
+		.num_notes = ARRAYSIZE(scale_notes),
+		.note = &scale_notes[0],
+	};
+
+	...
+
+	play_tune(&scale);
+```
+
 Look into gulag.c for an example of how to create a kind of "explosiony" sound.
 
 
