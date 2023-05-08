@@ -1,14 +1,14 @@
 #include <stdint.h>
 #include "new_badge_monsters.h"
+#include "new_badge_monsters_assets.h"
+#include "new_badge_monsters_ir.h"
 #include "audio.h"
 #include "badge.h"
 #include "button.h"
 #include "colors.h"
-#include "dynmenu.h"
 #include "framebuffer.h"
 #include "key_value_storage.h"
 #include "menu.h"
-#include "new_badge_monsters/new_badge_monsters_ir.h"
 #include "stdio.h"
 #include "string.h"
 #include "utils.h"
@@ -30,17 +30,17 @@ enum app_states {
 
 struct new_monster new_monsters[] = {
     {
-        "godzilla",
+        "AccessGator",
         true,
         RED,
-        "The undisputed king of them all",
-        &new_badge_monsters_godzilla
+        "Hides in your access control config, waiting to bite you on the a**",
+        &new_badge_monsters_assets_Access_Control_Alligator
     }, {
-        "gopher",
+        "CryptoRaptor",
         false,
         YELLOW,
-        "Gophers are\nsmall, furry\nrodents that\nburrow tunnels\nthrough yards\nof North\nAmerica and\nCentral\nAmerica.",
-        &new_badge_monsters_gopher
+        "Attacks from above, out of the sun",
+        &new_badge_monsters_assets_Crypto_Raptor
     }
 };
 
@@ -86,7 +86,9 @@ static state_to_function_map_fn_type state_to_function_map[] = {
 
 void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
 {
-
+#ifdef __linux__
+    printf("badge_monsters_cb: state %d\n", state.app_state);
+#endif
     state_to_function_map[state.app_state]();
 }
 
@@ -95,6 +97,9 @@ void app_init()
     FbInit();
     state.app_state = INIT_APP_STATE;
     register_ir_packet_callback(ir_packet_callback);
+#ifdef __linux__
+    printf("app_init: %lu, %lu\n", ARRAYSIZE(new_monsters), ARRAYSIZE(state.menu_item));
+#endif
     dynmenu_init(&state.menu, state.menu_item, ARRAYSIZE(state.menu_item));
 
     change_menu_level(MAIN_MENU);

@@ -3,19 +3,17 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-typedef char colormap[16][3];
+#include "new_badge_monsters_assets.h"
+#include "dynmenu.h"
 
 struct new_monster
 {
-    char name[20];
+    char name[DYNMENU_MAX_TITLE];
     bool owned;
     int color;
     char blurb[128];
     const struct asset *asset;
 };
-
-extern const struct asset new_badge_monsters_godzilla;
-extern const struct asset new_badge_monsters_gopher;
 
 void app_init(void);
 void exit_app(void);
