@@ -4,18 +4,23 @@
  * where the menu items can be updated at run time.
  */
 
+// defines maximum length of a menu item
+// 14 chars * 8px per char + 13 * 1px spacing + 1px start + 1px end = 127
+// +1 for trailing \0
+#define DYNMENU_MAX_TITLE 15
+
 /* Each menu item is defined by an instance of this structure. */
 struct dynmenu_item {
-	char text[15];		/* text to be displayed for this menu item. */
+	char text[DYNMENU_MAX_TITLE];		/* text to be displayed for this menu item. */
 	int next_state;		/* The next program state upon menu selection (see NOTES below) */
 	unsigned char cookie;	/* for use by the badge app how it sees fit. */
 };
 
 /* This structure defines a menu. */
 struct dynmenu {
-	char title[15]; /* Up to three lines of text to be used as a menu title. */
-	char title2[15];
-	char title3[15];
+	char title[DYNMENU_MAX_TITLE]; /* Up to three lines of text to be used as a menu title. */
+	char title2[DYNMENU_MAX_TITLE];
+	char title3[DYNMENU_MAX_TITLE];
 	struct dynmenu_item *item;	/* Up to max_items on the menu */
 	unsigned char nitems;		/* Current actual number of items on the menu */
 	unsigned char max_items;	/* Maximum possible number of items on the menu. */

@@ -38,7 +38,8 @@ void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned c
 
     if (dm->nitems >= dm->max_items) {
 #ifdef linux
-        printf("WARNING: dynmenu_add_item: failed to add menu item, max_items = %d\n", dm->max_items);
+        printf("WARNING: dynmenu_add_item: failed to add menu items %d, max_items = %d\n", dm->nitems, dm->max_items);
+        printf("menu title: %s\n", dm->title);
 #endif
         return;
     }
