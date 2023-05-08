@@ -162,6 +162,19 @@ int audio_out_beep_with_cb(uint16_t freq,  uint16_t duration, void (*beep_finish
 
 	if (duration <= 0)
 		return 0;
+
+	if (freq == 0 && beep_finished != NULL) { /* We're being asked to play a rest? Ok. */
+		pthread_mutex_lock(&audio_lock);
+		memset(audio_buffer, 0, sizeof(audio_buffer));
+		user_callback_fn = beep_finished;
+		audio_buffer_index = 0;
+		samples_left_to_play = (duration * 48);
+		if (samples_left_to_play > AUDIO_BUFFER_SIZE)
+			samples_left_to_play = AUDIO_BUFFER_SIZE;
+		pthread_mutex_unlock(&audio_lock);
+		return 0;
+	}
+
 	pthread_mutex_lock(&audio_lock);
 	for (int i = 0; i < AUDIO_BUFFER_SIZE; i++) {
 		audio_buffer[i] = value;
@@ -172,7 +185,7 @@ int audio_out_beep_with_cb(uint16_t freq,  uint16_t duration, void (*beep_finish
 	audio_buffer_index = 0;
 	samples_left_to_play = (duration * 48);
 	if (samples_left_to_play > AUDIO_BUFFER_SIZE)
-		samples_left_to_play = AUDIO_BUFFER_SIZE; 
+		samples_left_to_play = AUDIO_BUFFER_SIZE;
 	pthread_mutex_unlock(&audio_lock);
 #endif
 	return 0;

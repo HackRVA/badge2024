@@ -176,6 +176,8 @@ static int64_t audio_out_beep_alarm(__attribute__((unused)) alarm_id_t id,
 
     if (audio_out_mode != AUDIO_OUT_MODE_BEEP)
     {
+	if (beep_finished)
+		beep_finished();
         return 0;
     }
 
@@ -189,6 +191,19 @@ static int64_t audio_out_beep_alarm(__attribute__((unused)) alarm_id_t id,
 
 int audio_out_beep_with_cb(uint16_t freqHz, uint16_t durMs, void (*beep_finished)(void))
 {
+    static alarm_id_t prev_alarm;
+    if (freqHz == 0 && beep_finished != NULL) { /* we're being asked to play a rest?  Ok. */
+        audio_out_mode = AUDIO_OUT_MODE_OFF;
+        pwm_set_enabled(slice, false);
+        audio_stby_ctl(true);
+        prev_alarm = alarm_pool_add_alarm_in_ms(alarm_pool_get_default(),
+                                            durMs,
+                                            audio_out_beep_alarm,
+                                            beep_finished,
+                                            true);
+        return 0;
+    }
+
     if ((freqHz < AUDIO_BEEP_FREQ_HZ_MIN)
         || (freqHz > AUDIO_BEEP_FREQ_HZ_MAX)
         || (durMs < AUDIO_BEEP_DUR_MS_MIN)
@@ -197,7 +212,6 @@ int audio_out_beep_with_cb(uint16_t freqHz, uint16_t durMs, void (*beep_finished
         return -1;
     }
 
-    static alarm_id_t prev_alarm;
     if (AUDIO_OUT_MODE_BEEP == audio_out_mode)
     {
         alarm_pool_cancel_alarm(alarm_pool_get_default(), prev_alarm);
