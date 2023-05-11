@@ -550,47 +550,165 @@ int gulag_nobjs = 0;
 #define thirtysecond_note 100 
 
 static struct note natl_anthem_notes[] = {
-	{ NOTE_D5, dotted_quarter, },
+	{ NOTE_D5, dotted_quarter, }, /* measure 1 */
 	{ NOTE_D5, eighth_note, },
 	{ NOTE_D5, eighth_note, },
 	{ NOTE_C5, eighth_note, },
 	{ NOTE_D5, eighth_note, },
 	{ NOTE_Ef5, eighth_note, },
 
-	{ NOTE_F5, dotted_quarter, },
+	{ NOTE_F5, dotted_quarter, }, /* measure 2 */
 	{ NOTE_Ef5, eighth_note, },
 	{ NOTE_D5, quarter_note, },
 	{ NOTE_C5, quarter_note, },
 
-	{ NOTE_Bf4, quarter_note, },
+	{ NOTE_Bf4, quarter_note, }, /* measure 3 */
 	{ NOTE_D5, quarter_note, },
 	{ NOTE_A4, quarter_note, },
 	{ NOTE_D5, quarter_note, },
 
-	{ NOTE_G4, dotted_quarter, },
+	{ NOTE_G4, dotted_quarter, }, /* measure 4 */
 	{ NOTE_A4, eighth_note, },
 	{ NOTE_Bf4, quarter_note, },
 	{ NOTE_C5, quarter_note, },
 
-	{ NOTE_D5, dotted_quarter, },
+	{ NOTE_D5, dotted_quarter, }, /* measure 5 */
 	{ NOTE_D5, eighth_note, },
 	{ NOTE_D5, eighth_note, },
 	{ NOTE_C5, eighth_note, },
 	{ NOTE_D5, eighth_note, },
 	{ NOTE_Ef5, eighth_note, },
 
-	{ NOTE_F5, dotted_quarter, },
+	{ NOTE_F5, dotted_quarter, }, /* measure 6 */
 	{ NOTE_Ef5, eighth_note, },
 	{ NOTE_D5, quarter_note, },
 	{ NOTE_C5, quarter_note, },
 
-	{ NOTE_Bf4, quarter_note, },
+	{ NOTE_Bf4, quarter_note, }, /* measure 7 */
 	{ NOTE_D5, quarter_note, },
 	{ NOTE_A4, quarter_note, },
 	{ NOTE_D5, quarter_note, },
 
-	{ NOTE_G4, half_note },
+	{ NOTE_G4, half_note }, /* measure 8 */
 	{ NOTE_REST, half_note },
+
+	{ NOTE_A4, dotted_quarter, }, /* measure 9 */
+	{ NOTE_A4, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_Bf4, eighth_note, },
+	{ NOTE_A4, eighth_note, },
+
+	{ NOTE_G4, eighth_note, }, /* measure 10 */
+	{ NOTE_A4, eighth_note, },
+	{ NOTE_Bf4, eighth_note, },
+	{ NOTE_G4, eighth_note, },
+	{ NOTE_A4, quarter_note, },
+	{ NOTE_A4, quarter_note, },
+
+	{ NOTE_Bf4, quarter_note, }, /* measure 11 */
+	{ NOTE_Bf4, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+
+	{ NOTE_D5, half_note, }, /* measure 12 */
+	{ NOTE_D5, quarter_note, },
+	{ NOTE_REST, quarter_note, },
+
+	{ NOTE_A4, dotted_quarter, }, /* measure 13 */
+	{ NOTE_A4, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_Bf4, eighth_note, },
+	{ NOTE_A4, eighth_note, },
+
+	{ NOTE_G4, eighth_note, }, /* measure 14 */
+	{ NOTE_A4, eighth_note, },
+	{ NOTE_Bf4, eighth_note, },
+	{ NOTE_G4, eighth_note, },
+	{ NOTE_A4, quarter_note, },
+	{ NOTE_A4, quarter_note, },
+
+	{ NOTE_Bf4, quarter_note, }, /* measure 15 */
+	{ NOTE_D5, quarter_note, },
+	{ NOTE_A4, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+
+	{ NOTE_G4, dotted_quarter, }, /* measure 16 */
+	{ NOTE_A4, eighth_note, },
+	{ NOTE_Bf4, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_Ef5, eighth_note, },
+
+	{ NOTE_F5, dotted_quarter }, /* measure 17 */
+	{ NOTE_E5, eighth_note, },
+	{ NOTE_F5, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+
+	{ NOTE_C5, quarter_note, }, /* measure 18 */
+	{ NOTE_C5, quarter_note, },
+	{ NOTE_F5, eighth_note, },
+	{ NOTE_Ef5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+
+	{ NOTE_Bf4, quarter_note, }, /* measure 19 */
+	{ NOTE_Bf4, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+
+	{ NOTE_D5, dotted_quarter, }, /* measure 20 */
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_Bf4, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_Ef5, eighth_note, },
+
+	{ NOTE_F5, dotted_quarter, }, /* measure 21 */
+	{ NOTE_E5, eighth_note, },
+	{ NOTE_F5, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+
+	{ NOTE_C5, quarter_note, }, /* measure 22 */
+	{ NOTE_C5, quarter_note, },
+	{ NOTE_F5, eighth_note, },
+	{ NOTE_Ef5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+
+	{ NOTE_Bf4, quarter_note, }, /* measure 23 */
+	{ NOTE_Bf4, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+	{ NOTE_C5, quarter_note, },
+
+	{ NOTE_D5, dotted_quarter, }, /* measure 24 */
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_Bf4, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_Ef5, eighth_note, },
+
+	{ NOTE_F5, dotted_quarter, }, /* measure 25 */
+	{ NOTE_E5, eighth_note, },
+	{ NOTE_F5, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+
+	{ NOTE_C5, quarter_note, }, /* measure 26 */
+	{ NOTE_C5, quarter_note, },
+	{ NOTE_F5, eighth_note, },
+	{ NOTE_Ef5, eighth_note, },
+	{ NOTE_D5, eighth_note, },
+	{ NOTE_C5, eighth_note, },
+
+	{ NOTE_Bf4, quarter_note, }, /* measure 27 */
+	{ NOTE_D5, quarter_note, },
+	{ NOTE_A4, quarter_note, },
+	{ NOTE_D5, quarter_note, },
+
+	{ NOTE_G4, half_note, }, /* measure 28 */
+	{ NOTE_G4, quarter_note, },
+	{ NOTE_REST, quarter_note, },
 };
 
 static struct tune ukrainian_natl_anthem = {
