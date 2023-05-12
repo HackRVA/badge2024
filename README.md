@@ -95,7 +95,7 @@ But to build the simulator, you will need a C compiler for your computer. The si
 for graphics and keyboard/mouse/game controller support, so you will need to install SDL2.  For images,
 libpng is needed.  ("apt-get install libsdl2-dev" package on Debian based distros, libpng-dev is usually already
 present, on Mac, "brew install sdl2" and "brew install libpng").  In addition, portaudio is needed, the
-debian package names might be lipportaudio2 and portaudio19-dev. If you want to compile the simulator
+debian package names might be libportaudio2 and portaudio19-dev. If you want to compile the simulator
 without audio support, in the top level CMakelists.txt, make the following change:
 
 ```
