@@ -68,18 +68,17 @@ const char drag_hack_num[] = "HackRVA.org";
 void hack_the_dragon(){
 
     led_pwm_enable(BADGE_LED_RGB_RED, 255);
-    FbMove(5, 20);
+    FbMove(120 - 20, 5);
     FbColor(RED);
-    FbWriteLine(drag_hack);
+    FbRotWriteLine(drag_hack);
 
     int i = 0;
     for(i=0; i<(8 - popup_time%8); i++){
-        FbMove(17, 35+ (i*10));
-        FbWriteLine(drag_hack_num);
+        // FbMove(17, 35+ (i*10));
+	FbMove(128 - (i * 10) - 35, 17);
+        FbRotWriteLine(drag_hack_num);
     }
-
     FbSwapBuffers();
-
 }
 
 static int random_num(int n)
