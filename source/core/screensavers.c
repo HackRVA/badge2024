@@ -280,60 +280,54 @@ void for_president(){
 
 }
 
-void smiley(){
+static void smiley_eye(int x, int y)
+{
+	/* Whites of the eye */
+	FbColor(WHITE);
+	FbMove(x, y);
+	FbFilledRectangle(35, 20);
 
-    FbColor(WHITE);
+	/* Iris */
+	FbColor(BLACK);
+	if(popup_time > 40)
+		FbMove(x + 17, y + 10);
+	else if(popup_time > 30)
+		FbMove(x + 25, y + 15);
+	else if(popup_time > 20)
+		FbMove(x + 10, y + 5);
+	else
+		FbMove(x + 17, y + 10);
+	FbFilledRectangle(7, 7);
+}
 
-    FbMove(10, 10);
-    FbFilledRectangle(20, 35);
-    FbMove(100, 10);
-    FbFilledRectangle(20, 35);
-    FbMove(20, 80);
-    FbFilledRectangle(80, 5);
+static void smiley_mouth(int x, int y)
+{
+	FbColor(WHITE);
+	FbMove(x, y);
+	FbFilledRectangle(5, 80);
+}
 
-    FbColor(BLACK);
+static void smiley_tongue(int x, int y)
+{
+	int dx;
 
-    if(popup_time > 40)
-        FbMove(15, 20);
-    else if(popup_time > 30)
-        FbMove(12, 15);
-    else if(popup_time > 20)
-        FbMove(19, 15);
-    else
-        FbMove(16, 25);
+	dx = popup_time > 20 ? 20 : popup_time;
+	FbColor(RED);
+	FbMove(x + 20 - dx, y);
+	FbFilledRectangle(popup_time > 20 ? 20 : popup_time, 30);
+	FbMove(x + 20 - dx - 5, y + 5);
+	FbFilledRectangle(5, 20);
+}
 
-    FbFilledRectangle(7, 7);
+void smiley(void)
+{
+	int dx = popup_time > 20 ? 20 : popup_time;
 
-    if(popup_time > 40)
-        FbMove(105, 20);
-    else if(popup_time > 30)
-        FbMove(102, 15);
-    else if(popup_time > 20)
-        FbMove(109, 15);
-    else
-        FbMove(106, 25);
-
-    FbFilledRectangle(7, 7);
-
-
-    FbColor(RED);
-
-    if(popup_time > 20){
-        FbMove(60, 85);
-        FbFilledRectangle(30, 20);
-        FbMove(65, 105);
-        FbFilledRectangle(20, 7);
-
-    }
-    else{
-        FbMove(40+popup_time, 85);
-        FbFilledRectangle(30, popup_time);
-        FbMove(45+popup_time, 85+popup_time);
-        FbFilledRectangle(20, 7);
-    }
-
-
-    FbSwapBuffers();
+	smiley_eye(90, 20);
+	smiley_eye(90, 120);
+	smiley_mouth(45, 40);
+	smiley_tongue(30, 60 + dx);
+	FbSwapBuffers();
 }
 
 void matrix(){
