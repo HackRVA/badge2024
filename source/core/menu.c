@@ -31,6 +31,7 @@
 #include "asteroids.h"
 #include "etch-a-sketch.h"
 #include "magic-8-ball.h"
+#include "test-screensavers.h"
 
 #define MAIN_MENU_BKG_COLOR GREY2
 

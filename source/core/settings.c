@@ -8,6 +8,7 @@
 #include "led_pwm.h"
 #include "display.h"
 #include "key_value_storage.h"
+#include "test-screensavers.h"
 
 #define PING_REQUEST      0x1000
 #define PING_RESPONSE     0x2000
@@ -252,9 +253,9 @@ const struct menu_t screen_lock_m[] = {
     {"ON",       0|VERT_ITEM, FUNCTION, {(struct menu_t *)screen_save_lock_cb} },
     {"OFF",      1|VERT_ITEM, FUNCTION, {(struct menu_t *)screen_save_lock_cb} },
     {"INVERT", VERT_ITEM, FUNCTION, {(struct menu_t *)screen_save_invert_cb} },
+    {"TEST", VERT_ITEM, FUNCTION, { .func = test_screensavers_cb, }, },
     {"Back",   VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
-
 
 
 void setup_settings_menus(void) {
