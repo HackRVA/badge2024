@@ -44,6 +44,7 @@ void FbInit() {
     G_Fb.pos.x = 0;
     G_Fb.pos.y = 0;
     G_Fb.font = FONT;
+    G_Fb.rotated_font = ROTATED_FONT;
     G_Fb.fontHeight = 8;
 
     G_Fb.color = 255;

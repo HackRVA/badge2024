@@ -35,6 +35,7 @@ struct framebuffer_t {
     unsigned short *buffer;
     struct vector8_t pos;
     unsigned char font;
+    unsigned char rotated_font;
     unsigned char fontHeight;
 
     unsigned short color;

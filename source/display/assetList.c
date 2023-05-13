@@ -18,6 +18,7 @@
 
 //#include "font_2.xbm" // for size reasons just A-Z and a couple others
 #include "font8x8.xbm.h" // full font
+#include "font8x8-rotated.xbm.h" // rotated 90 deg clockwise font
 
 
 /* for 1 bit images */
@@ -53,5 +54,6 @@ const struct asset assetList[] = {
 // partial font    { FONT, PICTURE1BIT, 42, 8, 8, (const char *)BW_cmap, (const char *)font_2_bits, (dummy_draw) },
         { RVASEC2016, RVASEC2016_BITS, 1, RVASEC2016_WIDTH, RVASEC2016_HEIGHT, (const char *)RVASEC2016_CMAP, (const char *)RVASEC2016_DATA, (dummy_draw) },
         { FONT, PICTURE1BIT, 128, 8, 8, (const char *)BW_cmap, (const char *)font8x8_bits, (dummy_draw) },
+	{ ROTATED_FONT, PICTURE1BIT, 128, 8, 8, (const char *)BW_cmap, (const char *)font8x8_rotated_bits, (dummy_draw) },
 };
 

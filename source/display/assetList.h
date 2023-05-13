@@ -13,6 +13,7 @@ enum {
     HACKRVA4,
     RVASEC2016,
     FONT,
+    ROTATED_FONT,
 
     LASTASSET,
 };
