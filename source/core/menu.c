@@ -86,6 +86,10 @@ static void rvasec_splash_cb();
 /* Duration of beeps for menu actions, in milliseconds */
 #define NOTEDUR 50
 
+static void menu_beep(uint16_t freq)
+{
+	audio_out_beep(freq, NOTEDUR);
+}
 
 #ifdef QC
  void (*runningApp)() = QC_cb;
@@ -379,29 +383,29 @@ void menus() {
         switch (G_selectedMenu->type) {
 
             case MORE: /* jump to next page of menu */
-                audio_out_beep(MORE_FREQ, NOTEDUR); /* a */
+                menu_beep(MORE_FREQ); /* a */
                 G_currMenu += PAGESIZE;
                 G_selectedMenu = G_currMenu;
                 break;
 
             case BACK: /* return from menu */
-                audio_out_beep(BACK_FREQ, NOTEDUR);
+                menu_beep(BACK_FREQ);
 		pop_menu();
                 if (G_menuCnt == 0)
 			return; /* stack is empty, error or main menu */
                 break;
 
             case TEXT: /* maybe highlight if clicked?? */
-                audio_out_beep(TEXT_FREQ, NOTEDUR); /* c */
+                menu_beep(TEXT_FREQ); /* c */
                 break;
 
             case MENU: /* drills down into menu if clicked */
-                audio_out_beep(MENU_FREQ, NOTEDUR); /* d */
+                menu_beep(MENU_FREQ); /* d */
 		push_menu(G_selectedMenu->data.menu);
                 break;
 
             case FUNCTION: /* call the function pointer if clicked */
-                audio_out_beep(FUNC_FREQ, NOTEDUR); /* e */
+                menu_beep(FUNC_FREQ); /* e */
                 runningApp = G_selectedMenu->data.func;
                 break;
 
@@ -412,7 +416,7 @@ void menus() {
         G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
     } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
         /* handle slider/soft button clicks */
-        audio_out_beep(TEXT_FREQ, NOTEDUR); /* f */
+        menu_beep(TEXT_FREQ); /* f */
 
         /* make sure not on first menu item */
         if (G_selectedMenu > G_currMenu) {
@@ -438,7 +442,7 @@ void menus() {
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         }
     } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
-        audio_out_beep(MORE_FREQ, NOTEDUR); /* g */
+        menu_beep(MORE_FREQ); /* g */
 
         /* make sure not on last menu item */
         if (!(G_selectedMenu->attrib & LAST_ITEM)) {
@@ -491,13 +495,13 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
         BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
         switch (L_selectedMenu->type) {
             case MORE: /* jump to next page of menu */
-                audio_out_beep(MORE_FREQ, NOTEDUR); /* a */
+                menu_beep(MORE_FREQ); /* a */
                 L_currMenu += PAGESIZE;
                 L_selectedMenu = L_currMenu;
                 break;
 
             case BACK: /* return from menu */
-                audio_out_beep(BACK_FREQ, NOTEDUR); /* b */
+                menu_beep(BACK_FREQ); /* b */
                 if (L_menuCnt == 0) return; /* stack is empty, error or main menu */
                 L_menuCnt--;
                 L_currMenu = L_menuStack[L_menuCnt] ;
@@ -506,11 +510,11 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
                 break;
 
             case TEXT: /* maybe highlight if clicked?? */
-                audio_out_beep(TEXT_FREQ, NOTEDUR); /* c */
+                menu_beep(TEXT_FREQ); /* c */
                 break;
 
             case MENU: /* drills down into menu if clicked */
-                audio_out_beep(MENU_FREQ, NOTEDUR); /* d */
+                menu_beep(MENU_FREQ); /* d */
                 L_menuStack[L_menuCnt++] = L_currMenu; /* push onto stack  */
                 if (L_menuCnt == MAX_MENU_DEPTH) L_menuCnt--; /* too deep, undo */
                 L_currMenu = (struct menu_t *)L_selectedMenu->data.menu; /* go into this menu */
@@ -520,7 +524,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
                 break;
 
             case FUNCTION: /* call the function pointer if clicked */
-                audio_out_beep(FUNC_FREQ, NOTEDUR); /* e */
+                menu_beep(FUNC_FREQ); /* e */
                 (*L_selectedMenu->data.func)(L_selectedMenu);
 
                 /* clean up for nex call back */
@@ -537,7 +541,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
         }
     } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
         /* handle slider/soft button clicks */
-        audio_out_beep(TEXT_FREQ, NOTEDUR); /* f */
+        menu_beep(TEXT_FREQ); /* f */
 
         /* make sure not on first menu item */
         if (L_selectedMenu > L_currMenu) {
@@ -551,7 +555,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
             L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
         }
     } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-        audio_out_beep(MORE_FREQ, NOTEDUR); /* g */
+        menu_beep(MORE_FREQ); /* g */
 
         /* make sure not on last menu item */
         if (!(L_selectedMenu->attrib & LAST_ITEM)) {
@@ -601,7 +605,7 @@ static void rvasec_splash_cb(){
         FbSwapBuffers();
         led_pwm_enable(BADGE_LED_RGB_GREEN, 50 * 255/100);
         //if(buzzer)
-        audio_out_beep(MORE_FREQ, NOTEDUR);
+        menu_beep(MORE_FREQ);
     } else if(wait < 40){
         FbImage4bit(&assetList[HACKRVA4], 0);
         FbSwapBuffers();
