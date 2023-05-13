@@ -7,6 +7,7 @@
 #include "random.h"
 #include "led_pwm.h"
 #include "rtc.h"
+#include "xorshift.h"
 
 extern unsigned short popup_time;
 extern void render_screen_save_monsters(void);
@@ -83,9 +84,11 @@ void hack_the_dragon(){
 
 static int random_num(int n)
 {
-	unsigned int rnd;
-	random_insecure_bytes((uint8_t*)&rnd, sizeof(unsigned int));
-	return (rnd % n);
+	static unsigned int xorshift_state = 0;
+	if (xorshift_state == 0) {
+		random_insecure_bytes((uint8_t*)&xorshift_state, sizeof(xorshift_state));
+	}
+	return xorshift(&xorshift_state) % n;
 }
 
 void stupid_rects(void)
@@ -331,16 +334,47 @@ void smiley(void)
 	FbSwapBuffers();
 }
 
-void matrix(){
-    unsigned char w = 0, h = 0;
-    FbColor(GREEN);
-    for(w = 0; w <132; w+=10){
-        for(h = 0; h < 132; h+=10){
-            FbMove(w, h);
-            //FbCharacter(lcd_font_map[irbit2(popup_time+w+h+timestamp)%42]);
-        }
-    }
-    FbSwapBuffers();
+void matrix(void)
+{
+#define NUM_MATRIX_DOODADS 5
+	static int x[NUM_MATRIX_DOODADS], y[NUM_MATRIX_DOODADS];
+	static int started = 0;
+	if (!started) {
+		FbColor(x11_light_green);
+		FbBackgroundColor(BLACK);
+		FbClear();
+		for (int i = 0; i < NUM_MATRIX_DOODADS; i++) {
+			x[i] = random_num(LCD_XSIZE / 8);
+			y[i] = random_num(LCD_YSIZE / 8);
+		}
+		started = 1;
+	}
+
+	for (int i = 0; i < NUM_MATRIX_DOODADS; i++) {
+		if (x[i] > 0)
+			FbColor(x11_light_green);
+		else
+			FbColor(x11_dark_green);
+		FbBackgroundColor(BLACK);
+		unsigned char ch = random_num(63) + 'A';
+		FbMove(x[i] * 8, y[i] * 8);
+		FbRotCharacter(ch);
+		if (random_num(1000) < 900) {
+			int nx = x[i] + 1;
+			if (nx * 8 <= LCD_XSIZE - 8) {
+				FbColor(x11_dark_green);
+				FbMove(nx * 8, y[i] * 8);
+				ch = random_num(63) + 'A';
+				FbRotCharacter(ch);
+			}
+		}
+		x[i] -= 1;
+		if (x[i] < 0) {
+			x[i] = (LCD_XSIZE - 8) / 8;
+			y[i] = random_num(LCD_YSIZE / 8);
+		}
+	}
+	FbPushBuffer();
 }
 
 const char bs1[] = "Badgedows";
@@ -371,7 +405,7 @@ void bluescreen(){
     FbRotWriteLine(bs1);
     FbSwapBuffers();
     FbColor(WHITE);
-    FbBackground(BLACK);
+    FbBackgroundColor(BLACK);
 }
 
 const char badgetips_header[] = "--Badge Tip--";
