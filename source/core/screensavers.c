@@ -387,166 +387,70 @@ void just_the_badge_tips(){
 
     FbBackgroundColor(BLACK);
     FbColor(GREEN);
-    FbMove(14, 4);
+    FbMove(LCD_XSIZE - 8 - 4, 14);
     FbWriteLine(badgetips_header);
 
 
     FbColor(YELLOW);
+    FbMove(LCD_XSIZE - 20 - 20 , 4);
     switch(tipnum){
         case 0:
-            FbMove(4, 20);
-            FbWriteLine("Dont lick the");
-            FbMove(4, 30);
-            FbWriteLine("badge");
+            FbRotWriteString("Dont lick the\nbadge");
             break;
         case 1:
-            FbMove(4, 20);
-            FbWriteLine("These are land");
-            FbMove(4, 30);
-            FbWriteLine("dwelling badges.");
-            FbMove(4, 40);
-            FbWriteLine("Avoid water");
+            FbRotWriteString("These are land\ndwelling badges.\nAvoid water");
             break;
         case 2:
-            FbMove(4, 20);
-            FbWriteLine("Known to the");
-            FbMove(4, 30);
-            FbWriteLine("state of cancer to");
-            FbMove(4, 40);
-            FbWriteLine("cause california");
+            FbRotWriteString("Known to the\nstate of cancer to\ncause California");
             break;
         case 3:
-            FbMove(4, 20);
-            FbWriteLine("Wash your hands");
-            FbMove(4, 30);
-            FbWriteLine("next time.");
+            FbRotWriteString("Wash your hands\nnext time.");
             break;
         case 4:
-            FbMove(4, 20);
-            FbWriteLine("Say hi to");
-            FbMove(4, 30);
-            FbWriteLine("the creators");
-            FbMove(4, 40);
-            FbWriteLine("over at hackrva");
+            FbRotWriteString("Say hi to\nthe creators\nover at hackrva");
             break;
         case 5:
-            FbMove(4, 20);
-            FbWriteLine("Have another");
-            FbMove(4, 30);
-            FbWriteLine("beer.");
+            FbRotWriteString("Have another\nbeer.");
             break;
         case 6:
-            FbMove(4, 20);
-            FbWriteLine("This badge is");
-            FbMove(4, 30);
-            FbWriteLine("zombie load");
-            FbMove(4, 40);
-            FbWriteLine("Enabled");
+            FbRotWriteString("This badge is\nzombie load\nenabled");
             break;
         case 7:
-            FbMove(4, 20);
-            FbWriteLine("This badge is");
-            FbMove(4, 30);
-            FbWriteLine("loyal to Mark");
-            FbMove(4, 40);
-            FbWriteLine("ZuckyZuck");
+            FbRotWriteString("This badge is\nloyal to Mark\nZuckyZuck");
             break;
         case 8:
-            FbMove(4, 20);
-            FbWriteLine("checkout the");
-            FbMove(4, 30);
-            FbWriteLine("   CTF!");
+            FbRotWriteString("checkout the\nCTF!");
             break;
         case 9:
-            FbMove(4, 20);
-            FbWriteLine("Its impolite");
-            FbMove(4, 30);
-            FbWriteLine("to stare at");
-            FbMove(4, 40);
-            FbWriteLine("other peoples");
-            FbMove(4, 50);
-            FbWriteLine("badges.");
+            FbRotWriteString("Its impolite\nto start at\nother peoples\nbadges.");
             break;
         case 10:
-            FbMove(4, 20);
-            FbWriteLine("Every badge is");
-            FbMove(4, 30);
-            FbWriteLine("different. Find");
-            FbMove(4, 40);
-            FbWriteLine("the bugs in");
-            FbMove(4, 50);
-            FbWriteLine("Yours!");
+            FbRotWriteString("Every badge is\ndifferent. Find\nthe bugs in\nyours!");
             break;
         case 11:
-            FbMove(4, 20);
-            FbWriteLine("Badges can be");
-            FbMove(4, 30);
-            FbWriteLine("very social.");
-            FbMove(4, 40);
-            FbWriteLine("Try playing");
-            FbMove(4, 50);
-            FbWriteLine("IR games.");
+            FbRotWriteString("Badges can be\nvery social.\nTry playing\nIR games");
             break;
         case 12:
-            FbMove(4, 20);
-            FbWriteLine("Its a thin line");
-            FbMove(4, 30);
-            FbWriteLine("a badge and a");
-            FbMove(4, 40);
-            FbWriteLine("bodge.");
+            FbRotWriteString("Its a thin line\nbetween a badge\nand an bodge");
             break;
         case 13:
-            FbMove(4, 20);
-            FbWriteLine("If you cant");
-            FbMove(4, 30);
-            FbWriteLine("read this your");
-            FbMove(4, 40);
-            FbWriteLine("badge is broken");
+            FbRotWriteString("If you cant\nread this your\nbadge is broken");
             break;
         case 14:
-            FbMove(4, 20);
-            FbWriteLine("Youll find the");
-            FbMove(4, 30);
-            FbWriteLine("source code ");
-            FbMove(4, 40);
-            FbWriteLine("online after");
-            FbMove(4, 50);
-            FbWriteLine("the conference.");
+            FbRotWriteString("Youll find the\nsource code\nonline after\nthe conference.");
             break;
         case 15:
-            FbMove(4, 20);
-            FbWriteLine("The badge is");
-            FbMove(4, 30);
-            FbWriteLine("not a touch");
-            FbMove(4, 40);
-            FbWriteLine("screen");
+            FbRotWriteString("The badge is\nnot a touch\nscreen");
             break;
         case 16:
-            FbMove(4, 20);
-            FbWriteLine("Badges need");
-            FbMove(4, 30);
-            FbWriteLine("love. Pet");
-            FbMove(4, 40);
-            FbWriteLine("your badge");
-            FbMove(4, 50);
-            FbWriteLine("regularly.");
+            FbRotWriteString("Badges need\nlove. Pet\nyour badge\nregularly");
             break;
         case 17:
-            FbMove(4, 20);
-            FbWriteLine("These are");
-            FbMove(4, 30);
-            FbWriteLine("artisanal");
-            FbMove(4, 40);
-            FbWriteLine("badges.");
+            FbRotWriteString("These are\nartisanal\nbadges");
             break;
         case 18:
         default:
-            FbMove(4, 20);
-            FbWriteLine("Badges are");
-            FbMove(4, 30);
-            FbWriteLine("hand crafted");
-            FbMove(4, 40);
-            FbWriteLine("at hackrva");
+            FbRotWriteString("Badges are\nhand crafted\nat hackrva");
             break;
     }
 
