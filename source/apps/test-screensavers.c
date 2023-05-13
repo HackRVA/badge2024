@@ -8,8 +8,6 @@ extern unsigned short popup_time;
 
 typedef void (*ss_func)(void);
 
-static int animation_count = 0;
-
 static const ss_func ss[] = {
 	just_the_badge_tips,
 	dotty,
@@ -88,13 +86,11 @@ static void draw_screen()
 
 static void test_screensavers_run()
 {
-	screensaver_set_animation_count(animation_count);
 	check_buttons();
 	draw_screen();
 	popup_time--;
 	if (popup_time == 0)
 		popup_time = 9 * 30;
-	animation_count++;
 }
 
 static void test_screensavers_exit()

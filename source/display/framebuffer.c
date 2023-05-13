@@ -487,6 +487,15 @@ void FbCharacter(unsigned char charin)
     G_Fb.changed = 1;
 }
 
+void FbRotCharacter(unsigned char charin)
+{
+    if ((charin < 32) | (charin > 126)) charin = 32;
+
+    charin -= 32;
+    FbImage1bit(&assetList[G_Fb.rotated_font], charin);
+    G_Fb.changed = 1;
+}
+
 void FbFilledRectangle(unsigned char width, unsigned char height)
 {
     unsigned int y, x, endX, endY;
@@ -611,6 +620,21 @@ void FbWriteLine(const char *string)
     G_Fb.changed = 1;
 }
 
+void FbRotWriteLine(const char *string)
+{
+    unsigned char j, x, y;
+
+    x = G_Fb.pos.x;
+    y = G_Fb.pos.y;
+
+    for(j=0; string[j] != 0; j++) {
+        FbMove(x, y + j * assetList[G_Fb.font].y);
+        FbRotCharacter(string[j]);
+        FbMove(x, y + (j+1) * assetList[G_Fb.font].y);
+    }
+    G_Fb.changed = 1;
+}
+
 void FbWriteString(const char *string)
 {
     unsigned char j, x;
@@ -624,6 +648,24 @@ void FbWriteString(const char *string)
         } else {
             FbCharacter(string[j]);
             FbMoveRelative(8, 0);
+        }
+    }
+    G_Fb.changed = 1;
+}
+
+void FbRotWriteString(const char *string)
+{
+    unsigned char j, y;
+
+    y = G_Fb.pos.y;
+
+    for(j=0; string[j] != 0; j++) {
+        if (string[j] == '\n') {
+            FbMoveRelative(-8, 0);
+            FbMoveY(y);
+        } else {
+            FbRotCharacter(string[j]);
+            FbMoveRelative(0, 8);
         }
     }
     G_Fb.changed = 1;

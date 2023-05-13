@@ -59,7 +59,8 @@ void FbBackgroundColor(unsigned short color);
 void FbTransparency(unsigned short transparencyMask);
 void FbTransparentIndex(unsigned short color);
 // void FbSprite(unsigned char picId, unsigned char imageNo);
-// void FbCharacter(unsigned char charin);
+void FbCharacter(unsigned char charin);
+void FbRotCharacter(unsigned char charin);
 void FbFilledRectangle(unsigned char width, unsigned char height);
 void FbPoint(unsigned char x, unsigned char y);
 // void FbPrintChar(unsigned char charin, unsigned char x, unsigned char y);
@@ -72,6 +73,8 @@ void FbClippedLine(signed short x0, signed short y0, signed short x1, signed sho
 
 void FbWriteLine(const char *string);
 void FbWriteString(const char *string);
+void FbRotWriteLine(const char *string); /* write text rotated 90 degrees clockwise */
+void FbRotWriteString(const char *string);
 void FbRectangle(unsigned char width, unsigned char height);
 void FbCircle(int x, int y, int r);
 
