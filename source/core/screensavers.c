@@ -82,72 +82,74 @@ void hack_the_dragon(){
 
 }
 
-void stupid_rects(){
-    unsigned int rnd;
-    random_insecure_bytes((uint8_t*)&rnd, sizeof(unsigned int));
-    animation_count++;
+static int random_num(int n)
+{
+	unsigned int rnd;
+	random_insecure_bytes((uint8_t*)&rnd, sizeof(unsigned int));
+	return (rnd % n);
+}
 
-    if(animation_count==1){
-        FbColor(YELLOW);
-        FbMove(rnd%20+rnd%20,rnd%70+rnd%30);
+void stupid_rects(void)
+{
+	static const int colors[] = { RED, YELLOW, GREEN, CYAN, WHITE, BLUE, MAGENTA };
+	int x1, y1, x2, y2;
+	int color = random_num(sizeof(colors) / sizeof(colors[0]));
 
-        FbFilledRectangle(rnd%80, rnd%20);
-        led_pwm_enable(BADGE_LED_RGB_RED, 255);
-        led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
-        led_pwm_disable(BADGE_LED_RGB_BLUE);
-    }
-    else if(animation_count == 5){
-        FbColor(GREEN);
-        FbMove(rnd%60+rnd%60,rnd%55+rnd%10);
-
-        FbFilledRectangle(rnd%10, rnd%50);
-        led_pwm_disable(BADGE_LED_RGB_RED);
-        led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
-        led_pwm_disable(BADGE_LED_RGB_BLUE);
-    }
-    else if(animation_count == 10){
-        FbColor(CYAN);
-        FbMove(rnd%70+rnd%45,rnd%45+rnd%33);
-
-        FbFilledRectangle(rnd%25, rnd%30);
-        led_pwm_disable(BADGE_LED_RGB_RED);
-        led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
-        led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
-    }
-    else if(animation_count == 15){
-
-        FbColor(WHITE);
-        FbMove(rnd%30+rnd%10,rnd%30+rnd%30);
-
-        FbFilledRectangle(rnd%70, rnd%20);
-        led_pwm_enable(BADGE_LED_RGB_RED, 255);
-        led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
-        led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
-    }
-    else if(animation_count == 20){
-
-        FbColor(BLUE);
-        FbMove(rnd%50+rnd%30,rnd%10+rnd%15);
-
-        FbFilledRectangle(rnd%30, rnd%50);
-        led_pwm_disable(BADGE_LED_RGB_RED);
-        led_pwm_disable(BADGE_LED_RGB_GREEN);
-        led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
-    }
-    else if(animation_count == 25){
-
-        FbColor(MAGENTA);
-        FbMove(rnd%33+rnd%47,rnd%65+rnd%33);
-
-        FbFilledRectangle(rnd%40, rnd%30);
-        led_pwm_enable(BADGE_LED_RGB_RED, 255/2);
-        led_pwm_disable(BADGE_LED_RGB_GREEN);
-        led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
-    }
-    else if(animation_count > 25)
-        animation_count = 0;
-
-    FbPushBuffer();
+	animation_count++;
+	if (animation_count == 1 || (animation_count % 5) == 0) {
+		x1 = random_num(LCD_XSIZE);
+		y1 = random_num(LCD_YSIZE);
+		x2 = random_num(LCD_XSIZE);
+		y2 = random_num(LCD_YSIZE);
+		if (x1 > x2) {
+			int t = x1;
+			x1 = x2;
+			x2 = t;
+		}
+		if (y1 > y2) {
+			int t = y1;
+			y1 = y2;
+			y2 = t;
+		}
+		switch (animation_count) {
+		case 1:
+			led_pwm_enable(BADGE_LED_RGB_RED, 255);
+			led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
+			led_pwm_disable(BADGE_LED_RGB_BLUE);
+			break;
+		case 5:
+			led_pwm_disable(BADGE_LED_RGB_RED);
+			led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
+			led_pwm_disable(BADGE_LED_RGB_BLUE);
+			break;
+		case 10:
+			led_pwm_disable(BADGE_LED_RGB_RED);
+			led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
+			led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
+			break;
+		case 15:
+			led_pwm_enable(BADGE_LED_RGB_RED, 255);
+			led_pwm_enable(BADGE_LED_RGB_GREEN, 255);
+			led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
+			break;
+		case 20:
+			led_pwm_disable(BADGE_LED_RGB_RED);
+			led_pwm_disable(BADGE_LED_RGB_GREEN);
+			led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
+			break;
+		case 25:
+			led_pwm_enable(BADGE_LED_RGB_RED, 255/2);
+			led_pwm_disable(BADGE_LED_RGB_GREEN);
+			led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
+			break;
+		}
+		FbColor(colors[color]);
+		FbMove(x1, y1);
+		FbFilledRectangle(x2 - x1 + 1, y2 - y1 + 1);
+		FbPushBuffer();
+		if (animation_count > 25)
+			animation_count = 0;
+	}
 }
 
 #define TUNNEL_COLOR CYAN
