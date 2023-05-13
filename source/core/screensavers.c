@@ -349,31 +349,31 @@ const char bs2[] = "An error occured";
 const char bs3[] = "Give up to";
 const char bs4[] = "continue";
 void bluescreen(){
-    FbColor(BLUE);
-    FbMove(0,0);
-    FbFilledRectangle(132, 132);
-
     FbColor(WHITE);
-    FbMove(25, 10);
-    FbFilledRectangle(75, 10);
+    FbBackgroundColor(BLUE);
+    FbClear();
+    FbMove(0,0);
 
-    FbMove(4, 40);
-    FbWriteLine(bs2);
+    FbMove(25, 25);
+    FbFilledRectangle(10, 75);
+
+    FbMove(55, 4);
+    FbRotWriteLine(bs2);
 
     if(popup_time < 40){
-        FbMove(4, 60);
-        FbWriteLine(bs3);
+        FbMove(75, 4);
+        FbRotWriteLine(bs3);
 
-        FbMove(17, 70);
-        FbWriteLine(bs4);
+        FbMove(85, 17);
+        FbRotWriteLine(bs4);
     }
 
-    FbColor(BLUE);
-    FbMove(27, 11);
-    FbWriteLine(bs1);
+    FbMove(26, 27);
+    FbRotWriteLine(bs1);
     FbSwapBuffers();
+    FbColor(WHITE);
+    FbBackground(BLACK);
 }
-
 
 const char badgetips_header[] = "--Badge Tip--";
 //const unsigned char badgetip_more_you_know = 
