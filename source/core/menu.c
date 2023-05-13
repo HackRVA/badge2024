@@ -13,6 +13,7 @@
 #include "display.h"
 #include "audio.h"
 #include "led_pwm.h"
+#include "music.h"
 
 // Apps
 #include "about_badge.h"
@@ -75,13 +76,14 @@ unsigned char menu_redraw_main_menu = 0;
 static void rvasec_splash_cb();
 
 /* Frequency in Hz of beeps to make for various menu actions */
-#define MORE_FREQ 1000
-#define BACK_FREQ 1200
-#define TEXT_FREQ 1400
-#define MENU_FREQ 1600
-#define FUNC_FREQ 1800
+/* Use low pentatonic scale to make it not quite so annoying. */
+#define MORE_FREQ NOTE_C3
+#define BACK_FREQ NOTE_D3
+#define TEXT_FREQ NOTE_E3
+#define MENU_FREQ NOTE_G3
+#define FUNC_FREQ NOTE_A3
 /* Duration of beeps for menu actions, in milliseconds */
-#define NOTEDUR 100
+#define NOTEDUR 50
 
 
 #ifdef QC
