@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "button.h"
 #include "ir.h"
@@ -10,6 +11,7 @@
 #include "led_pwm.h"
 #include "delay.h"
 #include <accelerometer.h>
+#include "music.h"
 
 #include <utils.h>
 
@@ -106,14 +108,102 @@ static const struct qc_button QC_BTN[] = {
     {BADGE_BUTTON_ENCODER_2_A, "ENC 2", 666, check_encoder},
 };
 
+static struct note tune0[] = {
+	{ NOTE_C4, 100 },
+};
+
+static struct note tune1[] = {
+	{ NOTE_C4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_D4, 100 },
+};
+
+static struct note tune2[] = {
+	{ NOTE_C4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_D4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_E4, 100 },
+};
+
+static struct note tune3[] = {
+	{ NOTE_C4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_D4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_E4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_F4, 100 },
+};
+
+static struct note tune4[] = {
+	{ NOTE_C4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_D4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_E4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_F4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_G4, 100 },
+};
+
+static struct note tune5[] = {
+	{ NOTE_C4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_D4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_E4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_F4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_G4, 100 },
+	{ NOTE_REST, 100 },
+	{ NOTE_A4, 100 },
+};
+
+static struct tune accel_tune[] = {
+	{ ARRAY_SIZE(tune0), tune0, },
+	{ ARRAY_SIZE(tune1), tune1, },
+	{ ARRAY_SIZE(tune2), tune2, },
+	{ ARRAY_SIZE(tune3), tune3, },
+	{ ARRAY_SIZE(tune4), tune4, },
+	{ ARRAY_SIZE(tune5), tune5, },
+};
+
+static int trigger_accel_sound = -1;
+
 static bool qc_accel()
 {
     union acceleration a = accelerometer_last_sample();
+    static char *axis_name[] = { "-X", "+X", "-Y", "+Y", "-Z", "+Z" };
+    int max_axis = -1;
+    int max_accel;
 
     char msg[64] = {0};
     snprintf(msg, sizeof(msg), "whoami:0x%02x\nx:%d\ny:%d\nz:%d\n",
              accelerometer_whoami(), a.x, a.y, a.z);
     FbWriteString(msg);
+
+    max_accel = a.x;
+    max_axis = a.x < 0 ? 0 : 1;
+    if (abs(a.y) > abs(max_accel)) {
+        max_accel = a.y;
+	max_axis = a.y < 0 ? 2 : 3;
+    }
+    if (abs(a.z) > abs(max_accel)) {
+        max_accel = a.z;
+	max_axis = a.z < 0 ? 4 : 5;
+    }
+    snprintf(msg, sizeof(msg), "Max Accel: %s\n", axis_name[max_axis]);
+    FbWriteString(msg);
+
+    if (trigger_accel_sound > 0)
+	trigger_accel_sound--;
+    if (trigger_accel_sound == 0) {
+	trigger_accel_sound = -1;
+	play_tune(&accel_tune[max_axis], NULL);
+    }
 
     return true;
 }
@@ -186,8 +276,17 @@ void QC_cb()
                 data = *((uint8_t *) 0x8F000000);
             }
 
+	    int down_latches = button_down_latches();
+
+            if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		/* Gives a slight delay so the tune isn't clobbered by
+		 * the sound the button press makes.
+		 */
+		trigger_accel_sound = 25;
+	    }
+
             // Send QC ping
-            if (BUTTON_PRESSED(BADGE_BUTTON_A, button_down_latches())) {
+            if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
                 data = 1;
                 ir_send_complete_message(&ir_packet);
             }
