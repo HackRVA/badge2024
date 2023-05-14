@@ -190,10 +190,10 @@ uint64_t ProcessIO(void)
         FbSwapBuffers();
         if(!screensaver_inverted) {
             if(display_get_display_mode() == DISPLAY_MODE_NORMAL) {
-                display_set_display_mode_inverted();
+                display_set_display_mode_noninverted();
             }
             else {
-                display_set_display_mode_noninverted();
+                display_set_display_mode_inverted();
             }
         }
     }
