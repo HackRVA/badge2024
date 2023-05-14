@@ -8,6 +8,7 @@
 #include "led_pwm.h"
 #include "rtc.h"
 #include "xorshift.h"
+#include "trig.h"
 
 extern unsigned short popup_time;
 extern void render_screen_save_monsters(void);
@@ -482,12 +483,14 @@ void just_the_badge_tips(){
 #define QIX_LINE_COUNT 20 
 struct qixline {
 	int x[2], y[2];
+	uint16_t color;
 };
 
 static struct qix {
 	struct qixline qline[QIX_LINE_COUNT];
 	int vx[2], vy[2];
 	int head, tail, initialized;
+	int color_angle;
 } the_qix = { 0 };
 
 static void init_qix(struct qix *q)
@@ -498,6 +501,8 @@ static void init_qix(struct qix *q)
 	q->qline[0].y[0] = random_num(LCD_YSIZE);
 	q->qline[0].x[1] = random_num(LCD_XSIZE);
 	q->qline[0].y[1] = random_num(LCD_YSIZE);
+	q->qline[0].color = WHITE;
+	q->color_angle = 0;
 	q->vx[0] = random_num(17) - 8;
 	q->vy[0] = random_num(17) - 8;
 	q->vx[1] = random_num(17) - 8;
@@ -509,7 +514,7 @@ static void draw_qix(struct qix *q)
 {
 	int h = q->head;
 	int t = q->tail;
-	FbColor(CYAN);
+	FbColor(q->qline[h].color);
 	FbLine(q->qline[h].x[0], q->qline[h].y[0], q->qline[h].x[1], q->qline[h].y[1]);
 	FbColor(BLACK);
 	FbLine(q->qline[t].x[0], q->qline[t].y[0], q->qline[t].x[1], q->qline[t].y[1]);
@@ -529,6 +534,37 @@ static void qix_advance_point(int *p, int limit, int *vel)
 	}
 }
 
+static void qix_set_color(struct qixline *line, int color_angle)
+{
+	short rs, gs, bs;
+	int r, g, b;
+	int rangle, gangle, bangle;
+	uint16_t color;
+
+	rangle = color_angle;
+	gangle = color_angle + (128 / 3);
+	if (gangle > 127)
+		gangle -= 128;
+	bangle = gangle + (128 / 3);
+	if (bangle > 127)
+		bangle -= 128;
+	rs = sine(rangle);
+	gs = sine(gangle);
+	bs = sine(bangle);
+
+	/* map color values from [-128-127] to [0-255] */
+	r = (int) rs + 128;
+	g = (int) gs + 128;
+	b = (int) bs + 128;
+
+	r = r >> 3; /* top 5 bits */
+	g = g >> 2; /* top 6 bits */
+	b = b >> 3; /* top 5 bits */
+
+	color = (r << 11) | (g << 5) | b;
+	line->color = color;
+}
+
 static void move_qix(struct qix *q)
 {
 	q->qline[q->tail] = q->qline[q->head];
@@ -536,8 +572,12 @@ static void move_qix(struct qix *q)
 	qix_advance_point(&q->qline[q->tail].y[0], LCD_YSIZE, &q->vy[0]);
 	qix_advance_point(&q->qline[q->tail].x[1], LCD_XSIZE, &q->vx[1]);
 	qix_advance_point(&q->qline[q->tail].y[1], LCD_YSIZE, &q->vy[1]);
+	qix_set_color(&q->qline[q->tail], q->color_angle);
 	q->head = q->tail;
 	q->tail = (q->tail + 1) % QIX_LINE_COUNT;
+	q->color_angle++;
+	if (q->color_angle > 127)
+		q->color_angle = 0;
 }
 
 void qix(void)
