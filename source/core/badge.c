@@ -13,6 +13,7 @@
 #include "key_value_storage.h"
 #include "settings.h"
 #include "uid.h"
+#include "xorshift.h"
 
 /*
   inital system data, will be save/restored from flash
@@ -95,9 +96,9 @@ unsigned char current_screen_saver = 0;
 void do_screen_save_popup(){
 
     static unsigned char prob_val = 50;
+    static uint32_t xorshift_state = 0xa5a5a5a5;
     if(popup_time == POPUP_LENGTH) {
-        random_insecure_bytes(&prob_val, 1);
-        prob_val %= 100;
+	prob_val = xorshift(&xorshift_state) % 100;
     }
     
     if(popup_time){
