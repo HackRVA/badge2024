@@ -8,6 +8,8 @@ extern unsigned short popup_time;
 
 typedef void (*ss_func)(void);
 
+static int animation_count = 0;
+
 static const ss_func ss[] = {
 	just_the_badge_tips,
 	dotty,
@@ -35,6 +37,7 @@ static enum test_screensavers_state_t test_screensavers_state = TEST_SCREENSAVER
 static void test_screensavers_init(void)
 {
 	FbInit();
+	FbBackgroundColor(BLACK);
 	FbClear();
 	test_screensavers_state = TEST_SCREENSAVERS_RUN;
 	current_screen_saver = 0;
@@ -51,18 +54,26 @@ static void check_buttons()
 		current_screen_saver--;
 		if (current_screen_saver < 0)
 			current_screen_saver = num_screen_savers - 1;
+		FbBackgroundColor(BLACK);
+		FbClear();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		current_screen_saver++;
 		if (current_screen_saver >= num_screen_savers)
 			current_screen_saver = 0;
+		FbBackgroundColor(BLACK);
+		FbClear();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		current_screen_saver++;
 		if (current_screen_saver >= num_screen_savers)
 			current_screen_saver = 0;
+		FbBackgroundColor(BLACK);
+		FbClear();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		current_screen_saver--;
 		if (current_screen_saver < 0)
 			current_screen_saver = num_screen_savers - 1;
+		FbBackgroundColor(BLACK);
+		FbClear();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		test_screensavers_state = TEST_SCREENSAVERS_EXIT;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
@@ -77,11 +88,13 @@ static void draw_screen()
 
 static void test_screensavers_run()
 {
+	screensaver_set_animation_count(animation_count);
 	check_buttons();
 	draw_screen();
 	popup_time--;
 	if (popup_time == 0)
 		popup_time = 9 * 30;
+	animation_count++;
 }
 
 static void test_screensavers_exit()
