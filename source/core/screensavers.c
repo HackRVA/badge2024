@@ -249,39 +249,27 @@ void dotty(){
 
 }
 
-const char president1[] = "HAL FOR";
-const char president2[] = "president";
-const char president3[] = "Badge for";
-const char president4[] = "Vice President";
-void for_president(){
-
-    FbMove(22, 17);
+void for_president(void)
+{
+    FbMove(LCD_XSIZE - 8 - 17, 22);
     FbColor(WHITE);
-    FbWriteLine(president1);
-
-    FbMove(32, 35);
-    FbWriteLine(president2);
+    FbRotWriteString("HAL FOR\nPresident");
 
     if(popup_time > 3){
         unsigned char i = 0;
         for(i=0; i<8; i++){
             FbColor((i+(animation_count/15))%2 ? WHITE: RED);
-            FbMove(0, 50 + (i*10));
-            FbFilledRectangle(132, 10);
+            FbMove(LCD_XSIZE - (50 + (i*10)), 0);
+            FbFilledRectangle(10, LCD_YSIZE);
         }
-    }
-    else{
+    } else {
         FbColor(WHITE);
-        FbMove(32, 70);
-        FbWriteLine(president3);
-
-        FbMove(12, 80);
-        FbWriteLine(president4);
+        FbMove(LCD_XSIZE - 8 - 70, 32);
+	FbRotWriteString("Badge for\nVice President");
     }
     animation_count++;
     FbSwapBuffers();
     led_pwm_enable(BADGE_LED_RGB_BLUE, 255);
-
 }
 
 static void smiley_eye(int x, int y)
