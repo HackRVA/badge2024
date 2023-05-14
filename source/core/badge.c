@@ -97,6 +97,10 @@ void do_screen_save_popup(){
 
     static unsigned char prob_val = 50;
     static uint32_t xorshift_state = 0xa5a5a5a5;
+
+    if (badge_system_data()->screensaver_disabled)
+	return;
+
     if(popup_time == POPUP_LENGTH) {
 	prob_val = xorshift(&xorshift_state) % 100;
     }
