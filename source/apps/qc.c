@@ -212,6 +212,9 @@ void QC_cb()
                 redraw = 1;
             }
 
+	    FbMove(10, 130);
+	    FbWriteString("PRESS AND HOLD\nRIGHT ROTARY\nSWITCH TO EXIT");
+
             if (redraw)
                 FbSwapBuffers();
     }
