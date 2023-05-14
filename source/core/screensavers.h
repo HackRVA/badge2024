@@ -14,6 +14,7 @@ enum {
     MATRIX,
     BLUESCREEN,
     DISP_ASSET,
+    QIX,
 };
 
 void just_the_badge_tips();
@@ -26,4 +27,5 @@ void for_president();
 void smiley();
 void matrix();
 void bluescreen();
+void qix();
 void screensaver_set_animation_count(unsigned short count);

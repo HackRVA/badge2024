@@ -120,7 +120,7 @@ void do_screen_save_popup(){
             }
         }
         else if(prob_val < HIGH_PROB_THRESH){
-            switch(current_screen_saver%5){
+            switch(current_screen_saver%6){
                 case 0:
                     disp_asset_saver();
                     break;
@@ -136,7 +136,9 @@ void do_screen_save_popup(){
                 case 4:
                     just_the_badge_tips();
                     break;
-                    
+                case 5:
+                    qix();
+                    break;
             }
         }
         popup_time--;

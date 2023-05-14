@@ -478,3 +478,73 @@ void just_the_badge_tips(){
 
     FbSwapBuffers();
 }
+
+#define QIX_LINE_COUNT 20 
+struct qixline {
+	int x[2], y[2];
+};
+
+static struct qix {
+	struct qixline qline[QIX_LINE_COUNT];
+	int vx[2], vy[2];
+	int head, tail, initialized;
+} the_qix = { 0 };
+
+static void init_qix(struct qix *q)
+{
+	q->head = 0;
+	q->tail = QIX_LINE_COUNT - 1;
+	q->qline[0].x[0] = random_num(LCD_XSIZE);
+	q->qline[0].y[0] = random_num(LCD_YSIZE);
+	q->qline[0].x[1] = random_num(LCD_XSIZE);
+	q->qline[0].y[1] = random_num(LCD_YSIZE);
+	q->vx[0] = random_num(17) - 8;
+	q->vy[0] = random_num(17) - 8;
+	q->vx[1] = random_num(17) - 8;
+	q->vy[1] = random_num(17) - 8;
+	q->initialized = 1;
+}
+
+static void draw_qix(struct qix *q)
+{
+	int h = q->head;
+	int t = q->tail;
+	FbColor(CYAN);
+	FbLine(q->qline[h].x[0], q->qline[h].y[0], q->qline[h].x[1], q->qline[h].y[1]);
+	FbColor(BLACK);
+	FbLine(q->qline[t].x[0], q->qline[t].y[0], q->qline[t].x[1], q->qline[t].y[1]);
+	FbPushBuffer();
+}
+
+static void qix_advance_point(int *p, int limit, int *vel)
+{
+	*p += *vel;
+	if (*p < 0) {
+		*vel = -*vel;
+		*p = -*p;
+	}
+	if (*p >= limit) {
+		*vel = -*vel;
+		*p = limit - (*p - limit);
+	}
+}
+
+static void move_qix(struct qix *q)
+{
+	q->qline[q->tail] = q->qline[q->head];
+	qix_advance_point(&q->qline[q->tail].x[0], LCD_XSIZE, &q->vx[0]);
+	qix_advance_point(&q->qline[q->tail].y[0], LCD_YSIZE, &q->vy[0]);
+	qix_advance_point(&q->qline[q->tail].x[1], LCD_XSIZE, &q->vx[1]);
+	qix_advance_point(&q->qline[q->tail].y[1], LCD_YSIZE, &q->vy[1]);
+	q->head = q->tail;
+	q->tail = (q->tail + 1) % QIX_LINE_COUNT;
+}
+
+void qix(void)
+{
+	if (!the_qix.initialized)
+		init_qix(&the_qix);
+	draw_qix(&the_qix);
+	move_qix(&the_qix);
+}
+
