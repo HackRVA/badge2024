@@ -708,8 +708,8 @@ Miscellaneous Functions:
 
 ```
 
-Pseudorandom numbers
---------------------
+(Pseudo)random number generators (PRNGs)
+--------------------------------------
 
 There is a hardware based random number generator defined in
 [source/hal/random.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/random.h)
@@ -717,9 +717,11 @@ There is a hardware based random number generator defined in
 ```
 	void random_insecure_bytes(uint8_t *bytes, size_t len);
 ```
-
-Note: the badge simulator does not have a hardware based random number
-generator.
+For most purposes you should probably only use random_insecure_bytes() to
+help generate a seed for a pseudorandom number generator.  (I have seen
+repeated use of random_insecure_bytes() produce visible patterns. Perhaps
+it falls back to a poor pseudorandom number generator if it runs out of
+entropy?  Maybe that's why "insecure" is in the name.)
 
 And there is a pseudo-random number generator defined in random.h as well:
 
@@ -745,10 +747,10 @@ Typical usage:
 
 	unsigned int my_state = 0xa5a5a5a5 ^ timestamp; // For example.
 
-
-	int random_number_between_0_and_1000(void)
+	/* Return an integer between 0 and n - 1, inclusive */
+	int random_num(int n)
 	{
-		return (xorshift(&my_state) % 1000);
+		return (xorshift(&my_state) % n);
 	}
 
 ```
@@ -756,6 +758,7 @@ Typical usage:
 For more information about how this pseudorandom number generator is implemented,
 see https://en.wikipedia.org/wiki/Xorshift#Example_implementation.
 
+I tend to favor use of the xorshift() PRNG.
 
 Menus
 -----
