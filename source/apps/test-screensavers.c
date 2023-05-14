@@ -3,10 +3,13 @@
 #include "button.h"
 #include "framebuffer.h"
 #include "screensavers.h"
+#include "badge.h"
 
 extern unsigned short popup_time;
 
 typedef void (*ss_func)(void);
+
+static bool saved_screensaver_disabled = 0;
 
 static const ss_func ss[] = {
 	just_the_badge_tips,
@@ -41,6 +44,10 @@ static void test_screensavers_init(void)
 	test_screensavers_state = TEST_SCREENSAVERS_RUN;
 	current_screen_saver = 0;
 	popup_time = 9 * 30;
+
+	/* Disable the actual screensaver while the screensaver test app is running */
+	saved_screensaver_disabled = badge_system_data()->screensaver_disabled;
+	badge_system_data()->screensaver_disabled = 1;
 }
 
 static void check_buttons()
@@ -100,6 +107,8 @@ static void test_screensavers_exit()
 	test_screensavers_state = TEST_SCREENSAVERS_INIT;
 	popup_time = 0;
 	returnToMenus();
+	/* Restore the original screensaver_disabled value */
+	badge_system_data()->screensaver_disabled = saved_screensaver_disabled;
 }
 
 void test_screensavers_cb(__attribute__((unused)) struct menu_t *m)
