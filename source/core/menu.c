@@ -312,6 +312,7 @@ static void push_menu(const struct menu_t *menu)
 	G_menuStack[G_menuCnt].currMenu = G_currMenu;
 	G_menuStack[G_menuCnt].selectedMenu = G_selectedMenu;
 	G_menuStack[G_menuCnt].menu_scroll_start_item = menu_scroll_start_item;
+	menu_scroll_start_item = 0;
 	G_menuCnt++;
 	G_currMenu = (struct menu_t *) menu; /* go into this menu */
 	G_selectedMenu = (struct menu_t *) menu; /* first item of current menu */
