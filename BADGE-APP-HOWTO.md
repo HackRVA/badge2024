@@ -688,14 +688,13 @@ Miscellaneous Functions:
 
 	short sine(int a);
 	short cosine(int a);
-		Returns 1024 * the sine and 1024 * the cosine of angle a, where a is in units
+		Returns 256 * the sine and 256 * the cosine of angle a, where a is in units
 		of 128th's of a circle. Typical usage is as follows:
 
 		int angle_in_degress = 90; /* degrees */
 		int speed = 20;
-
-		int vx = (speed * cosine((128 * angle_in_degrees) / 360)) / 1024;
-		int vy = (speed * -sine((128 * angle_in_degrees) / 360)) / 1024;
+		int vx = (speed * cosine((128 * angle_in_degrees) / 360)) / 256;
+		int vy = (speed * -sine((128 * angle_in_degrees) / 360)) / 256;
 
 	int arctan2(int y, int x);
 		The angles returned by arctan2 are in the range -64 to +64, corresponding
