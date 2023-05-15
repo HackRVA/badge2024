@@ -40,6 +40,7 @@ static volatile enum audio_out_mode_ {
     AUDIO_OUT_MODE_BEEP,
 } audio_out_mode;
 
+#ifdef EXPERIMENTAL_TEST_CODE
 static uint16_t test_wave[] =
 {
     127,133,140,146,152,158,163,169,173,177,181,184,187,189,190,
@@ -49,6 +50,7 @@ static uint16_t test_wave[] =
     120
 };
 static int test_pos = 0;
+#endif
 
 /*- IRQ Handlers -------------------------------------------------------------*/
 
@@ -66,7 +68,7 @@ static void audio_out_pwm_irq_handler()
         default:
             return;
     }
-#if 0
+#ifdef EXPERIMENTAL_TEST_CODE
     int sample = test_wave[(test_pos++)>>0];
     // sample -= 127; // remove bias
     // sample *= 32;
