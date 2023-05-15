@@ -46,7 +46,9 @@ static bool check_button(const struct qc_button *b)
     snprintf(msg, sizeof(msg), "%s\n", b->name);
     FbWriteString(msg);
 
-    audio_out_beep(b->freq, 100);
+#define SUPPRESS_BEEP ((uint16_t) -1)
+    if (b->freq != SUPPRESS_BEEP)
+	    audio_out_beep(b->freq, 100);
 
     return true;
 }
@@ -94,7 +96,7 @@ static bool check_buttons(const struct qc_button *a, size_t n)
 
 static const struct qc_button QC_BTN[] = {
     {BADGE_BUTTON_A, "A", 999, check_button},
-    {BADGE_BUTTON_B, "B", 1111, check_button},
+    {BADGE_BUTTON_B, "B", SUPPRESS_BEEP, check_button},
 
     {BADGE_BUTTON_UP, "UP", 1046, check_button},
     {BADGE_BUTTON_DOWN, "DOWN", 740, check_button},
@@ -171,7 +173,7 @@ static struct tune accel_tune[] = {
 	{ ARRAY_SIZE(tune5), tune5, },
 };
 
-static int trigger_accel_sound = -1;
+static int trigger_accel_sound = 0;
 
 static bool qc_accel()
 {
@@ -198,10 +200,8 @@ static bool qc_accel()
     snprintf(msg, sizeof(msg), "Max Accel: %s\n", axis_name[max_axis]);
     FbWriteString(msg);
 
-    if (trigger_accel_sound > 0)
-	trigger_accel_sound--;
-    if (trigger_accel_sound == 0) {
-	trigger_accel_sound = -1;
+    if (trigger_accel_sound) {
+	trigger_accel_sound = 0;
 	play_tune(&accel_tune[max_axis], NULL);
     }
 
@@ -279,10 +279,7 @@ void QC_cb()
 	    int down_latches = button_down_latches();
 
             if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		/* Gives a slight delay so the tune isn't clobbered by
-		 * the sound the button press makes.
-		 */
-		trigger_accel_sound = 25;
+		trigger_accel_sound = 1;
 	    }
 
             // Send QC ping
