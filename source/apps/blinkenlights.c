@@ -18,18 +18,6 @@ enum {
     BLINKEN_LIGHTS_EXIT
 };
 
-struct menu_t blinkenlights_config_m[] = {
-    {"Red: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_red}},
-    {"Blue: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_blue}},
-    {"Green: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_green}},
-    {"--CLEAR--", VERT_ITEM, FUNCTION, {(struct menu_t *)bl_clear_colors} },
-    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
-    {"Mode: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_bl_mode} },
-    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, {(struct menu_t *)set_bl_go} },
-    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, {(struct menu_t *) set_bl_exit}},
-};
-unsigned char bl_red = 50, bl_green = 40, bl_blue = 0;
-
 enum
 {
     INIT,
@@ -50,69 +38,34 @@ enum
 char bl_state = INIT;
 char bl_mode = LOCAL_ONLY;
 
-void set_red(void)
+void set_red(__attribute__((unused)) struct menu_t *m)
 {
     bl_state = CONFIG_RED;
 }
 
-void set_blue(void)
+void set_blue(__attribute__((unused)) struct menu_t *m)
 {
     bl_state = CONFIG_BLUE;
 }
 
-void set_green(void)
+void set_green(__attribute__((unused)) struct menu_t *m)
 {
     bl_state = CONFIG_GREEN;
 }
 
-void bl_clear_colors(void)
-{
-    bl_red = 0;
-    bl_green = 0;
-    bl_blue = 0;
-    bl_populate_menu();
-}
+struct menu_t blinkenlights_config_m[] = {
+    {"Red: ", VERT_ITEM, FUNCTION, { .func = set_red}},
+    {"Blue: ", VERT_ITEM, FUNCTION, { .func = set_blue}},
+    {"Green: ", VERT_ITEM, FUNCTION, { .func = set_green}},
+    {"--CLEAR--", VERT_ITEM, FUNCTION, { .func = bl_clear_colors} },
+    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
+    {"Mode: ", VERT_ITEM, FUNCTION, { .func = set_bl_mode} },
+    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = set_bl_go} },
+    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, { .func =set_bl_exit}},
+};
+unsigned char bl_red = 50, bl_green = 40, bl_blue = 0;
 
-void set_bl_mode(void)
-{
-    if(bl_mode == LOCAL_ONLY || bl_mode == BCAST_ONLY)
-        bl_mode++;
-    else
-        bl_mode = LOCAL_ONLY;
-
-    bl_populate_menu();
-}
-
-void set_bl_go(void)
-{
-    if(bl_mode == BCAST_ONLY || bl_mode == LOCAL_AND_BCAST)
-    {
-        uint16_t data = PACKRGB( bl_red, bl_green, bl_blue);
-        uint8_t byte_data[2];
-        byte_data[0] = data >> 8;
-        byte_data[1] = data;
-
-        IR_DATA ir_packet = {0};
-        ir_packet.app_address = IR_LED;
-        ir_packet.recipient_address = IR_BADGE_ID_BROADCAST;
-        ir_packet.data = byte_data;
-        ir_packet.data_length = 2;
-        ir_send_complete_message(&ir_packet);
-    }
-
-    if(bl_mode == LOCAL_ONLY || bl_mode == LOCAL_AND_BCAST)
-    {
-        set_local_leds();
-    }
-}
-
-void set_bl_exit(void)
-{
-    bl_state = INIT;
-    returnToMenus();
-}
-
-void bl_populate_menu(void)
+void bl_populate_menu(__attribute__((unused)) struct menu_t *m)
 {
     blinkenlights_config_m[0].name[5] = '0' + (bl_red/100) % 10;
     blinkenlights_config_m[0].name[6] = '0' + (bl_red/10) % 10;
@@ -157,6 +110,53 @@ void bl_populate_menu(void)
     }
 }
 
+void bl_clear_colors(__attribute__((unused)) struct menu_t *m)
+{
+    bl_red = 0;
+    bl_green = 0;
+    bl_blue = 0;
+    bl_populate_menu(NULL);
+}
+
+void set_bl_mode(__attribute__((unused)) struct menu_t *m)
+{
+    if(bl_mode == LOCAL_ONLY || bl_mode == BCAST_ONLY)
+        bl_mode++;
+    else
+        bl_mode = LOCAL_ONLY;
+
+    bl_populate_menu(NULL);
+}
+
+void set_bl_go(__attribute__((unused)) struct menu_t *m)
+{
+    if(bl_mode == BCAST_ONLY || bl_mode == LOCAL_AND_BCAST)
+    {
+        uint16_t data = PACKRGB( bl_red, bl_green, bl_blue);
+        uint8_t byte_data[2];
+        byte_data[0] = data >> 8;
+        byte_data[1] = data;
+
+        IR_DATA ir_packet = {0};
+        ir_packet.app_address = IR_LED;
+        ir_packet.recipient_address = IR_BADGE_ID_BROADCAST;
+        ir_packet.data = byte_data;
+        ir_packet.data_length = 2;
+        ir_send_complete_message(&ir_packet);
+    }
+
+    if(bl_mode == LOCAL_ONLY || bl_mode == LOCAL_AND_BCAST)
+    {
+        set_local_leds();
+    }
+}
+
+void set_bl_exit(__attribute__((unused)) struct menu_t *m)
+{
+    bl_state = INIT;
+    returnToMenus();
+}
+
 void set_local_leds(void)
 {
     led_pwm_enable(BADGE_LED_RGB_RED, bl_red * 255 / 100);
@@ -170,7 +170,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
     switch(bl_state)
     {
         case INIT:
-            bl_populate_menu();
+            bl_populate_menu(NULL);
             bl_state++;
             break;
         case SHOW_MENU:
@@ -191,7 +191,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                     bl_red = 100;
                 
                 set_local_leds();
-                bl_populate_menu();
+                bl_populate_menu(NULL);
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_RED], MAIN_MENU_STYLE);
                 
             }
@@ -203,7 +203,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                     bl_red = 0;
 
                 set_local_leds();
-                bl_populate_menu();
+                bl_populate_menu(NULL);
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_RED], MAIN_MENU_STYLE);
             }
             break;
@@ -222,7 +222,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                     bl_green = 100;
 
                 set_local_leds();
-                bl_populate_menu();
+                bl_populate_menu(NULL);
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_GREEN], MAIN_MENU_STYLE);
 
             }
@@ -234,7 +234,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                     bl_green = 0;
 
                 set_local_leds();
-                bl_populate_menu();
+                bl_populate_menu(NULL);
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_GREEN], MAIN_MENU_STYLE);
             }
             break;
@@ -253,7 +253,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                     bl_blue = 100;
 
                 set_local_leds();
-                bl_populate_menu();
+                bl_populate_menu(NULL);
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_BLUE], MAIN_MENU_STYLE);
 
             }
@@ -265,7 +265,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                     bl_blue = 0;
 
                 set_local_leds();
-                bl_populate_menu();
+                bl_populate_menu(NULL);
                 display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_BLUE], MAIN_MENU_STYLE);
             }
             break;

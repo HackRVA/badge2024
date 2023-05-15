@@ -9,18 +9,18 @@
 #define	BLINKENLIGHTS_H
 
 #define BL_INCR_AMNT 5
-void set_red(void);
-void set_blue(void);
-void set_green(void);
+void set_red(struct menu_t *m);
+void set_blue(struct menu_t *m);
+void set_green(struct menu_t *m);
 
-void bl_clear_colors(void);
+void bl_clear_colors(struct menu_t *m);
 
-void set_bl_mode(void);
-void set_bl_go(void);
-void set_bl_exit(void);
+void set_bl_mode(struct menu_t *m);
+void set_bl_go(struct menu_t *m);
+void set_bl_exit(struct menu_t *m);
 
 void set_local_leds(void);
-void bl_populate_menu(void);
+void bl_populate_menu(struct menu_t *m);
 
 void blinkenlights_cb(struct menu_t *m);
 #endif	/* BLINKENLIGHTS_H */

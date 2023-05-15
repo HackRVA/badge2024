@@ -50,9 +50,9 @@ void (*runningApp)() = app_cb; // Don't commit this change; just for local testi
 
 ...
 const struct menu_t games_m[] = {
-   {"Blinkenlights", VERT_ITEM|DEFAULT_ITEM, FUNCTION, {(struct menu_t *)blinkenlights_cb}},
+   {"Blinkenlights", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = blinkenlights_cb}},
    ...
-   {"My App",    VERT_ITEM, FUNCTION, {(struct menu_t *)app_cb},
+   {"My App",    VERT_ITEM, FUNCTION, { .func = app_cb},
    {"Back",	     VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 ...

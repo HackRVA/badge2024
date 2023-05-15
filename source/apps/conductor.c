@@ -16,24 +16,24 @@ enum {
     CONDUCTOR_EXIT
 };
 
-static void set_conductor_top_note(void);
-static void set_exit(void);
-static void set_conductor_bottom_note(void);
-static void set_conductor_left_note(void);
-static void set_conductor_right_note(void);
-static void set_mode(void);
-static void set_go(void);
+static void set_conductor_top_note(struct menu_t *m);
+static void set_exit(struct menu_t *m);
+static void set_conductor_bottom_note(struct menu_t *m);
+static void set_conductor_left_note(struct menu_t *m);
+static void set_conductor_right_note(struct menu_t *m);
+static void set_mode(struct menu_t *m);
+static void set_go(struct menu_t *m);
 
 static struct menu_t conductor_config_m[] = {
-    {"Top: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_conductor_top_note} },
-    {"Bottom: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_conductor_bottom_note} },
+    {"Top: ", VERT_ITEM, FUNCTION, { .func = set_conductor_top_note} },
+    {"Bottom: ", VERT_ITEM, FUNCTION, { .func = set_conductor_bottom_note} },
     {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
-    {"Left: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_conductor_left_note} },
-    {"Right: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_conductor_right_note} },
+    {"Left: ", VERT_ITEM, FUNCTION, { .func = set_conductor_left_note} },
+    {"Right: ", VERT_ITEM, FUNCTION, { .func = set_conductor_right_note} },
     {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
-    {"Mode: ", VERT_ITEM, FUNCTION, {(struct menu_t *)set_mode} },
-    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, {(struct menu_t *)set_go} },
-    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, {(struct menu_t *) set_exit}},
+    {"Mode: ", VERT_ITEM, FUNCTION, { .func = set_mode} },
+    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = set_go} },
+    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, { .func = set_exit}},
 };
 
 
@@ -63,29 +63,29 @@ enum
 static char con_state = INIT;
 static char con_mode = LOCAL_ONLY;
 
-static void set_conductor_top_note(void)
+static void set_conductor_top_note(__attribute__((unused)) struct menu_t *m)
 {
     con_state = CONFIG_TOP;
 }
 
-static void set_conductor_bottom_note(void)
+static void set_conductor_bottom_note(__attribute__((unused)) struct menu_t *m)
 {
     con_state = CONFIG_BOTTOM;
 }
 
-static void set_conductor_left_note(void)
+static void set_conductor_left_note(__attribute__((unused)) struct menu_t *m)
 {
     con_state = CONFIG_LEFT;
 }
 
-static void set_conductor_right_note(void)
+static void set_conductor_right_note(__attribute__((unused)) struct menu_t *m)
 {
     con_state = CONFIG_RIGHT;
 }
 
 static void populate_menu(void);
 
-static void set_mode(void)
+static void set_mode(__attribute__((unused)) struct menu_t *m)
 {
     if(con_mode == LOCAL_ONLY || con_mode == BCAST_ONLY)
         con_mode++;
@@ -95,12 +95,12 @@ static void set_mode(void)
     populate_menu();
 }
 
-static void set_go(void)
+static void set_go(__attribute__((unused)) struct menu_t *m)
 {
     con_state = RUN_CONDUCTOR;
 }
 
-static void set_exit(void)
+static void set_exit(__attribute__((unused)) struct menu_t *m)
 {
     con_state = INIT;
     returnToMenus();
