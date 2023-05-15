@@ -54,7 +54,7 @@ static int test_pos = 0;
 
 /*- IRQ Handlers -------------------------------------------------------------*/
 
-static void audio_out_pwm_irq_handler()
+static void audio_out_pwm_irq_handler(void)
 {
     pwm_clear_irq(slice);
     switch (audio_out_mode)
@@ -79,7 +79,7 @@ static void audio_out_pwm_irq_handler()
 #endif
 }
 
-static void audio_in_iqr_handler()
+static void audio_in_iqr_handler(void)
 {
     uint16_t sample = adc_fifo_get();
     pwm_set_chan_level(slice, chan, sample);
@@ -134,7 +134,7 @@ static void audio_in_init(void)
     return;
 }
 
-static void audio_out_init()
+static void audio_out_init(void)
 {
     pwm_set_enabled(slice, false);
     pwm_set_clkdiv_mode(slice, PWM_DIV_FREE_RUNNING);
@@ -149,7 +149,7 @@ static void audio_out_init()
     alarm_pool_init_default();
 }
 
-void audio_init()
+void audio_init(void)
 {
     audio_out_init();
     //audio_in_init();
