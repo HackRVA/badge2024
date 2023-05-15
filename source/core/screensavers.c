@@ -557,14 +557,14 @@ static void qix_set_color(struct qixline *line, int color_angle)
 	gs = sine(gangle);
 	bs = sine(bangle);
 
-	/* map color values from [-128-127] to [0-255] */
-	r = (int) rs + 128;
-	g = (int) gs + 128;
-	b = (int) bs + 128;
+	/* map color values from [-256-255] to [0-512] */
+	r = (int) rs + 256;
+	g = (int) gs + 256;
+	b = (int) bs + 256;
 
-	r = r >> 3; /* top 5 bits */
-	g = g >> 2; /* top 6 bits */
-	b = b >> 3; /* top 5 bits */
+	r = r >> 4; /* top 5 bits */
+	g = g >> 3; /* top 6 bits */
+	b = b >> 4; /* top 5 bits */
 
 	color = (r << 11) | (g << 5) | b;
 	line->color = color;
