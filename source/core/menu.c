@@ -96,7 +96,7 @@ static void menu_beep(uint16_t freq)
 #else
 #  define INITIAL_BADGE_APP rvasec_splash_cb;
 #endif
-void (*runningApp)() = INITIAL_BADGE_APP;
+void (*runningApp)(struct menu_t *menu) = INITIAL_BADGE_APP;
 
 #define MORE_INC 4
 
@@ -360,7 +360,7 @@ void returnToMenus() {
 
 void menus() {
     if (runningApp != NULL) { /* running app is set by menus() not genericMenus() */
-        (*runningApp)();
+        (*runningApp)(NULL);
         return;
     }
 

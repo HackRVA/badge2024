@@ -47,12 +47,12 @@ struct framebuffer_t {
 
 extern struct framebuffer_t G_Fb;
 
-void FbInit() ;
+void FbInit(void) ;
 void FbMove(unsigned char x, unsigned char y);
 void FbMoveRelative(char x, char y);
 void FbMoveX(unsigned char x);
 void FbMoveY(unsigned char y);
-void FbClear();
+void FbClear(void);
 void FbColor(unsigned short color);
 void FbBackgroundColor(unsigned short color);
 // void FbPicture(unsigned char assetId, unsigned char seqNum);

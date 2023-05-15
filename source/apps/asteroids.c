@@ -264,7 +264,7 @@ static void add_sparks(int x, int y, int v, int n)
 		add_random_spark(x, y, v);
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
 	static int first_time = 1;
 
@@ -539,7 +539,7 @@ static void draw_score(void)
 	FbWriteString(scorestr);
 }
 
-static void draw_screen()
+static void draw_screen(void)
 {
 	if (!screen_changed)
 		return;
@@ -570,13 +570,13 @@ static void draw_screen()
 	screen_changed = 1;
 }
 
-static void asteroids_run()
+static void asteroids_run(void)
 {
 	check_buttons();
 	draw_screen();
 }
 
-static void asteroids_exit()
+static void asteroids_exit(void)
 {
 	asteroids_state = ASTEROIDS_INIT; /* So that when we start again, we do not immediately exit */
 	returnToMenus();

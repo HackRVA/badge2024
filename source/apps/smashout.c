@@ -107,7 +107,7 @@ static void smashout_game_init(void)
 	smashout_program_state = SMASHOUT_GAME_PLAY;
 }
 
-static void smashout_check_buttons()
+static void smashout_check_buttons(void)
 {
 	int rotary_switch = button_get_rotation(0);
 	int down_latches = button_down_latches();
@@ -122,7 +122,7 @@ static void smashout_check_buttons()
 		paddle.vx += PADDLE_SPEED * rotary_switch;
 }
 
-static void smashout_draw_paddle()
+static void smashout_draw_paddle(void)
 {
 	int dx = old_paddle.w / 2;
 	FbColor(BLACK);
@@ -142,7 +142,7 @@ static void smashout_draw_brick(int row, int col)
 	FbRectangle(BRICK_WIDTH, BRICK_HEIGHT);
 }
 
-static void smashout_draw_bricks()
+static void smashout_draw_bricks(void)
 {
 	int i, j;
 	int count = 0;
@@ -261,7 +261,7 @@ static void smashout_draw_sparks(void)
 	}
 }
 
-static void smashout_draw_ball()
+static void smashout_draw_ball(void)
 {
 	int x, y, x1, y1, x2, y2;
 	static const int r = BALL_RADIUS;
@@ -288,7 +288,7 @@ static void smashout_draw_ball()
 	FbVerticalLine(x2, y1, x2, y2);
 }
 
-static void smashout_move_paddle()
+static void smashout_move_paddle(void)
 {
 	old_paddle = paddle;
 	paddle.x += paddle.vx;
@@ -306,7 +306,7 @@ static void smashout_move_paddle()
 	}
 }
 
-static void smashout_move_ball()
+static void smashout_move_ball(void)
 {
 	oldball = ball;
 	ball.x = ball.x + ball.vx;
@@ -378,7 +378,7 @@ static void draw_score_and_balls(int color)
 	FbWriteLine(b);
 }
 
-static void smashout_draw_screen()
+static void smashout_draw_screen(void)
 {
 	smashout_draw_paddle();
 	smashout_draw_ball();
@@ -393,7 +393,7 @@ static void smashout_draw_screen()
 	FbSwapBuffers();
 }
 
-static void smashout_game_play()
+static void smashout_game_play(void)
 {
 	smashout_check_buttons();
 	smashout_move_paddle();
@@ -402,7 +402,7 @@ static void smashout_game_play()
 	smashout_draw_screen();
 }
 
-static void smashout_game_exit()
+static void smashout_game_exit(void)
 {
 	smashout_program_state = SMASHOUT_GAME_INIT;
 	returnToMenus();

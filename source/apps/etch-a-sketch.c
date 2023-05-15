@@ -56,7 +56,7 @@ static void move(int x, int y)
 	state.y = ny;
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
 	int vrot, hrot;
 
@@ -82,7 +82,7 @@ static void check_buttons()
 	}
 }
 
-static void draw_screen()
+static void draw_screen(void)
 {
 	if (!screen_changed)
 		return;
@@ -124,14 +124,14 @@ static void check_accelerometer(void)
 	}
 }
 
-static void etch_a_sketch_run()
+static void etch_a_sketch_run(void)
 {
 	check_accelerometer();
 	check_buttons();
 	draw_screen();
 }
 
-static void etch_a_sketch_exit()
+static void etch_a_sketch_exit(void)
 {
 	etch_a_sketch_state = ETCH_A_SKETCH_INIT; /* So that when we start again, we do not immediately exit */
 	returnToMenus();

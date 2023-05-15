@@ -397,7 +397,7 @@ static void reduce_fuel(struct lander_data *lander, int amount)
 		lander->fuel = 0;
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
@@ -652,7 +652,7 @@ static void draw_stats(void)
 		FbWriteLine("GOOD JOB!");
 }
 
-static void draw_screen()
+static void draw_screen(void)
 {
 	FbColor(WHITE);
 	draw_terrain(&lander, BLACK); /* Erase previously drawn terrain */
@@ -678,14 +678,14 @@ static void draw_screen()
 	FbSwapBuffers();
 }
 
-static void lunarlander_run()
+static void lunarlander_run(void)
 {
 	if (mission_success == 0)
 		check_buttons();
 	draw_screen();
 }
 
-static void lunarlander_exit()
+static void lunarlander_exit(void)
 {
 	lunarlander_state = LUNARLANDER_INIT; /* So that when we start again, we do not immediately exit */
 	returnToMenus();

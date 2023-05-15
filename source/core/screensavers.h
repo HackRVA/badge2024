@@ -17,15 +17,15 @@ enum {
     QIX,
 };
 
-void just_the_badge_tips();
-void dotty();
-void disp_asset_saver();
-void hack_the_dragon();
-void stupid_rects();
-void carzy_tunnel_animator();
-void for_president();
-void smiley();
-void matrix();
-void bluescreen();
-void qix();
+void just_the_badge_tips(void);
+void dotty(void);
+void disp_asset_saver(void);
+void hack_the_dragon(void);
+void stupid_rects(void);
+void carzy_tunnel_animator(void);
+void for_president(void);
+void smiley(void);
+void matrix(void);
+void bluescreen(void);
+void qix(void);
 void screensaver_set_animation_count(unsigned short count);

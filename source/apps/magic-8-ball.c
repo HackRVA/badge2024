@@ -117,7 +117,7 @@ static void magic_8_ball_init(void)
 	led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 0);
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
@@ -177,7 +177,7 @@ static void draw_message(int n)
 	} while (1);
 }
 
-static void draw_screen()
+static void draw_screen(void)
 {
 	if (!screen_changed)
 		return;
@@ -190,14 +190,14 @@ static void draw_screen()
 	screen_changed = 0;
 }
 
-static void magic_8_ball_run()
+static void magic_8_ball_run(void)
 {
 	check_accelerometer();
 	check_buttons();
 	draw_screen();
 }
 
-static void magic_8_ball_exit()
+static void magic_8_ball_exit(void)
 {
 	magic_8_ball_state = MAGIC8BALL_INIT; /* So that when we start again, we do not immediately exit */
 	FbColor(WHITE);

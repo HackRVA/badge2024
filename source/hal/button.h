@@ -31,7 +31,7 @@ void button_init_gpio(void);
 int button_poll(BADGE_BUTTON button);
 
 // Get a bitmask of buttons.
-int button_mask();
+int button_mask(void);
 
 // Get up and down latches. These will return the corresponding bit once each call.
 int button_down_latches(void);

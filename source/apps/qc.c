@@ -175,7 +175,7 @@ static struct tune accel_tune[] = {
 
 static int trigger_accel_sound = 0;
 
-static bool qc_accel()
+static bool qc_accel(void)
 {
     union acceleration a = accelerometer_last_sample();
     static char *axis_name[] = { "-X", "+X", "-Y", "+Y", "-Z", "+Z" };
@@ -208,7 +208,7 @@ static bool qc_accel()
     return true;
 }
 
-void QC_cb()
+void QC_cb(__attribute__((unused)) struct menu_t *menu)
 {
     //static unsigned char call_count = 0;
     static int QC_state=0;

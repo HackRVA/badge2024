@@ -17,7 +17,7 @@
 
 static uint64_t badge_id = BADGE_ID_SIM;
 
-uint64_t uid_get()
+uint64_t uid_get(void)
 {
     return badge_id;
 }

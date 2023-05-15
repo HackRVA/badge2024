@@ -32,7 +32,7 @@ static int samples_left_to_play = 0;
 static pthread_mutex_t audio_lock = PTHREAD_MUTEX_INITIALIZER;
 #endif
 
-void audio_init_gpio()
+void audio_init_gpio(void)
 {
     return;
 }

@@ -80,7 +80,7 @@ static void int1_cb(uint gpio, uint32_t event_mask)
     sample = next_sample;
 }
 
-void accelerometer_init_gpio()
+void accelerometer_init_gpio(void)
 {
     /* Pull interrupt line high */
     gpio_init(BADGE_GPIO_ACCEL_INT1);
@@ -117,7 +117,7 @@ void accelerometer_init_gpio()
     spi_set_format(BADGE_SPI_ACCEL, 8, SPI_CPOL_1, SPI_CPHA_1, SPI_MSB_FIRST);
 }
 
-void accelerometer_init()
+void accelerometer_init(void)
 {
     int br = read(0x0f, false, &whoami, sizeof(whoami));
 
@@ -137,12 +137,12 @@ void accelerometer_init()
     write(0x20, true, ctrl_regs, sizeof(ctrl_regs));
 }
 
-uint8_t accelerometer_whoami()
+uint8_t accelerometer_whoami(void)
 {
     return whoami;
 }
 
-union acceleration accelerometer_last_sample()
+union acceleration accelerometer_last_sample(void)
 {
     if (whoami == 0x33) {
         int1_cb(0, 0);

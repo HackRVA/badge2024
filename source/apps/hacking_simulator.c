@@ -204,7 +204,7 @@ static struct cell *tail;
 static struct cell *head;
 
 
-static int is_fully_connected()
+static int is_fully_connected(void)
 {
 	if ((tail->x == GRID_SIZE && tail->y == target) &&
 		pipes[tail->pipe_index].io.right)
@@ -279,7 +279,7 @@ static int is_cell_blocked(struct cell *current_cell)
 * and we don't want to overwrite a blocker
 *
 */
-static void place_blocker()
+static void place_blocker(void)
 {
 	int x,y;
 
@@ -317,7 +317,7 @@ static void place_blocker()
 }
 
 /* ensure_winnable_path determines a winning path and places those pieces on the board */
-static void ensure_winnable_path()
+static void ensure_winnable_path(void)
 {
 	int vertical_direction;
 	int currentX;
@@ -376,7 +376,7 @@ static void ensure_winnable_path()
 }
 
 // TODO: could unroll this for better processing on the microcontroller
-static void shuffle()
+static void shuffle(void)
 {
 	int i, j, tmpX, tmpY, tmp_pindex;
 	int source_neighbor_is_set = FALSE;
@@ -432,7 +432,7 @@ static void place_random_pipe(struct cell *cell)
 *  we probably shouldn't have more than 3 blockers 
 *  because that could potentially block a route from source to target
 */
-static void handle_difficulty()
+static void handle_difficulty(void)
 {
 	enum difficulty_level i;
 
@@ -510,7 +510,7 @@ static void place_random_pipes(struct cell grid[GRID_SIZE + 1][GRID_SIZE])
 
 static void set_source_cell(struct cell *current_cell);
 
-static void initialize_connection()
+static void initialize_connection(void)
 {
 	tail = &grid[0][source];
 	set_source_cell(tail);
@@ -522,7 +522,7 @@ static void set_cell_as_visible(struct cell grid[GRID_SIZE + 1][GRID_SIZE], int 
 	grid[0][source].connected = TRUE;
 }
 
-static void initialize_grid()
+static void initialize_grid(void)
 {
 	hsim_seed = rtc_get_ms_since_boot();
 
@@ -597,7 +597,7 @@ static struct cell* get_next_cell(struct cell *current_cell)
 	return NULL;
 }
 
-static void check_for_win()
+static void check_for_win(void)
 {
 	if (!is_fully_connected())
 		return;
@@ -610,7 +610,7 @@ static void check_for_win()
 	handle_endgame(TRUE);
 }
 
-static void check_for_loss()
+static void check_for_loss(void)
 {
 	/*
 	 *	Ultimately if the player is out of time we don't need to check anything
@@ -630,7 +630,7 @@ static void check_for_loss()
 		handle_endgame(FALSE);
 }
 
-static void advance_tail()
+static void advance_tail(void)
 {
 	if (is_cell_blocked(tail))
 		return;
@@ -645,7 +645,7 @@ static void advance_tail()
 	tail = next_cell;
 }
 
-static void evaluate_connection()
+static void evaluate_connection(void)
 {
 	check_for_win();
 	check_for_loss();
@@ -658,7 +658,7 @@ static int get_time(void)
     return (int) rtc_get_time_of_day().tv_sec;
 }
 
-static void advance_tick()
+static void advance_tick(void)
 {	
 	int current_time = get_time();
 	if ((current_time % 60) != (last_time % 60))
@@ -686,7 +686,7 @@ static void swap_with_hand(struct cell *cell, int tmp_pipe)
 	evaluate_connection();
 }
 
-static void reset_flow_connections()
+static void reset_flow_connections(void)
 {
 	int i, j;
 	for (i = 0; i <= GRID_SIZE; i++)
@@ -696,8 +696,8 @@ static void reset_flow_connections()
 	grid[0][source].connected = TRUE;
 }
 
-static void render_screen();
-static void check_buttons()
+static void render_screen(void);
+static void check_buttons(void)
 {
 	static int button_presses = 0;
 
@@ -764,7 +764,7 @@ static void check_buttons()
 	}
 }
 
-static void handle_splash_screen_btn()
+static void handle_splash_screen_btn(void)
 {
 	initialize_grid();
 	hacking_simulator_state = HACKINGSIMULATOR_RUN;
@@ -783,7 +783,7 @@ static void render_pipe_fill(struct cell cell)
 	render_flow_cell(cell);
 }
 
-static void render_splash_screen()
+static void render_splash_screen(void)
 {
 	FbColor(WHITE);
 	FbMove(0, 20);
@@ -791,7 +791,7 @@ static void render_splash_screen()
 	FbSwapBuffers();
 }
 
-static void render_hackingsimulator_splash_screen()
+static void render_hackingsimulator_splash_screen(void)
 {
 	render_splash_screen();
 
@@ -800,7 +800,7 @@ static void render_hackingsimulator_splash_screen()
 		handle_splash_screen_btn();
 }
 
-static void render_hackingsimulator_fail_screen()
+static void render_hackingsimulator_fail_screen(void)
 {
 	FbClear();
 	FbColor(WHITE);
@@ -813,7 +813,7 @@ static void render_hackingsimulator_fail_screen()
 		hacking_simulator_state = HACKINGSIMULATOR_EXIT;
 }
 
-static void render_hackingsimulator_win_screen()
+static void render_hackingsimulator_win_screen(void)
 {
 	FbClear();
 	FbColor(WHITE);
@@ -831,7 +831,7 @@ static void render_hackingsimulator_win_screen()
 static int frame_count = 0;
 static int is_drawing_grid = 0;
 
-static void toggle_grid_render()
+static void toggle_grid_render(void)
 {
 	frame_count = 0;
 
@@ -844,9 +844,9 @@ static void toggle_grid_render()
 	is_drawing_grid = 1;
 }
 
-static void render_grid();
-static void render_cursor();
-static void handle_flicker()
+static void render_grid(void);
+static void render_cursor(void);
+static void handle_flicker(void)
 {
 	frame_count++;
 
@@ -888,14 +888,14 @@ static void render_pipe(struct cell cell)
 	FbColor(WHITE);
 }
 
-static void render_hand()
+static void render_hand(void)
 {
 	/* Check to see if the cell is blocking */
 	FbDrawObject(pipes[hand].drawing, pipes[hand].npoints, YELLOW, STARTX(HANDX) + PIPE_OFFSET, STARTY(HANDY) + PIPE_OFFSET, PIPE_SCALE);
 	FbColor(WHITE);
 }
 
-static void render_timer()
+static void render_timer(void)
 {
 	char p[4];
 	FbMove(STARTX(TIMERX) + (CELL_SIZE / 5), STARTY(TIMERY) + (CELL_SIZE / 2));
@@ -963,13 +963,13 @@ static void render_cell(int posX, int posY)
 		render_arrow(STARTX(GRID_SIZE), STARTY(posY));
 }
 
-static void render_hand_cell()
+static void render_hand_cell(void)
 {
 	FbColor(BLUE);
 	render_cell(HANDX, HANDY);
 }
 
-static void render_grid()
+static void render_grid(void)
 {
 	int x, y;
 
@@ -980,19 +980,19 @@ static void render_grid()
 	render_hand_cell();
 }
 
-static void render_cursor()
+static void render_cursor(void)
 {
 	render_box(cursor_x_index, cursor_y_index, GREEN);
 }
 
-static void render_difficulty_label()
+static void render_difficulty_label(void)
 {
 	FbColor(RED);
 	FbMove(30, 110);
 	FbWriteLine(difficulty_descriptor[difficulty_level_state]);
 }
 
-static void render_screen()
+static void render_screen(void)
 {
 	if (!screen_changed)
 		return;
@@ -1013,7 +1013,7 @@ static void render_screen()
 	screen_changed = 0;
 }
 
-static void hackingsimulator_init()
+static void hackingsimulator_init(void)
 {
 	FbInit();
 	FbClear();
@@ -1023,14 +1023,14 @@ static void hackingsimulator_init()
 	hacking_simulator_state = HACKINGSIMULATOR_SPLASH_SCREEN;
 }
 
-static void hackingsimulator_run()
+static void hackingsimulator_run(void)
 {
 	check_buttons();
 	advance_tick();
 	evaluate_connection();
 }
 
-static void hackingsimulator_exit()
+static void hackingsimulator_exit(void)
 {
 	hacking_simulator_state = HACKINGSIMULATOR_INIT; /* So that when we start again, we do not immediately exit */
 	returnToMenus();

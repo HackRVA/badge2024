@@ -358,7 +358,7 @@ static void suppress_screensaver(void)
 	button_reset_last_input_timestamp();
 }
 
-static void clue_run()
+static void clue_run(void)
 {
 	static int idle = 0;
 	FbClear();
@@ -533,7 +533,7 @@ static void draw_notebook(int top_item, int row, int col)
 	FbBackgroundColor(BLACK);
 }
 
-static void clue_notebook()
+static void clue_notebook(void)
 {
 	static int top_item = 0;;
 	static int row = 0;

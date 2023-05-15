@@ -31,12 +31,12 @@
  *  @subsection Input
  *  The input is configured
  */
-void audio_init_gpio();
+void audio_init_gpio(void);
 
 /*!
  *  @brief  Intialize audio driver
  */
-void audio_init();
+void audio_init(void);
 
 /*!
  *  @brief  Play an old fashioned beep on the speaker.

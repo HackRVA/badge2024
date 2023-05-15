@@ -31,7 +31,7 @@ static void ghostdetector_init(void)
 	ghostdetector_state = GHOSTDETECTOR_RUN;
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
@@ -75,7 +75,7 @@ static void draw_reticle(int color)
 	draw_reticle_line(23, 8);
 }
 
-static void draw_screen()
+static void draw_screen(void)
 {
 	draw_reticle(RED);
 	draw_radar_beam(BLACK);
@@ -84,13 +84,13 @@ static void draw_screen()
 	FbSwapBuffers();
 }
 
-static void ghostdetector_run()
+static void ghostdetector_run(void)
 {
 	check_buttons();
 	draw_screen();
 }
 
-static void ghostdetector_exit()
+static void ghostdetector_exit(void)
 {
 	ghostdetector_state = GHOSTDETECTOR_INIT; /* So that when we start again, we do not immediately exit */
 	returnToMenus();

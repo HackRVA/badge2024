@@ -50,22 +50,22 @@ enum
 char bl_state = INIT;
 char bl_mode = LOCAL_ONLY;
 
-void set_red()
+void set_red(void)
 {
     bl_state = CONFIG_RED;
 }
 
-void set_blue()
+void set_blue(void)
 {
     bl_state = CONFIG_BLUE;
 }
 
-void set_green()
+void set_green(void)
 {
     bl_state = CONFIG_GREEN;
 }
 
-void bl_clear_colors()
+void bl_clear_colors(void)
 {
     bl_red = 0;
     bl_green = 0;
@@ -73,7 +73,7 @@ void bl_clear_colors()
     bl_populate_menu();
 }
 
-void set_bl_mode()
+void set_bl_mode(void)
 {
     if(bl_mode == LOCAL_ONLY || bl_mode == BCAST_ONLY)
         bl_mode++;
@@ -83,7 +83,7 @@ void set_bl_mode()
     bl_populate_menu();
 }
 
-void set_bl_go()
+void set_bl_go(void)
 {
     if(bl_mode == BCAST_ONLY || bl_mode == LOCAL_AND_BCAST)
     {
@@ -106,13 +106,13 @@ void set_bl_go()
     }
 }
 
-void set_bl_exit()
+void set_bl_exit(void)
 {
     bl_state = INIT;
     returnToMenus();
 }
 
-void bl_populate_menu()
+void bl_populate_menu(void)
 {
     blinkenlights_config_m[0].name[5] = '0' + (bl_red/100) % 10;
     blinkenlights_config_m[0].name[6] = '0' + (bl_red/10) % 10;
@@ -157,7 +157,7 @@ void bl_populate_menu()
     }
 }
 
-void set_local_leds()
+void set_local_leds(void)
 {
     led_pwm_enable(BADGE_LED_RGB_RED, bl_red * 255 / 100);
     led_pwm_enable(BADGE_LED_RGB_GREEN, bl_green * 255 / 100);

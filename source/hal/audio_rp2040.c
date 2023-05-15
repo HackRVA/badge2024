@@ -85,7 +85,7 @@ static void audio_in_iqr_handler()
 
 /*- Initialization -----------------------------------------------------------*/
 
-void audio_init_gpio()
+void audio_init_gpio(void)
 {
     /* Initialize audio gpio */
     gpio_init(BADGE_GPIO_AUDIO_INPUT);
@@ -107,7 +107,7 @@ void audio_init_gpio()
     gpio_set_dir(BADGE_GPIO_AUDIO_STANDBY, true);
 }
 
-static void audio_in_init()
+static void audio_in_init(void)
 {
     adc_init();
     adc_gpio_init(BADGE_GPIO_AUDIO_INPUT);

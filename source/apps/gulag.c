@@ -2589,7 +2589,7 @@ static void gulag_help_screen(void)
 	}
 }
 
-static void gulag_munitions_room()
+static void gulag_munitions_room(void)
 {
 	if (player.planted_bomb) {
 		gulag_state = GULAG_RUN;
@@ -3771,7 +3771,7 @@ static void maybe_crack_safe(struct gulag_object *safe)
 	safe->tsd.safe.state = COMBO_STATE_WAITING_FOR_FIRST_REV;
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
 	static int firing_timer = 0;
 	int down_latches = button_down_latches();
@@ -4858,7 +4858,7 @@ static void maybe_spetsnaz_chases(void)
 	}
 }
 
-static void gulag_run()
+static void gulag_run(void)
 {
 	check_buttons();
 	if (gulag_state != GULAG_RUN)
@@ -4871,7 +4871,7 @@ static void gulag_run()
 	maybe_search_for_loot();
 }
 
-static void gulag_start_menu()
+static void gulag_start_menu(void)
 {
 	static char menu_initialized = 0;
 	if (!menu_initialized) {
@@ -4909,7 +4909,7 @@ static void gulag_start_menu()
 		dynmenu_change_current_selection(&start_menu, -1);
 }
 
-static void gulag_maybe_exit()
+static void gulag_maybe_exit(void)
 {
 	static char menu_initialized = 0;
 	if (!menu_initialized) {
@@ -4935,13 +4935,13 @@ static void gulag_maybe_exit()
 		dynmenu_change_current_selection(&quit_menu, -1);
 }
 
-static void gulag_exit()
+static void gulag_exit(void)
 {
 	gulag_state = GULAG_INTRO; /* So that when we start again, we do not immediately exit */
 	returnToMenus();
 }
 
-static void gulag_player_died()
+static void gulag_player_died(void)
 {
 	static int state = 0;
 
@@ -5025,7 +5025,7 @@ static void draw_safecracking_screen(struct gulag_object *s)
 	FbSwapBuffers();
 }
 
-static void gulag_safecracking()
+static void gulag_safecracking(void)
 {
 	struct gulag_object *s;
 	static int first_number = -1;

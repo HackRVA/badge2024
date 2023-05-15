@@ -625,7 +625,7 @@ static void battlezone_init(void)
 	screen_changed = 1;
 }
 
-static void bump_player()
+static void bump_player(void)
 {
 	camera.y = CAMERA_GROUND_LEVEL + (4 * 256);
 }
@@ -759,7 +759,7 @@ static void fire_gun(void)
 	bzo[n].parent_obj = PLAYER_PARENT_OBJ;
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
@@ -927,7 +927,7 @@ static void draw_mountains(void)
 	}
 }
 
-static void draw_horizon()
+static void draw_horizon(void)
 {
 	FbColor(TERRAIN_COLOR);
 	FbHorizontalLine(0, 80, 128, 80);
@@ -1510,7 +1510,7 @@ static void remove_dead_objects(void)
 	}
 }
 
-static void draw_screen()
+static void draw_screen(void)
 {
 	char buf[15];
 
@@ -1548,7 +1548,7 @@ static void draw_screen()
 	FbSwapBuffers();
 }
 
-static void battlezone_run()
+static void battlezone_run(void)
 {
 #if REGULATE_FRAMERATE
 	static uint64_t last_frame_time = (uint64_t) -1;
@@ -1565,7 +1565,7 @@ static void battlezone_run()
 #endif
 }
 
-static void battlezone_exit()
+static void battlezone_exit(void)
 {
 	battlezone_state = BATTLEZONE_INIT; /* So that when we start again, we do not immediately exit */
 	returnToMenus();

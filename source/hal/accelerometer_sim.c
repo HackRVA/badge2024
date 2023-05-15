@@ -22,22 +22,22 @@ void set_simulated_accelerometer_values(float x, float y, float z)
 }
 #endif
 
-void accelerometer_init_gpio()
+void accelerometer_init_gpio(void)
 {
     return;
 }
 
-void accelerometer_init()
+void accelerometer_init(void)
 {
     return;
 }
 
-uint8_t accelerometer_whoami()
+uint8_t accelerometer_whoami(void)
 {
     return 0x33;
 }
 
-union acceleration accelerometer_last_sample()
+union acceleration accelerometer_last_sample(void)
 {
     return a;
 }

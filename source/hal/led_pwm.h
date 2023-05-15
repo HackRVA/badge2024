@@ -16,7 +16,7 @@ typedef enum {
     BADGE_LED_MAX,
 } BADGE_LED;
 
-void led_pwm_init_gpio();
+void led_pwm_init_gpio(void);
 
 void led_pwm_enable(BADGE_LED led, uint8_t duty);
 

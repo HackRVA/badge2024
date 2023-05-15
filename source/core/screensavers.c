@@ -36,7 +36,8 @@ static unsigned int irbit2(unsigned int iseed) {
     return iseed;
 }
 
-void disp_asset_saver(){
+void disp_asset_saver(void)
+{
     static unsigned char imgnum = 0;
     if(!animation_count){
         uint8_t random;
@@ -72,8 +73,8 @@ void disp_asset_saver(){
 
 const char drag_hack[] = "Checkout HackRVA!";
 const char drag_hack_num[] = "HackRVA.org";
-void hack_the_dragon(){
-
+void hack_the_dragon(void)
+{
     led_pwm_enable(BADGE_LED_RGB_RED, 255);
     FbMove(120 - 20, 5);
     FbColor(RED);
@@ -161,7 +162,8 @@ void stupid_rects(void)
 }
 
 #define TUNNEL_COLOR CYAN
-void carzy_tunnel_animator(){
+void carzy_tunnel_animator(void)
+{
     animation_count++;
 
     if(!animation_count){
@@ -224,7 +226,8 @@ void carzy_tunnel_animator(){
     FbSwapBuffers();
 }
 
-void dotty(){
+void dotty(void)
+{
 
     unsigned int rnd;
     random_insecure_bytes((uint8_t*)&rnd, sizeof(unsigned int));
@@ -375,7 +378,8 @@ const char bs1[] = "Badgedows";
 const char bs2[] = "An error occured";
 const char bs3[] = "Give up to";
 const char bs4[] = "continue";
-void bluescreen(){
+void bluescreen(void)
+{
     FbColor(WHITE);
     FbBackgroundColor(BLUE);
     FbClear();
@@ -404,7 +408,8 @@ void bluescreen(){
 
 const char badgetips_header[] = "--Badge Tip--";
 //const unsigned char badgetip_more_you_know = 
-void just_the_badge_tips(){
+void just_the_badge_tips(void)
+{
     static unsigned char tipnum = 0;
     if(!animation_count){
         int random;

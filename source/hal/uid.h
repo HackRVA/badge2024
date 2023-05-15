@@ -14,7 +14,7 @@
  *
  *  @return 64-bit unique ID from flash.
  */
-uint64_t uid_get();
+uint64_t uid_get(void);
 
 #if TARGET_SIMULATOR
 

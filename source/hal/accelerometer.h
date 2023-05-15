@@ -51,10 +51,10 @@ static inline mG_t acceleration_magnitude(union acceleration a)
 #endif
 }
 
-void accelerometer_init_gpio();
-void accelerometer_init();
-uint8_t accelerometer_whoami();
-union acceleration accelerometer_last_sample();
+void accelerometer_init_gpio(void);
+void accelerometer_init(void);
+uint8_t accelerometer_whoami(void);
+union acceleration accelerometer_last_sample(void);
 
 #if TARGET_SIMULATOR
 void set_simulated_accelerometer_values(float x, float y, float z);

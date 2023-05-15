@@ -17,7 +17,8 @@ static void save_settings(void) {
     flash_kv_store_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
 }
 
-void ping_cb(){
+void ping_cb(__attribute__((unused)) struct menu_t *menu)
+{
     static unsigned char num_pinged = 0;
 
     if(!num_pinged){
@@ -207,7 +208,7 @@ struct menu_t LEDlight_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL} },
 };
 
-void buzzer_config_cb()
+void buzzer_config_cb(__attribute__((unused)) struct menu_t *menu)
 {
     struct menu_t *dstMenu, *selectedMenu;
 
@@ -243,7 +244,8 @@ void screen_save_lock_cb(__attribute__((unused)) struct menu_t *h) {
     returnToMenus(); 
 }
 
-void screen_save_invert_cb() {
+void screen_save_invert_cb(__attribute__((unused)) struct menu_t *menu)
+{
     SYSTEM_DATA *system_data = badge_system_data();
     system_data->screensaver_inverted = !system_data->screensaver_inverted;
     returnToMenus();

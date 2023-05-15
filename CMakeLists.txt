@@ -46,7 +46,7 @@ endif()
 
 if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
     # Note: cmake doesn't know about portaudio, so we cram -lportaudio -lasound -lm -lpthread in here
-    add_compile_options(-fsanitize=address -fsanitize=undefined)
+    add_compile_options(-fsanitize=address -fsanitize=undefined -Wstrict-prototypes)
     if (${SIMULATOR_AUDIO} STREQUAL "yes")
 	    add_link_options(-fsanitize=address -fsanitize=undefined -lportaudio -lasound -lm -lpthread)
     else()

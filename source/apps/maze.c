@@ -396,7 +396,7 @@ static void maze_stack_pop(void)
     maze_stack_ptr--;
 }
 
-static void player_init()
+static void player_init(void)
 {
     player.hitpoints = 255;
     player.gp = 0;
@@ -692,7 +692,7 @@ static void add_random_object(int x, int y)
         nmaze_objects = i + 1;
 }
 
-static void print_maze()
+static void print_maze(void)
 {
 #ifdef __linux__
     int i, j;
@@ -778,7 +778,7 @@ static void generate_maze(void)
     }
 }
 
-static void draw_map()
+static void draw_map(void)
 {
     int x, y;
 
@@ -1713,7 +1713,7 @@ static void maze_game_start_menu(void)
     maze_program_state = MAZE_DRAW_MENU;
 }
 
-static void maze_begin_fight()
+static void maze_begin_fight(void)
 {
     combat_mode = 1;
     player.combatx = LCD_XSIZE / 2;

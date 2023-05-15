@@ -93,7 +93,8 @@ unsigned char current_screen_saver = 0;
 #define MEDIUM_PROB_THRESH 30
 #define LOW_PROB_THRESH 15
 
-void do_screen_save_popup(){
+void do_screen_save_popup(void)
+{
 
     static unsigned char prob_val = 50;
     static unsigned int xorshift_state = 0xa5a5a5a5;

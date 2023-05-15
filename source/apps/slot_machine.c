@@ -36,7 +36,7 @@ static int win;
 #define BET_MIN (1)
 #define BET_MAX (3)
 
-static void bet_increase()
+static void bet_increase(void)
 {
 	if (bet < BET_MAX)
 	{
@@ -45,7 +45,7 @@ static void bet_increase()
 	}
 }
 
-static void bet_decrease()
+static void bet_decrease(void)
 {
 	if (bet > BET_MIN)
 	{
@@ -54,7 +54,7 @@ static void bet_decrease()
 	}
 }
 
-static void bet_take()
+static void bet_take(void)
 {
 	credits -= bet;
 }
@@ -160,7 +160,7 @@ struct Payscale
 {
 	char* description;
 	int multiplier;
-	enum Payout (*evaluation)();
+	enum Payout (*evaluation)(void);
 	struct 
 	{
 		uint16_t freq;
@@ -169,7 +169,7 @@ struct Payscale
 	uint8_t led_duty[3];
 };
 
-static enum Payout eval_cherry()
+static enum Payout eval_cherry(void)
 {
 	for (size_t reel = 0; reel < REEL_COUNT; reel++)
 	{
@@ -184,7 +184,7 @@ static enum Payout eval_cherry()
 	return PAY_NONE;
 }
 
-static enum Payout eval_bar_any2()
+static enum Payout eval_bar_any2(void)
 {
 	if (symbol_is_bar(symbol_in_pos(0, 0))
 	    && symbol_is_bar(symbol_in_pos(1, 0))
@@ -198,7 +198,7 @@ static enum Payout eval_bar_any2()
 	}
 }
 
-static enum Payout eval_bar_any3()
+static enum Payout eval_bar_any3(void)
 {
 	if (symbol_is_bar(symbol_in_pos(0, 0))
 	    && symbol_is_bar(symbol_in_pos(1, 0))
@@ -212,7 +212,7 @@ static enum Payout eval_bar_any3()
 	}
 }
 
-static enum Payout eval_bar2_3()
+static enum Payout eval_bar2_3(void)
 {
 	if ((SYM_BAR2 == (symbol_in_pos(0, 0)))
 	    && (SYM_BAR2 == (symbol_in_pos(1, 0)))
@@ -226,7 +226,7 @@ static enum Payout eval_bar2_3()
 	}
 }
 
-static enum Payout eval_bar3_3()
+static enum Payout eval_bar3_3(void)
 {
 	if ((SYM_BAR3 == (symbol_in_pos(0, 0)))
 	    && (SYM_BAR3 == (symbol_in_pos(1, 0)))
@@ -240,7 +240,7 @@ static enum Payout eval_bar3_3()
 	}
 }
 
-static enum Payout eval_seven_3()
+static enum Payout eval_seven_3(void)
 {
 	if ((SYM_SEVEN == (symbol_in_pos(0, 0)))
 	    && (SYM_SEVEN == (symbol_in_pos(1, 0)))
@@ -254,7 +254,7 @@ static enum Payout eval_seven_3()
 	}
 }
 
-static enum Payout eval_cherry_3()
+static enum Payout eval_cherry_3(void)
 {
 	if ((SYM_CHERRY == (symbol_in_pos(0, 0)))
 	    && (SYM_CHERRY == (symbol_in_pos(1, 0)))
@@ -268,7 +268,7 @@ static enum Payout eval_cherry_3()
 	}
 }
 
-static bool eval_bonus()
+static bool eval_bonus(void)
 {
 	for (size_t reel = 0; reel < REEL_COUNT; reel++)
 	{
@@ -294,7 +294,7 @@ static const struct Payscale PAYSCALE[] =
 
 //#define FORCE_PAYOUT
 
-static enum Payout payout_get()
+static enum Payout payout_get(void)
 {
 #ifdef FORCE_PAYOUT
 	int b = button_down_latches();
@@ -613,7 +613,7 @@ static void render_symbol(size_t reel, int offset)
 	}
 }
 
-static void render_reels()
+static void render_reels(void)
 {
 	size_t padding = REND_PADDING;
 	size_t reel_width = (LCD_XSIZE - (REND_PADDING * (REEL_COUNT + 1)))/ REEL_COUNT;
@@ -642,14 +642,14 @@ static void render_reels()
 		   LCD_XSIZE - padding-REEL_COUNT, padding + reel_height / 2);
 }
 
-static void render_instructions()
+static void render_instructions(void)
 {
 	FbColor(GREY16);
 	FbMove(REND_PADDING, LCD_YSIZE - REND_PADDING - REND_CHAR_WIDTH);
 	FbWriteString("<Exit  ^/v");
 }
 
-static void render_credits()
+static void render_credits(void)
 {
 	char s[16] = {0};
 	snprintf(s, sizeof(s), "Credit\n%-6d", credits);
@@ -658,7 +658,7 @@ static void render_credits()
 	FbWriteString(s);
 }
 
-static void render_bet()
+static void render_bet(void)
 {
 	char s[16] = {0};
 	snprintf(s, sizeof(s), "Bet\n%2d", bet);
@@ -668,7 +668,7 @@ static void render_bet()
 	FbWriteString(s);
 }
 
-static void render_win()
+static void render_win(void)
 {
 	char s[16] = {0};
 	snprintf(s, sizeof(s), "Win\n%3d", win);
@@ -678,7 +678,7 @@ static void render_win()
 	FbWriteString(s);
 }
 
-static void render_bonus()
+static void render_bonus(void)
 {
 	const char s[] = "BONUS!";
 	FbColor(YELLOW);
@@ -688,7 +688,7 @@ static void render_bonus()
 	FbBackgroundColor(BLACK);
 }
 
-static void render()
+static void render(void)
 {
 	FbClear();
 	render_reels();
@@ -718,7 +718,7 @@ static void slot_machine_init(void)
 	render();
 }
 
-static void spin()
+static void spin(void)
 {
 	outcome = random_insecure_u32_congruence(outcome);
 	for (size_t reel = 0; reel < REEL_COUNT; reel++)
@@ -728,7 +728,7 @@ static void spin()
 	slot_machine_state = SLOT_MACHINE_SPIN;	
 }
 
-static void pull_handle()
+static void pull_handle(void)
 {
 	if (!bonus_active)
 	{
@@ -737,14 +737,14 @@ static void pull_handle()
 	spin();
 }
 
-static void led_rgb_off()
+static void led_rgb_off(void)
 {
 	led_pwm_disable(BADGE_LED_RGB_RED);
 	led_pwm_disable(BADGE_LED_RGB_GREEN);
 	led_pwm_disable(BADGE_LED_RGB_BLUE);
 }
 
-static void audio_play_jingle()
+static void audio_play_jingle(void)
 {
 	char offset[4];
 	random_insecure_bytes((void *) offset, sizeof(offset));
@@ -754,7 +754,7 @@ static void audio_play_jingle()
 	led_pwm_enable(BADGE_LED_RGB_BLUE, offset[3]/8);
 }
 
-static void slot_machine_bet()
+static void slot_machine_bet(void)
 {
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
@@ -783,7 +783,7 @@ static void slot_machine_bet()
 	}
 }
 
-static void slot_machine_spin()
+static void slot_machine_spin(void)
 {
 	static size_t positions_spun = 0;
 	size_t reel;
@@ -813,7 +813,7 @@ static void slot_machine_spin()
 	render();
 }
 
-static void slot_machine_payout()
+static void slot_machine_payout(void)
 {
 	last_payout = payout_get();
 	const struct Payscale *payscale = PAYSCALE+last_payout;
@@ -853,7 +853,7 @@ static void slot_machine_payout()
 	render();
 }
 
-static void slot_machine_exit()
+static void slot_machine_exit(void)
 {
 	slot_machine_state = SLOT_MACHINE_INIT;
 	led_rgb_off();

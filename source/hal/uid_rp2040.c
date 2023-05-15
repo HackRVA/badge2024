@@ -14,7 +14,7 @@
 
 #include <pico/unique_id.h>
 
-uint64_t uid_get()
+uint64_t uid_get(void)
 {
     pico_unique_board_id_t id;
     uint64_t badgeId;

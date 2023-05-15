@@ -63,7 +63,7 @@ static void next_screensaver(int direction)
 	screensaver_set_animation_count(0);
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
@@ -84,12 +84,12 @@ static void check_buttons()
 	}
 }
 
-static void draw_screen()
+static void draw_screen(void)
 {
 	ss[current_screen_saver]();
 }
 
-static void test_screensavers_run()
+static void test_screensavers_run(void)
 {
 	check_buttons();
 	draw_screen();
@@ -98,7 +98,7 @@ static void test_screensavers_run()
 		popup_time = 9 * 30;
 }
 
-static void test_screensavers_exit()
+static void test_screensavers_exit(void)
 {
 	/* So that when we start again, we do not immediately exit */
 	test_screensavers_state = TEST_SCREENSAVERS_INIT;
