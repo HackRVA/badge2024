@@ -3,9 +3,7 @@
 
 #include <stdint.h>
 
-#define RED_BG 0
-#define GREEN_BG 0
-#define BLUE_BG 0
+/* Must ... resist ... temptation ... to rewrite ... all of whatever this is. */
 
 /*
    low order bits of attrib can be used to store
@@ -28,7 +26,7 @@ enum attrib_bits {
 #define LAST_ITEM (1 << LAST_BIT)
 
 enum type {
-   MORE=0, /* if the menu is too long to fit */
+   MORE=0, /* if the menu is too long to fit (but menus scroll now, so you shouldn't need this) */
    TEXT,   /* text to display */
    BACK,    /* return to previous menu */
    MENU,    /* sub menu type */
@@ -47,14 +45,19 @@ struct menu_t {
    char name[16];
    unsigned short attrib;
    unsigned char type;
-   union {                      /* when initing the union, coerce non void data to a menu_t to keep compiler from whining */
+   union { /* when initializing the union, use designated
+	    * initializers, e.g, "{ .menu = blah }", "{ .func = blah }" */
       const struct menu_t *menu;
       void (*func)(struct menu_t *m);
       void *generic;
    } data;
 };
 
+#if 0
+/* nothing uses this */
 struct menu_t *getMenuStack(unsigned char item);
+#endif
+/* This is only used by settings.c to change the name of menu items in LCD backlight menu */
 struct menu_t *getSelectedMenuStack(unsigned char item);
 
 struct menu_t *display_menu(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style);

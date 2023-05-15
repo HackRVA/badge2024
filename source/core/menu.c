@@ -123,12 +123,16 @@ struct menu_t *getCurrMenu() {
     return G_currMenu;
 }
 
+#if 0
+/* Nothing uses this */
 struct menu_t *getMenuStack(unsigned char item) {
    if (item > G_menuCnt) return 0;
 
    return G_menuStack[G_menuCnt-item].currMenu;
 }
+#endif
 
+/* This is only used by settings.c to modify menu item names in the LCD backlight menu. */
 struct menu_t *getSelectedMenuStack(unsigned char item) {
    if (item > G_menuCnt) return 0;
 
