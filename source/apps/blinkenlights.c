@@ -5,6 +5,8 @@
 #include "button.h"
 #include "led_pwm.h"
 
+#define BL_INCR_AMNT 5
+
 // If ordering changed, make sure indices still work
 // in the populate function
 enum {
@@ -35,37 +37,28 @@ enum
     LOCAL_AND_BCAST
 };
 
-char bl_state = INIT;
-char bl_mode = LOCAL_ONLY;
+static char bl_state = INIT;
+static char bl_mode = LOCAL_ONLY;
 
-void set_red(__attribute__((unused)) struct menu_t *m)
+static void set_red(__attribute__((unused)) struct menu_t *m)
 {
     bl_state = CONFIG_RED;
 }
 
-void set_blue(__attribute__((unused)) struct menu_t *m)
+static void set_blue(__attribute__((unused)) struct menu_t *m)
 {
     bl_state = CONFIG_BLUE;
 }
 
-void set_green(__attribute__((unused)) struct menu_t *m)
+static void set_green(__attribute__((unused)) struct menu_t *m)
 {
     bl_state = CONFIG_GREEN;
 }
 
-struct menu_t blinkenlights_config_m[] = {
-    {"Red: ", VERT_ITEM, FUNCTION, { .func = set_red}},
-    {"Blue: ", VERT_ITEM, FUNCTION, { .func = set_blue}},
-    {"Green: ", VERT_ITEM, FUNCTION, { .func = set_green}},
-    {"--CLEAR--", VERT_ITEM, FUNCTION, { .func = bl_clear_colors} },
-    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
-    {"Mode: ", VERT_ITEM, FUNCTION, { .func = set_bl_mode} },
-    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = set_bl_go} },
-    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, { .func =set_bl_exit}},
-};
-unsigned char bl_red = 50, bl_green = 40, bl_blue = 0;
+static unsigned char bl_red = 50, bl_green = 40, bl_blue = 0;
 
-void bl_populate_menu(__attribute__((unused)) struct menu_t *m)
+static struct menu_t blinkenlights_config_m[];
+static void bl_populate_menu(__attribute__((unused)) struct menu_t *m)
 {
     blinkenlights_config_m[0].name[5] = '0' + (bl_red/100) % 10;
     blinkenlights_config_m[0].name[6] = '0' + (bl_red/10) % 10;
@@ -110,7 +103,7 @@ void bl_populate_menu(__attribute__((unused)) struct menu_t *m)
     }
 }
 
-void bl_clear_colors(__attribute__((unused)) struct menu_t *m)
+static void bl_clear_colors(__attribute__((unused)) struct menu_t *m)
 {
     bl_red = 0;
     bl_green = 0;
@@ -118,7 +111,7 @@ void bl_clear_colors(__attribute__((unused)) struct menu_t *m)
     bl_populate_menu(NULL);
 }
 
-void set_bl_mode(__attribute__((unused)) struct menu_t *m)
+static void set_bl_mode(__attribute__((unused)) struct menu_t *m)
 {
     if(bl_mode == LOCAL_ONLY || bl_mode == BCAST_ONLY)
         bl_mode++;
@@ -128,7 +121,14 @@ void set_bl_mode(__attribute__((unused)) struct menu_t *m)
     bl_populate_menu(NULL);
 }
 
-void set_bl_go(__attribute__((unused)) struct menu_t *m)
+static void set_local_leds(void)
+{
+    led_pwm_enable(BADGE_LED_RGB_RED, bl_red * 255 / 100);
+    led_pwm_enable(BADGE_LED_RGB_GREEN, bl_green * 255 / 100);
+    led_pwm_enable(BADGE_LED_RGB_BLUE, bl_blue * 255 / 100);
+}
+
+static void set_bl_go(__attribute__((unused)) struct menu_t *m)
 {
     if(bl_mode == BCAST_ONLY || bl_mode == LOCAL_AND_BCAST)
     {
@@ -151,18 +151,22 @@ void set_bl_go(__attribute__((unused)) struct menu_t *m)
     }
 }
 
-void set_bl_exit(__attribute__((unused)) struct menu_t *m)
+static void set_bl_exit(__attribute__((unused)) struct menu_t *m)
 {
     bl_state = INIT;
     returnToMenus();
 }
 
-void set_local_leds(void)
-{
-    led_pwm_enable(BADGE_LED_RGB_RED, bl_red * 255 / 100);
-    led_pwm_enable(BADGE_LED_RGB_GREEN, bl_green * 255 / 100);
-    led_pwm_enable(BADGE_LED_RGB_BLUE, bl_blue * 255 / 100);
-}
+static struct menu_t blinkenlights_config_m[] = {
+    {"Red: ", VERT_ITEM, FUNCTION, { .func = set_red}},
+    {"Blue: ", VERT_ITEM, FUNCTION, { .func = set_blue}},
+    {"Green: ", VERT_ITEM, FUNCTION, { .func = set_green}},
+    {"--CLEAR--", VERT_ITEM, FUNCTION, { .func = bl_clear_colors} },
+    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
+    {"Mode: ", VERT_ITEM, FUNCTION, { .func = set_bl_mode} },
+    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = set_bl_go} },
+    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, { .func =set_bl_exit}},
+};
 
 void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
 {
