@@ -96,6 +96,9 @@ static void test_screensavers_run(void)
 	popup_time--;
 	if (popup_time == 0)
 		popup_time = 9 * 30;
+
+	/* Prevent badge from going "dormant" so screen will stay lit */
+	button_reset_last_input_timestamp();
 }
 
 static void test_screensavers_exit(void)
