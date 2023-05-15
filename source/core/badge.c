@@ -96,7 +96,7 @@ unsigned char current_screen_saver = 0;
 void do_screen_save_popup(){
 
     static unsigned char prob_val = 50;
-    static uint32_t xorshift_state = 0xa5a5a5a5;
+    static unsigned int xorshift_state = 0xa5a5a5a5;
 
     if (badge_system_data()->screensaver_disabled)
 	return;
