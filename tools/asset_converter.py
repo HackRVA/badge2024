@@ -1,5 +1,17 @@
 # requirements: Pillow, PyYAML, bitstring
 # Install using `pip install Pillow PyYAML bitstring`
+#
+# Also, python3 is required. If you see this:
+#
+#   File "asset_converter.py", line 30
+#   asset_header_name = f"{image_yaml['name']}.h"
+#
+# It means python is python2, and you want python3
+# We can't check this in the script, because python2 fails to parse
+# the script and doesn't execute any of it.
+#
+# Try running the script by "python3 asset_converter.py ..."
+#
 
 # generates:
 # A C file for each generated sprite
