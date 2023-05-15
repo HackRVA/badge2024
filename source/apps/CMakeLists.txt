@@ -18,6 +18,7 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/smashout.c
         ${CMAKE_CURRENT_LIST_DIR}/username.c
         ${CMAKE_CURRENT_LIST_DIR}/gulag.c
+        ${CMAKE_CURRENT_LIST_DIR}/rvasec_splash.c
         ${CMAKE_CURRENT_LIST_DIR}/slot_machine.c
         ${CMAKE_CURRENT_LIST_DIR}/test-screensavers.c
         )
