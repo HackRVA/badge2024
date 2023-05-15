@@ -42,22 +42,27 @@ void disp_asset_saver(){
         uint8_t random;
         random_insecure_bytes(&random, sizeof(int8_t));
 
-        imgnum = random % 3;
+        imgnum = random % 4;
         animation_count++;
     }
 
     switch(imgnum){
         case 0:
             FbMove(0,0);
-            FbImage(&assetList[HACKRVA4], 0);
+            FbImage(&assetList[RVASEC_LOGO], 0);
             break;
 
         case 1:
+            FbMove(0,0);
+            FbImage(&assetList[HACKRVA4], 0);
+            break;
+
+        case 2:
             FbMove(0,20);
             FbImage2bit(&assetList[RVASEC2016], 0);
             break;
 
-        case 2:
+        case 3:
             render_screen_save_monsters();
             break;
     }
