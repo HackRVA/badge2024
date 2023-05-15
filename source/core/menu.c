@@ -682,9 +682,9 @@ static void rvasec_splash_cb(){
     }
 
     wait++;
-    if(wait == (sizeof(unsigned short))-2) {
+    /* Don't let wait overflow, or else the splash animation will start over. */
+    if (wait == 0)
         wait -= 1000;
-    }
 
     // Sam: had some buzzer code here prior
     int down_latches = button_down_latches();
