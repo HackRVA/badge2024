@@ -593,6 +593,20 @@ static const char *splash_word_things[] = {"Cognition Module",
 static const char splash_words_btn1[] = "Press the button";
 static const char splash_words_btn2[] = "to continue!";
 
+static void brand_preproduction_firmware(int blink)
+{
+	(void) blink;
+#define PREPRODUCTION_FIRMWARE 1
+#if PREPRODUCTION_FIRMWARE
+	if (!blink)
+		return;
+	FbColor(RED);
+	FbMove(13, 25);
+	FbWriteString("ALPHA FIRMWARE");
+	FbPushBuffer();
+#endif
+}
+
 #define SPLASH_SHIFT_DOWN 85
 static void rvasec_splash_cb(){
     static unsigned short wait = 0;
@@ -663,6 +677,7 @@ static void rvasec_splash_cb(){
         FbMove(15, 110);
         FbWriteLine(splash_words_btn2);
 
+        brand_preproduction_firmware(!((wait / 5) & 0x01) || wait > 158);
         FbSwapBuffers();
     }
 
