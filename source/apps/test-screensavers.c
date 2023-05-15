@@ -48,6 +48,19 @@ static void test_screensavers_init(void)
 	/* Disable the actual screensaver while the screensaver test app is running */
 	saved_screensaver_disabled = badge_system_data()->screensaver_disabled;
 	badge_system_data()->screensaver_disabled = 1;
+	screensaver_set_animation_count(0);
+}
+
+static void next_screensaver(int direction)
+{
+	current_screen_saver += direction;
+	if (current_screen_saver < 0)
+		current_screen_saver = num_screen_savers - 1;
+	if (current_screen_saver >= num_screen_savers)
+		current_screen_saver = 0; 
+	FbBackgroundColor(BLACK);
+	FbClear();
+	screensaver_set_animation_count(0);
 }
 
 static void check_buttons()
@@ -57,29 +70,13 @@ static void check_buttons()
 		/* Pressing the button exits the program. You probably want to change this. */
 		test_screensavers_state = TEST_SCREENSAVERS_EXIT;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
-		current_screen_saver--;
-		if (current_screen_saver < 0)
-			current_screen_saver = num_screen_savers - 1;
-		FbBackgroundColor(BLACK);
-		FbClear();
+		next_screensaver(-1);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
-		current_screen_saver++;
-		if (current_screen_saver >= num_screen_savers)
-			current_screen_saver = 0;
-		FbBackgroundColor(BLACK);
-		FbClear();
+		next_screensaver(1);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
-		current_screen_saver++;
-		if (current_screen_saver >= num_screen_savers)
-			current_screen_saver = 0;
-		FbBackgroundColor(BLACK);
-		FbClear();
+		next_screensaver(1);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-		current_screen_saver--;
-		if (current_screen_saver < 0)
-			current_screen_saver = num_screen_savers - 1;
-		FbBackgroundColor(BLACK);
-		FbClear();
+		next_screensaver(-1);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		test_screensavers_state = TEST_SCREENSAVERS_EXIT;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
