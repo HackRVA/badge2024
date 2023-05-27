@@ -94,9 +94,9 @@ enum difficulty_level
 };
 
 static char difficulty_descriptor[4][10] = { "EASY", "MEDIUM", "HARD", "VERY HARD" };
-static char splash_screen_messages[4][60] = 
+static char splash_screen_messages[4][100] =
 { 
-	"Welcome to\nHackingSim\n\nPress button 4\ntimes to quit",
+	"Welcome to\nHackingSim\n\nPress A button\nto proceed\n\nPress B button\nto quit\n",
 	"Nice Work, It\ngets harder\nnow",
 	"Whoa, you\nreally know\nyour stuff.\nLet's make\nit harder",
 	"There's no\nway you'll\nbeat this\none",
@@ -702,7 +702,8 @@ static void check_buttons(void)
 	static int button_presses = 0;
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 	{
 		button_presses++;
 
@@ -745,6 +746,9 @@ static void check_buttons(void)
 		button_presses = 0;
 		cursor_y_index++;
 		screen_changed = 1;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+		hacking_simulator_state = HACKINGSIM_QUIT_CONFIRM;
 	}
 
 	if (cursor_x_index < 0)
@@ -796,8 +800,11 @@ static void render_hackingsimulator_splash_screen(void)
 	render_splash_screen();
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		handle_splash_screen_btn();
+	if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
+		hacking_simulator_state = HACKINGSIM_QUIT_CONFIRM;
 }
 
 static void render_hackingsimulator_fail_screen(void)
@@ -809,7 +816,8 @@ static void render_hackingsimulator_fail_screen(void)
 	FbSwapBuffers();
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		hacking_simulator_state = HACKINGSIMULATOR_EXIT;
 }
 
@@ -822,7 +830,8 @@ static void render_hackingsimulator_win_screen(void)
 	FbSwapBuffers();
 
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		hacking_simulator_state = HACKINGSIMULATOR_EXIT;
 }
 
@@ -1056,7 +1065,8 @@ static void hackingsimulator_quit_confirm(void)
 static void hackingsimulator_quit_input(void)
 {
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		hacking_simulator_state =
 			(enum hacking_simulator_state_t) quitmenu.item[quitmenu.current_item].next_state;
 		return;
