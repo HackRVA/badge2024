@@ -24,6 +24,7 @@ static const ss_func ss[] = {
 	matrix,
 	bluescreen,
 	qix,
+	hyperspace_screen_saver,
 };
 static const int num_screen_savers = sizeof(ss) / sizeof(ss[0]);
 static int current_screen_saver = 0;

@@ -28,4 +28,5 @@ void smiley(void);
 void matrix(void);
 void bluescreen(void);
 void qix(void);
+void hyperspace_screen_saver(void);
 void screensaver_set_animation_count(unsigned short count);

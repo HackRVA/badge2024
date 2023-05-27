@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include "colors.h"
 #include "ir.h"
 #include "assetList.h"
@@ -34,6 +35,120 @@ static unsigned int irbit2(unsigned int iseed) {
         iseed <<= 1;
     }
     return iseed;
+}
+
+static int random_num(int n)
+{
+	static unsigned int xorshift_state = 0;
+	if (xorshift_state == 0) {
+		random_insecure_bytes((uint8_t*)&xorshift_state, sizeof(xorshift_state));
+	}
+	return xorshift(&xorshift_state) % n;
+}
+
+#define NHYPERSPACE_STARS 30
+static struct hyperspace_star {
+	int64_t lx, ly, x, y, vx, vy;
+} hyperspace_star[NHYPERSPACE_STARS] = { 0 };
+
+static void map_hyperspace_star(void (*func)(struct hyperspace_star *))
+{
+	for (int i = 0; i < NHYPERSPACE_STARS; i++)
+		func(&hyperspace_star[i]);
+}
+
+static void initialize_hyperspace_star(struct hyperspace_star *s)
+{
+	do {
+		s->x = random_num(LCD_XSIZE) * 256;
+		s->y = random_num(LCD_YSIZE) * 256;
+	} while (s->x == LCD_XSIZE / 2 && s->y == LCD_YSIZE / 2);
+
+	s->lx = s->x;
+	s->ly = s->y;
+	s->vx = -((LCD_XSIZE / 2) - (s->x / 256));
+	s->vy = -((LCD_YSIZE / 2) - (s->y / 256));
+	s->vx = s->vx * 20;
+	s->vy = s->vy * 20;
+}
+
+static void draw_hyperspace_star(struct hyperspace_star *s)
+{
+	int x1, y1, x2, y2;
+	x1 = s->x / 256;
+	y1 = s->y / 256;
+	x2 = s->lx / 256;
+	y2 = s->ly / 256;
+	FbLine(x1, y1, x2, y2);
+}
+
+static void move_hyperspace_star(struct hyperspace_star *s)
+{
+	s->lx = s->x;
+	s->ly = s->y;
+	s->x += s->vx;
+	s->y += s->vy;
+	s->vx = (s->vx * 300) / 256; /* multiply by approximately 1.2 */
+	s->vy = (s->vy * 300) / 256; /* multiply by approximately 1.2 */
+	int sx = s->x / 256;
+	int sy = s->y / 256;
+	if (sx < 0 || sx >= LCD_XSIZE || sy < 0 || sy >= LCD_YSIZE)
+		initialize_hyperspace_star(s);
+}
+
+static void initialize_hyperspace_screen_saver(void)
+{
+	map_hyperspace_star(initialize_hyperspace_star);
+}
+
+static void draw_hyperspace_stars(void)
+{
+	static int angle = 0;
+	int r, g, b, ra, ga, ba, color;
+	angle += 1;
+	if (angle >= 128)
+		angle = 0;
+	ra = angle;
+	ga = ra + 42;
+	if (ga >= 128)
+		ga -= 128;
+	ba = ga + 42;
+	if (ba >= 128)
+		ba -= 128;
+	r = sine(ra);
+	b = sine(ba);
+	g = sine(ga);
+
+	/* map color values from [-256-255] to [0-512] */
+	r = (int) r + 256;
+	g = (int) g + 256;
+	b = (int) b + 256;
+
+	r = r >> 4; /* top 5 bits */
+	g = g >> 3; /* top 6 bits */
+	b = b >> 4; /* top 5 bits */
+
+	color = (r << 11) | (g << 5) | b;
+	FbColor(color);
+	map_hyperspace_star(draw_hyperspace_star);
+}
+
+static void move_hyperspace_stars(void)
+{
+	map_hyperspace_star(move_hyperspace_star);
+}
+
+void hyperspace_screen_saver(void)
+{
+	static int initialized = 0;
+	if (!initialized) {
+		initialize_hyperspace_screen_saver();
+		initialized = 1;
+	}
+	move_hyperspace_stars();
+	draw_hyperspace_stars();
+	FbSwapBuffers();
+	animation_count++;
 }
 
 void disp_asset_saver(void)
@@ -87,15 +202,6 @@ void hack_the_dragon(void)
         FbRotWriteLine(drag_hack_num);
     }
     FbSwapBuffers();
-}
-
-static int random_num(int n)
-{
-	static unsigned int xorshift_state = 0;
-	if (xorshift_state == 0) {
-		random_insecure_bytes((uint8_t*)&xorshift_state, sizeof(xorshift_state));
-	}
-	return xorshift(&xorshift_state) % n;
 }
 
 void stupid_rects(void)
