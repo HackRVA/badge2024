@@ -37,14 +37,17 @@ void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned c
     int i;
 
     if (dm->nitems >= dm->max_items) {
-#ifdef linux
-        printf("WARNING: dynmenu_add_item: failed to add menu items %d, max_items = %d\n", dm->nitems, dm->max_items);
+#ifdef __linux__
+        printf("dynmenu_add_item: WARNING: failed to add menu item %d, max_items = %d\n", dm->nitems, dm->max_items);
         printf("menu title: %s\n", dm->title);
 #endif
         return;
     }
 
     i = dm->nitems;
+#ifdef __linux__
+    printf("dynmenu_add_item: '%s', length: %lu\n", text, sizeof(dm->item[i].text)-1);
+#endif
     strncpy(dm->item[i].text, text, sizeof(dm->item[i].text) - 1);
     dm->item[i].next_state = next_state;
     dm->item[i].cookie = cookie;

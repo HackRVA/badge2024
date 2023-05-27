@@ -6,12 +6,13 @@ static const unsigned char new_badge_monsters_assets_Crypto_Raptor_data[8192] = 
 
 };
 
-static const unsigned char new_badge_monsters_assets_Crypto_Raptor_cmap[5][3] = {
-{247, 236, 47},
-{235, 212, 48},
-{104, 144, 177},
-{81, 166, 220},
-{171, 82, 54},
+static const unsigned char new_badge_monsters_assets_Crypto_Raptor_cmap[6][3] = {
+    {247, 236, 47},
+    {235, 212, 48},
+    {104, 144, 177},
+    {81, 166, 220},
+    {171, 82, 54},
+    {0, 0, 0},
 };
 
 const struct asset new_badge_monsters_assets_Crypto_Raptor = {
@@ -22,4 +23,3 @@ const struct asset new_badge_monsters_assets_Crypto_Raptor = {
     .data_cmap = (const char*) new_badge_monsters_assets_Crypto_Raptor_cmap,
     .pixdata = (const char*) new_badge_monsters_assets_Crypto_Raptor_data,
 };
-

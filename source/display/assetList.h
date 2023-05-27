@@ -32,7 +32,7 @@ enum {
 struct asset {
     unsigned char assetId; /* number used to reference object */
     unsigned char type;    /* image/audio/midi/private */
-    unsigned char seqNum; /* number of images within the asset for animattion, frame no. for font char id */
+    unsigned char seqNum; /* number of images within the asset for animation, frame no. for font char id */
     unsigned short x;	/* array x */
     unsigned short y;	/* array y */
     const char *data_cmap; /* color map lookup table for image data */

@@ -71,3 +71,9 @@ docs/html/*
 
 # Simulator flash storage
 simulator_flash_storage.bin
+# created by vs code?
+cmake-build-debug/
+# generated docs
+web/docs/badgeappdev/book/
+# local version setting for pyenv
+.python-version

@@ -6,15 +6,16 @@ static const unsigned char new_badge_monsters_assets_Access_Control_Alligator_da
 
 };
 
-static const unsigned char new_badge_monsters_assets_Access_Control_Alligator_cmap[8][3] = {
-{255, 241, 233},
-{223, 228, 214},
-{239, 233, 48},
-{247, 236, 47},
-{81, 166, 220},
-{0, 135, 81},
-{0, 80, 48},
-{0, 8, 5},
+static const unsigned char new_badge_monsters_assets_Access_Control_Alligator_cmap[9][3] = {
+    {255, 241, 233},
+    {223, 228, 214},
+    {239, 233, 48},
+    {247, 236, 47},
+    {81, 166, 220},
+    {0, 135, 81},
+    {0, 80, 48},
+    {0, 8, 5},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_Access_Control_Alligator = {
