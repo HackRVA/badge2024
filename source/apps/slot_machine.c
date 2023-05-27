@@ -645,8 +645,8 @@ static void render_reels(void)
 static void render_instructions(void)
 {
 	FbColor(GREY16);
-	FbMove(REND_PADDING, LCD_YSIZE - REND_PADDING - REND_CHAR_WIDTH);
-	FbWriteString("<Exit  ^/v");
+	FbMove(5, LCD_YSIZE - REND_PADDING - 3 * REND_CHAR_WIDTH);
+	FbWriteString("Up: incr bet\nDn: decr bet\nPress B to Exit");
 }
 
 static void render_credits(void)
@@ -767,7 +767,8 @@ static void slot_machine_bet(void)
 		bet_decrease();
 		render();
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
 	{
 		slot_machine_state = SLOT_MACHINE_EXIT;
 	}
