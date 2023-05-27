@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "new_badge_monsters_assets.h"
+#include "menu.h"
 #include "dynmenu.h"
 
 struct new_monster
@@ -15,14 +16,15 @@ struct new_monster
     const struct asset *asset;
 };
 
+void badge_monsters_cb(struct menu_t *m);
 void app_init(void);
 void exit_app(void);
 char *key_from_monster(const struct new_monster *m, char *key, size_t len);
 void set_monster_owned(const int monster_id, const bool owned);
 void enable_monster(const int monster_id);
 // loads all monsters from flash key-value store
-void load_from_flash();
-void save_to_flash();
+void load_from_flash(void);
+void save_to_flash(void);
 
 
 //***************** MENUS ******************
@@ -39,8 +41,10 @@ void setup_monster_menu(void);
 void setup_main_menu(void);
 void game_menu(void);
 void render_monster(void);
+void render_screen(void);
 void render_screen_save_monsters(void);
 void show_message(const char *message);
+void trade_monsters(void);
 
 #ifdef __linux__
 void enable_all_monsters(void);

@@ -11,6 +11,7 @@ unsigned short get_payload(IR_DATA* packet);
 void process_packet(IR_DATA* packet);
 void check_for_incoming_packets(void);
 void ir_packet_callback(const IR_DATA *data);
+void build_and_send_packet(unsigned char address, unsigned short badge_id, unsigned short payload);
 
 /*
  * We have 16 bits of payload. Let's say the high order 4 bits are the opcode.
