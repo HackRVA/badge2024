@@ -1,10 +1,11 @@
-#include "new_badge_monsters_ir.h"
-#include "new_badge_monsters.h"
-#include "init.h"
 #include <string.h>
 #ifdef __linux__
 #include <stdio.h>
 #endif
+
+#include "new_badge_monsters_ir.h"
+#include "new_badge_monsters.h"
+#include "init.h"
 
 /* These need to be protected from interrupts. */
 #define QUEUE_SIZE 5
@@ -30,8 +31,7 @@ void unregister_ir_packet_callback(void (*callback)(const IR_DATA *))
     ir_remove_callback(callback, BADGE_IR_GAME_ADDRESS);
 }
 
-
-void build_and_send_packet(unsigned char address, unsigned short badge_id, unsigned short payload)
+void build_and_send_packet(uint8_t address, uint16_t badge_id, uint16_t payload)
 {
     uint8_t byte_payload[2] = {payload >> 8, payload & 0xFF};
     IR_DATA ir_packet = {
@@ -45,7 +45,7 @@ void build_and_send_packet(unsigned char address, unsigned short badge_id, unsig
 
 }
 
-unsigned short get_payload(IR_DATA* packet)
+uint16_t get_payload(IR_DATA* packet)
 {
     return packet->data[0] << 8 | packet->data[1];
 }
@@ -88,8 +88,10 @@ void ir_packet_callback(const IR_DATA *data)
 	int next_queue_in;
 
 	next_queue_in = (queue_in + 1) % QUEUE_SIZE;
-	if (next_queue_in == queue_out) /* queue is full, drop packet */
+	if (next_queue_in == queue_out) {
+        /* queue is full, drop packet */
 		return;
+    }
     size_t data_size = data->data_length;
     if (QUEUE_DATA_SIZE < data_size) {
         data_size = QUEUE_DATA_SIZE;

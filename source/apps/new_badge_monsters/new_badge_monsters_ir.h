@@ -1,17 +1,19 @@
 #if !defined(NEW_BADGE_MONSTERS_IR_H)
 #define NEW_BADGE_MONSTERS_IR_H
 
+#include <stdint.h>
+
 #include "ir.h"
 
 typedef void (*ir_callback)(const IR_DATA *);
 
 void register_ir_packet_callback(ir_callback callback);
 void unregister_ir_packet_callback(ir_callback callback);
-unsigned short get_payload(IR_DATA* packet);
+uint16_t get_payload(IR_DATA* packet);
 void process_packet(IR_DATA* packet);
 void check_for_incoming_packets(void);
 void ir_packet_callback(const IR_DATA *data);
-void build_and_send_packet(unsigned char address, unsigned short badge_id, unsigned short payload);
+void build_and_send_packet(uint8_t address, uint16_t badge_id, uint16_t payload);
 
 /*
  * We have 16 bits of payload. Let's say the high order 4 bits are the opcode.
