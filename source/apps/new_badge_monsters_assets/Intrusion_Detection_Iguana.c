@@ -6,12 +6,13 @@ static const unsigned char new_badge_monsters_assets_Intrusion_Detection_Iguana_
 
 };
 
-static const unsigned char new_badge_monsters_assets_Intrusion_Detection_Iguana_cmap[5][3] = {
-{250, 162, 27},
-{131, 118, 156},
-{81, 166, 220},
-{72, 184, 93},
-{0, 135, 81},
+static const unsigned char new_badge_monsters_assets_Intrusion_Detection_Iguana_cmap[6][3] = {
+    {250, 162, 27},
+    {131, 118, 156},
+    {81, 166, 220},
+    {72, 184, 93},
+    {0, 135, 81},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_Intrusion_Detection_Iguana = {

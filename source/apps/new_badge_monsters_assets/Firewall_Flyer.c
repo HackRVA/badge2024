@@ -6,12 +6,13 @@ static const unsigned char new_badge_monsters_assets_Firewall_Flyer_data[8192] =
 
 };
 
-static const unsigned char new_badge_monsters_assets_Firewall_Flyer_cmap[5][3] = {
-{255, 241, 233},
-{195, 195, 198},
-{81, 166, 220},
-{173, 162, 153},
-{96, 88, 79},
+static const unsigned char new_badge_monsters_assets_Firewall_Flyer_cmap[6][3] = {
+    {255, 241, 233},
+    {195, 195, 198},
+    {81, 166, 220},
+    {173, 162, 153},
+    {96, 88, 79},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_Firewall_Flyer = {

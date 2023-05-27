@@ -6,14 +6,15 @@ static const unsigned char new_badge_monsters_assets_Spam_Spider_data[8192] = {
 
 };
 
-static const unsigned char new_badge_monsters_assets_Spam_Spider_cmap[7][3] = {
-{255, 241, 233},
-{247, 236, 47},
-{247, 235, 229},
-{227, 216, 214},
-{195, 195, 198},
-{28, 43, 83},
-{237, 27, 81},
+static const unsigned char new_badge_monsters_assets_Spam_Spider_cmap[8][3] = {
+    {255, 241, 233},
+    {247, 236, 47},
+    {247, 235, 229},
+    {227, 216, 214},
+    {195, 195, 198},
+    {28, 43, 83},
+    {237, 27, 81},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_Spam_Spider = {

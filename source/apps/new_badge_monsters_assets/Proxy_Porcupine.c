@@ -6,11 +6,12 @@ static const unsigned char new_badge_monsters_assets_Proxy_Porcupine_data[8192] 
 
 };
 
-static const unsigned char new_badge_monsters_assets_Proxy_Porcupine_cmap[4][3] = {
-{195, 195, 198},
-{237, 27, 81},
-{171, 82, 54},
-{28, 43, 83},
+static const unsigned char new_badge_monsters_assets_Proxy_Porcupine_cmap[5][3] = {
+    {195, 195, 198},
+    {237, 27, 81},
+    {171, 82, 54},
+    {28, 43, 83},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_Proxy_Porcupine = {
