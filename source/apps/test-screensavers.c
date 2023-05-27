@@ -2,6 +2,7 @@
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
+#include "display.h"
 #include "screensavers.h"
 #include "badge.h"
 
@@ -58,6 +59,7 @@ static void next_screensaver(int direction)
 		current_screen_saver = num_screen_savers - 1;
 	if (current_screen_saver >= num_screen_savers)
 		current_screen_saver = 0; 
+	display_reset();
 	FbBackgroundColor(BLACK);
 	FbClear();
 	screensaver_set_animation_count(0);
@@ -109,6 +111,8 @@ static void test_screensavers_exit(void)
 	returnToMenus();
 	/* Restore the original screensaver_disabled value */
 	badge_system_data()->screensaver_disabled = saved_screensaver_disabled;
+	display_reset();
+	menu_redraw_main_menu = 1;
 }
 
 void test_screensavers_cb(__attribute__((unused)) struct menu_t *m)
