@@ -263,13 +263,13 @@ static void render_end_game_screen(void)
 		FbClear();
 		FbColor(WHITE);
 		FbMove(20, 40);
-		FbWriteString("Thank you\nfor playing!\n\n\nPress button\nto leave");
+		FbWriteString("Thank you\nfor playing!\n\n\nPress B button\nto exit");
 		FbSwapBuffers();
 		already_rendered = 1;
 	}
 
-    int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
 	{
 		game_of_life_state = GAME_OF_LIFE_EXIT;
 		already_rendered = 0;
@@ -295,7 +295,7 @@ static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) || BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
 	{
 		game_of_life_state = GAME_OF_LIFE_EXIT;
 		return;
@@ -323,7 +323,7 @@ static void render_splash_screen(void)
 {
 	FbColor(WHITE);
 	FbMove(10, 30);
-	FbWriteString("Game of Life\n\nPress A\nTo Start\n\nLeft/Right Dpad\nto exit");
+	FbWriteString("Game of Life\n\nPress A\nTo Start\n\nPress B\nto exit");
 	FbSwapBuffers();
 }
 
@@ -352,7 +352,7 @@ static void game_of_life_splash_screen(void)
 		init_cells();
 		game_of_life_state = GAME_OF_LIFE_RUN;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) || BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
 	{
 		already_rendered_splash_screen = 0;
 		game_of_life_state = GAME_OF_LIFE_EXIT;
