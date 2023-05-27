@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include "colors.h"
 #include "ir.h"
 #include "assetList.h"
@@ -68,8 +67,13 @@ static void initialize_hyperspace_star(struct hyperspace_star *s)
 	s->ly = s->y;
 	s->vx = -((LCD_XSIZE / 2) - (s->x / 256));
 	s->vy = -((LCD_YSIZE / 2) - (s->y / 256));
+	if (s->vx == 0 && s->vy == 0) {
+		s->vx = 1;
+		s->vy = 1;
+	}
 	s->vx = s->vx * 20;
 	s->vy = s->vy * 20;
+
 }
 
 static void draw_hyperspace_star(struct hyperspace_star *s)
