@@ -136,7 +136,7 @@ void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
     if (last_state != state.app_state) {
         printf("badge_monsters_cb: state %d\n", state.app_state);
         last_state = state.app_state;
-    };
+    }
 #endif
     state_to_function_map[state.app_state]();
 }
@@ -286,9 +286,10 @@ void change_menu_level(enum menu_level_t level)
             break;
         case MONSTER_MENU:
             setup_monster_menu();
-            if (state.menu.max_items > which_item)
+            if (state.menu.max_items > which_item) {
 		        state.menu.current_item = which_item; /* Stay on the same monster */
                 state.current_monster = state.menu.item[state.menu.current_item].cookie;
+            }
             state.screen_changed = true;
             break;
         case DESCRIPTION:
