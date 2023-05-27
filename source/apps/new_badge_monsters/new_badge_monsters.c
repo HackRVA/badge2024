@@ -1,4 +1,9 @@
 #include <stdint.h>
+#include <string.h>
+#ifdef __linux__
+#include <stdio.h>
+#endif
+
 #include "new_badge_monsters.h"
 #include "new_badge_monsters_assets.h"
 #include "new_badge_monsters_ir.h"
@@ -8,9 +13,6 @@
 #include "colors.h"
 #include "framebuffer.h"
 #include "key_value_storage.h"
-#include "menu.h"
-#include "stdio.h"
-#include "string.h"
 #include "utils.h"
 
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
@@ -41,6 +43,36 @@ struct new_monster new_monsters[] = {
         YELLOW,
         "Attacks from above, out of the sun",
         &new_badge_monsters_assets_Crypto_Raptor
+    }, {
+        "FirewallFlyr",
+        false,
+        GREEN,
+        "You thought no-one could get through",
+        &new_badge_monsters_assets_Firewall_Flyer
+    }, {
+        "IDIguana",
+        false,
+        BLUE,
+        "When Firewall Flyer lets you down",
+        &new_badge_monsters_assets_Intrusion_Detection_Iguana
+    }, {
+        "PentestPenguin",
+        false,
+        RED,
+        "There has to be a way in here somewhere",
+        &new_badge_monsters_assets_PenTest_Penguin
+    }, {
+        "ProxyPorcupine",
+        false,
+        GREEN,
+        "Poke those bad packets in the ...",
+        &new_badge_monsters_assets_Proxy_Porcupine
+    }, {
+        "SpamSpider",
+        false,
+        BLUE,
+        "One day you don't see any, the next they're everywhere",
+        &new_badge_monsters_assets_Spam_Spider
     }
 };
 
@@ -57,23 +89,35 @@ struct game_state {
     bool trading_monsters_enabled;
     unsigned int initial_mon;
     struct dynmenu menu;
-    struct dynmenu_item menu_item[ARRAYSIZE(new_monsters)];
+    struct dynmenu_item menu_item[20];
     enum menu_level_t menu_level;
 };
 
 static struct game_state state = {
-    0, 0, 0, 0, 0, INIT_APP_STATE, false,
-    0, {}, {}, MAIN_MENU
+    false, 0, 0, 0, 0, INIT_APP_STATE, false,
+    0, {
+        "Badge Monsters",
+        "",
+        "",
+        NULL,
+        0,
+        8,
+        0,
+        0,
+        0,
+        0xFFFFFF,
+        0x0
+	}, {}, MAIN_MENU
 };
 
-typedef void (*state_to_function_map_fn_type)();
+typedef void (*state_to_function_map_fn_type)(void);
 
 static state_to_function_map_fn_type state_to_function_map[] = {
     app_init,
     game_menu,
-    // render_screen,
+    render_screen,
     render_monster,
-    // trade_monsters,
+    trade_monsters,
     check_the_buttons,
     exit_app,
 #ifdef __linux__
@@ -87,7 +131,12 @@ static state_to_function_map_fn_type state_to_function_map[] = {
 void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
 {
 #ifdef __linux__
-    printf("badge_monsters_cb: state %d\n", state.app_state);
+    // print only state changes, or we get 100s of useless lines of output
+    static unsigned int last_state = EXIT_APP;
+    if (last_state != state.app_state) {
+        printf("badge_monsters_cb: state %d\n", state.app_state);
+        last_state = state.app_state;
+    };
 #endif
     state_to_function_map[state.app_state]();
 }
@@ -95,13 +144,16 @@ void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
 void app_init()
 {
     FbInit();
-    state.app_state = INIT_APP_STATE;
     register_ir_packet_callback(ir_packet_callback);
 #ifdef __linux__
-    printf("app_init: %lu, %lu\n", ARRAYSIZE(new_monsters), ARRAYSIZE(state.menu_item));
+    printf("app_init: %lu, %d\n", ARRAYSIZE(new_monsters), 0);
 #endif
-    dynmenu_init(&state.menu, state.menu_item, ARRAYSIZE(state.menu_item));
-
+    dynmenu_init(&state.menu, state.menu_item, ARRAYSIZE(new_monsters));
+#ifdef __linux__
+    printf("app_init: adding %s to %p", new_monsters[0].name, &state.menu);
+#endif
+    setup_main_menu();
+    dynmenu_add_item(&state.menu, new_monsters[0].name, RENDER_MONSTER, 0);
     change_menu_level(MAIN_MENU);
     state.app_state = GAME_MENU;
     state.screen_changed = true;
@@ -113,6 +165,7 @@ void app_init()
     state.initial_mon = badge_system_data()->badgeId % state.nmonsters;
     state.current_monster = state.initial_mon;
     enable_monster(state.initial_mon);
+    state.app_state = GAME_MENU;
 }
 
 void exit_app(void)
@@ -204,7 +257,7 @@ void draw_menu(void)
             }
         }
 
-        sprintf( available_monsters, "%lu", ARRAYSIZE(new_monsters));
+        sprintf( available_monsters, "%d", (int)ARRAYSIZE(new_monsters));
         sprintf( unlocked_monsters, "%d", nunlocked);
 
         FbMove(1,25);
@@ -422,6 +475,9 @@ void setup_main_menu(void)
 {
     dynmenu_clear(&state.menu);
     strcpy(state.menu.title, "Badge Monsters");
+#ifdef __linux__
+    printf("setup_main_menu\n");
+#endif
     dynmenu_add_item(&state.menu, "Monsters", RENDER_SCREEN, 0);
     dynmenu_add_item(&state.menu, "Trade Monsters", TRADE_MONSTERS, 1);
     dynmenu_add_item(&state.menu, "EXIT", EXIT_APP, 2);
@@ -444,29 +500,35 @@ void game_menu(void)
 
 void render_monster(void)
 {
-    const struct new_monster monster = new_monsters[state.current_monster];
+    const struct new_monster *monster = &new_monsters[state.current_monster];
 
+#ifdef __linux__
+    printf("render\n");
+    printf("render_monster: %s\n", monster->name);
+#endif
     FbClear();
+    FbMove(0, 10);
+    FbImage4bit(monster->asset, 0);
     if(state.current_monster == state.initial_mon)
     {
         FbMove(0,10);
         FbWriteLine("--starting-mon--");
     }
-    FbMove(0,0);
-    FbColor(monster.color);
-    FbWriteLine(monster.name);
-    FbImage4bit(monster.asset, 0);
+    // TODO: approximately center based on name length
+    FbMove(10,0);
+    FbColor(monster->color);
+    FbWriteLine(monster->name);
 
     FbColor(WHITE);
-    FbMove(43,120);
+    FbMove(43, LCD_YSIZE - 15);
     FbWriteLine("|down|");
     FbColor(GREEN);
 
-    FbMove(5, 120);
+    FbMove(5, LCD_YSIZE - 15);
     FbWriteLine("<Back");
 
 
-    FbMove(90,120);
+    FbMove(90, LCD_YSIZE - 15);
     FbWriteLine("desc>");
 
     FbSwapBuffers();
@@ -513,3 +575,24 @@ void render_screen_save_monsters(void) {
     FbImage4bit(new_monsters[current_index].asset, 0);
 }
 
+void trade_monsters(void)
+{
+    static int counter = 0;
+
+    counter++;
+    if ((counter % 10) == 0) { /* transmit our monster IR packet */
+        build_and_send_packet(BADGE_IR_GAME_ADDRESS, BADGE_IR_BROADCAST_ID,
+                              (OPCODE_XMIT_MONSTER << 12) | (state.initial_mon & 0x01ff));
+        audio_out_beep(500, 100);
+    }
+    if (!state.trading_monsters_enabled) {
+        FbClear();
+        FbMove(10, 60);
+        FbWriteLine("TRADING");
+        FbMove(10, 70);
+        FbWriteLine("MONSTERS!");
+        state.screen_changed = true;
+        state.trading_monsters_enabled = true;
+    }
+    state.app_state = RENDER_SCREEN;
+}
