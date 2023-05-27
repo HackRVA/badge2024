@@ -107,7 +107,7 @@ static struct game_state state = {
         0,
         0xFFFFFF,
         0x0
-	}, {}, MAIN_MENU
+    }, {}, MAIN_MENU
 };
 
 typedef void (*state_to_function_map_fn_type)(void);
@@ -230,12 +230,12 @@ void enable_monster(int monster_id)
 #ifdef __linux__
 void enable_all_monsters(void)
 {
-	for (size_t i = 0; i < ARRAYSIZE(new_monsters); i++)
-		enable_monster(i);
-	FbClear();
-	FbMove(2, 2);
-	FbWriteString("ALL MONSTERS\nENABLED!");
-	state.app_state = RENDER_SCREEN;
+    for (size_t i = 0; i < ARRAYSIZE(new_monsters); i++)
+        enable_monster(i);
+    FbClear();
+    FbMove(2, 2);
+    FbWriteString("ALL MONSTERS\nENABLED!");
+    state.app_state = RENDER_SCREEN;
 }
 #endif
 
@@ -274,10 +274,10 @@ void change_menu_level(enum menu_level_t level)
     static int which_item = -1;
 
     if (which_item == -1)
-	    which_item = state.initial_mon;
+        which_item = state.initial_mon;
 
     if (strcmp(state.menu.title, "Monsters") == 0)
-	    which_item = state.menu.current_item;
+        which_item = state.menu.current_item;
 
     switch(level){
         case MAIN_MENU:
@@ -287,7 +287,7 @@ void change_menu_level(enum menu_level_t level)
         case MONSTER_MENU:
             setup_monster_menu();
             if (state.menu.max_items > which_item) {
-		        state.menu.current_item = which_item; /* Stay on the same monster */
+        state.menu.current_item = which_item; /* Stay on the same monster */
                 state.current_monster = state.menu.item[state.menu.current_item].cookie;
             }
             state.screen_changed = true;
@@ -321,19 +321,19 @@ void check_the_buttons(void)
 
     /* If we are trading monsters, stop trading monsters on a button press */
     if (state.trading_monsters_enabled) {
-		if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-			state.trading_monsters_enabled = false;
-			state.app_state = GAME_MENU;
-			state.screen_changed = true;
-			return;
-		}
+        if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+            state.trading_monsters_enabled = false;
+            state.app_state = GAME_MENU;
+            state.screen_changed = true;
+            return;
+        }
     }
 
     switch(state.menu_level){
@@ -341,13 +341,13 @@ void check_the_buttons(void)
             if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
             {
                 dynmenu_change_current_selection(&state.menu, -1);
-		        state.screen_changed = true;
+                state.screen_changed = true;
                 something_changed = true;
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
             {
                 dynmenu_change_current_selection(&state.menu, 1);
-		        state.screen_changed = true;
+                state.screen_changed = true;
                 something_changed = true;
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
@@ -357,7 +357,7 @@ void check_the_buttons(void)
             {
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
+            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
                 switch(state.menu.current_item){
                     case 0:
@@ -371,9 +371,9 @@ void check_the_buttons(void)
                         state.app_state = EXIT_APP;
                         break;
 #ifdef __linux__
-		            case 3:
-			            state.app_state = ENABLE_ALL_MONSTERS;
-			            break;
+                    case 3:
+                        state.app_state = ENABLE_ALL_MONSTERS;
+                        break;
 #endif
                 }
             }
@@ -383,19 +383,19 @@ void check_the_buttons(void)
             if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
             {
                 dynmenu_change_current_selection(&state.menu, -1);
-		        state.screen_changed = true;
+                state.screen_changed = true;
                 state.current_monster = state.menu.item[state.menu.current_item].cookie;
                 render_monster();
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
             {
                 dynmenu_change_current_selection(&state.menu, 1);
-		        state.screen_changed = true;
+                state.screen_changed = true;
                 state.current_monster = state.menu.item[state.menu.current_item].cookie;
                 render_monster();
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
+            BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
                 change_menu_level(MAIN_MENU);
                 something_changed = true;
@@ -405,7 +405,7 @@ void check_the_buttons(void)
                 show_message(new_monsters[state.current_monster].blurb);
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
+            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
                 #ifdef __linux__
                     print_menu_info();
@@ -423,7 +423,7 @@ void check_the_buttons(void)
                 change_menu_level(MONSTER_MENU);
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
+            BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
@@ -432,7 +432,7 @@ void check_the_buttons(void)
                 change_menu_level(MONSTER_MENU);
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
+            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
@@ -442,12 +442,12 @@ void check_the_buttons(void)
         }
 
     if (state.trading_monsters_enabled && !something_changed) {
-	    state.app_state = TRADE_MONSTERS;
-	    return;
+        state.app_state = TRADE_MONSTERS;
     }
 
-    if (something_changed && state.app_state == CHECK_THE_BUTTONS)
+    if (something_changed && state.app_state == CHECK_THE_BUTTONS) {
         state.app_state = GAME_MENU;
+    }
     return;
 }
 
