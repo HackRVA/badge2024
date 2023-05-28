@@ -23,6 +23,7 @@
 #include "game_of_life.h"
 #include "hacking_simulator.h"
 #include "lunarlander.h"
+#include "pong.h"
 #include "qc.h"
 #include "smashout.h"
 #include "username.h"
@@ -45,6 +46,7 @@ static const struct menu_t games_m[] = {
    {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, },
    {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
    {"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, },
+   {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, },
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
    {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
    {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, },

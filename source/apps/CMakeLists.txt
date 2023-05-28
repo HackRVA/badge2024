@@ -14,6 +14,7 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/lunarlander.c
         ${CMAKE_CURRENT_LIST_DIR}/magic-8-ball.c
         ${CMAKE_CURRENT_LIST_DIR}/maze.c
+        ${CMAKE_CURRENT_LIST_DIR}/pong.c
         ${CMAKE_CURRENT_LIST_DIR}/qc.c
         ${CMAKE_CURRENT_LIST_DIR}/smashout.c
         ${CMAKE_CURRENT_LIST_DIR}/username.c
