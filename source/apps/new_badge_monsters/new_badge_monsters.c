@@ -24,6 +24,7 @@ enum app_states {
     RENDER_MONSTER,
     TRADE_MONSTERS,
     CHECK_THE_BUTTONS,
+
     EXIT_APP,
     ENABLE_ALL_MONSTERS
 };
@@ -31,49 +32,217 @@ enum app_states {
 /***************************************** GLOBALS ************************************************/
 
 struct new_monster new_monsters[] = {
-    {
-        "AccessGator",
-        true,
-        RED,
-        "Hides in your access control config, waiting to bite you on the a**",
-        &new_badge_monsters_assets_Access_Control_Alligator
-    }, {
-        "CryptoRaptor",
-        false,
-        YELLOW,
-        "Attacks from above, out of the sun",
-        &new_badge_monsters_assets_Crypto_Raptor
-    }, {
-        "FirewallFlyr",
-        false,
-        GREEN,
-        "You thought no-one could get through",
-        &new_badge_monsters_assets_Firewall_Flyer
-    }, {
-        "IDIguana",
-        false,
-        BLUE,
-        "When Firewall Flyer lets you down",
-        &new_badge_monsters_assets_Intrusion_Detection_Iguana
-    }, {
-        "PentestPenguin",
-        false,
-        RED,
-        "There has to be a way in here somewhere",
-        &new_badge_monsters_assets_PenTest_Penguin
-    }, {
-        "ProxyPorcupine",
-        false,
-        GREEN,
-        "Poke those bad packets in the ...",
-        &new_badge_monsters_assets_Proxy_Porcupine
-    }, {
-        "SpamSpider",
-        false,
-        BLUE,
-        "One day you don't see any, the next they're everywhere",
-        &new_badge_monsters_assets_Spam_Spider
-    }
+ {
+      "cryptoraptor",
+      false,
+      RED,
+      "This one only roars in cryptocurrency",
+      &new_badge_monsters_assets_Crypto_Raptor
+      }
+, {
+      "firewallFlyer",
+      false,
+      RED,
+      "Can't touch this, unless you're an allowed IP",
+      &new_badge_monsters_assets_Firewall_Flyer
+      }
+ , {
+      "vpnVulture",
+      false,
+      RED,
+      "Flies over geo-restrictions with ease",
+      &new_badge_monsters_assets_VPN_Vulture
+      }
+, {
+      "trojanTurtle",
+      false,
+      RED,
+      "Slow and sneaky, never underestimate it",
+      &new_badge_monsters_assets_Trojan_Turtle
+      }
+, {
+      "phishinPhoenix",
+      false,
+      RED,
+      "Spams your inbox, then rises from its ashes",
+      &new_badge_monsters_assets_Phishing_Phoenix
+      }
+, {
+      "hackerHawk",
+      false,
+      RED,
+      "Always watching from above, waiting to swoop in",
+      &new_badge_monsters_assets_Hacker_Hawk
+      }
+, {
+      "malwareMantis",
+      false,
+      RED,
+      "Prays on your system's vulnerabilities",
+      &new_badge_monsters_assets_Malware_Mantis
+      }
+, {
+      "ddosDragon",
+      false,
+      RED,
+      "Breathes a fire of traffic at your servers",
+      &new_badge_monsters_assets_DDOS_Dragon
+      }
+, {
+      "keylogKoala",
+      false,
+      RED,
+      "It's not eucalyptus leaves it's after",
+      &new_badge_monsters_assets_Keylogger_Koala
+      }
+, {
+      "wormWombat",
+      false,
+      RED,
+      "Burrows deep into your system",
+      &new_badge_monsters_assets_Worm_Wombat
+      }
+, {
+      "adwareAnteater",
+      false,
+      RED,
+      "Feeds on your browsing habits",
+      &new_badge_monsters_assets_Adware_Anteater
+      }
+, {
+      "rootkitRhino",
+      false,
+      RED,
+      "Charges at your system's core",
+      &new_badge_monsters_assets_Rootkit_Rhino
+      }
+, {
+      "botnetBat",
+      false,
+      RED,
+      "Flies in the darkness of the web",
+      &new_badge_monsters_assets_Botnet_Bat
+      }
+/* , {
+      "dnsDolphin",
+      false,
+      RED,
+      "Loves to play redirect games",
+      &new_badge_monsters_assets_DNS_Dolphin
+      }
+ */, {
+      "sslShark",
+      false,
+      RED,
+      "Swims in a sea of encrypted data",
+      &new_badge_monsters_assets_SSL_Shark
+      }
+ , {
+      "spamSpider",
+      false,
+      RED,
+      "Weaves a web of unwanted emails",
+      &new_badge_monsters_assets_Spam_Spider
+      }
+/* , {
+      "ransomRabbit",
+      false,
+      RED,
+      "Hops into your files, then locks them up",
+      &new_badge_monsters_assets_Ransomware_Rabbit
+      }
+, {
+      "snifferSnail",
+      false,
+      RED,
+      "Slow but can smell your data from miles away",
+      &new_badge_monsters_assets_Sniffer_Snail
+      }
+, {
+      "backdoorBee",
+      false,
+      RED,
+      "Buzzes into your system through the back",
+      &new_badge_monsters_assets_Backdoor_Bee
+      }
+, {
+      "exploitEagle",
+      false,
+      RED,
+      "Soars high to find unpatched vulnerabilities",
+      &new_badge_monsters_assets_Exploit_Eagle
+      }
+, {
+      "brutForceBaboon",
+      false,
+      RED,
+      "Not subtle, but sometimes it works",
+      &new_badge_monsters_assets_Brute_Force_Baboon
+      }
+, {
+      "socEngrSquirrel",
+      false,
+      RED,
+      "Collects your info like acorns",
+      &new_badge_monsters_assets_Social_Engineering_Squirrel
+      }
+, {
+      "packSnifPuma",
+      false,
+      RED,
+      "Stealthily stalks your network traffic",
+      &new_badge_monsters_assets_Packet_Sniffer_Puma
+      }
+ */, {
+      "proxyPorcupine",
+      false,
+      RED,
+      "Its spikes are like multiple IP addresses",
+      &new_badge_monsters_assets_Proxy_Porcupine
+      }
+/* , {
+      "2FactorTiger",
+      false,
+      RED,
+      "Double the security, double the fun",
+      &new_badge_monsters_assets_Two_Factor_Tiger
+      }
+ */, {
+      "intrDetctIguan",
+      false,
+      RED,
+      "Keeps a cold-blooded watch on your network",
+      &new_badge_monsters_assets_Intrusion_Detection_Iguana
+      }
+ , {
+      "penTestPengo",
+      false,
+      RED,
+      "Slides into your defenses with ease",
+      &new_badge_monsters_assets_PenTest_Penguin
+      }
+, {
+      "accesCtrlGator",
+      false,
+      RED,
+      "Keeps unauthorized users at bay, snappily",
+      &new_badge_monsters_assets_Access_Control_Alligator
+      }
+/* , {
+      "idsImpala",
+      false,
+      RED,
+      "Fast and efficient at detecting intrusions",
+      &new_badge_monsters_assets_IDS_Impala
+      }
+, {
+      "siemSloth",
+      false,
+      RED,
+      "Slow but steady wins the security race",
+      &new_badge_monsters_assets_SIEM_Sloth
+      }
+ */
 };
 
 /*
