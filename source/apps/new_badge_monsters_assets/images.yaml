@@ -70,6 +70,10 @@ images:
   - name: "Rootkit Rhino"
     filename: "RootkitRhino.png"
     bits: 4
+  - name: "Sniffer Snail"
+    shortname: "snifferSnail"
+    filename: "SnifferSnail.png"
+    bits: 4
   - name: "Social-Engineer Squirrel"
     filename: "SocialEngineerSquirrel.png"
     bits: 4

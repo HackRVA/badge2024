@@ -29,6 +29,7 @@ extern const struct asset new_badge_monsters_assets_Ransomware_Rabbit;
 extern const struct asset new_badge_monsters_assets_Rootkit_Rhino;
 extern const struct asset new_badge_monsters_assets_SIEM_Sloth;
 extern const struct asset new_badge_monsters_assets_SSL_Shark;
+extern const struct asset new_badge_monsters_assets_Sniffer_Snail;
 extern const struct asset new_badge_monsters_assets_Social_Engineer_Squirrel;
 extern const struct asset new_badge_monsters_assets_Spam_Spider;
 extern const struct asset new_badge_monsters_assets_Trojan_Turtle;
