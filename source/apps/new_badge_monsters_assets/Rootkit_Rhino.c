@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include "assetList.h"
 #include "new_badge_monsters_assets.h"
 
 static const unsigned char new_badge_monsters_assets_Rootkit_Rhino_data[8192] = {
@@ -7,15 +9,16 @@ static const unsigned char new_badge_monsters_assets_Rootkit_Rhino_data[8192] = 
 };
 
 static const unsigned char new_badge_monsters_assets_Rootkit_Rhino_cmap[6][3] = {
-{195, 195, 198},
-{173, 168, 184},
-{131, 118, 156},
-{96, 88, 79},
-{237, 27, 81},
-{ 0, 0, 0 }
+    {195, 195, 198},
+    {173, 168, 184},
+    {131, 118, 156},
+    {96, 88, 79},
+    {237, 27, 81},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_Rootkit_Rhino = {
+    .assetId = 0,
     .type = PICTURE4BIT,
     .seqNum = 1,
     .x = 128,

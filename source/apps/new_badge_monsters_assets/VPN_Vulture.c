@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include "assetList.h"
 #include "new_badge_monsters_assets.h"
 
 static const unsigned char new_badge_monsters_assets_VPN_Vulture_data[8192] = {
@@ -7,16 +9,17 @@ static const unsigned char new_badge_monsters_assets_VPN_Vulture_data[8192] = {
 };
 
 static const unsigned char new_badge_monsters_assets_VPN_Vulture_cmap[7][3] = {
-{255, 241, 233},
-{247, 236, 47},
-{250, 162, 27},
-{81, 166, 220},
-{241, 118, 166},
-{131, 118, 156},
-{ 0, 0, 0 }
+    {255, 241, 233},
+    {247, 236, 47},
+    {250, 162, 27},
+    {81, 166, 220},
+    {241, 118, 166},
+    {131, 118, 156},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_VPN_Vulture = {
+    .assetId = 0,
     .type = PICTURE4BIT,
     .seqNum = 1,
     .x = 128,

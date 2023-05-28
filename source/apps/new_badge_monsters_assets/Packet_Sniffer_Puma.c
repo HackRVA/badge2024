@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include "assetList.h"
 #include "new_badge_monsters_assets.h"
 
 static const unsigned char new_badge_monsters_assets_Packet_Sniffer_Puma_data[8192] = {
@@ -7,18 +9,19 @@ static const unsigned char new_badge_monsters_assets_Packet_Sniffer_Puma_data[81
 };
 
 static const unsigned char new_badge_monsters_assets_Packet_Sniffer_Puma_cmap[9][3] = {
-{255, 241, 233},
-{252, 204, 171},
-{247, 236, 47},
-{93, 187, 77},
-{0, 135, 81},
-{171, 82, 54},
-{237, 27, 81},
-{127, 36, 84},
-{ 0, 0, 0 }
+    {255, 241, 233},
+    {252, 204, 171},
+    {247, 236, 47},
+    {93, 187, 77},
+    {0, 135, 81},
+    {171, 82, 54},
+    {237, 27, 81},
+    {127, 36, 84},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_Packet_Sniffer_Puma = {
+    .assetId = 0,
     .type = PICTURE4BIT,
     .seqNum = 1,
     .x = 128,

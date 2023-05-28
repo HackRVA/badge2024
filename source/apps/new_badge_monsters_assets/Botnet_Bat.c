@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include "assetList.h"
 #include "new_badge_monsters_assets.h"
 
 static const unsigned char new_badge_monsters_assets_Botnet_Bat_data[8192] = {
@@ -7,13 +9,14 @@ static const unsigned char new_badge_monsters_assets_Botnet_Bat_data[8192] = {
 };
 
 static const unsigned char new_badge_monsters_assets_Botnet_Bat_cmap[4][3] = {
-{171, 82, 54},
-{237, 27, 81},
-{96, 88, 79},
-{ 0, 0, 0 }
+    {171, 82, 54},
+    {237, 27, 81},
+    {96, 88, 79},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_Botnet_Bat = {
+    .assetId = 0,
     .type = PICTURE4BIT,
     .seqNum = 1,
     .x = 128,

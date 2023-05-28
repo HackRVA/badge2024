@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include "assetList.h"
 #include "new_badge_monsters_assets.h"
 
 static const unsigned char new_badge_monsters_assets_Intrusion_Detection_Iguana_data[8192] = {
@@ -16,6 +18,7 @@ static const unsigned char new_badge_monsters_assets_Intrusion_Detection_Iguana_
 };
 
 const struct asset new_badge_monsters_assets_Intrusion_Detection_Iguana = {
+    .assetId = 0,
     .type = PICTURE4BIT,
     .seqNum = 1,
     .x = 128,

@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include "assetList.h"
 #include "new_badge_monsters_assets.h"
 
 static const unsigned char new_badge_monsters_assets_SSL_Shark_data[8192] = {
@@ -7,19 +9,20 @@ static const unsigned char new_badge_monsters_assets_SSL_Shark_data[8192] = {
 };
 
 static const unsigned char new_badge_monsters_assets_SSL_Shark_cmap[10][3] = {
-{255, 241, 233},
-{253, 226, 225},
-{195, 195, 198},
-{211, 168, 187},
-{106, 177, 222},
-{81, 166, 220},
-{241, 118, 166},
-{140, 162, 208},
-{122, 154, 206},
-{ 0, 0, 0 }
+    {255, 241, 233},
+    {253, 226, 225},
+    {195, 195, 198},
+    {211, 168, 187},
+    {106, 177, 222},
+    {81, 166, 220},
+    {241, 118, 166},
+    {140, 162, 208},
+    {122, 154, 206},
+    {0, 0, 0}
 };
 
 const struct asset new_badge_monsters_assets_SSL_Shark = {
+    .assetId = 0,
     .type = PICTURE4BIT,
     .seqNum = 1,
     .x = 128,

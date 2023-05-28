@@ -1,3 +1,5 @@
+#include <stddef.h>
+#include "assetList.h"
 #include "new_badge_monsters_assets.h"
 
 static const unsigned char new_badge_monsters_assets_Access_Control_Alligator_data[8192] = {
@@ -19,6 +21,7 @@ static const unsigned char new_badge_monsters_assets_Access_Control_Alligator_cm
 };
 
 const struct asset new_badge_monsters_assets_Access_Control_Alligator = {
+    .assetId = 0,
     .type = PICTURE4BIT,
     .seqNum = 1,
     .x = 128,
