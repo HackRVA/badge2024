@@ -64,8 +64,8 @@ images:
     shortname: "phishinPhoenix"
     filename: "PhishingPhoenix.png"
     bits: 4
-  - name: "Ransomeware Rabbit"
-    filename: "RansomewareRabbit.png"
+  - name: "Ransomware Rabbit"
+    filename: "RansomwareRabbit.png"
     bits: 4
   - name: "Rootkit Rhino"
     filename: "RootkitRhino.png"
