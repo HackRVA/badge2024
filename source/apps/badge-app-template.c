@@ -95,7 +95,7 @@ static void myprogram_init(void)
 	screen_changed = 1;
 }
 
-static void check_buttons()
+static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
@@ -108,7 +108,7 @@ static void check_buttons()
 	}
 }
 
-static void draw_screen()
+static void draw_screen(void)
 {
 	if (!screen_changed)
 		return;
@@ -119,13 +119,13 @@ static void draw_screen()
 	screen_changed = 0;
 }
 
-static void myprogram_run()
+static void myprogram_run(void)
 {
 	check_buttons();
 	draw_screen();
 }
 
-static void myprogram_exit()
+static void myprogram_exit(void)
 {
 	myprogram_state = MYPROGRAM_INIT; /* So that when we start again, we do not immediately exit */
 	returnToMenus();
