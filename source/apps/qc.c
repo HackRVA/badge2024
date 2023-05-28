@@ -28,6 +28,8 @@ void ir_callback(const IR_DATA * ir_data) {
     QC_IR = ir_data->data[0];
 }
 
+static unsigned char screen_brightness = 255;
+
 struct qc_button {
     int button;
     const char *name;
@@ -196,6 +198,10 @@ static bool qc_accel(void)
     if (abs(a.z) > abs(max_accel)) {
         max_accel = a.z;
 	max_axis = a.z < 0 ? 4 : 5;
+	if (a.z < 0) {
+		screen_brightness = 0;
+		led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, screen_brightness);
+	}
     }
     snprintf(msg, sizeof(msg), "Max Accel: %s\n", axis_name[max_axis]);
     FbWriteString(msg);
@@ -313,5 +319,10 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
 
             if (redraw)
                 FbSwapBuffers();
+
+	    if (screen_brightness < 255) {
+		screen_brightness++;
+		led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, screen_brightness);
+	    }
     }
 }
