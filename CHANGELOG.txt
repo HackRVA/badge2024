@@ -1,0 +1,8 @@
+(Not a true CHANGELOG, this is a running list of notes about changes in the new_badge_monsters branch)
+
+1. Added 128x128 version of all Bill's creations in /new_badge_monster_assets/ directory.
+2. Refactored `tools/asset_converter.py`, fixed some apparent bugs, and generated files for all assets.
+3. added script, configuration file for `cpplint` linting of C code, cleaned up some issues.
+4. refactored `badge_monsters.c/h` into the /new_badge_monsters/ sub-directory, split out IR functions
+into a separate file.
+5. Revised data structures and code to support use of `FbImage4Bit` for drawing monsters.
