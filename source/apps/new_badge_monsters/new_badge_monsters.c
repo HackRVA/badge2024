@@ -1,8 +1,5 @@
 #include <stdint.h>
 #include <string.h>
-#ifdef __linux__
-#include <stdio.h>
-#endif
 
 #include "new_badge_monsters.h"
 #include "new_badge_monsters_assets.h"
@@ -17,13 +14,20 @@
 
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
 
+#ifdef __linux__
+#include <stdio.h>
+#define LOG(...) printf(__VA_ARGS__)
+#else
+#define LOG(...)
+#endif
+
 enum app_states {
-    INIT_APP_STATE,
-    GAME_MENU,
-    RENDER_SCREEN,
-    RENDER_MONSTER,
+    INIT_APP_STATE, //0
+    GAME_MENU,      //1
+    RENDER_SCREEN,  //2
+    RENDER_MONSTER, //3
     TRADE_MONSTERS,
-    CHECK_THE_BUTTONS,
+    CHECK_THE_BUTTONS, //5
 
     EXIT_APP,
     ENABLE_ALL_MONSTERS
@@ -33,18 +37,18 @@ enum app_states {
 
 struct new_monster new_monsters[] = {
     {
+        "cryptoraptor",
+        true,
+        RED,
+        "This one only roars in cryptocurrency",
+        &new_badge_monsters_assets_Crypto_Raptor
+    }
+  , {
         "2FactorTiger",
         false,
         RED,
         "Double the security, double the fun",
         &new_badge_monsters_assets_Two_Factor_Tiger
-    }
-  , {
-        "cryptoraptor",
-        false,
-        RED,
-        "This one only roars in cryptocurrency",
-        &new_badge_monsters_assets_Crypto_Raptor
     }
   , {
         "firewallFlyer",
@@ -295,14 +299,13 @@ static state_to_function_map_fn_type state_to_function_map[] = {
 
 /***************************************** End of GLOBALS *****************************************/
 
-
 void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
 {
 #ifdef __linux__
     // print only state changes, or we get 100s of useless lines of output
     static unsigned int last_state = EXIT_APP;
     if (last_state != state.app_state) {
-        printf("badge_monsters_cb: state %d\n", state.app_state);
+        LOG("badge_monsters_cb: state %d\n", state.app_state);
         last_state = state.app_state;
     }
 #endif
@@ -313,15 +316,9 @@ void app_init()
 {
     FbInit();
     register_ir_packet_callback(ir_packet_callback);
-#ifdef __linux__
-    printf("app_init: %lu, %d\n", ARRAYSIZE(new_monsters), 0);
-#endif
+    LOG("app_init: %lu, %d\n", ARRAYSIZE(new_monsters), 0);
     dynmenu_init(&state.menu, state.menu_item, ARRAYSIZE(new_monsters));
-#ifdef __linux__
-    printf("app_init: adding %s to %p", new_monsters[0].name, &state.menu);
-#endif
     setup_main_menu();
-    dynmenu_add_item(&state.menu, new_monsters[0].name, RENDER_MONSTER, 0);
     change_menu_level(MAIN_MENU);
     state.app_state = GAME_MENU;
     state.screen_changed = true;
@@ -385,14 +382,13 @@ void set_monster_owned(const int monster_id, const bool owned)
 
 void enable_monster(int monster_id)
 {
-    if(monster_id < 0 || (size_t) monster_id > ARRAYSIZE(new_monsters) - 1)
+    if(monster_id < 0 || (size_t) monster_id > ARRAYSIZE(new_monsters) - 1) {
+        LOG("enable_monster: index %d is out of bounds!\n", monster_id);
         return;
-
-    new_monsters[monster_id].owned = true;
+    }
+    set_monster_owned(monster_id, true);
     audio_out_beep(900, 200);
-    #ifdef __linux__
-        printf("enabling monster: %d\n", monster_id);
-    #endif
+    LOG("enabled monster: %d\n", monster_id);
 }
 
 #ifdef __linux__
@@ -410,6 +406,10 @@ void enable_all_monsters(void)
 
 //********************************** MENUS *****************************************
 
+/*
+ * Draws the menu from the current state. If menu is main menu, add a line with counts
+ * of unlocked and total monsters.
+ */
 void draw_menu(void)
 {
     dynmenu_draw(&state.menu);
@@ -440,6 +440,7 @@ void draw_menu(void)
 void change_menu_level(enum menu_level_t level)
 {
     static int which_item = -1;
+    LOG("change_menu_level: menu title: %s\n", state.menu.title);
 
     if (which_item == -1)
         which_item = state.initial_mon;
@@ -450,20 +451,19 @@ void change_menu_level(enum menu_level_t level)
     switch(level){
         case MAIN_MENU:
             setup_main_menu();
-            state.screen_changed = true;
             break;
         case MONSTER_MENU:
             setup_monster_menu();
             if (state.menu.max_items > which_item) {
-        state.menu.current_item = which_item; /* Stay on the same monster */
+                state.menu.current_item = which_item; /* Stay on the same monster */
                 state.current_monster = state.menu.item[state.menu.current_item].cookie;
             }
-            state.screen_changed = true;
             break;
         case DESCRIPTION:
-            state.screen_changed = true;
-            return;
+            ;
     }
+    state.screen_changed = true;
+    LOG("change_menu_level: new level = %s\n", level == 0 ? "MAIN" : level == 1 ? "GAME" : "DESCRIPTION");
 }
 
 #ifdef __linux__
@@ -471,14 +471,17 @@ void print_menu_info()
 {
     /* int next_state = menu.item[menu.current_item].next_state
        system("clear"); */
-    printf("current item: %d\nmenu level: %d\ncurrent monster: %d\n menu item: %s\nn-menu-items: %d\ncookie_monster: %d\n",
+    printf("current item: %d\n  menu level: %s\n  current monster: %d\n  menu item: %s\n  cookie: %d\n  # items: %d\n  app state: %d\n",
            state.menu.current_item,
-           state.menu_level,
+           state.menu_level == 0 ? "MAIN" : state.menu_level == 1 ? "GAME" : "DESCRIPTION",
            state.current_monster,
            state.menu.item[state.menu.current_item].text,
+           state.menu.item[state.menu.current_item].cookie,
            state.menu.nitems,
-           state.menu.item[state.menu.current_item].cookie);
+           state.app_state);
 }
+#else
+void print_menu_info() {}
 #endif
 
 void check_the_buttons(void)
@@ -503,6 +506,8 @@ void check_the_buttons(void)
             return;
         }
     }
+
+    print_menu_info();
 
     switch(state.menu_level){
         case MAIN_MENU:
@@ -575,9 +580,7 @@ void check_the_buttons(void)
             else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
             BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
-                #ifdef __linux__
-                    print_menu_info();
-                #endif
+                print_menu_info();
                 show_message(new_monsters[state.current_monster].blurb);
              }
             break;
@@ -619,6 +622,15 @@ void check_the_buttons(void)
     return;
 }
 
+/*
+ * Builds a monster menu by clearing the menu, setting the title to "Monsters", and
+ * for each monster which is owned, adding an entry with the monster's name, the
+ * state RENDER_MONSTER, and a cookie set to the index of the monster in the new_monsters
+ * array.
+ * If the current monster is shown in the menu (?), set the current item to the current
+ * monster, otherwise set the current monster to the current menu item.
+ * Calls render_monster.
+ */
 void setup_monster_menu(void)
 {
     dynmenu_clear(&state.menu);
@@ -631,6 +643,7 @@ void setup_monster_menu(void)
             dynmenu_add_item(&state.menu, (char *)m->name, RENDER_MONSTER, index);
         index++;
     }
+    // I'm not sure this is accomplishing what it's supposed to
     if (state.current_monster < state.menu.max_items)
         state.menu.current_item = state.current_monster;
     else
@@ -640,13 +653,14 @@ void setup_monster_menu(void)
     render_monster();
 }
 
+/*
+ *
+ */
 void setup_main_menu(void)
 {
     dynmenu_clear(&state.menu);
     strncpy(state.menu.title, "Badge Monsters", sizeof(state.menu.title));
-#ifdef __linux__
-    printf("setup_main_menu\n");
-#endif
+    LOG("setup_main_menu\n");
     dynmenu_add_item(&state.menu, "Monsters", RENDER_SCREEN, 0);
     dynmenu_add_item(&state.menu, "Trade Monsters", TRADE_MONSTERS, 1);
     dynmenu_add_item(&state.menu, "EXIT", EXIT_APP, 2);
@@ -671,10 +685,7 @@ void render_monster(void)
 {
     const struct new_monster *monster = &new_monsters[state.current_monster];
 
-#ifdef __linux__
-    printf("render\n");
-    printf("render_monster: %s\n", monster->name);
-#endif
+    LOG("render_monster: %s\n", monster->name);
     FbClear();
     FbMove(0, 10);
     FbImage4bit(monster->asset, 0);
@@ -707,9 +718,7 @@ void render_monster(void)
 
 void show_message(const char *message)
 {
-    #ifdef __linux__
-        printf("%s\n", message);
-    #endif
+    LOG("%s\n", message);
 
     FbClear();
     FbColor(WHITE);
