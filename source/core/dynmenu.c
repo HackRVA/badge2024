@@ -34,8 +34,6 @@ void dynmenu_clear(struct dynmenu *dm)
 
 void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned char cookie)
 {
-    int i;
-
     if (dm->nitems >= dm->max_items) {
 #ifdef __linux__
         printf("dynmenu_add_item: WARNING: failed to add menu item %d, max_items = %d\n", dm->nitems, dm->max_items);
@@ -44,9 +42,9 @@ void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned c
         return;
     }
 
-    i = dm->nitems;
+    const int i = dm->nitems;
 #ifdef __linux__
-    printf("dynmenu_add_item: '%s', length: %lu\n", text, sizeof(dm->item[i].text)-1);
+    printf("dynmenu_add_item: '%s', length: %lu\n", text, strlen(text));
 #endif
     strncpy(dm->item[i].text, text, sizeof(dm->item[i].text) - 1);
     dm->item[i].next_state = next_state;
@@ -58,6 +56,7 @@ void dynmenu_draw(struct dynmenu *dm)
 {
 	int i, y, first_item, last_item;
 
+    /* choose a starting point that leaves the current item in the center */
 	first_item = dm->current_item - 3;
 	if (first_item < 0)
 		first_item = 0;
@@ -65,6 +64,7 @@ void dynmenu_draw(struct dynmenu *dm)
 	if (last_item > dm->nitems - 1)
 		last_item = dm->nitems - 1;
 
+    /* write menu title (1 to 3 lines) */
 	FbClear();
 	FbColor(WHITE);
 	FbMove(8, 5);
@@ -78,7 +78,9 @@ void dynmenu_draw(struct dynmenu *dm)
 		FbWriteLine(dm->title3);
 	}
 
+    /* get y position for the first item */
 	y = LCD_YSIZE / 2 - 10 * (dm->current_item - first_item);
+    /* draw each menu item, color the current item green */
 	for (i = first_item; i <= last_item; i++) {
 		if (i == dm->current_item)
 			FbColor(GREEN);
@@ -89,14 +91,21 @@ void dynmenu_draw(struct dynmenu *dm)
 		y += 10;
 	}
 
+    /* draw a green rectangle around the current item */
 	FbColor(GREEN);
 	FbMove(5, LCD_YSIZE / 2 - 2);
 	FbRectangle(LCD_XSIZE - 7, 12);
 }
 
+/*
+ * Change the current item on the menu by going down (positive direction) or
+ * up (negative direction). If we would move past the beginning or end of the menu,
+ * wrap around to the other end.
+ */
 void dynmenu_change_current_selection(struct dynmenu *dm, int direction)
 {
 	int new = dm->current_item + direction;
+    /* wrap around in either direction */
 	if (new < 0)
 		new = dm->nitems - 1;
 	else if (new >= dm->nitems)
