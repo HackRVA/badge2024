@@ -1,4 +1,6 @@
-bitstring==4.0.2
-Pillow==9.5.0
-PyYAML==6.0
+bitstring==3.1.9
 black
+Pillow==9.1.1
+PyYAML==6.0
+types-Pillow
+wheel
