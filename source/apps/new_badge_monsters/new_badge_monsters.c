@@ -22,15 +22,15 @@
 #endif
 
 enum app_states {
-    INIT_APP_STATE, //0
-    GAME_MENU,      //1
-    RENDER_SCREEN,  //2
-    RENDER_MONSTER, //3
-    TRADE_MONSTERS,
-    CHECK_THE_BUTTONS, //5
+    INIT_APP_STATE,     //0
+    GAME_MENU,          //1 app should draw menu, either main or monster
+    RENDER_SCREEN,      //2 app should call render_screen() to update display
+    RENDER_MONSTER,     //3 app should show monster
+    TRADE_MONSTERS,     //4 enters trading mode, starts IR communications
+    CHECK_THE_BUTTONS,  //5 default idle state, awaiting user input
 
-    EXIT_APP,
-    ENABLE_ALL_MONSTERS
+    EXIT_APP,           //6 returns to badge menu
+    ENABLE_ALL_MONSTERS //7 for testing, grants ownership of all monsters
 };
 
 /***************************************** GLOBALS ************************************************/
@@ -331,6 +331,7 @@ void app_init()
     state.current_monster = state.initial_mon;
     enable_monster(state.initial_mon);
     state.app_state = GAME_MENU;
+    LOG("app_init complete\n");
 }
 
 void exit_app(void)
@@ -380,6 +381,9 @@ void set_monster_owned(const int monster_id, const bool owned)
     new_monsters[monster_id].owned = owned;
 }
 
+/*
+ * Marks the monster with id `monster_id` as owned by user, beeps.
+ */
 void enable_monster(int monster_id)
 {
     if(monster_id < 0 || (size_t) monster_id > ARRAYSIZE(new_monsters) - 1) {
@@ -437,6 +441,9 @@ void draw_menu(void)
     state.app_state = RENDER_SCREEN;
 }
 
+/*
+ * Changes the menu from the current level to `level`, runs setup function.
+ */
 void change_menu_level(enum menu_level_t level)
 {
     static int which_item = -1;
@@ -484,9 +491,12 @@ void print_menu_info()
 void print_menu_info() {}
 #endif
 
+/*
+ * Update game state based on button status.
+ * If trading monsters and any button pressed: stop trading, set app_state to GAME_MENU.
+ */
 void check_the_buttons(void)
 {
-    bool something_changed = false;
     int down_latches = button_down_latches();
     int rotary = button_get_rotation(0);
 
@@ -505,9 +515,11 @@ void check_the_buttons(void)
             state.screen_changed = true;
             return;
         }
+        if (rotary != 0) {
+            // do nothing
+            return;
+        }
     }
-
-    print_menu_info();
 
     switch(state.menu_level){
         case MAIN_MENU:
@@ -515,42 +527,30 @@ void check_the_buttons(void)
             {
                 dynmenu_change_current_selection(&state.menu, -1);
                 state.screen_changed = true;
-                something_changed = true;
+                state.app_state = GAME_MENU;
+                LOG("moving up in main menu\n");
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
             {
                 dynmenu_change_current_selection(&state.menu, 1);
                 state.screen_changed = true;
-                something_changed = true;
+                state.app_state = GAME_MENU;
+                LOG("moving down in main menu\n");
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
-            {
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
             {
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
             BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
-                switch(state.menu.current_item){
-                    case 0:
-                        change_menu_level(MONSTER_MENU);
-                        state.current_monster = state.menu.item[state.menu.current_item].cookie;
-                        break;
-                    case 1:
-                        state.app_state = TRADE_MONSTERS;
-                        break;
-                    case 2:
-                        state.app_state = EXIT_APP;
-                        break;
-#ifdef __linux__
-                    case 3:
-                        state.app_state = ENABLE_ALL_MONSTERS;
-                        break;
-#endif
+                const struct dynmenu_item menu_item = state.menu.item[state.menu.current_item];
+                if (state.menu.current_item == 0) {
+                    change_menu_level(MONSTER_MENU);
+                    state.current_monster = state.menu.item[state.menu.current_item].cookie;
                 }
+                state.app_state = menu_item.next_state;
             }
-
             break;
         case MONSTER_MENU:
             if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
@@ -571,7 +571,6 @@ void check_the_buttons(void)
             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
                 change_menu_level(MAIN_MENU);
-                something_changed = true;
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
             {
@@ -585,38 +584,23 @@ void check_the_buttons(void)
              }
             break;
         case DESCRIPTION:
-            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
-            {
-                change_menu_level(MONSTER_MENU);
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
-            {
-                change_menu_level(MONSTER_MENU);
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+            // press of any button takes user back to monster menu
+            if (rotary ||
+            BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
                 change_menu_level(MONSTER_MENU);
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
-            {
-                change_menu_level(MONSTER_MENU);
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
-            {
-                change_menu_level(MONSTER_MENU);
-            }
-            break;
-        default:
             break;
         }
 
-    if (state.trading_monsters_enabled && !something_changed) {
-        state.app_state = TRADE_MONSTERS;
-    }
-
-    if (something_changed && state.app_state == CHECK_THE_BUTTONS) {
+    // set state to GAME_MENU so we respond to subsequent buttons
+    if (state.menu_level == MONSTER_MENU && state.app_state == CHECK_THE_BUTTONS) {
         state.app_state = GAME_MENU;
     }
     return;
@@ -659,7 +643,7 @@ void setup_monster_menu(void)
 void setup_main_menu(void)
 {
     dynmenu_clear(&state.menu);
-    strncpy(state.menu.title, "Badge Monsters", sizeof(state.menu.title));
+    snprintf(state.menu.title, sizeof(state.menu.title), "Badge Monsters");
     LOG("setup_main_menu\n");
     dynmenu_add_item(&state.menu, "Monsters", RENDER_SCREEN, 0);
     dynmenu_add_item(&state.menu, "Trade Monsters", TRADE_MONSTERS, 1);
