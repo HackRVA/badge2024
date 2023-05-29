@@ -17,6 +17,7 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/pong.c
         ${CMAKE_CURRENT_LIST_DIR}/qc.c
         ${CMAKE_CURRENT_LIST_DIR}/smashout.c
+        ${CMAKE_CURRENT_LIST_DIR}/tank-vs-tank.c
         ${CMAKE_CURRENT_LIST_DIR}/username.c
         ${CMAKE_CURRENT_LIST_DIR}/gulag.c
         ${CMAKE_CURRENT_LIST_DIR}/rvasec_splash.c

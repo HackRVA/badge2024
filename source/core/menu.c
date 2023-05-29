@@ -34,6 +34,7 @@
 #include "magic-8-ball.h"
 #include "rvasec_splash.h"
 #include "test-screensavers.h"
+#include "tank-vs-tank.h"
 
 #define MAIN_MENU_BKG_COLOR GREY2
 
@@ -47,6 +48,7 @@ static const struct menu_t games_m[] = {
    {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
    {"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, },
    {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, },
+   {"Tank vs Tank", VERT_ITEM, FUNCTION, { .func = tank_vs_tank_cb }, },
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
    {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
    {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, },
