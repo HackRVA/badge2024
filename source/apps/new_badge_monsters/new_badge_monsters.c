@@ -252,11 +252,12 @@ struct new_monster new_monsters[] = {
  * global state for game -- used by almost all functions.
 */
 struct game_state {
+    // used in render_screen to skip render if unchanged
     bool screen_changed;
-    int smiley_x;
-    int smiley_y;
     unsigned int current_monster;
     unsigned int nmonsters;
+    // TODO: (alf) looks like app_state and menu_level could be combined.
+    // split state is just confusing.
     enum app_states app_state;
     bool trading_monsters_enabled;
     unsigned int initial_mon;
@@ -266,7 +267,7 @@ struct game_state {
 };
 
 static struct game_state state = {
-    false, 0, 0, 0, 0, INIT_APP_STATE, false,
+    false, 0, 0, INIT_APP_STATE, false,
     0, {
         "Badge Monsters",
         "",
@@ -322,8 +323,6 @@ void app_init()
     change_menu_level(MAIN_MENU);
     state.app_state = GAME_MENU;
     state.screen_changed = true;
-    state.smiley_x = LCD_XSIZE / 2; //?? name?
-    state.smiley_y = LCD_XSIZE / 2;
     state.nmonsters = ARRAYSIZE(new_monsters);
 
     load_from_flash();
