@@ -849,6 +849,7 @@ void FbDrawObject(const struct point drawing[], int npoints, int color, int x, i
     int i;
     int xcenter = x;
     int ycenter = y;
+    int x1, y1, x2, y2, o1, o2;
 
     FbColor(color);
     for (i = 0; i < npoints - 1;) {
@@ -860,8 +861,16 @@ void FbDrawObject(const struct point drawing[], int npoints, int color, int x, i
             i+=2;
             continue;
         }
-        FbLine(xcenter + ((drawing[i].x * scale) >> 10), ycenter + ((drawing[i].y * scale) >> 10),
-               xcenter + ((drawing[i + 1].x * scale) >> 10), ycenter + ((drawing[i + 1].y * scale) >> 10));
+        x1 = xcenter + ((drawing[i].x * scale) >> 10);
+	y1 = ycenter + ((drawing[i].y * scale) >> 10);
+	x2 = xcenter + ((drawing[i + 1].x * scale) >> 10);
+	y2 = ycenter + ((drawing[i + 1].y * scale) >> 10);
+	o1 = onscreen(x1, y1);
+	o2 = onscreen(x2, y2);
+	if (o1 && o2)
+		FbLine(x1, y1, x2, y2);
+	else if (o1 || o2)
+		FbClippedLine(x1, y1, x2, y2);
         i++;
     }
 }
