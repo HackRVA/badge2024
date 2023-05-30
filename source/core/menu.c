@@ -366,8 +366,11 @@ void returnToMenus() {
     runningApp = NULL;
 }
 
+extern unsigned char is_dormant;
+
 void menus() {
-    if (runningApp != NULL) { /* running app is set by menus() not genericMenus() */
+    if (runningApp != NULL && !is_dormant) { /* running app is set by menus() not genericMenus() */
+	/* Call the runningApp if non-NULL and the screen saver is not active */
         (*runningApp)(NULL);
         return;
     }

@@ -60,7 +60,7 @@ void UserInit(void)
 }
 
 
-// dormant returns 1 if touch/buttons are dormant for 2 minutes, otherwise returns 0
+// dormant returns 1 if touch/buttons and IR messages are dormant for 2 minutes, otherwise returns 0
 unsigned char dormant(void) {
     uint32_t timestamp = (uint32_t)rtc_get_ms_since_boot();
     if (timestamp >= (button_last_input_timestamp() + 1000 * 2 * 60)){
@@ -168,6 +168,9 @@ void do_screen_save_popup(void)
     }
     
 }
+
+/* is_dormant is 1 if the screen saver has been activated
+ * due to lack of button presses or IR messages, 0 otherwise */
 unsigned char is_dormant = 0;
 unsigned char screen_save_lockout = 0;
 
