@@ -118,6 +118,32 @@ static void bullet_tank_collision_detection(struct bullet *b, struct tank *t)
 		t->alive = -100;
 }
 
+static int point_obstacle_collision(int x, int y, struct obstacle *o)
+{
+	if (x < o->x)
+		return 0;
+	if (y < o->y)
+		return 0;
+	if (x >= o->x + o->w)
+		return 0;
+	if (y >= o->y + o->h)
+		return 0;
+	return 1;
+}
+
+static void bullet_obstacle_collision_detection(struct bullet *b)
+{
+	for (int i = 0; i < nobstacles; i++) {
+		int bx, by;
+		bx = b->x / 256;
+		by = b->y / 256;
+		if (point_obstacle_collision(bx, by, &obstacle[i])) {
+			b->life = 0;
+			break;
+		}
+	}
+}
+
 static void move_bullet(struct bullet *b)
 {
 	if (b->life > 0)
@@ -129,6 +155,7 @@ static void move_bullet(struct bullet *b)
 	if (b->x < 0 || b->y < 0 || b->x >= LCD_XSIZE * 256 || b->y >= LCD_YSIZE * 256)
 		b->life = 0;
 	bullet_tank_collision_detection(b, &tank[!b->shooter]);
+	bullet_obstacle_collision_detection(b);
 }
 
 static void move_bullets(void)
