@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
+
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
@@ -38,7 +40,7 @@ static struct point tank_points[] = {
 #define MIN_TANK_SPEED (-128) 
 #define TANK_SPEED_INCR 128
 static struct tank {
-	int x, y, angle, color, speed, alive;
+	int x, y, angle, color, speed, alive, score;
 } tank[2] = { 0 };
 
 #define MAX_BULLETS 20
@@ -79,12 +81,14 @@ static void tank_vs_tank_init(void)
 	tank[0].angle = 32 * 3;
 	tank[0].speed = 0;
 	tank[0].alive = 1;
+	tank[0].score = 0;
 	tank[1].color = CYAN;
 	tank[1].x = 256 * (LCD_XSIZE / 2);
 	tank[1].y = 256 * (LCD_YSIZE - 10);
 	tank[1].angle = 32;
 	tank[1].speed = 0;
 	tank[1].alive = 1;
+	tank[1].score = 0;
 	nsparks = 0;
 	nbullets = 0;
 }
@@ -183,6 +187,7 @@ static void bullet_tank_collision_detection(struct bullet *b, struct tank *t)
 	if (d2 / 256 < TANK_RADIUS * TANK_RADIUS) {
 		t->alive = -100;
 		add_sparks(t->x, t->y, 50);
+		tank[!(t - tank)].score++;
 	}
 }
 
@@ -467,11 +472,27 @@ static void draw_objects(void)
 	FbSwapBuffers();
 }
 
+static void draw_score(void)
+{
+	char score[10];
+	int x;
+
+	FbColor(WHITE);
+	snprintf(score, sizeof(score), "%d", tank[1].score);
+	FbMove(0, 0);
+	FbWriteString(score);
+	snprintf(score, sizeof(score), "%d", tank[0].score);
+	x = LCD_XSIZE - strlen(score) * 9;
+	FbMove(x, 0);
+	FbWriteString(score);
+}
+
 static void tank_vs_tank_run(void)
 {
 	check_buttons();
 	move_objects();
 	draw_objects();
+	draw_score();
 }
 
 static void tank_vs_tank_exit(void)
