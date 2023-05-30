@@ -1,10 +1,13 @@
 #include <stdio.h>
+#include <assert.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
 #include "trig.h"
 #include "fxp_sqrt.h"
+#include "random.h"
+#include "xorshift.h"
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -46,6 +49,13 @@ static struct bullet {
 } bullet[MAX_BULLETS] = { 0 };
 static int nbullets = 0;
 
+#define MAX_SPARKS 100
+#define MIN_SPARK_LIFETIME 20
+static struct spark {
+	int x, y, vx, vy, life;
+} spark[MAX_SPARKS] = { 0 };
+static int nsparks;
+
 /* Obstacles are just rectangles that are impassable to tanks and bullets */
 static struct obstacle {
 	int x, y, w, h;
@@ -75,7 +85,54 @@ static void tank_vs_tank_init(void)
 	tank[1].angle = 32;
 	tank[1].speed = 0;
 	tank[1].alive = 1;
+	nsparks = 0;
 	nbullets = 0;
+}
+
+static void add_spark(int x, int y, int vx, int vy)
+{
+	struct spark *s;
+	if (nsparks >= MAX_SPARKS)
+		return;
+	s = &spark[nsparks];
+	s->x = x;
+	s->y = y;
+	s->vx = vx;
+	s->vy = vy;
+	s->life = MIN_SPARK_LIFETIME + (nsparks % 20);
+	nsparks++;
+}
+
+/* return a random int between 0 and n - 1 */
+static int random_num(int n)
+{
+	int x;
+	static unsigned int state = 0;
+
+	assert(n != 0);
+	if (state == 0)
+		random_insecure_bytes((uint8_t *) &state, sizeof(state));
+	x = xorshift(&state);
+	if (x < 0)
+		x = -x;
+	return x % n;
+}
+
+static void add_random_spark(int x, int y)
+{
+	int angle, speed, vx, vy;
+
+	angle = random_num(128);
+	speed = random_num(256 * 5) + 256 * 3;
+	vx = (-sine(angle) * speed) / 256;
+	vy = (-cosine(angle) * speed) / 256;
+	add_spark(x, y, vx, vy);
+}
+
+static void add_sparks(int x, int y, int count)
+{
+	for (int i = 0; i < count; i++)
+		add_random_spark(x, y);
 }
 
 static void add_bullet(int x, int y, int vx, int vy, int shooter)
@@ -93,6 +150,15 @@ static void add_bullet(int x, int y, int vx, int vy, int shooter)
 	b->shooter = shooter;
 	b->life = BULLET_LIFETIME;
 	nbullets++;
+}
+
+static void remove_spark(int n)
+{
+	if (n < 0 || n >= nsparks)
+		return;
+	if (n != nsparks - 1)
+		spark[n] = spark[nsparks - 1];
+	nsparks--;
 }
 
 static void remove_bullet(int n)
@@ -114,8 +180,10 @@ static void bullet_tank_collision_detection(struct bullet *b, struct tank *t)
 	dx = t->x - b->x;
 	dy = t->y - b->y;
 	d2 = (dx * dx) / 256 + (dy * dy) / 256;
-	if (d2 / 256 < TANK_RADIUS * TANK_RADIUS)
+	if (d2 / 256 < TANK_RADIUS * TANK_RADIUS) {
 		t->alive = -100;
+		add_sparks(t->x, t->y, 50);
+	}
 }
 
 static int point_obstacle_collision(int x, int y, struct obstacle *o)
@@ -152,9 +220,20 @@ static void bullet_obstacle_collision_detection(struct bullet *b)
 		by = b->y / 256;
 		if (point_obstacle_collision(bx, by, &obstacle[i])) {
 			b->life = 0;
+			add_sparks(b->x, b->y, 5);
 			break;
 		}
 	}
+}
+
+static void move_spark(struct spark *s)
+{
+	if (s->life > 0)
+		s->life--;
+	s->x += s->vx;
+	s->y += s->vy;
+	if (s->x < 0 || s->y < 0 || s->x >= LCD_XSIZE * 256 || s->y >= LCD_YSIZE * 256)
+		s->life = 0;
 }
 
 static void move_bullet(struct bullet *b)
@@ -171,10 +250,28 @@ static void move_bullet(struct bullet *b)
 	bullet_obstacle_collision_detection(b);
 }
 
+static void move_sparks(void)
+{
+	for (int i = 0; i < nsparks; i++)
+		move_spark(&spark[i]);
+}
+
 static void move_bullets(void)
 {
 	for (int i = 0; i < nbullets; i++)
 		move_bullet(&bullet[i]);
+}
+
+static void remove_dead_sparks(void)
+{
+	int i = 0;
+
+	while (i < nsparks) {
+		if (!spark[i].life)
+			remove_spark(i);
+		else
+			i++;
+	}
 }
 
 static void remove_dead_bullets(void)
@@ -232,10 +329,22 @@ static void draw_tank(struct tank *t)
 	FbDrawObject(rotated_tank, ARRAYSIZE(tank_points), t->color, x, y, 1024);
 }
 
+static void draw_spark(struct spark *s)
+{
+	FbColor(YELLOW);
+	FbPoint(s->x / 256, s->y / 256);
+}
+
 static void draw_bullet(struct bullet *b)
 {
 	FbColor(WHITE);
 	FbLine(b->x / 256, b->y / 256, b->lx / 256, b->ly / 256);
+}
+
+static void draw_sparks(void)
+{
+	for (int i = 0; i < nsparks; i++)
+		draw_spark(&spark[i]);
 }
 
 static void draw_bullets(void)
@@ -331,6 +440,8 @@ static void move_objects(void)
 	move_tank(&tank[1]);
 	move_bullets();
 	remove_dead_bullets();
+	move_sparks();
+	remove_dead_sparks();
 }
 
 static void draw_obstacle(struct obstacle *o)
@@ -352,6 +463,7 @@ static void draw_objects(void)
 	draw_tank(&tank[1]);
 	draw_bullets();
 	draw_obstacles();
+	draw_sparks();
 	FbSwapBuffers();
 }
 
