@@ -131,6 +131,19 @@ static int point_obstacle_collision(int x, int y, struct obstacle *o)
 	return 1;
 }
 
+static int tank_obstacle_collision(int x, int y)
+{
+	int sx, sy;
+
+	sx = x / 256;
+	sy = y / 256;
+	for (int i = 0; i < nobstacles; i++)
+		if (point_obstacle_collision(sx, sy, &obstacle[i])) {
+			return 1;
+		}
+	return 0;
+}
+
 static void bullet_obstacle_collision_detection(struct bullet *b)
 {
 	for (int i = 0; i < nobstacles; i++) {
@@ -301,8 +314,12 @@ static void move_tank(struct tank *t)
 	ny = t->y + ((-t->speed * cosine(t->angle)) / 256);
 
 	if (nx >= 0 && nx <= 256 * LCD_XSIZE && ny >= 0 && ny <= 256 * LCD_YSIZE) {
-		t->x = nx;
-		t->y = ny;
+		if (!tank_obstacle_collision(nx, ny)) {
+			t->x = nx;
+			t->y = ny;
+		} else {
+			t->speed = 0;
+		}
 	} else {
 		t->speed = 0;
 	}
