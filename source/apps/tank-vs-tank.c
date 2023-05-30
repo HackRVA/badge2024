@@ -413,6 +413,30 @@ static void check_buttons(void)
 
 static void respawn_tank(struct tank *t)
 {
+	int x, y, dx, dy, d2;
+	struct tank *enemy_tank = &tank[!(t - tank)];
+
+retry:
+	/* Choose a random location */
+	x = random_num(LCD_XSIZE);
+	y = random_num(LCD_YSIZE);
+
+	/* Compute distance from location to enemy tank */
+	dx = x - (enemy_tank->x / 256);
+	dy = y - (enemy_tank->y / 256);
+	d2 = dx * dx + dy * dy;
+
+	if (d2 < 60 * 60) /* Too close to enemy tank? Try again */
+		goto retry;
+
+	/* Touching any obstacles? Try again. */
+	for (int i = 0; i < nobstacles; i++)
+		if (point_obstacle_collision(x, y, &obstacle[i]))
+			goto retry;
+
+	/* Location is good. Move the tank there. */
+	t->x = x * 256;
+	t->y = y * 256;
 	t->alive = 1;
 }
 
