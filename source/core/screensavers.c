@@ -485,7 +485,7 @@ void matrix(void)
 }
 
 const char bs1[] = "Badgedows";
-const char bs2[] = "An error occured";
+const char bs2[] = "An error occurred";
 const char bs3[] = "Give up to";
 const char bs4[] = "continue";
 void bluescreen(void)
@@ -502,10 +502,10 @@ void bluescreen(void)
     FbRotWriteLine(bs2);
 
     if(popup_time < 40){
-        FbMove(75, 4);
+        FbMove(85, 4);
         FbRotWriteLine(bs3);
 
-        FbMove(85, 17);
+        FbMove(75, 17);
         FbRotWriteLine(bs4);
     }
 
