@@ -60,7 +60,7 @@ static struct bullet {
 static int nbullets = 0;
 
 #define MAX_SPARKS 100
-#define MIN_SPARK_LIFETIME 20
+#define MIN_SPARK_LIFETIME 10
 static struct spark {
 	int x, y, vx, vy, life;
 } spark[MAX_SPARKS] = { 0 };
