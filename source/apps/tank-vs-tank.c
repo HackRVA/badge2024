@@ -408,9 +408,9 @@ static void check_buttons(void)
 	int r1 = button_get_rotation(1);
 
 	if (r0)
-		adjust_angle(&tank[0].angle, -r0);
+		adjust_angle(&tank[0].angle, -2 * r0);
 	if (r1)
-		adjust_angle(&tank[1].angle, -r1);
+		adjust_angle(&tank[1].angle, -2 * r1);
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		fire_gun(&tank[0]);
