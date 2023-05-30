@@ -531,8 +531,7 @@ void just_the_badge_tips(void)
     FbBackgroundColor(BLACK);
     FbColor(GREEN);
     FbMove(LCD_XSIZE - 8 - 4, 14);
-    FbWriteLine(badgetips_header);
-
+    FbRotWriteString(badgetips_header);
 
     FbColor(YELLOW);
     FbMove(LCD_XSIZE - 20 - 20 , 4);
