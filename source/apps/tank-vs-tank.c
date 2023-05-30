@@ -17,6 +17,7 @@ enum tank_vs_tank_state_t {
 
 static enum tank_vs_tank_state_t tank_vs_tank_state = TANK_VS_TANK_INIT;
 
+#define TANK_RADIUS 8
 static struct point tank_points[] = {
 #if 0
 	{ 0, -5 },
@@ -91,6 +92,20 @@ static void remove_bullet(int n)
 	nbullets--;
 }
 
+static void bullet_tank_collision_detection(struct bullet *b, struct tank *t)
+{
+	int dx, dy, d2;
+
+	if (t->alive <= 0) /* Can't hit a dead tank */
+		return;
+
+	dx = t->x - b->x;
+	dy = t->y - b->y;
+	d2 = (dx * dx) / 256 + (dy * dy) / 256;
+	if (d2 / 256 < TANK_RADIUS * TANK_RADIUS)
+		t->alive = -100;
+}
+
 static void move_bullet(struct bullet *b)
 {
 	if (b->life > 0)
@@ -101,6 +116,7 @@ static void move_bullet(struct bullet *b)
 	b->y += b->vy;
 	if (b->x < 0 || b->y < 0 || b->x >= LCD_XSIZE * 256 || b->y >= LCD_YSIZE * 256)
 		b->life = 0;
+	bullet_tank_collision_detection(b, &tank[!b->shooter]);
 }
 
 static void move_bullets(void)
@@ -156,7 +172,7 @@ static void draw_tank(struct tank *t)
 	int x, y;
 	struct point rotated_tank[ARRAYSIZE(tank_points)];
 
-	if (!t->alive)
+	if (t->alive <= 0)
 		return;
 	rotate_points(tank_points, rotated_tank, ARRAYSIZE(tank_points), t->angle);
 	x = t->x / 256;
@@ -229,10 +245,19 @@ static void check_buttons(void)
 	}
 }
 
+static void respawn_tank(struct tank *t)
+{
+	t->alive = 1;
+}
+
 static void move_tank(struct tank *t)
 {
 	int nx, ny;
 
+	if (t->alive < 0)
+		t->alive++;
+	if (t->alive == 0)
+		respawn_tank(t);
 	nx = t->x + ((-t->speed * sine(t->angle)) / 256);
 	ny = t->y + ((-t->speed * cosine(t->angle)) / 256);
 
