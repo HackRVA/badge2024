@@ -164,13 +164,13 @@ static void move_ball(void)
 	x = ball.x / 256;
 	y = ball.y / 256;
 	if (y < 0) {
-		score[0]++;
+		score[1]++;
 		serve_timer = SERVE_TIME;
 		serving_player = 1;
 		return;
 	}
 	if (y >= LCD_YSIZE) {
-		score[1]++;
+		score[0]++;
 		serve_timer = SERVE_TIME;
 		serving_player = 0;
 		return;
