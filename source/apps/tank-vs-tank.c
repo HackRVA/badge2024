@@ -24,16 +24,24 @@ static enum tank_vs_tank_state_t tank_vs_tank_state = TANK_VS_TANK_INIT;
 
 #define TANK_RADIUS 8
 static struct point tank_points[] = {
-#if 0
-	{ 0, -5 },
-	{ 3, 5 },
-	{ -3, 5 },
-	{ 0, - 5 },
-#endif
-	{ 5, 0 },
-	{ -5, 3 },
-	{ -5, -3 },
-	{ 5, 0 },
+	/* main body */
+	{ -6, -4 },
+	{ 6, -4},
+	{ 6, 4 },
+	{ -6, 4 },
+	{ -6, -4 },
+
+	/* turret */
+	{ -128, -128 },
+	{ -3, -2 },
+	{ 3, -2},
+	{ 3, 2 },
+	{ -3, 2 },
+	{ -3, -2 },
+
+	/* gun barrel */
+	{ 0, 0 },
+	{ 8, 0 },
 };
 
 #define MAX_TANK_SPEED (256 * 3)
