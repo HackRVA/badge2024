@@ -46,6 +46,18 @@ static struct bullet {
 } bullet[MAX_BULLETS] = { 0 };
 static int nbullets = 0;
 
+/* Obstacles are just rectangles that are impassable to tanks and bullets */
+static struct obstacle {
+	int x, y, w, h;
+} obstacle[] = {
+	{ 15, 15, 5, 30 },
+	{ 128 - 20, 15, 5, 30 },
+	{ 15, 115, 5, 30 },
+	{ 128 - 20, 115, 5, 30 },
+	{ 30, 73, 70, 5 },
+};
+static int nobstacles = ARRAYSIZE(obstacle);
+
 static void tank_vs_tank_init(void)
 {
 	FbInit();
@@ -277,11 +289,25 @@ static void move_objects(void)
 	remove_dead_bullets();
 }
 
+static void draw_obstacle(struct obstacle *o)
+{
+	FbMove(o->x, o->y);
+	FbRectangle(o->w, o->h);
+}
+
+static void draw_obstacles(void)
+{
+	FbColor(WHITE);
+	for (int i = 0; i < nobstacles; i++)
+		draw_obstacle(&obstacle[i]);
+}
+
 static void draw_objects(void)
 {
 	draw_tank(&tank[0]);
 	draw_tank(&tank[1]);
 	draw_bullets();
+	draw_obstacles();
 	FbSwapBuffers();
 }
 
