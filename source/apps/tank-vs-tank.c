@@ -193,6 +193,7 @@ static void bullet_tank_collision_detection(struct bullet *b, struct tank *t)
 	dy = t->y - b->y;
 	d2 = (dx * dx) / 256 + (dy * dy) / 256;
 	if (d2 / 256 < TANK_RADIUS * TANK_RADIUS) {
+		b->life = 0;
 		t->alive = -100;
 		add_sparks(t->x, t->y, 50);
 		tank[!(t - tank)].score++;
