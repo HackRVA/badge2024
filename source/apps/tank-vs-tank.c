@@ -217,6 +217,24 @@ static int tank_obstacle_collision(int x, int y)
 	return 0;
 }
 
+static int tank_tank_collision(struct tank *t, int x, int y)
+{
+	int tx, ty, ex, ey, dx, dy, d2;
+	struct tank *enemy_tank = &tank[!(t - tank)];
+
+	if (enemy_tank->alive <= 0)
+		return 0;
+
+	tx = x / 256;
+	ty = y / 256;
+	ex = enemy_tank->x / 256;
+	ey = enemy_tank->y / 256;
+	dx = tx - ex;
+	dy = ty - ey;
+	d2 = dx * dx + dy * dy;
+	return d2 < TANK_RADIUS * TANK_RADIUS;
+}
+
 static void bullet_obstacle_collision_detection(struct bullet *b)
 {
 	for (int i = 0; i < nobstacles; i++) {
@@ -451,16 +469,21 @@ static void move_tank(struct tank *t)
 	nx = t->x + ((-t->speed * sine(t->angle)) / 256);
 	ny = t->y + ((-t->speed * cosine(t->angle)) / 256);
 
-	if (nx >= 0 && nx <= 256 * LCD_XSIZE && ny >= 0 && ny <= 256 * LCD_YSIZE) {
-		if (!tank_obstacle_collision(nx, ny)) {
-			t->x = nx;
-			t->y = ny;
-		} else {
-			t->speed = 0;
-		}
-	} else {
-		t->speed = 0;
-	}
+	if (nx < 0 || nx >= 256 * LCD_XSIZE || ny < 0 || ny >= 256 * LCD_YSIZE)
+		goto stop_tank;
+
+	if (tank_obstacle_collision(nx, ny))
+		goto stop_tank;
+
+	if (tank_tank_collision(t, nx, ny))
+		goto stop_tank;
+
+	t->x = nx;
+	t->y = ny;
+	return;
+
+stop_tank:
+	t->speed = 0;
 }
 
 static void move_objects(void)
