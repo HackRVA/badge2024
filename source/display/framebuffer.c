@@ -6,6 +6,7 @@
 #include "assetList.h"
 #include "colors.h"
 #include "trig.h"
+#include "delay.h"
 
 #define uCHAR (unsigned char *)
 struct framebuffer_t G_Fb;
@@ -178,6 +179,8 @@ void FbImage8bit(const struct asset* asset, unsigned char seqNum)
 
     for (y = G_Fb.pos.y; y < yEnd; y++) {
         pixdata = uCHAR(&(asset->pixdata[ (y - G_Fb.pos.y) * asset->x + seqNum * asset->x * asset->y]));
+
+	sleep_us(1000); // This is a hack. Without this sleep, colors get messed up for unknown reasons.
 
         for (x = 0; x < asset->x; x++) {
             if ((x + G_Fb.pos.x) >= LCD_XSIZE) break; /* clip x */
