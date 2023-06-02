@@ -385,21 +385,40 @@ static void draw_bullets(void)
 		draw_bullet(&bullet[i]);
 }
 
-static void adjust_angle(int *angle, int amount)
+static void turn_tank(struct tank *t, int amount)
 {
-	*angle += amount;
-	if (*angle < 0)
-		*angle += 128;
-	if (*angle > 127)
-		*angle -= 128;
+	if (t->alive <= 0) /* Sorry, can't turn while dead */
+		return;
+
+	t->angle += amount;
+	if (t->angle < 0)
+		t->angle += 128;
+	if (t->angle > 127)
+		t->angle -= 128;
 }
 
 static void fire_gun(struct tank *t)
 {
 	int vx, vy;
+
+	if (t->alive <= 0) /* Sorry, can't shoot while dead */
+		return;
+
 	vx = -BULLET_SPEED * sine(t->angle) / 256;
 	vy = -BULLET_SPEED * cosine(t->angle) / 256;
 	add_bullet(t->x, t->y, vx, vy, t - tank); 
+}
+
+static void adjust_tank_speed(struct tank *t, int amount)
+{
+	if (t->alive <= 0) /* Sorry, not if you're dead. */
+		return;
+
+	t->speed += amount;
+	if (t->speed < MIN_TANK_SPEED)
+		t->speed = MIN_TANK_SPEED;
+	else if (t->speed > MAX_TANK_SPEED)
+		t->speed = MAX_TANK_SPEED;
 }
 
 static void check_buttons(void)
@@ -409,30 +428,22 @@ static void check_buttons(void)
 	int r1 = button_get_rotation(1);
 
 	if (r0)
-		adjust_angle(&tank[0].angle, -2 * r0);
+		turn_tank(&tank[0], -2 * r0);
 	if (r1)
-		adjust_angle(&tank[1].angle, -2 * r1);
+		turn_tank(&tank[1], -2 * r1);
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		fire_gun(&tank[0]);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		fire_gun(&tank[1]);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
-		tank[1].speed -= TANK_SPEED_INCR;
-		if (tank[1].speed < MIN_TANK_SPEED)
-			tank[1].speed = MIN_TANK_SPEED;
+		adjust_tank_speed(&tank[1], -TANK_SPEED_INCR);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
-		tank[1].speed += TANK_SPEED_INCR;
-		if (tank[1].speed > MAX_TANK_SPEED)
-			tank[1].speed = MAX_TANK_SPEED;
+		adjust_tank_speed(&tank[1], TANK_SPEED_INCR);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		tank[0].speed += TANK_SPEED_INCR;
-		if (tank[0].speed > MAX_TANK_SPEED)
-			tank[0].speed = MAX_TANK_SPEED;
+		adjust_tank_speed(&tank[0], TANK_SPEED_INCR);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		tank[0].speed -= TANK_SPEED_INCR;
-		if (tank[0].speed < MIN_TANK_SPEED)
-			tank[0].speed = MIN_TANK_SPEED;
+		adjust_tank_speed(&tank[0], -TANK_SPEED_INCR);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		tank_vs_tank_state = TANK_VS_TANK_EXIT;
 	}
@@ -464,6 +475,7 @@ retry:
 	/* Location is good. Move the tank there. */
 	t->x = x * 256;
 	t->y = y * 256;
+	t->speed = 0;
 	t->alive = 1;
 }
 
