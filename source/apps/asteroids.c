@@ -268,15 +268,18 @@ static void check_buttons(void)
 {
 	static int first_time = 1;
 
-	int rotation = button_get_rotation(0);
+	int r0 = button_get_rotation(0);
+	int r1 = button_get_rotation(1);
 	int down_latches = button_down_latches();
 	if (game_over_counter || player_dead_counter)
 		return;
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		asteroids_state = ASTEROIDS_EXIT;
 	}
-	if (rotation)
-		turn(&player, 2 * rotation);	
+	if (r0)
+		turn(&player, 2 * r0);
+	if (r1)
+		turn(&player, 2 * r1);
 	if (button_poll(BADGE_BUTTON_LEFT))
 		turn(&player, -player_rotation_speed);
 	if (button_poll(BADGE_BUTTON_RIGHT))
