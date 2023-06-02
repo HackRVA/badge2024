@@ -276,7 +276,7 @@ static void check_buttons(void)
 		asteroids_state = ASTEROIDS_EXIT;
 	}
 	if (rotation)
-		turn(&player, rotation);	
+		turn(&player, 2 * rotation);	
 	if (button_poll(BADGE_BUTTON_LEFT))
 		turn(&player, -player_rotation_speed);
 	if (button_poll(BADGE_BUTTON_RIGHT))
