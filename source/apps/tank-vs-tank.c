@@ -10,6 +10,7 @@
 #include "fxp_sqrt.h"
 #include "random.h"
 #include "xorshift.h"
+#include "dynmenu.h"
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -17,10 +18,14 @@
 enum tank_vs_tank_state_t {
 	TANK_VS_TANK_INIT,
 	TANK_VS_TANK_RUN,
+	TANK_VS_TANK_CONFIRM_EXIT,
 	TANK_VS_TANK_EXIT,
 };
 
 static enum tank_vs_tank_state_t tank_vs_tank_state = TANK_VS_TANK_INIT;
+
+static struct dynmenu quit_menu;
+static struct dynmenu_item quit_menu_item[2];
 
 #define TANK_RADIUS 8
 static struct point tank_points[] = {
@@ -99,6 +104,12 @@ static void tank_vs_tank_init(void)
 	tank[1].score = 0;
 	nsparks = 0;
 	nbullets = 0;
+
+	dynmenu_init(&quit_menu, quit_menu_item, ARRAYSIZE(quit_menu_item));
+	dynmenu_clear(&quit_menu);
+	strcpy(quit_menu.title, "REALLY QUIT?");
+	dynmenu_add_item(&quit_menu, "NO", TANK_VS_TANK_RUN, 0);
+	dynmenu_add_item(&quit_menu, "YES", TANK_VS_TANK_EXIT, 1);
 }
 
 static void add_spark(int x, int y, int vx, int vy)
@@ -445,7 +456,7 @@ static void check_buttons(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		adjust_tank_speed(&tank[0], -TANK_SPEED_INCR);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
-		tank_vs_tank_state = TANK_VS_TANK_EXIT;
+		tank_vs_tank_state = TANK_VS_TANK_CONFIRM_EXIT;
 	}
 }
 
@@ -569,6 +580,30 @@ static void tank_vs_tank_exit(void)
 	returnToMenus();
 }
 
+static void tank_vs_tank_confirm_exit(void)
+{
+	dynmenu_draw(&quit_menu);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	int r0 = button_get_rotation(0);
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+		dynmenu_change_current_selection(&quit_menu, 1);
+	}
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+		dynmenu_change_current_selection(&quit_menu, -1);
+	}
+	if (r0 > 0)
+		dynmenu_change_current_selection(&quit_menu, 1);
+	if (r0 < 0)
+		dynmenu_change_current_selection(&quit_menu, -1);
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	        tank_vs_tank_state = quit_menu.item[quit_menu.current_item].next_state;
+	}
+}
+
 void tank_vs_tank_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (tank_vs_tank_state) {
@@ -577,6 +612,9 @@ void tank_vs_tank_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case TANK_VS_TANK_RUN:
 		tank_vs_tank_run();
+		break;
+	case TANK_VS_TANK_CONFIRM_EXIT:
+		tank_vs_tank_confirm_exit();
 		break;
 	case TANK_VS_TANK_EXIT:
 		tank_vs_tank_exit();
