@@ -17,6 +17,7 @@
 /* Program states.  Initial state is TANK_VS_TANK_INIT */
 enum tank_vs_tank_state_t {
 	TANK_VS_TANK_INIT,
+	TANK_VS_TANK_INTRO,
 	TANK_VS_TANK_RUN,
 	TANK_VS_TANK_CONFIRM_EXIT,
 	TANK_VS_TANK_EXIT,
@@ -87,7 +88,6 @@ static void tank_vs_tank_init(void)
 {
 	FbInit();
 	FbClear();
-	tank_vs_tank_state = TANK_VS_TANK_RUN;
 	tank[0].color = YELLOW;
 	tank[0].x = 256 * (LCD_XSIZE / 2);
 	tank[0].y = 256 * 10;
@@ -110,6 +110,43 @@ static void tank_vs_tank_init(void)
 	strcpy(quit_menu.title, "REALLY QUIT?");
 	dynmenu_add_item(&quit_menu, "NO", TANK_VS_TANK_RUN, 0);
 	dynmenu_add_item(&quit_menu, "YES", TANK_VS_TANK_EXIT, 1);
+
+	tank_vs_tank_state = TANK_VS_TANK_INTRO;
+}
+
+static void tank_vs_tank_intro(void)
+{
+	FbClear();
+	FbColor(WHITE);
+	FbBackgroundColor(BLACK);
+
+	FbWriteString(
+		"THIS IS A TWO\n"
+		"PLAYER GAME.\n\n"
+		"RIGHT PLAYER:\n"
+		"USE ROTARY KNOB\n"
+		"TO STEER & SHOOT\n"
+		"A IS FORWARD, B\n"
+		"IS REVERSE.\n\n"
+		"LEFT PLAYER:\n"
+		"USE ROTARY KNOB\n"
+		"TO STEER & SHOOT\n"
+		"RIGHT DPAD IS\n"
+		"FORWARD, LEFT IS\n"
+		"REVERSE\n\n"
+		"DPAD UP TO QUIT\n");
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
+		tank_vs_tank_state = TANK_VS_TANK_RUN;
 }
 
 static void add_spark(int x, int y, int vx, int vy)
@@ -609,6 +646,9 @@ void tank_vs_tank_cb(__attribute__((unused)) struct menu_t *m)
 	switch (tank_vs_tank_state) {
 	case TANK_VS_TANK_INIT:
 		tank_vs_tank_init();
+		break;
+	case TANK_VS_TANK_INTRO:
+		tank_vs_tank_intro();
 		break;
 	case TANK_VS_TANK_RUN:
 		tank_vs_tank_run();
