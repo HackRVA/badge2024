@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "framebuffer.h"
 #include "display.h"
@@ -188,12 +189,33 @@ void FbImage8bit(const struct asset* asset, unsigned char seqNum)
             pixbyte = *pixdata; /* 1 pixel per byte */
 
             ci = pixbyte;
-            if (ci != G_Fb.transIndex) { /* transparent? */
-                cmap = uCHAR(&(asset->data_cmap[ci * 3]));
 
-                r = cmap[0];
-                g = cmap[1];
-                b = cmap[2];
+            if (ci != G_Fb.transIndex) { /* transparent? */
+                cmap = uCHAR(&(asset->data_cmap[(int) ci * 3]));
+
+		/* asset_converter.py seems to produce a colormap of dimensions cmap[255][3]
+		 * which means that if ci == 255, ci * 3 is out of bounds (address sanitizer
+		 * caught this.  There is some code in asset_converter.py
+		 * which looks like this:
+		 *
+		 * for i in range(0, len(inverted_map) - 1):  # one too many colors, last one is always black
+		 *     color_tuple = inverted_map[i]
+		 *     c_array += f"{{{color_tuple[0]}, {color_tuple[1]}, {color_tuple[2]}}},\n"
+		 * return len(inverted_map) - 1, c_array
+		 *
+		 * which I suspect is not quite right, but I'm not sure what it's supposed to be.
+		 *
+		 * But we can hack around it here:
+		 */
+		if (ci == 255) { /* White. */
+			r = 255;
+			g = 255;
+			b = 255;
+		} else {
+			r = cmap[0];
+			g = cmap[1];
+			b = cmap[2];
+		}
 
                 pixel = ((((r >> 3) & 0b11111) << 11 )
                          |  (((g >> 3) & 0b11111) <<  6 )
