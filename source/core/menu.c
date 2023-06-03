@@ -3,6 +3,7 @@
    Author: Paul Bruggeman
    paul@Killercats.com
 */
+#include <stdio.h>
 #include "menu.h"
 #include "settings.h"
 #include "colors.h"
@@ -366,6 +367,32 @@ void returnToMenus() {
     runningApp = NULL;
 }
 
+static char *menu_item_description = NULL;
+static void display_menu_item_description(__attribute__((unused)) struct menu_t *item)
+{
+	FbColor(CYAN);
+	FbBackgroundColor(BLACK);
+	FbClear();
+	FbMove(0, 0);
+	FbWriteString(menu_item_description);
+	FbSwapBuffers();
+
+	int r0 = button_get_rotation(0);
+	int r1 = button_get_rotation(1);
+	int down_latches = button_down_latches();
+	if (r0 || r1 ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+		returnToMenus();
+	}
+}
+
 extern unsigned char is_dormant;
 
 void menus() {
@@ -420,6 +447,12 @@ void menus() {
                 menu_beep(FUNC_FREQ); /* e */
                 runningApp = G_selectedMenu->data.func;
                 break;
+
+	    case ITEM_DESC:
+		menu_beep(TEXT_FREQ);
+		menu_item_description = G_selectedMenu->data.description;
+		runningApp = display_menu_item_description;
+		break;
 
             default:
                 break;

@@ -53,12 +53,6 @@ const struct menu_t day2_lunch_m[] = {
    {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 
-#if 0
-const struct menu_t day2_p2_m[] = {
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
-};
-#endif
-
 const struct menu_t day2_p1_m[] = {
    {"Wednesday", VERT_ITEM|SKIP_ITEM, TEXT, {NULL}},
    {" 7:59 Registrat", VERT_ITEM, TEXT, {NULL}},
@@ -67,7 +61,17 @@ const struct menu_t day2_p1_m[] = {
    {" 9:00 Keynote", VERT_ITEM, TEXT, {NULL}},
    {"10:00 -Break-", VERT_ITEM, TEXT, {NULL}},
    {"10:00 CTF Comp", VERT_ITEM, TEXT, {NULL}},
-   {"10:00 Badge", VERT_ITEM, TEXT, {NULL}},
+   {"10:00 Badge", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Badge Repair\n\n"
+		"Come learn about\n"
+		"your badge, get\n"
+		"it fixed if\n"
+		"there are any\n"
+		"issues and talk\n"
+		"to HackRVA!\n",
+	},
+   },
    {"10:00 Lock Pick", VERT_ITEM, TEXT, {NULL}},
    {"10:30 NSA", VERT_ITEM, TEXT, {NULL}},
    {"10:30 CISO", VERT_ITEM, TEXT, {NULL}},

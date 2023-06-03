@@ -30,7 +30,8 @@ enum type {
    TEXT,   /* text to display */
    BACK,    /* return to previous menu */
    MENU,    /* sub menu type */
-   FUNCTION /* c function */
+   FUNCTION, /* c function */
+   ITEM_DESC, /* Longer text description of item */
 };
 
 typedef enum  {
@@ -49,6 +50,7 @@ struct menu_t {
 	    * initializers, e.g, "{ .menu = blah }", "{ .func = blah }" */
       const struct menu_t *menu;
       void (*func)(struct menu_t *m);
+      char *description;
       void *generic;
    } data;
 };
