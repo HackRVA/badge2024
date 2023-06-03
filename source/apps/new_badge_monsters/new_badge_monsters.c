@@ -21,6 +21,7 @@
 #define LOG(...)
 #endif
 
+/***************************************** TYPES *************************************************/
 enum app_states {
     INIT_APP_STATE,     //0
     GAME_MENU,          //1 app should draw menu, either main or monster
@@ -33,7 +34,74 @@ enum app_states {
     ENABLE_ALL_MONSTERS //7 for testing, grants ownership of all monsters
 };
 
-/***************************************** GLOBALS ************************************************/
+struct new_monster
+{
+    char name[DYNMENU_MAX_TITLE];
+    bool owned;
+    int color;
+    char blurb[128];
+    const struct asset *asset;
+};
+
+enum draw_state_t {
+    DRAW_MENU,
+    DRAW_MONSTER_MENU,
+    DRAW_MONSTER,
+    DRAW_DESCRIPTION,
+    DRAW_TRADE_STATUS
+};
+
+enum menu_level_t {
+    MAIN_MENU,
+    MONSTER_MENU,
+    DESCRIPTION
+};
+
+/***************************************** PROTOTYPES ********************************************/
+
+
+/********* SETUP & EXIT ****************************/
+static void app_init(void);
+static void exit_app(void);
+
+/******** INPUT ************************************/
+static void check_the_buttons(void);
+
+/******** SAVE & RESTORE ***************************/
+char *key_from_monster(const struct new_monster *m, char *key, size_t len);
+static void set_monster_owned(const int monster_id, const bool owned);
+static void load_from_flash(void);
+static void save_to_flash(void);
+
+/******** ENABLE ***********************************/
+// void enable_monster(const int monster_id);
+#ifdef __linux__
+static void enable_all_monsters(void);
+#endif
+
+/******** TRADING **********************************/
+static void trade_monsters(void);
+
+/******** MENUS ************************************/
+
+static void change_menu_level(enum menu_level_t level);
+static void draw_menu(void);
+static void setup_monster_menu(void);
+static void setup_main_menu(void);
+static void game_menu(void);
+#ifdef __linux__
+static void print_menu_info(void);
+#endif
+
+
+/******** DISPLAY **********************************/
+static void render_monster(void);
+static void render_screen(void);
+static void show_message(const char *message);
+
+
+
+/***************************************** GLOBALS ***********************************************/
 
 struct new_monster new_monsters[] = {
     {
@@ -313,7 +381,7 @@ void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
     state_to_function_map[state.app_state]();
 }
 
-void app_init()
+static void app_init()
 {
     FbInit();
     register_ir_packet_callback(ir_packet_callback);
@@ -329,11 +397,10 @@ void app_init()
     state.initial_mon = badge_system_data()->badgeId % state.nmonsters;
     state.current_monster = state.initial_mon;
     enable_monster(state.initial_mon);
-    state.app_state = GAME_MENU;
     LOG("app_init complete\n");
 }
 
-void exit_app(void)
+static void exit_app(void)
 {
     state.app_state = INIT_APP_STATE;
     save_to_flash();
@@ -348,7 +415,7 @@ char *key_from_monster(const struct new_monster *m, char *key, size_t len)
     return key;
 }
 
-void load_from_flash()
+static void load_from_flash()
 {
     char key[20];
     int unused; //??
@@ -359,7 +426,7 @@ void load_from_flash()
     }
 }
 
-void save_if_enabled(const struct new_monster *m)
+static void save_if_enabled(const struct new_monster *m)
 {
     char key[20];
 
@@ -368,14 +435,14 @@ void save_if_enabled(const struct new_monster *m)
     }
 }
 
-void save_to_flash(void)
+static void save_to_flash(void)
 {
     for (struct new_monster *m = new_monsters; PART_OF_ARRAY(new_monsters, m); m++) {
         save_if_enabled(m);
     }
 }
 
-void set_monster_owned(const int monster_id, const bool owned)
+static void set_monster_owned(const int monster_id, const bool owned)
 {
     new_monsters[monster_id].owned = owned;
 }
@@ -395,7 +462,7 @@ void enable_monster(int monster_id)
 }
 
 #ifdef __linux__
-void enable_all_monsters(void)
+static void enable_all_monsters(void)
 {
     for (size_t i = 0; i < ARRAYSIZE(new_monsters); i++)
         enable_monster(i);
@@ -413,7 +480,7 @@ void enable_all_monsters(void)
  * Draws the menu from the current state. If menu is main menu, add a line with counts
  * of unlocked and total monsters.
  */
-void draw_menu(void)
+static void draw_menu(void)
 {
     dynmenu_draw(&state.menu);
     if(state.menu_level != MONSTER_MENU){
@@ -443,7 +510,7 @@ void draw_menu(void)
 /*
  * Changes the menu from the current level to `level`, runs setup function.
  */
-void change_menu_level(enum menu_level_t level)
+static void change_menu_level(enum menu_level_t level)
 {
     static int which_item = -1;
     LOG("change_menu_level: menu title: %s\n", state.menu.title);
@@ -474,7 +541,7 @@ void change_menu_level(enum menu_level_t level)
 }
 
 #ifdef __linux__
-void print_menu_info()
+static void print_menu_info()
 {
     /* int next_state = menu.item[menu.current_item].next_state
        system("clear"); */
@@ -488,17 +555,38 @@ void print_menu_info()
            state.app_state);
 }
 #else
-void print_menu_info() {}
+static void print_menu_info() {}
+#endif
+
+#ifdef __linux__
+static const char *menu_level_str(const enum menu_level_t menu_level) {
+    switch (menu_level) {
+        case MAIN_MENU:
+            return "MAIN";
+        case MONSTER_MENU:
+            return "MONSTER_MENU";
+        case DESCRIPTION:
+            return "DESCRIPTION";
+        default:
+            return "INVALID";
+    }
+}
 #endif
 
 /*
  * Update game state based on button status.
  * If trading monsters and any button pressed: stop trading, set app_state to GAME_MENU.
  */
-void check_the_buttons(void)
+static void check_the_buttons(void)
 {
+    static enum menu_level_t last_menu_level = 0;
     int down_latches = button_down_latches();
     int rotary = button_get_rotation(0);
+
+    if (state.menu_level != last_menu_level) {
+        LOG("check_the_buttons: new menu level %s\n", menu_level_str(state.menu_level));
+        last_menu_level = state.menu_level;
+    }
 
     /* If we are trading monsters, stop trading monsters on a button press */
     if (state.trading_monsters_enabled) {
@@ -566,29 +654,26 @@ void check_the_buttons(void)
                 dynmenu_change_current_selection(&state.menu, 1);
                 state.screen_changed = true;
                 state.current_monster = state.menu.item[state.menu.current_item].cookie;
-                render_monster();
+                state.app_state = RENDER_MONSTER;
+                // render_monster();
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
                 LOG("button press LEFT\n");
+                LOG("app_state: %d\n", state.app_state);
                 change_menu_level(MONSTER_MENU); //??
+                state.app_state = GAME_MENU;
                 draw_menu();
             }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
+            else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+                     BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+                     BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
             {
-                LOG("button press RIGHT\n");
-                show_message(new_monsters[state.current_monster].blurb);
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
-            {
-                print_menu_info();
                 show_message(new_monsters[state.current_monster].blurb);
              }
             break;
         case DESCRIPTION:
-            LOG("button press case DESCRIPTION\n");
             // press of any button takes user back to monster menu
             if (rotary ||
             BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
@@ -616,7 +701,7 @@ void check_the_buttons(void)
  * monster, otherwise set the current monster to the current menu item.
  * Calls render_monster.
  */
-void setup_monster_menu(void)
+static void setup_monster_menu(void)
 {
     dynmenu_clear(&state.menu);
     state.menu.menu_active = 0;
@@ -635,13 +720,13 @@ void setup_monster_menu(void)
         state.current_monster = state.menu.current_item;
 
     state.screen_changed = true;
-    render_monster();
+    state.app_state = GAME_MENU;
 }
 
 /*
  *
  */
-void setup_main_menu(void)
+static void setup_main_menu(void)
 {
     dynmenu_clear(&state.menu);
     snprintf(state.menu.title, sizeof(state.menu.title), "Badge Monsters");
@@ -656,9 +741,8 @@ void setup_main_menu(void)
     state.screen_changed = true;
 }
 
-void game_menu(void)
+static void game_menu(void)
 {
-    state.menu_level = MAIN_MENU;
     draw_menu();
     check_for_incoming_packets();
     state.app_state = RENDER_SCREEN;
@@ -671,7 +755,7 @@ void game_menu(void)
  *
  * Postconditions: app_state = RENDER_SCREEN, screen_changed = true
  */
-void render_monster(void)
+static void render_monster(void)
 {
     const struct new_monster *monster = &new_monsters[state.current_monster];
 
@@ -706,7 +790,7 @@ void render_monster(void)
     state.app_state = RENDER_SCREEN;
 }
 
-void show_message(const char *message)
+static void show_message(const char *message)
 {
     LOG("%s\n", message);
 
@@ -728,7 +812,7 @@ void show_message(const char *message)
  *
  * Postconditions: app_state = CHECK_THE_BUTTONS, screen_chaged = false
  */
-void render_screen(void)
+static void render_screen(void)
 {
     state.app_state = CHECK_THE_BUTTONS;
     if (!state.screen_changed)
@@ -751,7 +835,7 @@ void render_screen_save_monsters(void) {
     FbImage4bit(new_monsters[current_index].asset, 0);
 }
 
-void trade_monsters(void)
+static void trade_monsters(void)
 {
     static int counter = 0;
 
