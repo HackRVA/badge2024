@@ -469,7 +469,8 @@ void change_menu_level(enum menu_level_t level)
             ;
     }
     state.screen_changed = true;
-    LOG("change_menu_level: new level = %s\n", level == 0 ? "MAIN" : level == 1 ? "GAME" : "DESCRIPTION");
+    state.menu_level = level;
+    LOG("change_menu_level: new level = %s\n", state.menu_level == 0 ? "MAIN" : state.menu_level == 1 ? "MONSTER_MENU" : "DESCRIPTION");
 }
 
 #ifdef __linux__
@@ -561,6 +562,7 @@ void check_the_buttons(void)
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
             {
+                LOG("displaying current selection monster menu\n");
                 dynmenu_change_current_selection(&state.menu, 1);
                 state.screen_changed = true;
                 state.current_monster = state.menu.item[state.menu.current_item].cookie;
@@ -569,10 +571,13 @@ void check_the_buttons(void)
             else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
-                change_menu_level(MAIN_MENU);
+                LOG("button press LEFT\n");
+                change_menu_level(MONSTER_MENU); //??
+                draw_menu();
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
             {
+                LOG("button press RIGHT\n");
                 show_message(new_monsters[state.current_monster].blurb);
             }
             else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
@@ -583,6 +588,7 @@ void check_the_buttons(void)
              }
             break;
         case DESCRIPTION:
+            LOG("button press case DESCRIPTION\n");
             // press of any button takes user back to monster menu
             if (rotary ||
             BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
@@ -593,15 +599,11 @@ void check_the_buttons(void)
             BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
             {
+                LOG("input in case DESCRIPTION, moving to MONSTER_MENU\n");
                 change_menu_level(MONSTER_MENU);
             }
             break;
         }
-
-    // set state to GAME_MENU so we respond to subsequent buttons
-    if (state.menu_level == MONSTER_MENU && state.app_state == CHECK_THE_BUTTONS) {
-        state.app_state = GAME_MENU;
-    }
     return;
 }
 
@@ -664,6 +666,11 @@ void game_menu(void)
 
 //**************************** DISPLAY ***********************************************
 
+/*
+ * Displays state.current_monster on the screen.
+ *
+ * Postconditions: app_state = RENDER_SCREEN, screen_changed = true
+ */
 void render_monster(void)
 {
     const struct new_monster *monster = &new_monsters[state.current_monster];
@@ -716,6 +723,11 @@ void show_message(const char *message)
     state.screen_changed = true;
 }
 
+/*
+ * If state.screen_changed, pushes the display buffer.
+ *
+ * Postconditions: app_state = CHECK_THE_BUTTONS, screen_chaged = false
+ */
 void render_screen(void)
 {
     state.app_state = CHECK_THE_BUTTONS;
@@ -725,6 +737,9 @@ void render_screen(void)
     state.screen_changed = false;
 }
 
+/*
+ * Displays a monster, showing a new one each time it is called.
+ */
 void render_screen_save_monsters(void) {
     static unsigned char current_index = 0;
     current_index++;
