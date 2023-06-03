@@ -4,6 +4,7 @@
    paul@Killercats.com
 */
 #include <stdio.h>
+#include <stdlib.h>
 #include "menu.h"
 #include "settings.h"
 #include "colors.h"
@@ -245,7 +246,16 @@ struct menu_t *display_menu(struct menu_t *menu,
 		continue;
 	}
 
-        for (c=0, rect_w=0; (menu->name[c] != 0); c++) rect_w += CHAR_WIDTH;
+        for (c=0, rect_w=0; (menu->name[c] != 0); c++) {
+		rect_w += CHAR_WIDTH;
+#ifdef TARGET_SIMULATOR
+		/* Catch overly long menu names */
+		if (c >= sizeof(menu->name) - 1) {
+			printf("menu name too long: '%s'\n", menu->name);
+			abort();
+		}
+#endif
+	}
 
         if (menu->attrib & VERT_ITEM) {
             cursor_y += (CHAR_HEIGHT + 2 * SCAN_BLANK);
