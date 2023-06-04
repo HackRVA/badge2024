@@ -19,7 +19,7 @@
 
 // Apps
 #include "about_badge.h"
-#include "badge_monsters.h"
+#include "new_badge_monsters/new_badge_monsters.h"
 #include "battlezone.h"
 #include "clue.h"
 #include "game_of_life.h"
@@ -146,7 +146,7 @@ struct menu_t *getSelectedMenuStack(unsigned char item) {
 }
 
 /*
-  currently the char routine draws Y in decreasing (up), 
+  currently the char routine draws Y in decreasing (up),
   so 1st Y position has to offset down CHAR_HEIGHT to account for that
 */
 
@@ -272,7 +272,7 @@ struct menu_t *display_menu(struct menu_t *menu,
         }
 
         if (selected == NULL) {
-            if (menu->attrib & DEFAULT_ITEM) 
+            if (menu->attrib & DEFAULT_ITEM)
             selected = menu;
         }
 
@@ -299,7 +299,7 @@ struct menu_t *display_menu(struct menu_t *menu,
             default:
                 break;
         }
-        
+
         FbMove(cursor_x+1, cursor_y+1);
         FbWriteLine(menu->name);
         cursor_x += (rect_w + CHAR_WIDTH);
@@ -357,7 +357,7 @@ void closeMenuAndReturn(void) {
     runningApp = NULL;
 }
 
-/* 
+/*
    NOTE-
      apps will call this but since this returns to the callback
      code will execute up the the fuction return()

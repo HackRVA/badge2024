@@ -1,0 +1,102 @@
+---
+name: new_badge_monsters_assets
+images:
+  - name: "Access Control Alligator"
+    shortname: "accesCtrlGator"
+    filename: "AccessControlAlligator.png"
+    bits: 4
+  - name: "DNS Dolphin"
+    shortname: "dnsDolphin"
+    filename: "DNS_Dolphin.png"
+    bits: 4
+  - name: "Crypto Raptor"
+    shortname: "cryptoraptor"
+    filename: "CryptoRaptor.png"
+    bits: 4
+  - name: "Firewall Flyer"
+    shortname: "firewallFlyer"
+    filename: "FirewallFlyer.png"
+    bits: 4
+  - name: "Intrusion Detection Iguana"
+    filename: "IntrusionDetectionIguana.png"
+    bits: 4
+  - name: "PenTest Penguin"
+    filename: "PenTestPenguin.png"
+    bits: 4
+  - name: "Proxy Porcupine"
+    filename: "ProxyPorcupine.png"
+    bits: 4
+  - name: "Spam Spider"
+    filename: "SpamSpider.png"
+    bits: 4
+  - name: "Adware Anteater"
+    filename: "AdwareAnteater.png"
+    bits: 4
+  - name: "Backdoor Bee"
+    filename: "BackdoorBee.png"
+    bits: 4
+  - name: "Botnet Bat"
+    filename: "BotnetBat.png"
+    bits: 4
+  - name: "Brute-Force Baboon"
+    filename: "BruteForceBaboon.png"
+    bits: 4
+  - name: "DDOS Dragon"
+    filename: "DDoS_Dragon.png"
+    bits: 4
+  - name: "Exploit Eagle"
+    filename: "ExploitEagle.png"
+    bits: 4
+  - name: "Hacker Hawk"
+    shortname: "hackerHawk"
+    filename: "HackerHawk.png"
+    bits: 4
+  - name: "Keylogger Koala"
+    filename: "KeyloggerKoala.png"
+    bits: 4
+  - name: "Malware Mantis"
+    filename: "MalwareMantis.png"
+    bits: 4
+  - name: "Packet Sniffer Puma"
+    filename: "PacketSnifferPuma.png"
+    bits: 4
+  - name: "Phishing Phoenix"
+    shortname: "phishinPhoenix"
+    filename: "PhishingPhoenix.png"
+    bits: 4
+  - name: "Ransomware Rabbit"
+    filename: "RansomwareRabbit.png"
+    bits: 4
+  - name: "Rootkit Rhino"
+    filename: "RootkitRhino.png"
+    bits: 4
+  - name: "Sniffer Snail"
+    shortname: "snifferSnail"
+    filename: "SnifferSnail.png"
+    bits: 4
+  - name: "Social-Engineer Squirrel"
+    filename: "SocialEngineerSquirrel.png"
+    bits: 4
+  - name: "SSL Shark"
+    filename: "SSL_Shark.png"
+    bits: 4
+  - name: "Trojan Turtle"
+    shortname: "trojanTurtle"
+    filename: "TrojanTurtle.png"
+    bits: 4
+  - name: "VPN Vulture"
+    filename: "VPN_Vulture.png"
+    bits: 4
+  - name: "Worm Wombat"
+    filename: "WormWombat.png"
+    bits: 4
+  - name: "IDS Impalas"
+    filename: "IDS_Impalas.png"
+    bits: 4
+  - name: "Two-Factor Tiger"
+    shortname: "2FactorTiger"
+    filename: "TwoFactorTiger.png"
+    bits: 4
+  - name: "SIEM Sloth"
+    filename: "SIEM_Sloth.png"
+    bits: 4
