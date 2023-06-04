@@ -521,7 +521,8 @@ void menus() {
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         }
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 	/* Left rotary encoder switch can be used to back out of menus */
         menu_beep(BACK_FREQ);
         pop_menu();
