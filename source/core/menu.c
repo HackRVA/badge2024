@@ -426,7 +426,8 @@ void menus() {
     int rotary = button_get_rotation(0);
     /* see if physical button has been clicked */
     if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-        BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+        BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+	BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
         // action happened that will result in menu redraw
         // do_animation = 1;
         switch (G_selectedMenu->type) {
