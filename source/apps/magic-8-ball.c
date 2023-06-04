@@ -117,6 +117,8 @@ static void magic_8_ball_init(void)
 	led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 0);
 }
 
+static int manually_triggered = 0;
+
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
@@ -131,6 +133,29 @@ static void check_buttons(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	}
+	if ((button_poll(BADGE_BUTTON_A) && button_poll(BADGE_BUTTON_B))) {
+		manually_triggered = 1;
+	}
+
+	if (manually_triggered) {
+		if (screen_brightness < 255) {
+			led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, screen_brightness);
+			screen_brightness++;
+			if (screen_brightness > 255) {
+				screen_brightness = 255;
+				manually_triggered = 0;
+			}
+		} else {
+			if (manually_triggered) {
+				screen_brightness = 0;
+				led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, screen_brightness);
+				/* choose a new random message */
+				current_message = random_num(NMSGS);
+				screen_changed = 1;
+				manually_triggered = 0;
+			}
+		}
 	}
 }
 
