@@ -420,9 +420,15 @@ static void exit_app(void)
 
 static void game_menu(void)
 {
+    if (state.menu_level != GAME_MENU_LEVEL) {
+        state.menu_level = GAME_MENU_LEVEL;
+        change_menu_level(GAME_MENU_LEVEL);
+    }
     if (state.screen_changed) {
+        LOG("game_menu(): draw_menu()\n");
         draw_menu();
         FbPushBuffer();
+        state.screen_changed = false;
     }
     check_for_incoming_packets();
     game_menu_button_handler();
@@ -430,9 +436,17 @@ static void game_menu(void)
 
 static void monster_menu(void)
 {
+    if (state.menu_level != MONSTER_MENU_LEVEL) {
+        LOG("monster_menu(): changing menu_level to MONSTER_MENU_LEVEL\n");
+        state.menu_level = MONSTER_MENU_LEVEL;
+        change_menu_level(MONSTER_MENU_LEVEL);
+        state.screen_changed = true;
+    }
     if (state.screen_changed) {
+        LOG("monster_menu(): draw_menu()\n");
         draw_menu();
         FbPushBuffer();
+        state.screen_changed = false;
     }
     check_for_incoming_packets();
     monster_menu_button_handler();
@@ -580,25 +594,28 @@ static void monster_menu_button_handler(void) {
     {
         dynmenu_change_current_selection(&state.menu, -1);
         state.current_monster = state.menu.item[state.menu.current_item].cookie;
+        state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
     {
         dynmenu_change_current_selection(&state.menu, 1);
         state.current_monster = state.menu.item[state.menu.current_item].cookie;
+        state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
              BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
     {
         change_menu_level(GAME_MENU_LEVEL);
         draw_menu();
+        state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
              BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
              BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
     {
-        state.app_state = SHOW_MONSTER;
+        state.app_state = state.menu.item[state.menu.current_item].next_state;
+        state.screen_changed = true;
     }
-    state.screen_changed = true; // make sure it gets redrawn
 }
 
 /*
@@ -655,7 +672,7 @@ static void show_monster_button_handler(void) {
     if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
              BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
     {
-        state.app_state = GAME_MENU;
+        state.app_state = MONSTER_MENU;
         state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
@@ -770,6 +787,12 @@ static void draw_menu(void)
 
 /*
  * Changes the menu from the current level to `level`, runs setup function.
+ *
+ * state changes:
+ * state.screen_changed -> true
+ * state.menu_level = level
+ * state.menu.current_item (conditional)
+ * state.current_monster (conditional)
  */
 static void change_menu_level(enum menu_level_t level)
 {
@@ -792,7 +815,6 @@ static void change_menu_level(enum menu_level_t level)
             state.current_monster = state.menu.item[state.menu.current_item].cookie;
         }
     }
-    state.screen_changed = true;
     state.menu_level = level;
     LOG("change_menu_level: new level = %s\n", menu_level_str(state.menu_level));
 }
@@ -821,8 +843,10 @@ static void setup_monster_menu(void)
 
     int index = 0;
     for(const struct new_monster *m = new_monsters; PART_OF_ARRAY(new_monsters, m); m++){
-        if(m->owned)
+        if(m->owned) {
             dynmenu_add_item(&state.menu, (char *)m->name, SHOW_MONSTER, index);
+            LOG("Added monster %d to menu\n", index);
+        }
         index++;
     }
     dynmenu_add_item(&state.menu, "EXIT", GAME_MENU, 0);
@@ -842,8 +866,7 @@ static void setup_main_menu(void)
 {
     dynmenu_clear(&state.menu);
     snprintf(state.menu.title, sizeof(state.menu.title), "Badge Monsters");
-    // OK, monsters menu needs its own state
-    dynmenu_add_item(&state.menu, "Monsters", GAME_MENU, 0);
+    dynmenu_add_item(&state.menu, "Monsters", MONSTER_MENU, 0);
     dynmenu_add_item(&state.menu, "Trade Monsters", TRADE_MONSTERS, 1);
     dynmenu_add_item(&state.menu, "EXIT", EXIT_APP, 2);
 #ifdef __linux__
