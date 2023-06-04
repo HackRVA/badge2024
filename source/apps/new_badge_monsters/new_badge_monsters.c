@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "new_badge_monsters.h"
 #include "new_badge_monsters_assets.h"
@@ -15,7 +16,6 @@
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
 
 #ifdef __linux__
-#include <stdio.h>
 #define LOG(...) printf(__VA_ARGS__)
 #else
 #define LOG(...)
