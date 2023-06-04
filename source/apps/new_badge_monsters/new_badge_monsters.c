@@ -88,7 +88,7 @@ static void trade_monsters(void);
 /******** MENUS ************************************/
 
 static void change_menu_level(enum menu_level_t level);
-static void draw_menu(void);
+static void show_monster_count(void);
 static void setup_monster_menu(void);
 static void setup_main_menu(void);
 
@@ -327,7 +327,7 @@ struct game_state {
     unsigned int initial_mon;
     // menu used for both game and monster menu, rebuilt when menu changed
     struct dynmenu menu;
-    // 1 extra menu item: "EXIT"
+    // space for (longer) monster menu + 1 extra menu item: "EXIT"
     struct dynmenu_item menu_item[ARRAYSIZE(new_monsters) + 1];
     // TODO: since the two menus are different app states, we might not need this
     enum menu_level_t menu_level;
@@ -396,7 +396,7 @@ static void app_init()
     // set up to receive IR
     register_ir_packet_callback(ir_packet_callback);
     // initialize menu and load main menu
-    dynmenu_init(&state.menu, state.menu_item, ARRAYSIZE(new_monsters));
+    dynmenu_init(&state.menu, state.menu_item, ARRAYSIZE(state.menu_item));
     setup_main_menu();
     state.menu_level = GAME_MENU_LEVEL;
 
@@ -433,7 +433,7 @@ static void game_menu(void)
     }
     if (state.screen_changed) {
         LOG("game_menu(): draw_menu()\n");
-        draw_menu();
+        dynmenu_draw(&state.menu);
         FbPushBuffer();
         state.screen_changed = false;
     }
@@ -444,15 +444,15 @@ static void game_menu(void)
 static void monster_menu(void)
 {
     if (state.menu_level != MONSTER_MENU_LEVEL) {
-        LOG("monster_menu(): changing menu_level to MONSTER_MENU_LEVEL\n");
         state.menu_level = MONSTER_MENU_LEVEL;
         change_menu_level(MONSTER_MENU_LEVEL);
-        state.screen_changed = true;
     }
     if (state.screen_changed) {
         LOG("monster_menu(): draw_menu()\n");
-        draw_menu();
+        dynmenu_draw(&state.menu);
+        show_monster_count();
         FbPushBuffer();
+        LOG("monster_menu(): FbPushBuffer()\n");
         state.screen_changed = false;
     }
     check_for_incoming_packets();
@@ -579,7 +579,9 @@ static void game_menu_button_handler(void) {
         // menu item 0 is "monsters", and we need to change to other menu
         if (state.menu.current_item == 0) {
             change_menu_level(MONSTER_MENU_LEVEL);
-            state.current_monster = state.menu.item[state.menu.current_item].cookie;
+            dynmenu_draw(&state.menu);
+            show_monster_count();
+            state.current_monster = menu_item.cookie;
         }
         state.app_state = menu_item.next_state;
     }
@@ -613,8 +615,7 @@ static void monster_menu_button_handler(void) {
              BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
     {
         change_menu_level(GAME_MENU_LEVEL);
-        draw_menu();
-        state.screen_changed = true;
+        dynmenu_draw(&state.menu);
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
              BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
@@ -676,7 +677,28 @@ static void show_monster_button_handler(void) {
     const int down_latches = button_down_latches();
     const int rotary = button_get_rotation(0);
 
-    if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
+    {
+        // we change position in menu, but we keep displaying monster instead
+        dynmenu_change_current_selection(&state.menu, -1);
+        // skip "EXIT" item
+        // Assumes at least one monster in the menu!!
+        while (state.menu.item[state.menu.current_item].next_state != SHOW_MONSTER) {
+            dynmenu_change_current_selection(&state.menu, -1);
+        }
+        state.current_monster = state.menu.item[state.menu.current_item].cookie;
+        state.screen_changed = true;
+    }
+    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
+    {
+        dynmenu_change_current_selection(&state.menu, 1);
+        while (state.menu.item[state.menu.current_item].next_state != SHOW_MONSTER) {
+            dynmenu_change_current_selection(&state.menu, 1);
+        }
+        state.current_monster = state.menu.item[state.menu.current_item].cookie;
+        state.screen_changed = true;
+    }
+    else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
              BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
     {
         state.app_state = MONSTER_MENU;
@@ -763,33 +785,29 @@ static void enable_all_monsters(void)
 /***************************************** MENUS *************************************************/
 
 /*
- * Draws the menu from the current state. If menu is main menu, add a line with counts
- * of unlocked and total monsters.
+ * Adds a line to the current screen showing # of monsters owned / total # of monsters.
  */
-static void draw_menu(void)
+static void show_monster_count(void)
 {
-    dynmenu_draw(&state.menu);
-    if(state.menu_level == MONSTER_MENU_LEVEL){
-        int nunlocked = 0;
-        char available_monsters[3];
-        char unlocked_monsters[3];
-        for(size_t i = 0; i < ARRAYSIZE(new_monsters); i++)
+    int nunlocked = 0;
+    char available_monsters[3];
+    char unlocked_monsters[3];
+    for(size_t i = 0; i < ARRAYSIZE(new_monsters); i++)
+    {
+        if(new_monsters[i].owned)
         {
-            if(new_monsters[i].owned)
-            {
-                nunlocked++;
-            }
+            nunlocked++;
         }
-
-        snprintf( available_monsters, sizeof(available_monsters), "%d", (int)ARRAYSIZE(new_monsters));
-        snprintf( unlocked_monsters, sizeof(unlocked_monsters), "%d", nunlocked);
-
-        FbMove(1,25);
-        FbWriteLine("Collected: ");
-        FbWriteLine(unlocked_monsters);
-        FbWriteLine("/");
-        FbWriteLine(available_monsters);
     }
+
+    snprintf( available_monsters, sizeof(available_monsters), "%d", (int)ARRAYSIZE(new_monsters));
+    snprintf( unlocked_monsters, sizeof(unlocked_monsters), "%d", nunlocked);
+
+    FbMove(1,25);
+    FbWriteLine("Collected: ");
+    FbWriteLine(unlocked_monsters);
+    FbWriteLine("/");
+    FbWriteLine(available_monsters);
 }
 
 /*
@@ -824,6 +842,7 @@ static void change_menu_level(enum menu_level_t level)
     }
     state.menu_level = level;
     LOG("change_menu_level: new level = %s\n", menu_level_str(state.menu_level));
+    state.screen_changed = true;
 }
 
 
@@ -886,7 +905,8 @@ static void setup_main_menu(void)
 //**************************** DISPLAY ***********************************************
 
 /*
- * Displays a monster, showing a new one each time it is called.
+ * Displays a monster, showing a new one each time it is called. For use by screen
+ * saver.
  */
 void render_screen_save_monsters(void) {
     static unsigned char current_index = 0;
