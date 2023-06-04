@@ -23,15 +23,16 @@
 
 /***************************************** TYPES *************************************************/
 enum app_states {
-    INIT_APP_STATE,     //0
-    GAME_MENU,          //1 app should draw menu, either main or monster
-    RENDER_SCREEN,      //2 app should call render_screen() to update display
-    RENDER_MONSTER,     //3 app should show monster
-    TRADE_MONSTERS,     //4 enters trading mode, starts IR communications
-    CHECK_THE_BUTTONS,  //5 default idle state, awaiting user input
-
-    EXIT_APP,           //6 returns to badge menu
-    ENABLE_ALL_MONSTERS //7 for testing, grants ownership of all monsters
+    APP_INIT,
+    GAME_MENU,
+    MONSTER_MENU,
+    SHOW_MONSTER,
+    SHOW_DESCRIPTION,
+    TRADE_MONSTERS,
+    EXIT_APP
+#ifdef __linux__
+    , ENABLE_ALL_MONSTERS //7 for testing, grants ownership of all monsters
+#endif
 };
 
 struct new_monster
@@ -43,29 +44,31 @@ struct new_monster
     const struct asset *asset;
 };
 
-enum draw_state_t {
-    DRAW_MENU,
-    DRAW_MONSTER_MENU,
-    DRAW_MONSTER,
-    DRAW_DESCRIPTION,
-    DRAW_TRADE_STATUS
+enum menu_level_t {
+    GAME_MENU_LEVEL,
+    MONSTER_MENU_LEVEL
 };
 
-enum menu_level_t {
-    MAIN_MENU,
-    MONSTER_MENU,
-    DESCRIPTION
-};
+// each game state is mapped to a function with this type signature
+typedef void (*state_to_function_map_fn_type)(void);
 
 /***************************************** PROTOTYPES ********************************************/
-
-
-/********* SETUP & EXIT ****************************/
+/********* STATE FUNCTIONS ****************************/
+// code should not call these directly; instead set app_state
 static void app_init(void);
+static void game_menu(void);
+static void monster_menu(void);
+static void show_monster(void);
+static void show_description(void);
+static void trade_monsters(void);
 static void exit_app(void);
 
-/******** INPUT ************************************/
-static void check_the_buttons(void);
+/********* INPUT HANDLERS **************************/
+static void game_menu_button_handler(void);
+static void monster_menu_button_handler(void);
+static void show_monster_button_handler(void);
+static void show_description_button_handler(void);
+static void trade_monsters_button_handler(void);
 
 /******** SAVE & RESTORE ***************************/
 char *key_from_monster(const struct new_monster *m, char *key, size_t len);
@@ -88,21 +91,13 @@ static void change_menu_level(enum menu_level_t level);
 static void draw_menu(void);
 static void setup_monster_menu(void);
 static void setup_main_menu(void);
-static void game_menu(void);
+
 #ifdef __linux__
-static void print_menu_info(void);
+static const char *menu_level_str(const enum menu_level_t menu_level);
 #endif
 
 
-/******** DISPLAY **********************************/
-static void render_monster(void);
-static void render_screen(void);
-static void show_message(const char *message);
-
-
-
 /***************************************** GLOBALS ***********************************************/
-
 struct new_monster new_monsters[] = {
     {
         "cryptoraptor",
@@ -316,6 +311,7 @@ struct new_monster new_monsters[] = {
     }
 };
 
+// type, but it must be declared AFTER new_monsters for ARRAYSIZE
 /*
  * global state for game -- used by almost all functions.
 */
@@ -330,12 +326,14 @@ struct game_state {
     bool trading_monsters_enabled;
     unsigned int initial_mon;
     struct dynmenu menu;
-    struct dynmenu_item menu_item[ARRAYSIZE(new_monsters)];
+    struct dynmenu_item menu_item[ARRAYSIZE(new_monsters) + 1];
+    // need to remember menu level even in non-menu states
     enum menu_level_t menu_level;
 };
 
+
 static struct game_state state = {
-    false, 0, 0, INIT_APP_STATE, false,
+    false, 0, 0, APP_INIT, false,
     0, {
         "Badge Monsters",
         "",
@@ -348,65 +346,306 @@ static struct game_state state = {
         0,
         0xFFFFFF,
         0x0
-    }, {}, MAIN_MENU
+    }, {}, GAME_MENU_LEVEL
 };
-
-typedef void (*state_to_function_map_fn_type)(void);
 
 static state_to_function_map_fn_type state_to_function_map[] = {
     app_init,
     game_menu,
-    render_screen,
-    render_monster,
+    monster_menu,
+    show_monster,
+    show_description,
     trade_monsters,
-    check_the_buttons,
     exit_app,
 #ifdef __linux__
     enable_all_monsters,
 #endif
 };
 
-/***************************************** End of GLOBALS *****************************************/
+/***************************************** End of GLOBALS ****************************************/
 
 void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
 {
-#ifdef __linux__
-    // print only state changes, or we get 100s of useless lines of output
-    static unsigned int last_state = EXIT_APP;
-    if (last_state != state.app_state) {
-        LOG("badge_monsters_cb: state %d\n", state.app_state);
-        last_state = state.app_state;
-    }
-#endif
     state_to_function_map[state.app_state]();
 }
 
+/***************************************** STATE FUNCTIONS ***************************************/
+/*
+ * Each of these functions is called directly from the callback based on the current app state.
+ * Each should do roughly the following:
+ * 1. If screen_changed is false, draw to the screen based on the current state.
+ * 2. check for user input
+ * 3. set app_state to next state, if it's different
+ */
+
+/*
+ * Initializes data structures and screen, loads any saved monsters, sets up main menu.
+ * state --> GAME_MENU
+ */
 static void app_init()
 {
+    // graphics hardware init
     FbInit();
+    // set up to receive IR
     register_ir_packet_callback(ir_packet_callback);
-    LOG("app_init: %lu, %d\n", ARRAYSIZE(new_monsters), 0);
+    // initialize menu and load main menu
     dynmenu_init(&state.menu, state.menu_item, ARRAYSIZE(new_monsters));
     setup_main_menu();
-    change_menu_level(MAIN_MENU);
-    state.app_state = GAME_MENU;
-    state.screen_changed = true;
-    state.nmonsters = ARRAYSIZE(new_monsters);
+    state.menu_level = GAME_MENU_LEVEL;
 
+    // set up monster data structures, load
+    state.nmonsters = ARRAYSIZE(new_monsters);
     load_from_flash();
+    // initial monster different for different badges
     state.initial_mon = badge_system_data()->badgeId % state.nmonsters;
     state.current_monster = state.initial_mon;
     enable_monster(state.initial_mon);
+
+    // tell app to draw screen, go to menu
+    state.screen_changed = true;
+    state.app_state = GAME_MENU;
     LOG("app_init complete\n");
 }
 
+/*
+ * Saves monsters, de-initializes data, return to badge menu
+ */
 static void exit_app(void)
 {
-    state.app_state = INIT_APP_STATE;
+    state.app_state = APP_INIT;
     save_to_flash();
     unregister_ir_packet_callback(ir_packet_callback);
     returnToMenus();
 }
+
+static void game_menu(void)
+{
+    if (state.screen_changed) {
+        draw_menu();
+        FbPushBuffer();
+    }
+    check_for_incoming_packets();
+    game_menu_button_handler();
+}
+
+static void monster_menu(void)
+{
+    if (state.screen_changed) {
+        draw_menu();
+        FbPushBuffer();
+    }
+    check_for_incoming_packets();
+    monster_menu_button_handler();
+}
+
+/*
+ * If trading_monstes_enabled == false, sets it to true and draws a message to screen.
+ * Sends an IR packet every 10 loops.
+ */
+static void trade_monsters(void)
+{
+    static int counter = 0;
+
+    counter++;
+    if ((counter % 10) == 0) { /* transmit our monster IR packet */
+        build_and_send_packet(BADGE_IR_GAME_ADDRESS, BADGE_IR_BROADCAST_ID,
+                              (OPCODE_XMIT_MONSTER << 12) | (state.initial_mon & 0x01ff));
+        audio_out_beep(500, 100);
+    }
+    if (!state.trading_monsters_enabled) {
+        FbClear();
+        FbMove(10, 60);
+        FbWriteLine("TRADING");
+        FbMove(10, 70);
+        FbWriteLine("MONSTERS!");
+        FbPushBuffer();
+        state.trading_monsters_enabled = true;
+    }
+    trade_monsters_button_handler();
+}
+
+
+/*
+ * Displays state.current_monster on the screen.
+ *
+ * Postconditions: app_state = RENDER_SCREEN, screen_changed = true
+ */
+static void show_monster(void)
+{
+    const struct new_monster *monster = &new_monsters[state.current_monster];
+
+    if (state.screen_changed) {
+        LOG("render_monster: %s\n", monster->name);
+        FbClear();
+        FbMove(0, 10);
+        FbImage4bit(monster->asset, 0);
+        if(state.current_monster == state.initial_mon)
+        {
+            FbMove(0,10);
+            FbWriteLine("--starting-mon--");
+        }
+        // TODO: approximately center based on name length
+        FbMove(10,0);
+        FbColor(monster->color);
+        FbWriteLine(monster->name);
+
+        FbColor(WHITE);
+        FbMove(43, LCD_YSIZE - 15);
+        FbWriteLine("|down|");
+        FbColor(GREEN);
+
+        FbMove(5, LCD_YSIZE - 15);
+        FbWriteLine("<Back");
+
+
+        FbMove(90, LCD_YSIZE - 15);
+        FbWriteLine("desc>");
+
+        FbSwapBuffers();
+        FbPushBuffer();
+        state.screen_changed = false;
+    }
+    show_monster_button_handler();
+}
+
+static void show_description(void)
+{
+    const char *desc = new_monsters[state.current_monster].blurb;
+    if (state.screen_changed) {
+        FbClear();
+        FbColor(WHITE);
+
+        FbMove(8, 5);
+        FbWriteString(desc);
+        FbMove(5, 120);
+        FbWriteLine("<Back");
+        FbPushBuffer();
+    }
+    state.screen_changed = false;
+    show_description_button_handler();
+}
+
+
+/***************************************** INPUT HANDLERS ****************************************/
+// app_init() and exit_app() don't need handlers
+
+/*
+ * Handles input for the main game menu:
+ *
+ * "up" --> go to previous menu item
+ * "down" --> go to next menu item
+ * "left"/"right" --> do nothing
+ * "click" --> go to app state associated with menu item
+ */
+static void game_menu_button_handler(void) {
+    const int down_latches = button_down_latches();
+    const int rotary = button_get_rotation(0);
+
+    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
+    {
+        dynmenu_change_current_selection(&state.menu, -1);
+        state.screen_changed = true;
+    }
+    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
+    {
+        dynmenu_change_current_selection(&state.menu, 1);
+        state.screen_changed = true;
+    }
+    else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+    BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
+    {
+        const struct dynmenu_item menu_item = state.menu.item[state.menu.current_item];
+        // menu item 0 is "monsters", and we need to change to other menu
+        if (state.menu.current_item == 0) {
+            change_menu_level(MONSTER_MENU_LEVEL);
+            state.current_monster = state.menu.item[state.menu.current_item].cookie;
+        }
+        state.app_state = menu_item.next_state;
+    }
+}
+
+/*
+ * Handles input for the monster menu.
+ *
+ * "up" --> go to previous monster (and update current_monster)
+ * "down" --> go to next monster (and update current_monster)
+ * "left" --> change to MAIN_MENU level
+ * "right"/"click" --> display currently selected monster
+ */
+static void monster_menu_button_handler(void) {
+    const int down_latches = button_down_latches();
+    const int rotary = button_get_rotation(0);
+
+    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
+    {
+        dynmenu_change_current_selection(&state.menu, -1);
+        state.current_monster = state.menu.item[state.menu.current_item].cookie;
+    }
+    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
+    {
+        dynmenu_change_current_selection(&state.menu, 1);
+        state.current_monster = state.menu.item[state.menu.current_item].cookie;
+    }
+    else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
+    {
+        change_menu_level(GAME_MENU_LEVEL);
+        draw_menu();
+    }
+    else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+             BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+             BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
+    {
+        state.app_state = SHOW_MONSTER;
+    }
+    state.screen_changed = true; // make sure it gets redrawn
+}
+
+/*
+ * On any button click, ends trading, returns to game menu
+ */
+static void trade_monsters_button_handler(void) {
+    const int down_latches = button_down_latches();
+
+    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+        state.trading_monsters_enabled = false;
+        state.app_state = GAME_MENU;
+        state.screen_changed = true;
+    }
+}
+
+/*
+ * Handles input for monster description screen
+ *
+ * "up" -->
+ * "down" -->
+ * "left" --> redisplay monster
+ * "right"/"click" -->
+ */
+static void show_description_button_handler(void) {
+    const int down_latches = button_down_latches();
+
+    if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
+    {
+        state.app_state = SHOW_MONSTER;
+        state.screen_changed = true;
+    }
+}
+
+static void show_monster_button_handler(void) {
+    const int down_latches = button_down_latches();
+    const int rotary = button_get_rotation(0);
+}
+
+/***************************************** SAVE/RESTORE ******************************************/
 
 char *key_from_monster(const struct new_monster *m, char *key, size_t len)
 {
@@ -442,6 +681,7 @@ static void save_to_flash(void)
     }
 }
 
+/***************************************** MONSTER STATUS ****************************************/
 static void set_monster_owned(const int monster_id, const bool owned)
 {
     new_monsters[monster_id].owned = owned;
@@ -469,12 +709,12 @@ static void enable_all_monsters(void)
     FbClear();
     FbMove(2, 2);
     FbWriteString("ALL MONSTERS\nENABLED!");
-    state.app_state = RENDER_SCREEN;
+    state.app_state = GAME_MENU;
 }
 #endif
 
 
-//********************************** MENUS *****************************************
+/***************************************** MENUS *************************************************/
 
 /*
  * Draws the menu from the current state. If menu is main menu, add a line with counts
@@ -483,7 +723,7 @@ static void enable_all_monsters(void)
 static void draw_menu(void)
 {
     dynmenu_draw(&state.menu);
-    if(state.menu_level != MONSTER_MENU){
+    if(state.menu_level == MONSTER_MENU_LEVEL){
         int nunlocked = 0;
         char available_monsters[3];
         char unlocked_monsters[3];
@@ -504,7 +744,6 @@ static void draw_menu(void)
         FbWriteLine("/");
         FbWriteLine(available_monsters);
     }
-    state.app_state = RENDER_SCREEN;
 }
 
 /*
@@ -512,194 +751,45 @@ static void draw_menu(void)
  */
 static void change_menu_level(enum menu_level_t level)
 {
-    static int which_item = -1;
-    LOG("change_menu_level: menu title: %s\n", state.menu.title);
+    // remember the most recent monster selected
+    static int which_monster = -1;
 
-    if (which_item == -1)
-        which_item = state.initial_mon;
+    if (which_monster == -1)
+        which_monster = state.initial_mon;
 
     if (strcmp(state.menu.title, "Monsters") == 0)
-        which_item = state.menu.current_item;
+        which_monster = state.menu.current_item;
 
-    switch(level){
-        case MAIN_MENU:
-            setup_main_menu();
-            break;
-        case MONSTER_MENU:
-            setup_monster_menu();
-            if (state.menu.max_items > which_item) {
-                state.menu.current_item = which_item; /* Stay on the same monster */
-                state.current_monster = state.menu.item[state.menu.current_item].cookie;
-            }
-            break;
-        case DESCRIPTION:
-            ;
+    if (level == GAME_MENU_LEVEL) {
+        setup_main_menu();
+    } else {
+        setup_monster_menu();
+        // set current monster to same as previous, if it's in menu
+        if (state.menu.max_items > which_monster) {
+            state.menu.current_item = which_monster; /* Stay on the same monster */
+            state.current_monster = state.menu.item[state.menu.current_item].cookie;
+        }
     }
     state.screen_changed = true;
     state.menu_level = level;
-    LOG("change_menu_level: new level = %s\n", state.menu_level == 0 ? "MAIN" : state.menu_level == 1 ? "MONSTER_MENU" : "DESCRIPTION");
+    LOG("change_menu_level: new level = %s\n", menu_level_str(state.menu_level));
 }
 
-#ifdef __linux__
-static void print_menu_info()
-{
-    /* int next_state = menu.item[menu.current_item].next_state
-       system("clear"); */
-    printf("current item: %d\n  menu level: %s\n  current monster: %d\n  menu item: %s\n  cookie: %d\n  # items: %d\n  app state: %d\n",
-           state.menu.current_item,
-           state.menu_level == 0 ? "MAIN" : state.menu_level == 1 ? "GAME" : "DESCRIPTION",
-           state.current_monster,
-           state.menu.item[state.menu.current_item].text,
-           state.menu.item[state.menu.current_item].cookie,
-           state.menu.nitems,
-           state.app_state);
-}
-#else
-static void print_menu_info() {}
-#endif
 
 #ifdef __linux__
 static const char *menu_level_str(const enum menu_level_t menu_level) {
-    switch (menu_level) {
-        case MAIN_MENU:
-            return "MAIN";
-        case MONSTER_MENU:
-            return "MONSTER_MENU";
-        case DESCRIPTION:
-            return "DESCRIPTION";
-        default:
-            return "INVALID";
-    }
+    // TODO: convert all "main" references to "game"
+    return menu_level == GAME_MENU_LEVEL ? "MAIN" : "MONSTER_MENU";
 }
 #endif
 
 /*
- * Update game state based on button status.
- * If trading monsters and any button pressed: stop trading, set app_state to GAME_MENU.
- */
-static void check_the_buttons(void)
-{
-    static enum menu_level_t last_menu_level = 0;
-    int down_latches = button_down_latches();
-    int rotary = button_get_rotation(0);
-
-    if (state.menu_level != last_menu_level) {
-        LOG("check_the_buttons: new menu level %s\n", menu_level_str(state.menu_level));
-        last_menu_level = state.menu_level;
-    }
-
-    /* If we are trading monsters, stop trading monsters on a button press */
-    if (state.trading_monsters_enabled) {
-        if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-            state.trading_monsters_enabled = false;
-            state.app_state = GAME_MENU;
-            state.screen_changed = true;
-            return;
-        }
-        if (rotary != 0) {
-            // do nothing
-            return;
-        }
-    }
-
-    switch(state.menu_level){
-        case MAIN_MENU:
-            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
-            {
-                dynmenu_change_current_selection(&state.menu, -1);
-                state.screen_changed = true;
-                state.app_state = GAME_MENU;
-                LOG("moving up in main menu\n");
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
-            {
-                dynmenu_change_current_selection(&state.menu, 1);
-                state.screen_changed = true;
-                state.app_state = GAME_MENU;
-                LOG("moving down in main menu\n");
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
-            {
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
-            {
-                const struct dynmenu_item menu_item = state.menu.item[state.menu.current_item];
-                if (state.menu.current_item == 0) {
-                    change_menu_level(MONSTER_MENU);
-                    state.current_monster = state.menu.item[state.menu.current_item].cookie;
-                }
-                state.app_state = menu_item.next_state;
-            }
-            break;
-        case MONSTER_MENU:
-            if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
-            {
-                dynmenu_change_current_selection(&state.menu, -1);
-                state.screen_changed = true;
-                state.current_monster = state.menu.item[state.menu.current_item].cookie;
-                render_monster();
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
-            {
-                LOG("displaying current selection monster menu\n");
-                dynmenu_change_current_selection(&state.menu, 1);
-                state.screen_changed = true;
-                state.current_monster = state.menu.item[state.menu.current_item].cookie;
-                state.app_state = RENDER_MONSTER;
-                // render_monster();
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
-            {
-                LOG("button press LEFT\n");
-                LOG("app_state: %d\n", state.app_state);
-                change_menu_level(MONSTER_MENU); //??
-                state.app_state = GAME_MENU;
-                draw_menu();
-            }
-            else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-                     BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-                     BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
-            {
-                show_message(new_monsters[state.current_monster].blurb);
-             }
-            break;
-        case DESCRIPTION:
-            // press of any button takes user back to monster menu
-            if (rotary ||
-            BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-            BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
-            {
-                LOG("input in case DESCRIPTION, moving to MONSTER_MENU\n");
-                change_menu_level(MONSTER_MENU);
-            }
-            break;
-        }
-    return;
-}
-
-/*
  * Builds a monster menu by clearing the menu, setting the title to "Monsters", and
- * for each monster which is owned, adding an entry with the monster's name, the
- * state RENDER_MONSTER, and a cookie set to the index of the monster in the new_monsters
+ * for each monster which is owned, adding an entry with the monster's name, the next
+ * state SHOW_MONSTER, and a cookie set to the index of the monster in the new_monsters
  * array.
  * If the current monster is shown in the menu (?), set the current item to the current
  * monster, otherwise set the current monster to the current menu item.
- * Calls render_monster.
  */
 static void setup_monster_menu(void)
 {
@@ -710,28 +800,28 @@ static void setup_monster_menu(void)
     int index = 0;
     for(const struct new_monster *m = new_monsters; PART_OF_ARRAY(new_monsters, m); m++){
         if(m->owned)
-            dynmenu_add_item(&state.menu, (char *)m->name, RENDER_MONSTER, index);
+            dynmenu_add_item(&state.menu, (char *)m->name, SHOW_MONSTER, index);
         index++;
     }
+    dynmenu_add_item(&state.menu, "EXIT", GAME_MENU, 0);
     // I'm not sure this is accomplishing what it's supposed to
     if (state.current_monster < state.menu.max_items)
         state.menu.current_item = state.current_monster;
     else
         state.current_monster = state.menu.current_item;
-
     state.screen_changed = true;
-    state.app_state = GAME_MENU;
 }
 
 /*
- *
+ * Builds the game main menu. Note that this and monster menu share the same menu
+ * structure, it gets rebuilt when the menu_level changes.
  */
 static void setup_main_menu(void)
 {
     dynmenu_clear(&state.menu);
     snprintf(state.menu.title, sizeof(state.menu.title), "Badge Monsters");
-    LOG("setup_main_menu\n");
-    dynmenu_add_item(&state.menu, "Monsters", RENDER_SCREEN, 0);
+    // OK, monsters menu needs its own state
+    dynmenu_add_item(&state.menu, "Monsters", GAME_MENU, 0);
     dynmenu_add_item(&state.menu, "Trade Monsters", TRADE_MONSTERS, 1);
     dynmenu_add_item(&state.menu, "EXIT", EXIT_APP, 2);
 #ifdef __linux__
@@ -741,85 +831,7 @@ static void setup_main_menu(void)
     state.screen_changed = true;
 }
 
-static void game_menu(void)
-{
-    draw_menu();
-    check_for_incoming_packets();
-    state.app_state = RENDER_SCREEN;
-}
-
 //**************************** DISPLAY ***********************************************
-
-/*
- * Displays state.current_monster on the screen.
- *
- * Postconditions: app_state = RENDER_SCREEN, screen_changed = true
- */
-static void render_monster(void)
-{
-    const struct new_monster *monster = &new_monsters[state.current_monster];
-
-    LOG("render_monster: %s\n", monster->name);
-    FbClear();
-    FbMove(0, 10);
-    FbImage4bit(monster->asset, 0);
-    if(state.current_monster == state.initial_mon)
-    {
-        FbMove(0,10);
-        FbWriteLine("--starting-mon--");
-    }
-    // TODO: approximately center based on name length
-    FbMove(10,0);
-    FbColor(monster->color);
-    FbWriteLine(monster->name);
-
-    FbColor(WHITE);
-    FbMove(43, LCD_YSIZE - 15);
-    FbWriteLine("|down|");
-    FbColor(GREEN);
-
-    FbMove(5, LCD_YSIZE - 15);
-    FbWriteLine("<Back");
-
-
-    FbMove(90, LCD_YSIZE - 15);
-    FbWriteLine("desc>");
-
-    FbSwapBuffers();
-    state.screen_changed = true;
-    state.app_state = RENDER_SCREEN;
-}
-
-static void show_message(const char *message)
-{
-    LOG("%s\n", message);
-
-    FbClear();
-    FbColor(WHITE);
-
-    FbMove(8, 5);
-    FbWriteString(message);
-    FbMove(5, 120);
-    FbWriteLine("<Back");
-
-    change_menu_level(DESCRIPTION);
-    state.app_state = RENDER_SCREEN;
-    state.screen_changed = true;
-}
-
-/*
- * If state.screen_changed, pushes the display buffer.
- *
- * Postconditions: app_state = CHECK_THE_BUTTONS, screen_chaged = false
- */
-static void render_screen(void)
-{
-    state.app_state = CHECK_THE_BUTTONS;
-    if (!state.screen_changed)
-        return;
-    FbPushBuffer();
-    state.screen_changed = false;
-}
 
 /*
  * Displays a monster, showing a new one each time it is called.
@@ -835,24 +847,3 @@ void render_screen_save_monsters(void) {
     FbImage4bit(new_monsters[current_index].asset, 0);
 }
 
-static void trade_monsters(void)
-{
-    static int counter = 0;
-
-    counter++;
-    if ((counter % 10) == 0) { /* transmit our monster IR packet */
-        build_and_send_packet(BADGE_IR_GAME_ADDRESS, BADGE_IR_BROADCAST_ID,
-                              (OPCODE_XMIT_MONSTER << 12) | (state.initial_mon & 0x01ff));
-        audio_out_beep(500, 100);
-    }
-    if (!state.trading_monsters_enabled) {
-        FbClear();
-        FbMove(10, 60);
-        FbWriteLine("TRADING");
-        FbMove(10, 70);
-        FbWriteLine("MONSTERS!");
-        state.screen_changed = true;
-        state.trading_monsters_enabled = true;
-    }
-    state.app_state = RENDER_SCREEN;
-}
