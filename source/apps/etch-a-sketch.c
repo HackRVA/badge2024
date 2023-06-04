@@ -56,6 +56,13 @@ static void move(int x, int y)
 	state.y = ny;
 }
 
+static void clear_etch_a_sketch(void)
+{
+	FbColor(BGCOLOR);
+	FbClear();
+	screen_changed = 1;
+}
+
 static void check_buttons(void)
 {
 	int vrot, hrot;
@@ -68,9 +75,10 @@ static void check_buttons(void)
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		etch_a_sketch_state = ETCH_A_SKETCH_EXIT;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		state.pen_down = !state.pen_down;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		clear_etch_a_sketch();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		move(-1, 0);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
@@ -117,11 +125,8 @@ static void check_accelerometer(void)
 	a.y /= NSAMPLES;
 	a.z /= NSAMPLES;
 
-	if (a.z < -900) { /* screen facing floor, more or less, erase everything */
-		FbColor(BGCOLOR);
-		FbClear();
-		screen_changed = 1;
-	}
+	if (a.z < -900) /* screen facing floor, more or less, erase everything */
+		clear_etch_a_sketch();
 }
 
 static void etch_a_sketch_run(void)
