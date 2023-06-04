@@ -626,7 +626,7 @@ static void trade_monsters_button_handler(void) {
  *
  * "up" -->
  * "down" -->
- * "left" --> redisplay monster
+ * "left" --> redisplay current monster
  * "right"/"click" -->
  */
 static void show_description_button_handler(void) {
@@ -640,9 +640,31 @@ static void show_description_button_handler(void) {
     }
 }
 
+/*
+ * Handles input for show monster screen
+ *
+ * "up" --> display previous monster
+ * "down" --> display next monster
+ * "left" --> back
+ * "right"/"click" -->
+ */
 static void show_monster_button_handler(void) {
     const int down_latches = button_down_latches();
     const int rotary = button_get_rotation(0);
+
+    if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
+    {
+        state.app_state = GAME_MENU;
+        state.screen_changed = true;
+    }
+    else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+             BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+             BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
+    {
+        state.app_state = SHOW_DESCRIPTION;
+        state.screen_changed = true;
+    }
 }
 
 /***************************************** SAVE/RESTORE ******************************************/
