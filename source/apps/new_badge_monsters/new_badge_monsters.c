@@ -103,210 +103,210 @@ struct new_monster new_monsters[] = {
         "cryptoraptor",
         true,
         RED,
-        "This one only roars in cryptocurrency",
+        "This one\nonly roars\nin\ncrypto-\ncurrency",
         &new_badge_monsters_assets_Crypto_Raptor
     }
   , {
         "2FactorTiger",
         false,
         RED,
-        "Double the security, double the fun",
+        "Double the\nsecurity,\ndouble\nthe fun",
         &new_badge_monsters_assets_Two_Factor_Tiger
     }
   , {
         "firewallFlyer",
         false,
         RED,
-        "Can't touch this, unless you're an allowed IP",
+        "Can't touch\nthis, unless\nyou're an\nallowed IP",
         &new_badge_monsters_assets_Firewall_Flyer
     }
   , {
         "trojanTurtle",
         false,
         RED,
-        "Slow and sneaky, never underestimate it",
+        "Slow and\nsneaky, never\nunderestimate\nit",
         &new_badge_monsters_assets_Trojan_Turtle
     }
   , {
         "phishinPhoenix",
         false,
         RED,
-        "Spams your inbox, then rises from its ashes",
+        "Spams your\ninbox, then\nrises from \nits ashes",
         &new_badge_monsters_assets_Phishing_Phoenix
     }
   , {
         "hackerHawk",
         false,
         RED,
-        "Always watching from above, waiting to swoop in",
+        "Always\nwatching\nfrom above,\nwaiting to\nswoop in",
         &new_badge_monsters_assets_Hacker_Hawk
     }
   , {
         "malwareMantis",
         false,
         RED,
-        "Prays on your system's vulnerabilities",
+        "Prays on\nyour\nsystem's\nvulner-\nabilities",
         &new_badge_monsters_assets_Malware_Mantis
     }
   , {
         "ddosDragon",
         false,
         RED,
-        "Breathes a fire of traffic at your servers",
+        "Breathes a\nfire of\ntraffic at\nyour servers",
         &new_badge_monsters_assets_DDOS_Dragon
     }
   , {
         "keylogKoala",
         false,
         RED,
-        "It's not eucalyptus leaves it's after",
+        "It's not\neucalyptus\nleaves it's\nafter",
         &new_badge_monsters_assets_Keylogger_Koala
     }
   , {
         "wormWombat",
         false,
         RED,
-        "Burrows deep into your system",
+        "Burrows\ndeep into\nyour system",
         &new_badge_monsters_assets_Worm_Wombat
     }
   , {
         "adwareAnteater",
         false,
         RED,
-        "Feeds on your browsing habits",
+        "Feeds on\nyour browsing\nhabits",
         &new_badge_monsters_assets_Adware_Anteater
     }
   , {
         "rootkitRhino",
         false,
         RED,
-        "Charges at your system's core",
+        "Charges at\nyour system's\ncore",
         &new_badge_monsters_assets_Rootkit_Rhino
     }
   , {
         "botnetBat",
         false,
         RED,
-        "Flies in the darkness of the web",
+        "Flies in\nthe\ndarkness\nof the web",
         &new_badge_monsters_assets_Botnet_Bat
     }
   , {
         "dnsDolphin",
         false,
         RED,
-        "Loves to play redirect games",
+        "Loves to\nplay\nredirect\ngames",
         &new_badge_monsters_assets_DNS_Dolphin
     }
   , {
         "sslShark",
         false,
         RED,
-        "Swims in a sea of encrypted data",
+        "Swims in a\nsea of\nencrypted\ndata",
         &new_badge_monsters_assets_SSL_Shark
     }
   , {
         "spamSpider",
         false,
         RED,
-        "Weaves a web of unwanted emails",
+        "Weaves a\nweb of\nunwanted\nemails",
         &new_badge_monsters_assets_Spam_Spider
     }
   , {
         "ransomRabbit",
         false,
         RED,
-        "Hops into your files, then locks them up",
+        "Hops into\nyour files,\nthen locks\nthem up",
         &new_badge_monsters_assets_Ransomware_Rabbit
     }
   , {
         "snifferSnail",
         false,
         RED,
-        "Slow but can smell your data from miles away",
+        "Slow but\ncan smell\nyour data\nfrom miles\naway",
         &new_badge_monsters_assets_Sniffer_Snail
     }
   , {
         "backdoorBee",
         false,
         RED,
-        "Buzzes into your system through the back",
+        "Buzzes into\nyour system\nthrough the\nback",
         &new_badge_monsters_assets_Backdoor_Bee
     }
   , {
         "exploitEagle",
         false,
         RED,
-        "Soars high to find unpatched vulnerabilities",
+        "Soars high\nto find\nunpatched\nvulner-\nabilities",
         &new_badge_monsters_assets_Exploit_Eagle
     }
   , {
         "bruFrcBaboon",
         false,
         RED,
-        "Not subtle, but sometimes it works",
+        "Not subtle,\nbut\nsometimes\nit works",
         &new_badge_monsters_assets_Brute_Force_Baboon
     }
   , {
         "socNgnrSqrl",
         false,
         RED,
-        "Collects your info like acorns",
+        "Collects\nyour info\nlike acorns",
         &new_badge_monsters_assets_Social_Engineer_Squirrel
     }
   , {
         "packSnifPuma",
         false,
         RED,
-        "Stealthily stalks your network traffic",
+        "Stealthily\nstalks your\nnetwork\ntraffic",
         &new_badge_monsters_assets_Packet_Sniffer_Puma
     }
   , {
         "proxyPorcupn",
         false,
         RED,
-        "Its spikes are like multiple IP addresses",
+        "Its spikes\nare like\nmultiple IP\naddresses",
         &new_badge_monsters_assets_Proxy_Porcupine
     }
   , {
         "intDetIguana",
         false,
         RED,
-        "Keeps a cold-blooded watch on your network",
+        "Keeps a\ncold-blooded\nwatch on\nyour network",
         &new_badge_monsters_assets_Intrusion_Detection_Iguana
     }
   , {
         "penTestPengo",
         false,
         RED,
-        "Slides into your defenses with ease",
+        "Slides into\nyour defenses\nwith ease",
         &new_badge_monsters_assets_PenTest_Penguin
     }
   , {
         "axsCtrlGator",
         false,
         RED,
-        "Keeps unauthorized users at bay, snappily",
+        "Keeps\nunauthorized\nusers at bay,\nsnappily",
         &new_badge_monsters_assets_Access_Control_Alligator
     }
   , {
         "idsImpalas",
         false,
         RED,
-        "Fast and efficient at detecting intrusions",
+        "Fast and\nefficient\nat detecting\nintrusions",
         &new_badge_monsters_assets_IDS_Impalas
     }
   , {
         "siemSloth",
         false,
         RED,
-        "Slow but steady wins the security race",
+        "Slow but\nsteady wins\nthe security\nrace",
         &new_badge_monsters_assets_SIEM_Sloth
     }
   , {
         "vpnVulture",
         false,
         RED,
-        "Flies over geo-restrictions with ease",
+        "Flies over\ngeo-\nrestrictions\nwith ease",
         &new_badge_monsters_assets_VPN_Vulture
     }
 };
@@ -316,25 +316,32 @@ struct new_monster new_monsters[] = {
  * global state for game -- used by almost all functions.
 */
 struct game_state {
-    // used in render_screen to skip render if unchanged
+    // skip redrawing screen if no changes
     bool screen_changed;
     unsigned int current_monster;
     unsigned int nmonsters;
-    // TODO: (alf) looks like app_state and menu_level could be combined.
-    // split state is just confusing.
     enum app_states app_state;
+    // TODO: do we still need this?
     bool trading_monsters_enabled;
+    // user starts with a single monster, chosen based on badge ID
     unsigned int initial_mon;
+    // menu used for both game and monster menu, rebuilt when menu changed
     struct dynmenu menu;
+    // 1 extra menu item: "EXIT"
     struct dynmenu_item menu_item[ARRAYSIZE(new_monsters) + 1];
-    // need to remember menu level even in non-menu states
+    // TODO: since the two menus are different app states, we might not need this
     enum menu_level_t menu_level;
 };
 
 
 static struct game_state state = {
-    false, 0, 0, APP_INIT, false,
-    0, {
+    false,
+    0,
+    1, // user starts w/one
+    APP_INIT,
+    false,
+    0, // set later from badge id
+    {
         "Badge Monsters",
         "",
         "",
