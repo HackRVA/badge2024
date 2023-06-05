@@ -73,7 +73,8 @@ static void check_buttons(void)
 		move(hrot, vrot);
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		etch_a_sketch_state = ETCH_A_SKETCH_EXIT;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		state.pen_down = !state.pen_down;
