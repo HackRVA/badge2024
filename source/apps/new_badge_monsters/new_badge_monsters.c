@@ -573,7 +573,7 @@ static void game_menu_button_handler(void) {
         state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-    BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
+	    BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
     {
         const struct dynmenu_item menu_item = state.menu.item[state.menu.current_item];
         // menu item 0 is "monsters", and we need to change to other menu
@@ -584,6 +584,8 @@ static void game_menu_button_handler(void) {
             state.current_monster = menu_item.cookie;
         }
         state.app_state = menu_item.next_state;
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+	state.app_state = EXIT_APP;
     }
 }
 
