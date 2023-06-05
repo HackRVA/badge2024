@@ -701,7 +701,10 @@ static void check_buttons(void)
 {
 	static int button_presses = 0;
 
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
+	int r0 = button_get_rotation(0);
+	int r1 = button_get_rotation(1);
+
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 	{
@@ -723,25 +726,25 @@ static void check_buttons(void)
 		}
 		screen_changed = 1;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) || r0 < 0)
 	{
 		button_presses = 0;
 		cursor_x_index--;
 		screen_changed = 1;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) || r0 > 0)
 	{
 		button_presses = 0;
 		cursor_x_index++;
 		screen_changed = 1;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || r1 < 0)
 	{
 		button_presses = 0;
 		cursor_y_index--;
 		screen_changed = 1;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || r1 > 0)
 	{
 		button_presses = 0;
 		cursor_y_index++;
@@ -1064,17 +1067,19 @@ static void hackingsimulator_quit_confirm(void)
 
 static void hackingsimulator_quit_input(void)
 {
-    int down_latches = button_down_latches();
+	int down_latches = button_down_latches();
+	int r0 = button_get_rotation(0);
+
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		hacking_simulator_state =
 			(enum hacking_simulator_state_t) quitmenu.item[quitmenu.current_item].next_state;
 		return;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || r0 < 0) {
 		dynmenu_change_current_selection(&quitmenu, -1);
 		dynmenu_draw(&quitmenu);
 		FbSwapBuffers();
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || r0 > 0) {
 		dynmenu_change_current_selection(&quitmenu, 1);
 		dynmenu_draw(&quitmenu);
 		FbSwapBuffers();
