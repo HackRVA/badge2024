@@ -768,7 +768,8 @@ static void slot_machine_bet(void)
 		render();
 	}
 	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
 	{
 		slot_machine_state = SLOT_MACHINE_EXIT;
 	}
