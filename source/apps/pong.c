@@ -129,7 +129,8 @@ static void check_buttons(void)
 	if (r1)
 		paddle[1].vx -= r1 * PADDLE_SPEED;
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		/* Pressing the button exits the program. You probably want to change this. */
 		pong_state = PONG_EXIT;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
