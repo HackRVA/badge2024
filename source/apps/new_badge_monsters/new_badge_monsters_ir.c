@@ -1,7 +1,5 @@
 #include <string.h>
-#ifdef __linux__
 #include <stdio.h>
-#endif
 
 #include "new_badge_monsters_ir.h"
 #include "new_badge_monsters.h"
