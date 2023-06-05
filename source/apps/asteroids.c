@@ -273,7 +273,8 @@ static void check_buttons(void)
 	int down_latches = button_down_latches();
 	if (game_over_counter || player_dead_counter)
 		return;
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		asteroids_state = ASTEROIDS_EXIT;
 	}
 	if (r0)
