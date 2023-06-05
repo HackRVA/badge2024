@@ -2421,6 +2421,7 @@ static void gulag_scroll_text(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		gulag_state = GULAG_START_MENU;
 }
@@ -2460,6 +2461,7 @@ static void gulag_view_combo(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		gulag_state = GULAG_RUN;
 	}
@@ -2553,6 +2555,7 @@ static void gulag_view_map(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		FbColor(WHITE);
 		FbBackgroundColor(BLACK);
@@ -2582,6 +2585,7 @@ static void gulag_help_screen(void)
 	FbSwapBuffers();
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) || 
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) || 
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		FbColor(WHITE);
 		FbBackgroundColor(BLACK);
@@ -2626,6 +2630,7 @@ static void gulag_munitions_room(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (player.has_c4 && player.has_detonator)
 			player.planted_bomb = 1;
@@ -2677,6 +2682,7 @@ static void gulag_print_stats(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		gulag_state = GULAG_FLAG;
 	}
@@ -2700,6 +2706,7 @@ static void gulag_flag(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		gulag_state = GULAG_START_MENU;
 }
@@ -4907,6 +4914,8 @@ static void gulag_start_menu(void)
 		dynmenu_change_current_selection(&start_menu, 1);
 	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0)
 		dynmenu_change_current_selection(&start_menu, -1);
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
+		gulag_state = GULAG_EXIT;
 }
 
 static void gulag_maybe_exit(void)
