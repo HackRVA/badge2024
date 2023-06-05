@@ -122,8 +122,8 @@ static int manually_triggered = 0;
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
-		/* Pressing the button exits the program. You probably want to change this. */
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		magic_8_ball_state = MAGIC8BALL_EXIT;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		current_message++;
