@@ -764,12 +764,12 @@ static void check_buttons(void)
 	int down_latches = button_down_latches();
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		battlezone_state = BATTLEZONE_EXIT;
 		return;
 	}
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		fire_gun();
 	}
 	if (button_poll(BADGE_BUTTON_LEFT) || r1 < 0 || r0 < 0) {
