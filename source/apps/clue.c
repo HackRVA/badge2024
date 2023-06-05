@@ -349,10 +349,11 @@ static void clue_main_menu(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0) {
 		dynmenu_change_current_selection(&main_menu, -1);
 		screen_changed = 1;
-		
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		change_clue_state(main_menu.item[main_menu.current_item].next_state);
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+		change_clue_state(CLUE_EXIT);
 	}
 }
 
@@ -404,6 +405,8 @@ static void clue_run(void)
 		if (!idle)
 			change_clue_state(game_menu.item[game_menu.current_item].next_state);
 		clue_run_idle_time = rtc_get_ms_since_boot();
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+		change_clue_state(CLUE_INIT_MAIN_MENU);
 	}
 }
 
@@ -444,6 +447,8 @@ static void clue_how_to_play(void)
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		change_clue_state(CLUE_RUN);
 	}
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
+		change_clue_state(CLUE_EXIT);
 }
 
 static void clue_exit(void)
