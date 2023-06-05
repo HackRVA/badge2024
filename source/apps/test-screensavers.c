@@ -113,11 +113,10 @@ static void test_screensavers_exit(void)
 	/* So that when we start again, we do not immediately exit */
 	test_screensavers_state = TEST_SCREENSAVERS_INIT;
 	popup_time = 0;
-	returnToMenus();
 	/* Restore the original screensaver_disabled value */
 	badge_system_data()->screensaver_disabled = saved_screensaver_disabled;
-	display_reset();
-	menu_redraw_main_menu = 1;
+	display_reset(); /* In case the display got messed up (for unknown reasons it happens). */
+	returnToMenus();
 }
 
 void test_screensavers_cb(__attribute__((unused)) struct menu_t *m)
