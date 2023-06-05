@@ -4947,6 +4947,7 @@ static void gulag_maybe_exit(void)
 static void gulag_exit(void)
 {
 	gulag_state = GULAG_INTRO; /* So that when we start again, we do not immediately exit */
+	audio_out_beep(440, 1); /* silence any audio */
 	returnToMenus();
 }
 
