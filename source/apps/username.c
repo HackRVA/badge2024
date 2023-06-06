@@ -234,6 +234,9 @@ static void check_the_buttons(void)
 				cursor = NAMESIZE - 1;
 			something_changed = 1;
 		}
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+		app_state = EXIT_APP;
+		return;
 	}
 	if (something_changed)
 		app_state = DRAW_SCREEN;
