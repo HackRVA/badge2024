@@ -26,6 +26,7 @@ static const ss_func ss[] = {
 	qix,
 	hyperspace_screen_saver,
 	holly_screensaver,
+	nametag_screensaver,
 };
 static const int num_screen_savers = sizeof(ss) / sizeof(ss[0]);
 static int current_screen_saver = -1;

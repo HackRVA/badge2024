@@ -16,6 +16,7 @@ enum {
     DISP_ASSET,
     QIX,
     HOLLY_SCREENSAVER,
+    NAMETAG_SCREENSAVER,
 };
 
 void just_the_badge_tips(void);
@@ -32,4 +33,5 @@ void qix(void);
 void hyperspace_screen_saver(void);
 void screensaver_set_animation_count(unsigned short count);
 void holly_screensaver(void);
+void nametag_screensaver(void);
 

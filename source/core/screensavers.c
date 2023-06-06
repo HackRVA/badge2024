@@ -1,3 +1,4 @@
+#include "badge.h"
 #include "colors.h"
 #include "ir.h"
 #include "assetList.h"
@@ -10,6 +11,7 @@
 #include "xorshift.h"
 #include "trig.h"
 #include "new_badge_monsters/new_badge_monsters.h"
+#include <string.h>
 
 extern unsigned short popup_time;
 
@@ -142,7 +144,7 @@ static void move_hyperspace_stars(void)
 	map_hyperspace_star(move_hyperspace_star);
 }
 
-void hyperspace_screen_saver(void)
+static void draw_hyperspace_screensaver(void)
 {
 	static int initialized = 0;
 	if (!initialized) {
@@ -151,6 +153,11 @@ void hyperspace_screen_saver(void)
 	}
 	move_hyperspace_stars();
 	draw_hyperspace_stars();
+}
+
+void hyperspace_screen_saver(void)
+{
+	draw_hyperspace_screensaver();
 	FbSwapBuffers();
 	animation_count++;
 }
@@ -180,6 +187,23 @@ void holly_screensaver(void)
 	}
 	FbSwapBuffers();
 	animation_count++;
+}
+
+void nametag_screensaver(void)
+{
+	int len, y;
+	const char *name = badge_system_data()->name;
+
+	draw_hyperspace_screensaver();
+	FbColor(YELLOW);
+	FbBackgroundColor(BLACK);
+	FbMove(LCD_XSIZE - 20, 10);
+	FbRotWriteLine("HELLO MY NAME IS\n");
+	len = strlen(name);
+	y = ((LCD_YSIZE / 2) - (len * 9) / 2);
+	FbMove(64, y);
+	FbRotWriteLine(name);
+	FbSwapBuffers();
 }
 
 void disp_asset_saver(void)
