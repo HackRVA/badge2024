@@ -428,6 +428,7 @@ void menus() {
     /* see if physical button has been clicked */
     if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
 	BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
         // action happened that will result in menu redraw
         // do_animation = 1;
@@ -556,6 +557,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
     }
 
     if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+        BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
         switch (L_selectedMenu->type) {
             case MORE: /* jump to next page of menu */
