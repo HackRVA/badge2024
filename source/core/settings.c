@@ -255,7 +255,7 @@ const struct menu_t screen_lock_m[] = {
     {"ON",       0|VERT_ITEM, FUNCTION, { .func = screen_save_lock_cb} },
     {"OFF",      1|VERT_ITEM, FUNCTION, { .func = screen_save_lock_cb} },
     {"INVERT", VERT_ITEM, FUNCTION, { .func = screen_save_invert_cb} },
-    {"TEST", VERT_ITEM, FUNCTION, { .func = test_screensavers_cb, }, },
+    {"STATIC", VERT_ITEM, FUNCTION, { .func = test_screensavers_cb, }, },
     {"Back",   VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
 };
 
