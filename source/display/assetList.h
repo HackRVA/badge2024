@@ -13,6 +13,9 @@ enum {
     HACKRVA4,
     RVASEC2016,
     RVASEC_LOGO,
+    HOLLY01,
+    HOLLY02,
+    HOLLY03,
     FONT,
     ROTATED_FONT,
 

@@ -155,6 +155,33 @@ void hyperspace_screen_saver(void)
 	animation_count++;
 }
 
+void holly_screensaver(void)
+{
+	int n;
+
+	FbMove(0, 33);
+	n = 1;
+	if ((animation_count % 30) < 15)
+		n = 1;
+	else
+		n = 3;
+	if ((animation_count % 50) < 5)
+		n = 2;
+	switch (n) {
+		case 1:
+			FbImage(&assetList[HOLLY01], 0);
+			break;
+		case 2:
+			FbImage(&assetList[HOLLY02], 0);
+			break;
+		case 3:
+			FbImage(&assetList[HOLLY03], 0);
+			break;
+	}
+	FbSwapBuffers();
+	animation_count++;
+}
+
 void disp_asset_saver(void)
 {
     static unsigned char imgnum = 0;

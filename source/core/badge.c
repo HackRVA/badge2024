@@ -126,7 +126,7 @@ void do_screen_save_popup(void)
             }
         }
         else if(prob_val < HIGH_PROB_THRESH){
-            switch(current_screen_saver%8){
+            switch(current_screen_saver%9){
                 case 0:
                     disp_asset_saver();
                     break;
@@ -150,6 +150,9 @@ void do_screen_save_popup(void)
                     break;
                 case 7:
                     hyperspace_screen_saver();
+                    break;
+                case 8:
+                    holly_screensaver();
                     break;
             }
         }

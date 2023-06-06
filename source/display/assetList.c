@@ -18,6 +18,8 @@
 
 #include "rvasec_logo.h"
 
+#include "holly.h"
+
 //#include "font_2.xbm" // for size reasons just A-Z and a couple others
 #include "font8x8.xbm.h" // full font
 #include "font8x8-rotated.xbm.h" // rotated 90 deg clockwise font
@@ -56,6 +58,9 @@ const struct asset assetList[] = {
 // partial font    { FONT, PICTURE1BIT, 42, 8, 8, (const char *)BW_cmap, (const char *)font_2_bits, (dummy_draw) },
         { RVASEC2016, RVASEC2016_BITS, 1, RVASEC2016_WIDTH, RVASEC2016_HEIGHT, (const char *)RVASEC2016_CMAP, (const char *)RVASEC2016_DATA, (dummy_draw) },
         { RVASEC_LOGO, RVASEC_LOGO_BITS, 1, RVASEC_LOGO_WIDTH, RVASEC_LOGO_HEIGHT, (const char *)RVASEC_LOGO_CMAP, (const char *)RVASEC_LOGO_DATA, (dummy_draw) },
+	{ HOLLY01, PICTURE8BIT, 1, 128, 88, (const char *) holly01_cmap, (const char *) holly01_data, (dummy_draw) },
+	{ HOLLY02, PICTURE8BIT, 1, 128, 87, (const char *) holly02_cmap, (const char *) holly02_data, (dummy_draw) },
+	{ HOLLY03, PICTURE8BIT, 1, 128, 88, (const char *) holly03_cmap, (const char *) holly03_data, (dummy_draw) },
         { FONT, PICTURE1BIT, 128, 8, 8, (const char *)BW_cmap, (const char *)font8x8_bits, (dummy_draw) },
 	{ ROTATED_FONT, PICTURE1BIT, 128, 8, 8, (const char *)BW_cmap, (const char *)font8x8_rotated_bits, (dummy_draw) },
 };
