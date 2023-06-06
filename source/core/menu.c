@@ -423,7 +423,8 @@ void menus() {
     }
 
     int down_latches = button_down_latches();
-    int rotary = button_get_rotation(0);
+    int rotary0 = button_get_rotation(0);
+    int rotary1 = button_get_rotation(1);
     /* see if physical button has been clicked */
     if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
@@ -470,7 +471,7 @@ void menus() {
         }
 
         G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary0 < 0 || rotary1 < 0) {
         /* handle slider/soft button clicks */
         menu_beep(TEXT_FREQ); /* f */
 
@@ -497,7 +498,7 @@ void menus() {
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         }
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary0 > 0 || rotary1 > 0) {
         menu_beep(MORE_FREQ); /* g */
 
         /* make sure not on last menu item */
