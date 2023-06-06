@@ -27,7 +27,7 @@ static const ss_func ss[] = {
 	hyperspace_screen_saver,
 };
 static const int num_screen_savers = sizeof(ss) / sizeof(ss[0]);
-static int current_screen_saver = 0;
+static int current_screen_saver = -1;
 
 /* Program states.  Initial state is TEST_SCREENSAVERS_INIT */
 enum test_screensavers_state_t {
@@ -44,7 +44,7 @@ static void test_screensavers_init(void)
 	FbBackgroundColor(BLACK);
 	FbClear();
 	test_screensavers_state = TEST_SCREENSAVERS_RUN;
-	current_screen_saver = 0;
+	current_screen_saver = -1;
 	popup_time = 9 * 30;
 
 	/* Disable the actual screensaver while the screensaver test app is running */
@@ -56,10 +56,10 @@ static void test_screensavers_init(void)
 static void next_screensaver(int direction)
 {
 	current_screen_saver += direction;
-	if (current_screen_saver < 0)
+	if (current_screen_saver < -1)
 		current_screen_saver = num_screen_savers - 1;
 	if (current_screen_saver >= num_screen_savers)
-		current_screen_saver = 0; 
+		current_screen_saver = -1; 
 	display_reset();
 	FbBackgroundColor(BLACK);
 	FbClear();
@@ -69,7 +69,8 @@ static void next_screensaver(int direction)
 static void check_buttons(void)
 {
 	int down_latches = button_down_latches();
-	int rs = button_get_rotation(0);
+	int r0 = button_get_rotation(0);
+	int r1 = button_get_rotation(1);
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
@@ -82,18 +83,40 @@ static void check_buttons(void)
 		next_screensaver(1);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		next_screensaver(-1);
-	} else if (rs > 0) {
+	} else if (r0 > 0 || r1 > 0) {
 		next_screensaver(1);
-	} else if (rs < 0) {
+	} else if (r0 < 0 || r1 < 0) {
 		next_screensaver(-1);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		test_screensavers_state = TEST_SCREENSAVERS_EXIT;
 	}
 }
 
+static void draw_instructions(void)
+{
+	FbClear();
+	FbColor(CYAN);
+	FbBackgroundColor(BLACK);
+	FbMove(2, 2);
+	FbWriteString(
+		"\n"
+		"USE ROTARY KNOBS\n"
+		"  TO SELECT A\n"
+		" STATIC SCREEN\n"
+		"    SAVER.\n"
+		"\n"
+		"  PRESS LEFT\n"
+		" ROTARY SWITCH\n"
+		"   TO EXIT\n");
+	FbPushBuffer();
+}
+
 static void draw_screen(void)
 {
-	ss[current_screen_saver]();
+	if (current_screen_saver == -1)
+		draw_instructions();
+	else
+		ss[current_screen_saver]();
 }
 
 static void test_screensavers_run(void)
