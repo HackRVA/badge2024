@@ -444,7 +444,6 @@ static void clue_how_to_play(void)
 		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		change_clue_state(CLUE_RUN);
 	}
