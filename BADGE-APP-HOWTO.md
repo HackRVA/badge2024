@@ -85,6 +85,8 @@ Initializing and Clearing the Framebuffer
 -----------------------------------------
 
 ```
+	#include "framebuffer.h"
+
 	void FbInit(void);
 		You must call this before doing anything else with the framebuffer
 
@@ -96,6 +98,8 @@ Updating the Screen
 -------------------
 
 ```
+	#include "framebuffer.h"
+
 	void FbSwapBuffers();
 		Copy the framebuffer contents to the actual screen. This makes whatever
 		changes you've made to the framebuffer visible on the badge screen. This
@@ -117,6 +121,9 @@ and a lot more named colors defined in
 
 
 ```
+	#include "framebuffer.h"
+	#include "colors.h"
+
 	void FbColor(int color);
 		Sets the current foreground color, which subsequent drawing functions will then use.
 
@@ -128,6 +135,9 @@ and a lot more named colors defined in
 Example usage:
 
 ```
+	#include "framebuffer.h"
+	#include "colors.h"
+
 	FbColor(x11_goldenrod);
 	FbBackgroundColor(x11_firebrick1);
 ```
@@ -152,6 +162,8 @@ integer types (e.g. "int") as these will be wrapped into the range 0-255.
 
 
 ```
+	#include "framebuffer.h"
+
 	void FbPoint(unsigned char x, unsigned char y);
 		plots a point on the framebuffer at (x, y)
 
@@ -195,6 +207,8 @@ The following are also available for displaying images or "sprites",
 however they are not very well documented.
 
 ```
+	#include "framebuffer.h"
+
 	void FbImage(unsigned char assetId, unsigned char seqNum);
 	void FbImage8bit(unsigned char assetId, unsigned char seqNum);
 	void FbImage4bit(unsigned char assetId, unsigned char seqNum);
@@ -218,6 +232,8 @@ framebuffer things should be drawn. There are a number of functions to
 adjust the position indicated by the cursor, described below.
 
 ```
+	#include "framebuffer.h"
+
 	void FbMove(unsigned char x, unsigned char y);
 		Move the cursor to (x, y)
 
@@ -246,7 +262,11 @@ Writing Strings to the Framebuffer
 		not handled specially.
 
 	void FbWriteString(char *s);
-		Writes a string with the specified length to the framebuffer.
+		Writes a string to the framebuffer.
+		Newlines are handled.
+
+	void FbRotWriteString(char *s);
+		Writes a string rotated 90 degrees clockwise.
 		Newlines are handled.
 ```
 
@@ -256,7 +276,7 @@ Buttons, Directional-Pad Inputs and Rotary Encoders
 The API for badge-apps to deal with buttons and rotary encoders is defined
 in [source/hal/button.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/button.h)
 
-There is an enumerated type defining a value for each button:
+There is an enumerated type defining a value for each button in source/hal/button.h:
 ```
 
 	typedef enum {
@@ -281,6 +301,8 @@ There are three functions for getting and clearing the current state of the butt
 all at once.
 
 ```
+	#include "button.h"
+
 	int button_down_latches(void);
 	int button_up_latches(void);
 	void clear_latches(void);
@@ -289,6 +311,8 @@ all at once.
 and a convenience macro for interrogating the result returned by button_down_latches() or button_up_latches():
 
 ```
+	#include "button.h"
+
 	#define BUTTON_PRESSED(button, latches) ((latches) & (1 << (button)))
 ```
 
@@ -307,12 +331,16 @@ the button, and register the button as being active for as long as they hold it 
 there is button_poll() to get the current state of a particular button.
 
 ```
+	#include "button.h"
+
 	int button_poll(BADGE_BUTTON button);
 ```
 
 If you want the current state of all the buttons at once, you can use button_mask().
 
 ```
+	#include "button.h"
+
 	int button_mask();
 ```
 
@@ -321,6 +349,8 @@ of the last button pressed. You can periodically call
 button_reset_last_input_timestamp() to suppress the screensaver, if you need to.
 
 ```
+	#include "button.h"
+
 	unsigned int button_last_input_timestamp(void);
 	void button_reset_last_input_timestamp(void);
 ```
@@ -328,6 +358,8 @@ button_reset_last_input_timestamp() to suppress the screensaver, if you need to.
 There are two rotary encoders, 0 and 1, which can be queried:
 
 ```
+	#include "button.h"
+
 	// Get rotary encoder rotations! Rotation count is automatically cleared between calls.
 	// Positive indicates CW, negative indicates CCW.
 	int button_get_rotation(int which_rotary);
@@ -336,6 +368,8 @@ There are two rotary encoders, 0 and 1, which can be queried:
 The four enumeration values associated with the rotary encoders
 
 ```
+	#include "button.h"
+
 	BADGE_BUTTON_ENCODER_A,		/* You probably don't want to use this one */
 	BADGE_BUTTON_ENCODER_B,		/* You probably don't want to use this one */
 	BADGE_BUTTON_ENCODER_2_A,	/* You probably don't want to use this one */
@@ -347,6 +381,8 @@ use these enumeration values directly but instead get the rotation information b
 button_get_rotation();
 
 ```
+	#include "button.h"
+
 	int rot1 = button_get_rotation(0); /* get rotation info for the encoder on the right of the badge */
 	int rot2 = button_get_rotation(1); /* get rotation info for the encoder on the left of the badge */
 ```
@@ -416,6 +452,10 @@ The function ir_send_complete_message() is used to transmit IR packets.
 Here is an example from the "Clue" app showing how IR packets are transmitted:
 
 ```
+	#include "ir.h"
+
+	[...]
+
 	static void build_and_send_packet(unsigned char address, unsigned short badge_id, uint64_t payload)
 	{
 	    IR_DATA ir_packet = {
@@ -533,9 +573,8 @@ does whatever it needs to with the data.
 Badge ID and User Name:
 -----------------------
 
-Each badge has a unique ID which is a uint64_t burned into the firmware
-at the time the badge is firmware is flashed, and a user assignable name (using the
-username badge app).
+Each badge has a unique ID derived from the processor serial number 
+and a user assignable name (using the username badge app).
 
 ```
 	typedef struct {
@@ -567,8 +606,9 @@ See: [source/hal/audio.h](https://github.com/HackRVA/badge2023/blob/main/source/
 There are two main audio functions:
 
 ```
-void audio_out_beep(uint16_t frequency, uint16_t duration_ms);
-void audio_out_beep_with_cb(uint16_t frequency, uint16_t duration_ms, void (*callback)(void));
+	#include "audio.h"
+	void audio_out_beep(uint16_t frequency, uint16_t duration_ms);
+	void audio_out_beep_with_cb(uint16_t frequency, uint16_t duration_ms, void (*callback)(void));
 ```
 
 The first one, audio_out_beep() plays a note of the specified frequency for the specified
@@ -578,6 +618,8 @@ the specified callback function is called.  In this way, you can get the badge t
 sequence of notes "in the background" like so:
 
 ```
+	#include "audio.h"
+
 static struct note {
 	uint16_t frequency;
 	uint16_t duration;
@@ -647,7 +689,33 @@ Look into gulag.c for an example of how to create a kind of "explosiony" sound.
 Setting the Flair LED Color
 ---------------------------
 
-This year's badge has no flair LED.  Instead we have an extra rotary encoder and button.
+This year's badge has only a RED flair LED. The API to control this LED is defined in
+led_pwm.h.
+
+The API looks as if the LED is an RGB LED, as it has been in years past, but this year
+it's only red, as we ran out of gpio pins.  (On the plus side the reason we ran out of
+gpio pins is that this year we have two rotary encoders and 3 more buttons, a pretty
+good tradeoff.)
+
+```
+	typedef enum {
+	    BADGE_LED_RGB_RED = 0,
+	    BADGE_LED_RGB_GREEN,
+	    BADGE_LED_RGB_BLUE,
+	    BADGE_LED_DISPLAY_BACKLIGHT,
+	    BADGE_LED_MAX,
+	} BADGE_LED;
+```
+
+```
+	#include "led_pwm.h"
+
+	void led_pwm_enable(BADGE_LED led, uint8_t duty);
+		Sets the brightness of the LED or the display backlight.
+
+	void led_pwm_disable(BADGE_LED led);
+		Turns off the LED or the display backlight.
+```
 
 Flash Memory Access
 -------------------
@@ -662,6 +730,8 @@ Exiting the Badge App:
 ----------------------
 
 ```
+	#include "menu.h"
+
 	void returnToMenus(void);
 		"Exits" the badge app and returns to the main menu.
 ```
@@ -676,6 +746,7 @@ Miscellaneous Functions:
 		must have enough memory to hold the converted value.  (Note: the linux badge
 		emulator currently ignores base, and assumes you meant base 10.)
 
+	#include <string.h>
 	char *strcpy(char *dest, const char *src);
 		Copies NULL terminated string src to dest. There must be enough room in dest.
 
@@ -683,9 +754,11 @@ Miscellaneous Functions:
 		Concatenates NULL terminated string src onto the end of NULL terminated string dest.
 		There must be enough room in dest.
 
+	#include <stdlib.h>
 	int abs(int x);
 		Returns the absolute value of integer x.
 
+	#include "trig.h"
 	short sine(int a);
 	short cosine(int a);
 		Returns 256 * the sine and 256 * the cosine of angle a, where a is in units
@@ -695,11 +768,11 @@ Miscellaneous Functions:
 		int speed = 20;
 		int vx = (speed * cosine((128 * angle_in_degrees) / 360)) / 256;
 		int vy = (speed * -sine((128 * angle_in_degrees) / 360)) / 256;
-
 	int arctan2(int y, int x);
 		The angles returned by arctan2 are in the range -64 to +64, corresponding
 		to -180 and +180 degrees.
 
+	#include "fxp_sqrt.h"
 	int fxp_sqrt(int x);
 		Fixed point square root.
 		See: [source/core/fxp_sqrt.h](https://github.com/HackRVA/badge2023/blob/main/source/core/fxp_sqrt.h)
@@ -725,6 +798,7 @@ entropy?  Maybe that's why "insecure" is in the name.)
 And there is a pseudo-random number generator defined in random.h as well:
 
 ```
+	#include "random.h"
 	uint32_t random_insecure_u32_congruence(uint32_t last);
 ```
 
@@ -733,11 +807,20 @@ There is another pseudorandom number generator defined in
 
 
 ```
+	#include "xorshift.h"
 	unsigned int xorshift(unsigned int *state);
 		Returns a pseudo random number derived from seed, *state, and scrambles
 		*state to prepare for the next call.  The state variable should be initialized
 		to a random seed which should not be zero, and should contain a fair number of
 		1 bits and a fair number of 0 bits.
+
+		xorshift has the property that it returns every number representable by 32-bits
+		without any repeating in (pseudo)random order, as if you had shuffled a deck of
+		approximately 4-billion numbers and then dealt them out one by one, which strictly
+		speaking is a fault if you were wanting a truly random sequence of integers, as truly
+		random sequences would contain duplicate numbers from time to time.
+
+		For most purposes in games and such, this fault can be ignored.
 ```
 
 Typical usage:
@@ -756,8 +839,6 @@ Typical usage:
 
 For more information about how this pseudorandom number generator is implemented,
 see https://en.wikipedia.org/wiki/Xorshift#Example_implementation.
-
-I tend to favor use of the xorshift() PRNG.
 
 Menus
 -----
@@ -787,6 +868,8 @@ via [source/core/a_star.h](https://github.com/HackRVA/badge2023/blob/main/source
 A simple example demonstrating the use of this a-star implementation is provided in
 [source/core/test_a_star.c](https://github.com/HackRVA/badge2023/blob/main/source/core/test_a_star.c)
 
+The game in source/apps/gulag.c uses pathfinding.
+
 Ray Casting
 -----------
 
@@ -795,6 +878,7 @@ drawing algorithm.  For this the bline() function is provided via
 [source/core/bline.h](https://github.com/HackRVA/badge2023/blob/main/source/core/bline.h)
 
 ```
+	#include "bline.h"
 	typedef int (*plotting_function)(int x, int y, void *context);
 
 	extern void bline(int x1, int y1, int x2, int y2, plotting_function plot_func, void *context);
