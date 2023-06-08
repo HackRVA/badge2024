@@ -1080,3 +1080,26 @@ caching information about which objects are "near" eachother and only collision 
 "near" objects with each other. Exactly how to do this will depend on the application and is
 beyond the scope of this document. Google "space partitioning collision detection".
 
+## A few miscellaneous debugging tips
+
+The badge simulator is compiled with debugging information and with the address sanitizer and
+the undefined behavior sanitizer enabled, which should help to catch bugs early and enable
+easy debugging with gdb.
+
+In gdb, so-called "tui mode" can be activated by pressing "Ctrl-x" then "a" (I remember this
+by the mnemonic "eXtra Awesome mode").  You may occasionally need to refresh the screen if
+it is disturbed by output of your program by pressing Ctrl-L.
+
+You can switch between source, assembly and combined views by the command "layout next".
+
+When running the hardware badge, printf statements will be sent via USB serial back to your
+computer.  If you find a problem which manifests on the physical badge, but not on the
+simulator, judicious use of printfs may help you find the problem.  You can see this output
+by using a terminal program.  On linux, minicom works reasonably well:
+
+```
+	minicom -D /dev/ttyACM0 -8
+```
+
+You may need to install minicom.
+
