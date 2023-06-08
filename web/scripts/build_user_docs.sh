@@ -1,4 +1,6 @@
 #!/bin/bash
 
-npm run build --prefix=docs/user_docs
-cp -R docs/user_docs/_site/* .dist/
+source ./scripts/download_mdbook.sh
+mkdir -p .dist
+
+.bin/mdbook build docs/user_docs --dest-dir ../../.dist/

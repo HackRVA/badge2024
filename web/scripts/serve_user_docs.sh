@@ -1,5 +1,5 @@
 #!/bin/sh
 
-source ./install_node_modules.sh
+source ./scripts/build_user_docs.sh
 
-npm start --prefix=docs/user_docs
+.bin/mdbook serve -p 8888 docs/user_docs --dest-dir ../../.dist/ --open

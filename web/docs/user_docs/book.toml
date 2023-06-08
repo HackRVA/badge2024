@@ -1,0 +1,13 @@
+[book]
+authors = ["Dustin Firebaugh"]
+language = "en"
+multilingual = false
+src = "src"
+title = "HackRVA Badge"
+
+[output.html]
+default-theme="navy"
+git-repository-url = "https://github.com/hackrva/badge2023"
+git-repository-icon = "fa-github"
+edit-url-template = "https://github.com/hackrva/badge2023/edit/main/web/docs/user_docs/{path}"
+site-url = "/badge2023/"
