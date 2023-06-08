@@ -16,7 +16,13 @@ In both cases, you will need **CMake**, which is a build system / build system g
 
 ## Git Setup
 
-We're using `git` for version control, and there's one submodule being used. This means that after cloning the repository, you'll need to run the command `git submodule update --init --recursive` to get the submodule.
+We're using `git` for version control, and there's one submodule being used.
+This means that after cloning the repository, you'll need to run the command
+
+```
+	git submodule update --init --recursive
+```
+to get the submodule.
 
 ## Building for Hardware
 
@@ -25,19 +31,25 @@ For more info, see the [Pico SDK README](https://github.com/raspberrypi/pico-sdk
 When building the software for badge, you will need a *cross-compiler*. This takes code written on your computer and
 compiles it into machine code for the badge. The compiler used is the ARM Embedded GCC compiler.
 
-This may be available in your package manager, or [here](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads).
-If downloaded from the ARM site, you will need to take steps to add it to your `$PATH` or equivalent environment
-variable. (If it works, when you open a new terminal window, the `arm-none-eabi-gcc` program can be run).
+This may be available in your package manager (maybe called
+"gcc-arm-none-eabi"), or
+[here](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm/downloads).
+If downloaded from the ARM site, you will need to take steps to add it to your
+`$PATH` or equivalent environment
+variable. (If it works, when you open a new terminal window, the
+`arm-none-eabi-gcc` program can be run).
 
 ### Visual Studio Code Setup
 
-There are various editors and plugins you can add to better support CMake. A common setup is using Visual Studio Code
-with its CMake Tools plugin. (When you open the project folder with VS Code, it will suggest installing this plugin
+There are various editors and plugins you can add to better support CMake. A
+common setup is using Visual Studio Code with its CMake Tools plugin. (When you
+open the project folder with VS Code, it will suggest installing this plugin
 automatically, which you should do.)
 
-CMake Tools has a couple of additional concepts: Kits that define compilers it can find,
-and Variants that define build parameters. If you've installed the ARM Embedded GCC compiler,
-the plugin should be able to scan for kits and automatically find your cross-compiler (you'll see one named `arm-none-eabi`).
+CMake Tools has a couple of additional concepts: Kits that define compilers it
+can find, and Variants that define build parameters. If you've installed the
+ARM Embedded GCC compiler, the plugin should be able to scan for kits and
+automatically find your cross-compiler (you'll see one named `arm-none-eabi`).
 
 If using VS Code with CMake Tools, you'll be able to use the Pico Variant (alongside the Kit for
 the embedded compiler). Make sure to pick both the Kit and Variant that correspond with each other!
@@ -45,7 +57,7 @@ To switch Variants, you can click on the information icon in the blue bar the bo
 To switch Kits, you can click on the wrench icon in the same bar.
 Find more information on CMake Tools [here](https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md)
 
-You will likely want to change the target from `[all]` in the same bar at the bottom to `[badge2023_c]`.
+You will want to change the target from `[all]` in the same bar at the bottom to `[badge2023_c]`.
 
 The build folder will be named `build-pico` if using the VS Code variants.
 
@@ -54,19 +66,22 @@ The build folder will be named `build-pico` if using the VS Code variants.
 
 If not using an IDE or VS code, you can use the following command to set up the build:
 
-`cmake -S . -B build/ -G "Unix Makefiles"`
+`	./run_cmake.sh`
 
-or, if that's too hard to type or remember:
+which just does this:
 
-`./run_cmake.sh`
+`	cmake -S . -B build/ -G "Unix Makefiles"`
 
-to configure the build. This generates a bunch of makefiles, and
+to configure the build. This generates a bunch of makefiles. To build the firmware:
 
-`cd build && make` to build the firmware.
+```
+	cd build
+	make
+```
 
-After this, the file to flash on the device is at `build/source/badge2023_c.uf2`.
+(You can clean the build by running `make clean`.)
 
-You can clean the build by running `make clean`.
+If the build is successful, a firmware blob will be produced at `build/source/badge2023_c.uf2`.
 
 ### A note for Windows users
 [This link](https://community.element14.com/products/raspberry-pi/b/blog/posts/working-with-the-raspberry-pi-pico-with-windows-and-c-c)
@@ -77,14 +92,20 @@ instead of "Unix Makefiles" (unless you want to install and use `make` as well).
 ### Alternatively for Windows users
  Installing the development environment on Ubuntu, or another distro of your choice in WSL2 has been successfully accomplished, and was a fairly straightforward process. The best docs, surprisingly, came from [Microsoft](https://learn.microsoft.com/en-us/windows/wsl/). Don't skip the [VS Code integration with WSL](https://learn.microsoft.com/en-us/windows/wsl/tutorials/wsl-vscode).
 
+You can use Ninja, if you like, as well. \(Specify `-G Ninja` instead of Makefiles in the `cmake` command.\)
+
 ## Flashing the Badge
 
-You can flash the Pico by holding down the button on the Pico board (not the rotary switch button)
-as you're plugging it in to USB. That will make it show up as a USB mass storage device. Then,
-you can copy the file `build/source/badge2023_c.uf2` onto the mass storage device to flash it. The
-Pico will boot your new firmware immediately.
+To flash your firmware to the badge, press and hold the small white button just to
+the right of the screen on the badge, and connect the badge via micro usb cable to
+your computer and release the button.  This will cause the badge to act as a USB
+storage device, and you should see a filesystem mounted on your computer.  On linux this
+will typically appear at `/media/<i>username</i>/RPI-RP2`. Copy the firmware to this
+location:
 
-You can use Ninja, if you like, as well. \(Specify `-G Ninja` instead of Makefiles in the `cmake` command.\)
+```
+	cp source/badge2023_c.uf2 /media/<i>username</i>/RPI-RP2/
+```
 
 ## Building the Simulator
 
@@ -127,14 +148,16 @@ The build folder will be named `build-simulator` if using the VS Code variants.
 In a similar way to the hardware target, you can generate makefiles via CMake. Note that to make the simulator, there is
 an extra flag that gets passed in:
 
-`cmake -S . -B build_sdl_sim/ -DTARGET=SDL_SIMULATOR -G "Unix Makefiles"`
+`	./run_cmake_sdl_sim.sh`
 
-or, if that's too hard to type or remember:
+which just does this:
 
-`./run_cmake_sdl_sim.sh`
+`	cmake -S . -B build_sdl_sim/ -DTARGET=SDL_SIMULATOR -G "Unix Makefiles"`
 
 After which, you can `cd` into the `build_sdl_sim/` directory and run `make` to build the simulator target. The output
-program is called `build_sdl_sim/source/badge2023_c`, which you can run.
+program is called `build_sdl_sim/source/badge2023_c`, which you can run.  It is compiled with debug information and
+with address sanitizer and undefined behavior sanitizer to help catch bugs early and so you can easily debug things
+with gdb.
 
 ## Off-Target Unit Tests
 
