@@ -100,19 +100,20 @@ To flash your firmware to the badge, press and hold the small white button just 
 the right of the screen on the badge, and connect the badge via micro usb cable to
 your computer and release the button.  This will cause the badge to act as a USB
 storage device, and you should see a filesystem mounted on your computer.  On linux this
-will typically appear at `/media/<i>username</i>/RPI-RP2`. Copy the firmware to this
+will typically appear at `/media/*username*/RPI-RP2`. Copy the firmware to this
 location:
 
 ```
-	cp source/badge2023_c.uf2 /media/<i>username</i>/RPI-RP2/
+	cp source/badge2023_c.uf2 /media/*username*/RPI-RP2/
 ```
 
 ## Building the Simulator
 
-The simulator is intended to run on a Posix-y (that is, Linux or Mac) environment. Windows can build and run it, but
-using Windows Subsystem for Linux if your Linux subsystem has a desktop environment set up.
+The simulator is intended to run on a Posix-y (that is, Linux or Mac) environment. Windows can build and run it,
+although by using Windows Subsystem for Linux if your Linux subsystem has a desktop environment set up.
 
-But to build the simulator, you will need a C compiler for your computer. The simulator relies on SDL2
+To build the simulator, you will need a C compiler for your computer ("apt-get install build-essential"
+on Debian based distros).  The simulator relies on SDL2
 for graphics and keyboard/mouse/game controller support, so you will need to install SDL2.  For images,
 libpng is needed.  ("apt-get install libsdl2-dev" package on Debian based distros, libpng-dev is usually already
 present, on Mac, "brew install sdl2" and "brew install libpng").  In addition, portaudio is needed, the
@@ -145,14 +146,15 @@ The build folder will be named `build-simulator` if using the VS Code variants.
 
 ### Command Line Build
 
-In a similar way to the hardware target, you can generate makefiles via CMake. Note that to make the simulator, there is
-an extra flag that gets passed in:
+In a similar way to the hardware target, you can generate makefiles via CMake.
 
 `	./run_cmake_sdl_sim.sh`
 
 which just does this:
 
 `	cmake -S . -B build_sdl_sim/ -DTARGET=SDL_SIMULATOR -G "Unix Makefiles"`
+
+Note that to make the simulator, there is an extra flag that gets passed in: `-DTARGET=SDL_SIMULATOR`.
 
 After which, you can `cd` into the `build_sdl_sim/` directory and run `make` to build the simulator target. The output
 program is called `build_sdl_sim/source/badge2023_c`, which you can run.  It is compiled with debug information and
