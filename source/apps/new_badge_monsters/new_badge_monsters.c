@@ -614,10 +614,11 @@ static void monster_menu_button_handler(void) {
         state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches))
+             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+             BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
     {
-        change_menu_level(GAME_MENU_LEVEL);
-        dynmenu_draw(&state.menu);
+        state.app_state = GAME_MENU;
+        state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
              BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
