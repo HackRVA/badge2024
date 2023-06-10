@@ -165,6 +165,7 @@ static void check_the_buttons(void)
 	int action;
 	int down_latches = button_down_latches();
 	int rotation = button_get_rotation(0);
+	int rotation1 = button_get_rotation(1);
 
 	if (rotation < 0) {
 		if (current_col == 5 && current_row == 4) /* special case for exit */
@@ -187,12 +188,12 @@ static void check_the_buttons(void)
 		}
 		something_changed = 1;
 	}
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotation1 < 0) {
 		current_row--;
 		if (current_row < 0)
 			current_row = 4;
 		something_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotation1 > 0) {
 		current_row++;
 		if (current_row > 4)
 			current_row = 0;
