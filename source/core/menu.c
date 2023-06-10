@@ -69,6 +69,7 @@ static const struct menu_t settings_m[] = {
    {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, },
    {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, },
    {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, },
+   {"Clear NVRAM", VERT_ITEM, FUNCTION, { .func = clear_nvram_cb }, },
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
 

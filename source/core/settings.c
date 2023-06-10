@@ -1,4 +1,6 @@
 #include "string.h"
+#include "flash_storage.h"
+#include "colors.h"
 #include "badge.h"
 #include "menu.h"
 #include "button.h"
@@ -9,9 +11,12 @@
 #include "display.h"
 #include "key_value_storage.h"
 #include "test-screensavers.h"
+#include "dynmenu.h"
 
 #define PING_REQUEST      0x1000
 #define PING_RESPONSE     0x2000
+
+#define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 static void save_settings(void) {
     flash_kv_store_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
@@ -285,4 +290,102 @@ void setup_settings_menus(void) {
     } else {
         memcpy(buzzer_m[0].name, buzzer_config_m[0].name, sizeof(buzzer_m[0].name));
     }
+}
+
+enum clear_nvram_state {
+	CLEAR_NVRAM_INIT,
+	CLEAR_NVRAM_UNPLUG,
+	CLEAR_NVRAM_RUN,
+	CLEAR_NVRAM_WIPE,
+	CLEAR_NVRAM_EXIT,
+};
+
+static enum clear_nvram_state clear_nvram_state = CLEAR_NVRAM_INIT;
+static struct dynmenu clear_nvram_menu;
+static struct dynmenu_item clear_nvram_item[2];
+
+static void clear_nvram_init(void)
+{
+        dynmenu_init(&clear_nvram_menu, clear_nvram_item, ARRAYSIZE(clear_nvram_item));
+        dynmenu_clear(&clear_nvram_menu);
+	strcpy(clear_nvram_menu.title, "CLEAR NVRAM?");
+        dynmenu_add_item(&clear_nvram_menu, "NO, EXIT", CLEAR_NVRAM_EXIT, 0);
+        dynmenu_add_item(&clear_nvram_menu, "YES, WIPE IT", CLEAR_NVRAM_WIPE, 1);
+	clear_nvram_state = CLEAR_NVRAM_RUN;
+}
+
+static void clear_nvram_run(void)
+{
+	dynmenu_draw(&clear_nvram_menu);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	int r0 = button_get_rotation(0);
+	int r1 = button_get_rotation(1);
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+		clear_nvram_state = CLEAR_NVRAM_EXIT;
+		return;
+	}
+	if (r0 < 0 || r1 < 0 || BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+		dynmenu_change_current_selection(&clear_nvram_menu, -1);
+	}
+	if (r0 > 0 || r1 > 0 || BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+		dynmenu_change_current_selection(&clear_nvram_menu, 1);
+	}
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		clear_nvram_state = clear_nvram_menu.item[clear_nvram_menu.current_item].next_state;
+	}
+}
+
+static void clear_nvram_exit(void)
+{
+	clear_nvram_state = CLEAR_NVRAM_INIT;
+	returnToMenus();
+}
+
+static void clear_nvram_unplug(void)
+{
+	FbClear();
+	FbWriteString(
+		"FLASH WIPED\n\n"
+		"NOW REMOVE THE\n"
+		"BATTERY AND\n"
+		"UNPLUG THE USB\n"
+		"CABLE\n");
+	FbSwapBuffers();
+}
+
+static void clear_nvram_wipe(void)
+{
+	FbClear();
+	FbMove(5, 5);
+	FbColor(WHITE);
+	FbBackgroundColor(BLACK);
+	FbWriteString("WIPING FLASH");
+	FbSwapBuffers();
+	flash_erase_all();
+	clear_nvram_state = CLEAR_NVRAM_UNPLUG;
+}
+
+void clear_nvram_cb(__attribute__((unused)) struct menu_t *unused)
+{
+	switch (clear_nvram_state) {
+	case CLEAR_NVRAM_INIT:
+		clear_nvram_init();
+		break;
+	case CLEAR_NVRAM_RUN:
+		clear_nvram_run();
+		break;
+	case CLEAR_NVRAM_EXIT:
+		clear_nvram_exit();
+		break;
+	case CLEAR_NVRAM_WIPE:
+		clear_nvram_wipe();
+		break;
+	case CLEAR_NVRAM_UNPLUG:
+		clear_nvram_unplug();
+		break;
+	}
 }
