@@ -574,13 +574,6 @@ static void game_menu_button_handler(void) {
 	    BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
     {
         const struct dynmenu_item menu_item = state.menu.item[state.menu.current_item];
-        // menu item 0 is "monsters", and we need to change to other menu
-        if (state.menu.current_item == 0) {
-            change_menu_level(MONSTER_MENU_LEVEL);
-            dynmenu_draw(&state.menu);
-            show_monster_count();
-            state.current_monster = menu_item.cookie;
-        }
         state.app_state = menu_item.next_state;
         state.screen_changed = true;
     } else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
@@ -805,8 +798,8 @@ static void show_monster_count(void)
     snprintf( available_monsters, sizeof(available_monsters), "%d", (int)ARRAYSIZE(new_monsters));
     snprintf( unlocked_monsters, sizeof(unlocked_monsters), "%d", nunlocked);
 
-    FbMove(1,25);
-    FbWriteLine("Collected: ");
+    FbMove(10,25);
+    FbWriteLine("Collected:");
     FbWriteLine(unlocked_monsters);
     FbWriteLine("/");
     FbWriteLine(available_monsters);
