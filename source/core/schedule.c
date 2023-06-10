@@ -4,55 +4,6 @@
 #define NULL 0
 #endif
 
-const struct menu_t day1_breakfast_m[] = {
-   {"Sausage&Egg on", VERT_ITEM, TEXT, {NULL}},
-   {"  Buttmlk. Bisc", VERT_ITEM, TEXT, {NULL}},
-   {"EngMuf w/ EggW,", VERT_ITEM, TEXT, {NULL}},
-   {"  Spin., Mush.", VERT_ITEM, TEXT, {NULL}},
-   {"Fruit Cup", VERT_ITEM, TEXT, {NULL}},
-   {"Ch./Choc./Appl.", VERT_ITEM, TEXT, {NULL}},
-   {"  Danish", VERT_ITEM, TEXT, {NULL}},
-   {"Donut Holes", VERT_ITEM, TEXT, {NULL}},
-   {"Appl./O. Juic", VERT_ITEM, TEXT, {NULL}},
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
-};
-
-const struct menu_t day2_breakfast_m[] = {
-   {"Egg, Potato, &", VERT_ITEM, TEXT, {NULL}},
-   {"  Bacon Burrito", VERT_ITEM, TEXT, {NULL}},
-   {"GF EggW, Spin.", VERT_ITEM, TEXT, {NULL}},
-   {"  Pep., On. Wrp", VERT_ITEM, TEXT, {NULL}},
-   {"Fruit Cup", VERT_ITEM, TEXT, {NULL}},
-   {"Coffee Cakes", VERT_ITEM, TEXT, {NULL}},
-   {"Muffins", VERT_ITEM, TEXT, {NULL}},
-   {"Appl./O. Juic", VERT_ITEM, TEXT, {NULL}},
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
-};
-
-const struct menu_t day1_lunch_m[] = {
-   {"Box w/ roll,", VERT_ITEM, TEXT, {NULL}},
-   {"  slaw, chip,", VERT_ITEM, TEXT, {NULL}},
-   {"  brownie.", VERT_ITEM, TEXT, {NULL}},
-   {"Choice of:", VERT_ITEM, TEXT, {NULL}},
-   {"  BBQ Chicken", VERT_ITEM, TEXT, {NULL}},
-   {"  Port. Mush.", VERT_ITEM, TEXT, {NULL}},
-   {"Beverage", VERT_ITEM, TEXT, {NULL}},
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
-};
-
-const struct menu_t day2_lunch_m[] = {
-   {"Box w/ Fruit,", VERT_ITEM, TEXT, {NULL}},
-   {"  cup, potato,", VERT_ITEM, TEXT, {NULL}},
-   {"  salad, lemon", VERT_ITEM, TEXT, {NULL}},
-   {"  bar.", VERT_ITEM, TEXT, {NULL}},
-   {"Choice of:", VERT_ITEM, TEXT, {NULL}},
-   {"  Chicken Salad", VERT_ITEM, TEXT, {NULL}},
-   {"  Club Sandwich", VERT_ITEM, TEXT, {NULL}},
-   {"  V&GF Grdn Wrp", VERT_ITEM, TEXT, {NULL}},
-   {"Beverage", VERT_ITEM, TEXT, {NULL}},
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
-};
-
 const struct menu_t day2_p1_m[] = {
    {"Wednesday", VERT_ITEM|SKIP_ITEM, TEXT, {NULL}},
    {" 7:59 Registrat", VERT_ITEM, ITEM_DESC,
@@ -64,10 +15,29 @@ const struct menu_t day2_p1_m[] = {
 		"upstairs to\n"
 		"register.\n\n"
 		"Top of the\n"
-		"Grand\n",
+		"Grand\n\n"
+		"7:59-5:00\n"
+		"Top of the\n"
+		"Grand"
 	},
    },
-   {" 8:00 Breakfast", VERT_ITEM, MENU, {day2_breakfast_m}},
+   {" 8:00 Breakfast", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Breakfast\n\n"
+		"Bacon/Egg Bagel\n"
+		"  sandwich\n"
+		"GF Wraps w/ egg\n"
+		"  whites, spinach\n"
+		"  peppers & onion\n"
+		"Hashbrowns\n"
+		"Doughnut Holes\n"
+		"Danishes\n"
+		"Fruit\n\n"
+		"8:00-8:50\n"
+		"Top of the\n"
+		"Grand",
+	},
+   },
    {" 8:50 Welcome", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Welcome to Day\n"
@@ -76,7 +46,9 @@ const struct menu_t day2_p1_m[] = {
 		"provided about\n"
 		"what to expect\n"
 		"at the conference\n\n"
-		"Ballroom",
+		"8:50-9:00\n"
+		"Ballroom\n"
+		"Jake Kouns",
 	},
    },
    {" 9:00 Keynote", VERT_ITEM, ITEM_DESC,
@@ -85,15 +57,25 @@ const struct menu_t day2_p1_m[] = {
 		"Building\n"
 		"Leadership, 1%\n"
 		"at a time\n\n"
-		"Andy Ellis\n\n"
-		"Ballroom\n",
+		"9:00-10:00\n"
+		"Ballroom\n"
+		"Andy Ellis",
 	},
    },
-   {"10:00 -Break-", VERT_ITEM, TEXT, {NULL}},
+   {"10:00 -Break-", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Break\n\n"
+		"Coffee Cake\n"
+		"Peach & Apple\n"
+		"  Cobbler\n\n"
+		"10:00-10:30\n"
+		"Potomac",
+	},
+   },
    {"10:00 CTF Comp", VERT_ITEM, ITEM_DESC,
 	{ .description =
-		"CTF Competition\n"
-		"10-3pm\n\n"
+		"CTF Competition\n\n"
+		"10:00am-3pm\n"
 		"Shenandoah Room",
 	},
    },
@@ -106,6 +88,7 @@ const struct menu_t day2_p1_m[] = {
 		"there are any\n"
 		"issues and talk\n"
 		"to HackRVA!\n\n"
+		"10:00-4:00\n"
 		"Rappahannock",
 	},
    },
@@ -123,6 +106,7 @@ const struct menu_t day2_p1_m[] = {
 		"Test your\n"
 		"lock picking\n"
 		"skills.\n\n"
+		"10:00-4:00\n"
 		"Rappahannock",
 	},
    },
@@ -138,14 +122,18 @@ const struct menu_t day2_p1_m[] = {
 		"featuring a\n"
 		"code-breaking\n"
 		"Quaker poet\n\n"
-		"Ballroom C/D",
+		"10:30-11:20\n"
+		"Ballroom C/D\n"
+		"Brendan O'Leary",
 	},
    },
    {"10:30 CISO", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Top 5 CISO\n"
 		"Findings of 2022\n\n"
-		"Ballroom A/B",
+		"10:30-11:20\n"
+		"Ballroom A/B\n"
+		"Mark Arnold",
 	},
    },
    {"10:30 Heap Exp", VERT_ITEM, ITEM_DESC,
@@ -162,19 +150,32 @@ const struct menu_t day2_p1_m[] = {
 		"and demoing ways\n"
 		"to exploit such\n"
 		"weaknesses.\n\n"
+		"10:30-11:20\n"
 		"1st Floor\n"
-		"Magnolia Room",
+		"Magnolia Room\n"
+		"Kevin Massey",
 	},
    },
-   {"11:20 -Break-", VERT_ITEM, TEXT, {NULL}},
+   {"11:20 -Break-", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Break\n\n"
+		"Coffee Cake\n"
+		"Peach & Apple\n"
+		"  Cobbler\n\n"
+		"11:20-11:30\n"
+		"Potomac\n",
+	},
+   },
    {"11:30 NIST/CMMC", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"The State of\n"
 		"NIST/CMMC\n"
 		"Compliance\n"
 		"Today\n\n"
+		"11:30-12:20\n"
 		"1st Floor\n"
-		"Magnolia Room",
+		"Magnolia Room\n"
+		"Ian MacRae",
 	},
    },
    {"11:30 Leadrshp", VERT_ITEM, ITEM_DESC,
@@ -185,7 +186,9 @@ const struct menu_t day2_p1_m[] = {
 		"Creed for\n"
 		"Info-Sec\n"
 		"Professionals\n\n"
-		"Ballroom C/D",
+		"11:30-12:20\n"
+		"Ballroom C/D\n"
+		"Kate Collins\n",
 	},
    },
    {"11:30 Intruder", VERT_ITEM, ITEM_DESC,
@@ -197,10 +200,35 @@ const struct menu_t day2_p1_m[] = {
 		"Intruders With\n"
 		"Cyber\n"
 		"Deception Tools\n\n"
-		"Ballroom A/B",
+		"11:30-12:20\n"
+		"Ballroom A/B\n"
+		"Dwayne McDaniel",
 	},
    },
-   {"12:20 Lunch", VERT_ITEM, MENU, {day2_lunch_m}},
+   {"12:20 Lunch", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Box Lunch\n"
+		"Choice of:\n"
+		"1.Chicken Salad\n"
+		"  on croissant\n"
+		"2.Club Sandwich\n"
+		"Plus\n"
+		" Potato Salad\n"
+		" Fruit Cup\n"
+		" Lemon Bar\n"
+		" Condiments\n"
+		" Utensils\n"
+		"OR\n"
+		"GF Tortilla\n"
+		"Wrap w/ Asparagus,\n"
+		"Spinach, Bell\n"
+		"Pepper, Tomato\n"
+		"Onion and Garlic\n"
+		"Hummus\n"
+		"12:20-1:00\n"
+		"James River Foyer",
+	},
+   },
    {" 1:00 Quantum", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Quantum\n"
@@ -209,7 +237,9 @@ const struct menu_t day2_p1_m[] = {
 		"of the advent\n"
 		"of quantum\n"
 		"computers\n\n"
-		"Ballroom A/B",
+		"1:00-1:50\n"
+		"Ballroom A/B\n"
+		"Denis Mandich",
 	},
    },
    {" 1:00 Cmnwealth", VERT_ITEM, ITEM_DESC,
@@ -220,17 +250,31 @@ const struct menu_t day2_p1_m[] = {
 		"Whole Govt\n"
 		"approach to\n"
 		"cyber\n\n"
-		"Ballroom C/D",
+		"1:00-1:50\n"
+		"Ballroom C/D\n"
+		"Aliscia Andrews",
 	},
    },
-   {" 1:50 -Break-", VERT_ITEM, TEXT, {NULL}},
+   {" 1:50 -Break-", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Pretzels w/\n"
+		"  Cheese Dip &\n"
+		"  Mustard\n"
+		"Cinnamon Sugar\n"
+		"  Pretzels\n\n"
+		"1:50-2:00\n"
+		"Potomac",
+	},
+   },
    {" 2:00 ChatGPT", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Hacking Your\n"
 		"Job? Trying To\n"
 		"Cheat At Life\n"
 		"With ChatGPT\n\n"
-		"Ballroom C/D",
+		"2:00-2:50\n"
+		"Ballroom C/D\n"
+		"David Girvin\n",
 	},
    },
    {" 2:00 Ransomwre", VERT_ITEM, ITEM_DESC,
@@ -239,10 +283,23 @@ const struct menu_t day2_p1_m[] = {
 		"Rebranding\n"
 		"... So Hot\n"
 		"Right Now!\n\n"
-		"Ballroom A/B",
+		"2:00-2:50\n"
+		"Ballroom A/B\n"
+		"Drew Schmitt",
 	},
    },
-   {" 2:50 -Break-", VERT_ITEM, TEXT, {NULL}},
+   {" 2:50 -Break-", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Break\n\n"
+		"Pretzels w/\n"
+		"  Cheese Dip &\n"
+		"  Mustard\n"
+		"Cinnamon Sugar\n"
+		"Pretzels\n\n"
+		"2:50-3:10\n"
+		"Potomac",
+	},
+   }, 
    {" 3:10 Insiders", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Insiders\n"
@@ -255,7 +312,9 @@ const struct menu_t day2_p1_m[] = {
 		"exfiltrating\n"
 		"data prior to\n"
 		"leaving?\n\n"
-		"Ballroom",
+		"3:10-4:00\n"
+		"Ballroom\n"
+		"Colin Estep",
 	},
    },
    {" 4:00 Closing", VERT_ITEM, ITEM_DESC,
@@ -271,22 +330,13 @@ const struct menu_t day2_p1_m[] = {
 		"we will award\n"
 		"Prizes and\n"
 		"CTF awards\n\n"
-		"Ballroom",
+		"4:00-5:30\n"
+		"Ballroom\n"
+		"Chris Sullo",
 	},
    },
    {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
 };
-
-#if 0
-const struct menu_t day1_p3_m[] = {
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
-};
-
-
-const struct menu_t day1_p2_m[] = {
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
-};
-#endif
 
 const struct menu_t day1_p1_m[] = {
    {"Tuesday", VERT_ITEM|SKIP_ITEM, TEXT, {NULL}},
@@ -306,7 +356,27 @@ const struct menu_t day1_p1_m[] = {
 		"the Grand\".\n",
 	},
    },
-   {" 8:00 Breakfast", VERT_ITEM, MENU, {day1_breakfast_m}},
+   {" 8:00 Breakfast", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"VA Baked/Fried\n"
+		" Ham Biscuits\n"
+		"Mini Veggie\n"
+		" Frittatas\n"
+		" GF/Veg/nondairy\n"
+		"Cheese Grits w/\n"
+		" butter\n"
+		" GF/Veg\n"
+		"Muffins\n"
+		" Cranberry, Orange\n"
+		" Walnut, Blueberry\n"
+		" Chocolate\n"
+		"Seasonal Fruit\n"
+		" GF/Vegan\n"
+		" non-dairy\n\n"
+		"11-50-1:00\n"
+		"James River Foyer",
+	},
+   },
    {" 9:00 Welcome", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Welcome to\n"
@@ -321,7 +391,8 @@ const struct menu_t day1_p1_m[] = {
 		"tions on CTF,\n"
 		"Badge, and\n"
 		"Lock Picking.\n\n"
-		"Ballroom",
+		"Ballroom\n"
+		"Jake Kouns"
 	},
    },
    {" 9:30 Keynote", VERT_ITEM, ITEM_DESC,
@@ -331,6 +402,7 @@ const struct menu_t day1_p1_m[] = {
 		"  Security\n"
 		"  Evangelist\n"
 		"Eclypsium\n\n"
+		"9:30-10:30\n"
 		"Ballroom",
 	},
    },
@@ -343,6 +415,7 @@ const struct menu_t day1_p1_m[] = {
 		"there are any\n"
 		"issues and talk\n"
 		"to HackRVA!\n\n"
+		"10:00am-4:30pm\n"
 		"Rappahannock",
 	},
    },
@@ -360,6 +433,7 @@ const struct menu_t day1_p1_m[] = {
 		"Test your\n"
 		"lock picking\n"
 		"skills.\n\n"
+		"10am-5pm\n"
 		"Rappahannock",
 	},
    },
@@ -373,8 +447,12 @@ const struct menu_t day1_p1_m[] = {
 		"so we can\n"
 		"split the\n"
 		"room for\n"
-		"talks.",
-	}
+		"talks.\n\n"
+		"Mini Cinn Buns\n"
+		"Yogurt Parfait\n"
+		"10:30-11:00\n"
+		"Potomac",
+	},
    },
    {"11:00 Liability", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -384,7 +462,9 @@ const struct menu_t day1_p1_m[] = {
 		"Software\n"
 		"Liability and\n"
 		"Security\n\n"
-		"Ballroom A/B"
+		"Ballroom A/B\n"
+		"11-11:50\n"
+		"Andrea Matwyshyn",
 	},
    },
    {"11:00 Passwd", VERT_ITEM, ITEM_DESC,
@@ -401,18 +481,41 @@ const struct menu_t day1_p1_m[] = {
 		"but is it\n"
 		"always\n"
 		"appropriate?\n\n"
-		"Ballroom C/D"
+		"Ballroom C/D\n"
+		"11-11:50\n"
+		"Adrian Amos",
 	},
    },
-   {"11:50 Lunch", VERT_ITEM, MENU, {day1_lunch_m}},
+   {"11:50 Lunch", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Box Lunch\n\n"
+		"Choose one:\n"
+		"1.Shredded BBQ\n"
+		"  Chicken\n"
+		"2.Diced Port-\n"
+		"  abello Mush-\n"
+		"  rooms in GF\n"
+		"  BBQ Sauce\n"
+		"Plus\n"
+		"  Roll, Coleslaw,\n"
+		"  Chips, Brownie,\n" 
+		"  hot sauce,\n"
+		"  utensils\n"
+		"  napkins\n"
+		"11:50-1:00\n"
+		"James River Foyer",
+	},
+   },
    {" 1:00 Passkeys", VERT_ITEM, ITEM_DESC,
 	{. description =
 		"Everything You\n"
 		"Never Knew You\n"
 		"Wanted To Know\n"
 		"About Passkeys\n\n"
+		"1:00-1:50\n"
 		"1st floor\n"
-		"Magnolia Room\n",
+		"Magnolia Room\n"
+		"Josh Cigna",
 	},
    },
    {" 1:00 CyberGame", VERT_ITEM, ITEM_DESC,
@@ -422,7 +525,9 @@ const struct menu_t day1_p1_m[] = {
 		"Master: How\n"
 		"to Lead Cyber\n"
 		"Games at Work\n\n"
-		"Ballroom C/D",
+		"1:00-1:50\n"
+		"Ballroom C/D\n"
+		"Jason Wonn"
 	},
    },
    {" 1:00 Tradecrft", VERT_ITEM, ITEM_DESC,
@@ -432,7 +537,9 @@ const struct menu_t day1_p1_m[] = {
 		"craft to the\n"
 		"Operational\n"
 		"Environment\n\n"
-		"Ballroom A/B",
+		"1:00-1:50\n"
+		"Ballroom A/B\n"
+		"Fletcher Davis",
 	},
    },
    {" 1:00 CTF Prep", VERT_ITEM, ITEM_DESC,
@@ -441,10 +548,20 @@ const struct menu_t day1_p1_m[] = {
 		"Come prep and\n"
 		"learn more about\n"
 		"the CTF contest!\n\n"
+		"1:00-4:00\n"
 		"Shenandoah Room\n",
 	},
    },
-   {" 1:50 -Break-", VERT_ITEM, TEXT, {NULL}},
+   {" 1:50 -Break-", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Break\n\n"
+		"Milk and Cookies\n"
+		"Cold Milk\n"
+		"Chocolate Milk\n\n"
+		"1:50-2:00\n"
+		"Potomac\n",
+	},
+   },
    {" 2:00 TTP", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Adversary\n"
@@ -454,7 +571,9 @@ const struct menu_t day1_p1_m[] = {
 		"Evolution &\n"
 		"the Value of\n"
 		"TTP Intelligence\n\n"
-		"Ballroom A/B",
+		"2:00-2:50\n"
+		"Ballroom A/B\n"
+		"Scott Small",
 	},
    },
    {" 2:00 Enterpris", VERT_ITEM, ITEM_DESC,
@@ -468,6 +587,7 @@ const struct menu_t day1_p1_m[] = {
 		"security budget\n"
 		"on sh!7 that\n"
 		"doesn't matter!\n\n"
+		"2:00-2:50\n"
 		"Ballroom C/D",
 	},
    },
@@ -477,11 +597,22 @@ const struct menu_t day1_p1_m[] = {
 		"of Behaviors:\n"
 		"Why SBOMs\n"
 		"Aren't Enough\n\n"
+		"2:00-2:50\n"
 		"1st floor\n"
-		"Magnolia Room",
+		"Magnolia Room\n"
+		"Andrew Hendela",
 	},
    },
-   {" 2:50 -Break-", VERT_ITEM, TEXT, {NULL}},
+   {" 2:50 -Break-", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Break\n\n"
+		"Potato Chips &\n"
+		"French Onion\n"
+		"  Dip\n\n"
+		"2:50-3:00\n"
+		"Potomac"
+	},
+   },
    {" 3:00 Pentest", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Feature or a\n"
@@ -490,7 +621,9 @@ const struct menu_t day1_p1_m[] = {
 		"Active\n"
 		"Directory\n"
 		"Pentest\n\n"
-		"Ballroom C/D",
+		"3:00-3:50\n"
+		"Ballroom C/D\n"
+		"Qasim Ijaz",
 	},
    },
    {" 3:00 Pandemic", VERT_ITEM, ITEM_DESC,
@@ -503,8 +636,10 @@ const struct menu_t day1_p1_m[] = {
 		"and Their\n"
 		"Security\n"
 		"Architecture\n\n"
+		"3:00-3:50\n"
 		"1st Floor\n"
-		"Magnolia Room",
+		"Magnolia Room\n"
+		"Dan Han",
 	},
    },
    {" 3:00 ThreatHnt", VERT_ITEM, ITEM_DESC,
@@ -516,17 +651,30 @@ const struct menu_t day1_p1_m[] = {
 		"designing a\n"
 		"mature threat\n"
 		"hunting service.\n\n"
-		"Ballroom A/B",
+		"3:00-3:50\n"
+		"Ballroom A/B\n"
+		"Andrew Skatoff",
 	},
    },
-   {" 3:50 -Break-", VERT_ITEM, TEXT, {NULL}},
+   {" 3:50 -Break-", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Break\n\n"
+		"Potato Chips &\n"
+		"French Onion\n"
+		"  Dip\n\n"
+		"3:50-4:00\n"
+		"Potomac",
+	},
+    },
    {" 4:00 NW 201", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Network 201:\n"
 		"A Tour Through\n"
 		"Network Security\n\n"
+		"4:00-4:50\n"
 		"1st Floor\n"
-		"Magnolia Room",
+		"Magnolia Room\n"
+		"Rick Lull\n",
 	},
    },
    {" 4:00 No Popo", VERT_ITEM, ITEM_DESC,
@@ -545,7 +693,9 @@ const struct menu_t day1_p1_m[] = {
 		"of custody to\n"
 		"prove a theft\n"
 		"occurred.\n\n"
-		"Ballroom A/B",
+		"4:00-4:50\n"
+		"Ballroom A/B\n"
+		"Amelia Szczuchniak",
 	},
    },
    {" 4:50 Closing", VERT_ITEM, ITEM_DESC,
@@ -556,27 +706,35 @@ const struct menu_t day1_p1_m[] = {
 		"what to expect\n"
 		"for the rest\n"
 		"of the evening\n"
-		"and Day 2.",
+		"and Day 2.\n\n"
+		"4:50-5:00\n"
+		"Jake Kouns\n"
+		"Chris Sullo",
 	},
    },
-   {" 5:00 -Break-", VERT_ITEM, TEXT, {NULL}},
+   {" 5:00 -Break-", VERT_ITEM, ITEM_DESC,
+	{ .description =
+		"Break\n\n"
+		"Veg Crudite\n"
+		"Ranch Dip\n"
+		"Spinach/Artichoke\n"
+		"  Dip\n"
+		"Pita Chips\n"
+		"Crackers\n\n"
+		"5:00-5:30\n"
+		"James River Foyer\n",
+	},
+   },
    {" 5:30 Aft Party", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"RVAsec After\n"
 		"Party\n\n"
-		"The RVAsec 2023\n"
-		"after party,\n"
-		"brought to you\n"
-		"by RVAsec, and\n"
-		"will be in the\n"
-		"main Ballroom,\n"
-		"right after the\n"
-		"conference ends!\n"
-    		"5:30 pm to\n"
-		"8:30pm: Heavy\n"
-		"hors d'oeuvre\n"
-		"(new menu!)\n"
-		"and beverages",
+		"Casino Night!\n"
+		"-Food\n"
+		"-Beverages\n"
+		"-Games 5:30-8:30\n\n"
+		"5:30-9:00\n"
+		"Omni Ballroom"
 	},
    },
    {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
