@@ -318,8 +318,8 @@ struct new_monster new_monsters[] = {
 struct game_state {
     // skip redrawing screen if no changes
     bool screen_changed;
-    unsigned int current_monster;
-    unsigned int nmonsters;
+    unsigned int current_monster; // active monster
+    unsigned int nmonsters; // total monsters collectible
     enum app_states app_state;
     // TODO: do we still need this?
     bool trading_monsters_enabled;
@@ -816,24 +816,13 @@ static void show_monster_count(void)
  */
 static void change_menu_level(enum menu_level_t level)
 {
-    // remember the most recent monster selected
-    static int which_monster = -1;
-
-    if (which_monster == -1)
-        which_monster = state.initial_mon;
-
-    if (strcmp(state.menu.title, "Monsters") == 0)
-        which_monster = state.menu.current_item;
-
     if (level == GAME_MENU_LEVEL) {
         setup_main_menu();
     } else {
         setup_monster_menu();
         // set current monster to same as previous, if it's in menu
-        if (state.menu.max_items > which_monster) {
-            state.menu.current_item = which_monster; /* Stay on the same monster */
-            state.current_monster = state.menu.item[state.menu.current_item].cookie;
-        }
+        if (state.menu.current_item > state.menu.nitems - 1)
+            state.menu.current_item = state.menu.nitems - 1;
     }
     state.menu_level = level;
     LOG("change_menu_level: new level = %s\n", menu_level_str(state.menu_level));
@@ -844,7 +833,7 @@ static void change_menu_level(enum menu_level_t level)
 #ifdef __linux__
 static const char *menu_level_str(const enum menu_level_t menu_level) {
     // TODO: convert all "main" references to "game"
-    return menu_level == GAME_MENU_LEVEL ? "MAIN" : "MONSTER_MENU";
+    return menu_level == GAME_MENU_LEVEL ? "GAME_MENU_LEVEL" : "MONSTER_MENU_LEVEL";
 }
 #endif
 
