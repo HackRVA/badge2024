@@ -488,8 +488,6 @@ static void trade_monsters(void)
 
 /*
  * Displays state.current_monster on the screen.
- *
- * Postconditions: app_state = RENDER_SCREEN, screen_changed = true
  */
 static void show_monster(void)
 {
@@ -584,8 +582,9 @@ static void game_menu_button_handler(void) {
             state.current_monster = menu_item.cookie;
         }
         state.app_state = menu_item.next_state;
+        state.screen_changed = true;
     } else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
-	state.app_state = EXIT_APP;
+        state.app_state = EXIT_APP;
     }
 }
 
