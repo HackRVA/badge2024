@@ -21,7 +21,6 @@
 #include "about_badge.h"
 #include "new_badge_monsters/new_badge_monsters.h"
 #include "battlezone.h"
-#include "clue.h"
 #include "game_of_life.h"
 #include "hacking_simulator.h"
 #include "lunarlander.h"
@@ -48,7 +47,6 @@ static const struct menu_t games_m[] = {
    {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, },
    {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, },
    {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
-   {"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, },
    {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, },
    {"Tank vs Tank", VERT_ITEM, FUNCTION, { .func = tank_vs_tank_cb }, },
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },

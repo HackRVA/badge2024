@@ -3,7 +3,7 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/asteroids.c
         ${CMAKE_CURRENT_LIST_DIR}/battlezone.c
         ${CMAKE_CURRENT_LIST_DIR}/blinkenlights.c
-        ${CMAKE_CURRENT_LIST_DIR}/clue.c
+        # ${CMAKE_CURRENT_LIST_DIR}/clue.c
         ${CMAKE_CURRENT_LIST_DIR}/conductor.c
         ${CMAKE_CURRENT_LIST_DIR}/cube.c
         ${CMAKE_CURRENT_LIST_DIR}/etch-a-sketch.c
