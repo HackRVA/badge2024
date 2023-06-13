@@ -38,7 +38,7 @@ enum app_states {
 struct new_monster
 {
     char name[DYNMENU_MAX_TITLE];
-    bool owned;
+    int owned;
     int color;
     char blurb[128];
     const struct asset *asset;
@@ -720,11 +720,8 @@ char *key_from_monster(const struct new_monster *m, char *key, size_t len)
 static void load_from_flash()
 {
     char key[20];
-    int unused; //??
     for (struct new_monster *m = new_monsters; PART_OF_ARRAY(new_monsters, m); m++) {
-        if (!flash_kv_get_int(key_from_monster(m, key, sizeof(key)), &unused)) {
-            m->owned = false;
-        }
+	flash_kv_get_int(key_from_monster(m, key, sizeof(key)), &m->owned);
     }
 }
 
