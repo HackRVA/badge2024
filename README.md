@@ -221,4 +221,4 @@ Other Extensions:
 * GitHub Actions integration (build firmware/run tests/build docs)
 * Add audio to simulator
 
-[//]: # (MetaCTF{stop_asking_about_badge_problems})
+[//]: # (removed 2022 flag)
