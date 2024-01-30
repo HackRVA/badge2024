@@ -2,7 +2,7 @@
 
 # THIS CMakeLists.txt AUTOMATICALLY GENERATED
 
-target_sources(badge2023_c PUBLIC
+target_sources(badge2024_c PUBLIC
 
 ${CMAKE_CURRENT_LIST_DIR}/ballroom.c
 ${CMAKE_CURRENT_LIST_DIR}/billiards_room.c
@@ -28,5 +28,5 @@ ${CMAKE_CURRENT_LIST_DIR}/wrench.c
 
 )
 
-target_include_directories(badge2023_c PUBLIC .)
+target_include_directories(badge2024_c PUBLIC .)
 

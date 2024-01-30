@@ -1,5 +1,5 @@
-# badge2023
-RVASec Badge 2023 Firmware
+# badge2024
+RVASec Badge 2024 Firmware
 
 # Initial Setup
 
@@ -57,7 +57,7 @@ To switch Variants, you can click on the information icon in the blue bar the bo
 To switch Kits, you can click on the wrench icon in the same bar.
 Find more information on CMake Tools [here](https://github.com/microsoft/vscode-cmake-tools/blob/main/docs/README.md)
 
-You will want to change the target from `[all]` in the same bar at the bottom to `[badge2023_c]`.
+You will want to change the target from `[all]` in the same bar at the bottom to `[badge2024_c]`.
 
 The build folder will be named `build-pico` if using the VS Code variants.
 
@@ -81,7 +81,7 @@ to configure the build. This generates a bunch of makefiles. To build the firmwa
 
 (You can clean the build by running `make clean`.)
 
-If the build is successful, a firmware blob will be produced at `build/source/badge2023_c.uf2`.
+If the build is successful, a firmware blob will be produced at `build/source/badge2024_c.uf2`.
 
 ### A note for Windows users
 [This link](https://community.element14.com/products/raspberry-pi/b/blog/posts/working-with-the-raspberry-pi-pico-with-windows-and-c-c)
@@ -104,7 +104,7 @@ will typically appear at `/media/*username*/RPI-RP2`. Copy the firmware to this
 location:
 
 ```
-	cp source/badge2023_c.uf2 /media/*username*/RPI-RP2/
+	cp source/badge2024_c.uf2 /media/*username*/RPI-RP2/
 ```
 
 ## Building the Simulator
@@ -128,7 +128,7 @@ index 4b58925e..8c7eab01 100644
 @@ -5,7 +5,7 @@ set(PICO_SDK_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK from Git. Default o
  set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git. Default on.")
  set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
- set(PRODUCT "badge2023_c")
+ set(PRODUCT "badge2024_c")
 -set(SIMULATOR_AUDIO "yes") # change to "no" to avoid compiling audio code in simulator
 +set(SIMULATOR_AUDIO "no") # change to "no" to avoid compiling audio code in simulator
  
@@ -157,7 +157,7 @@ which just does this:
 Note that to make the simulator, there is an extra flag that gets passed in: `-DTARGET=SDL_SIMULATOR`.
 
 After which, you can `cd` into the `build_sdl_sim/` directory and run `make` to build the simulator target. The output
-program is called `build_sdl_sim/source/badge2023_c`, which you can run.  It is compiled with debug information and
+program is called `build_sdl_sim/source/badge2024_c`, which you can run.  It is compiled with debug information and
 with address sanitizer and undefined behavior sanitizer to help catch bugs early and so you can easily debug things
 with gdb.
 
@@ -176,7 +176,7 @@ running `doxygen` in the `source` folder will create a folder called `docs` with
 
 Apps are mostly contained within a single .c/.h file in the apps folder. Take a look at the comments inside the
 `badge-app-template` files for help getting started.  See also
-[BADGE-APP-HOWTO.md](https://github.com/HackRVA/badge2023/blob/main/BADGE-APP-HOWTO.md)
+[BADGE-APP-HOWTO.md](https://github.com/HackRVA/badge2024/blob/main/BADGE-APP-HOWTO.md)
 
 # Current Status
 

@@ -1,7 +1,7 @@
 # THIS CMakeLists.txt AUTOMATICALLY GENERATED
 
 target_sources(
-    badge2023_c PUBLIC
+    badge2024_c PUBLIC
 
     ${CMAKE_CURRENT_LIST_DIR}/Access_Control_Alligator.c
     ${CMAKE_CURRENT_LIST_DIR}/DNS_Dolphin.c
@@ -35,4 +35,4 @@ target_sources(
     ${CMAKE_CURRENT_LIST_DIR}/SIEM_Sloth.c
 )
 
-target_include_directories(badge2023_c PUBLIC .)
+target_include_directories(badge2024_c PUBLIC .)

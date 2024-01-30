@@ -68,7 +68,7 @@ To get started quickly, a badge app template file is provided which you can copy
 and modify to get started making your badge app quickly without having to type in
 a bunch of boilerplate code before anything even begins to work.
 
-* [source/apps/badge-app-template.c](https://github.com/HackRVA/badge2023/blob/main/source/apps/badge-app-template.c)
+* [source/apps/badge-app-template.c](https://github.com/HackRVA/badge2024/blob/main/source/apps/badge-app-template.c)
 
 It is extensively commented to help you know how it's meant to be used.
 
@@ -76,7 +76,7 @@ Drawing on the Screen
 ---------------------
 
 The screen is 128x160 pixels and the interface for drawing on the screen
-is mostly defined in [source/display/frambuffer.h](https://github.com/HackRVA/badge2023/blob/main/source/display/framebuffer.h).
+is mostly defined in [source/display/frambuffer.h](https://github.com/HackRVA/badge2024/blob/main/source/display/framebuffer.h).
 (BTW, use the macros `LCD_XSIZE` and `LCD_YSIZE` rather than hard coding screen dimensions.)
 
 Here is a (probably incomplete) list of functions you may call for drawing on the screen:
@@ -115,9 +115,9 @@ Colors
 ------
 
 There are a few named colors defined in
-[source/display/colors.h](https://github.com/HackRVA/badge2023/blob/main/source/display/colors.h)
+[source/display/colors.h](https://github.com/HackRVA/badge2024/blob/main/source/display/colors.h)
 and a lot more named colors defined in
-[source/display/x11_colors.h](https://github.com/HackRVA/badge2023/blob/main/source/display/x11_colors.h)
+[source/display/x11_colors.h](https://github.com/HackRVA/badge2024/blob/main/source/display/x11_colors.h)
 
 
 ```
@@ -274,7 +274,7 @@ Buttons, Directional-Pad Inputs and Rotary Encoders
 ---------------------------------------------------
 
 The API for badge-apps to deal with buttons and rotary encoders is defined
-in [source/hal/button.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/button.h)
+in [source/hal/button.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/button.h)
 
 There is an enumerated type defining a value for each button in source/hal/button.h:
 ```
@@ -393,10 +393,10 @@ Display Related Functions
 These functions are related to the hardware display as opposed to the
 framebuffer functions described earlier that are used for normal drawing.
 
-See: [source/hal/display.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/display.h)
+See: [source/hal/display.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/display.h)
 
 The display brightness can be controlled via led_pwd_enable(BADGE_LED_DISPLAY_BACKLIGHT, duty);
-See: [source/hal/led_pwm.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/led_pwm.h)
+See: [source/hal/led_pwm.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/led_pwm.h)
 
 Infrared Transmitter and Receiver
 ---------------------------------
@@ -601,7 +601,7 @@ and a user assignable name (using the username badge app).
 Audio
 -----
 
-See: [source/hal/audio.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/audio.h)
+See: [source/hal/audio.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/audio.h)
 
 There are two main audio functions:
 
@@ -655,7 +655,7 @@ Music
 -----
 
 The above pattern for playing music is already coded for you
-in source/core/music.c and [source/core/music.h](https://github.com/HackRVA/badge2023/blob/main/source/core/music.h)
+in source/core/music.c and [source/core/music.h](https://github.com/HackRVA/badge2024/blob/main/source/core/music.h)
 
 You could play the scale with this code:
 
@@ -721,10 +721,10 @@ Flash Memory Access
 -------------------
 
 For lower level access to flash API:
-see: [source/hal/flash_storage.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/flash_storage.h)
+see: [source/hal/flash_storage.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/flash_storage.h)
 
 For a higher level flash-backed key-value store API:
-see: [source/core/key_value_storage.h](https://github.com/HackRVA/badge2023/blob/main/source/core/key_value_storage.h)
+see: [source/core/key_value_storage.h](https://github.com/HackRVA/badge2024/blob/main/source/core/key_value_storage.h)
 
 Exiting the Badge App:
 ----------------------
@@ -775,7 +775,7 @@ Miscellaneous Functions:
 	#include "fxp_sqrt.h"
 	int fxp_sqrt(int x);
 		Fixed point square root.
-		See: [source/core/fxp_sqrt.h](https://github.com/HackRVA/badge2023/blob/main/source/core/fxp_sqrt.h)
+		See: [source/core/fxp_sqrt.h](https://github.com/HackRVA/badge2024/blob/main/source/core/fxp_sqrt.h)
 
 
 ```
@@ -784,7 +784,7 @@ Miscellaneous Functions:
 --------------------------------------
 
 There is a hardware based random number generator defined in
-[source/hal/random.h](https://github.com/HackRVA/badge2023/blob/main/source/hal/random.h)
+[source/hal/random.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/random.h)
 
 ```
 	void random_insecure_bytes(uint8_t *bytes, size_t len);
@@ -803,7 +803,7 @@ And there is a pseudo-random number generator defined in random.h as well:
 ```
 
 There is another pseudorandom number generator defined in
-[source/core/xorshift.h](https://github.com/HackRVA/badge2023/blob/main/source/core/xorshift.h)
+[source/core/xorshift.h](https://github.com/HackRVA/badge2024/blob/main/source/core/xorshift.h)
 
 
 ```
@@ -844,7 +844,7 @@ Menus
 -----
 
 There is a library for badge app menus. The interface for this library is defined in
-[source/core/dynmenu.h](https://github.com/HackRVA/badge2023/blob/master/source/core/dynmenu.h)
+[source/core/dynmenu.h](https://github.com/HackRVA/badge2024/blob/master/source/core/dynmenu.h)
 and the implementation is in [source/core/dynmenu.c](https://github.com/HackRVA/badge2020/blob/master/source/core/dynmenu.c).
 The types and functions declared in dynmenu.h and the way they are meant to be used are are
 fairly well documented within [the header file](https://github.com/HackRVA/badge2020/blob/master/include/dynmenu.h).
@@ -863,10 +863,10 @@ Pathfinding
 
 Many games may need to do pathfinding, so an implementation of
 the [A-Star algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm) is provided
-via [source/core/a_star.h](https://github.com/HackRVA/badge2023/blob/main/source/core/a_star.h)
+via [source/core/a_star.h](https://github.com/HackRVA/badge2024/blob/main/source/core/a_star.h)
 
 A simple example demonstrating the use of this a-star implementation is provided in
-[source/core/test_a_star.c](https://github.com/HackRVA/badge2023/blob/main/source/core/test_a_star.c)
+[source/core/test_a_star.c](https://github.com/HackRVA/badge2024/blob/main/source/core/test_a_star.c)
 
 The game in source/apps/gulag.c uses pathfinding.
 
@@ -875,7 +875,7 @@ Ray Casting
 
 Games frequently have a need to perform some ray-casting operations using Bresenham's line
 drawing algorithm.  For this the bline() function is provided via
-[source/core/bline.h](https://github.com/HackRVA/badge2023/blob/main/source/core/bline.h)
+[source/core/bline.h](https://github.com/HackRVA/badge2024/blob/main/source/core/bline.h)
 
 ```
 	#include "bline.h"
@@ -886,7 +886,7 @@ drawing algorithm.  For this the bline() function is provided via
 
 The user-provided plot_function will be called with the context pointer for every point that
 Bresenham's algorithm visits.  An example using bline() can be found in
-[source/apps/gulag.c](https://github.com/HackRVA/badge2023/blob/main/source/apps/gulag.c#L2499)
+[source/apps/gulag.c](https://github.com/HackRVA/badge2024/blob/main/source/apps/gulag.c#L2499)
 where it is used to do collision detection between bullets and walls.
 
 Some Common Video Game Programming Patterns
