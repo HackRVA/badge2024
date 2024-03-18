@@ -41,7 +41,7 @@
 
 extern const struct menu_t schedule_m[]; /* defined in core/schedule.c */
 
-static const struct menu_t games_m[] = {
+static const struct menu_t legacy_games_m[] = {
    {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, },
    {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, },
    {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, },
@@ -56,6 +56,11 @@ static const struct menu_t games_m[] = {
    {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, },
    {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, },
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
+};
+
+static const struct menu_t games_m[] = {
+	{"Legacy Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = legacy_games_m }, },
+	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
 };
 
 static const struct menu_t settings_m[] = {
