@@ -1189,8 +1189,9 @@ static void process_commands(void)
     if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
         maze_button_pressed();
     } else
-#endif
+#else
 #warning "maze.c needs maintenance related to ROTARY SWITCHES"
+#endif
     if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
         if (maze_menu.menu_active)
             dynmenu_change_current_selection(&maze_menu, -1);

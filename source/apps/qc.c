@@ -257,6 +257,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             } else {
                 button_hold_count = 0;
             }
+#else
 #warning "Badge QC app probably needs maintenance around use of encoder switches"
 #endif
 

@@ -4984,7 +4984,7 @@ static void gulag_maybe_exit(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCH
+#if BADGE_HAS_ROTARY_SWITCHES
 	int rotary_switch = button_get_rotation(0);
 #endif
 

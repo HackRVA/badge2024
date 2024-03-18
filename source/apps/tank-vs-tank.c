@@ -491,8 +491,9 @@ static void check_buttons(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		fire_gun(&tank[1]);
 	} else 
-#endif
+#else
 #warning "tank-vs-tank.c needs maintenance related to ROTARY SWITCHES"
+#endif
 	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		adjust_tank_speed(&tank[1], -TANK_SPEED_INCR);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
