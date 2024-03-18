@@ -558,27 +558,40 @@ static void show_description(void)
  */
 static void game_menu_button_handler(void) {
     const int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
     const int rotary = button_get_rotation(0);
+#define ROTATION_POS(x) ((x) > 0)
+#define ROTATION_NEG(x) ((x) < 0)
+#else
+#define ROTATION_POS(x) 0
+#define ROTATION_NEG(x) 0
+#endif
 
-    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
+    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary))
     {
         dynmenu_change_current_selection(&state.menu, -1);
         state.screen_changed = true;
     }
-    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
+    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary))
     {
         dynmenu_change_current_selection(&state.menu, 1);
         state.screen_changed = true;
     }
-    else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+    else if (
+#if BADGE_HAS_ROTARY_SWITCHES
+	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
 	    BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
     {
         const struct dynmenu_item menu_item = state.menu.item[state.menu.current_item];
         state.app_state = menu_item.next_state;
         state.screen_changed = true;
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+    }
+#if BADGE_HAS_ROTARY_SWITCHES
+    else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
         state.app_state = EXIT_APP;
     }
+#endif
 }
 
 /*
@@ -591,29 +604,35 @@ static void game_menu_button_handler(void) {
  */
 static void monster_menu_button_handler(void) {
     const int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
     const int rotary = button_get_rotation(0);
+#endif
 
-    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
+    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary))
     {
         dynmenu_change_current_selection(&state.menu, -1);
         state.current_monster = state.menu.item[state.menu.current_item].cookie;
         state.screen_changed = true;
     }
-    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
+    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary))
     {
         dynmenu_change_current_selection(&state.menu, 1);
         state.current_monster = state.menu.item[state.menu.current_item].cookie;
         state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-             BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
-    {
+             BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+	) {
         state.app_state = GAME_MENU;
         state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
              BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
              BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
     {
         state.app_state = state.menu.item[state.menu.current_item].next_state;
@@ -631,8 +650,10 @@ static void trade_monsters_button_handler(void) {
         BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
         BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
         BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
         state.trading_monsters_enabled = false;
@@ -670,9 +691,11 @@ static void show_description_button_handler(void) {
  */
 static void show_monster_button_handler(void) {
     const int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
     const int rotary = button_get_rotation(0);
+#endif
 
-    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary < 0)
+    if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary))
     {
         // we change position in menu, but we keep displaying monster instead
         dynmenu_change_current_selection(&state.menu, -1);
@@ -684,7 +707,7 @@ static void show_monster_button_handler(void) {
         state.current_monster = state.menu.item[state.menu.current_item].cookie;
         state.screen_changed = true;
     }
-    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary > 0)
+    else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary))
     {
         dynmenu_change_current_selection(&state.menu, 1);
         while (state.menu.item[state.menu.current_item].next_state != SHOW_MONSTER) {
@@ -700,7 +723,9 @@ static void show_monster_button_handler(void) {
         state.screen_changed = true;
     }
     else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
              BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
              BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
     {
         state.app_state = SHOW_DESCRIPTION;

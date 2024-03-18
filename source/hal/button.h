@@ -14,12 +14,14 @@ typedef enum {
     BADGE_BUTTON_DOWN,
     BADGE_BUTTON_UP,
     BADGE_BUTTON_RIGHT,
+#if BADGE_HAS_ROTARY_SWITCHES
     BADGE_BUTTON_ENCODER_SW, /* push button on right encoder */
     BADGE_BUTTON_ENCODER_A,  /* right encoder a quadrature signal */
     BADGE_BUTTON_ENCODER_B,  /* right encoder b quadrature signal */
     BADGE_BUTTON_ENCODER_2_SW, /* push button on left encoder */
     BADGE_BUTTON_ENCODER_2_A, /* left encoder a quadrature signal */
     BADGE_BUTTON_ENCODER_2_B, /* left encoder b quadrature signal */
+#endif
     BADGE_BUTTON_MAX
 } BADGE_BUTTON;
 

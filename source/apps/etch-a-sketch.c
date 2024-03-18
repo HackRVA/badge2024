@@ -65,18 +65,23 @@ static void clear_etch_a_sketch(void)
 
 static void check_buttons(void)
 {
+#if BADGE_HAS_ROTARY_SWITCHES
 	int vrot, hrot;
 
 	vrot = button_get_rotation(0);
 	hrot = button_get_rotation(1);
 	if (hrot || vrot)
 		move(hrot, vrot);
-
+#endif
 	int down_latches = button_down_latches();
+
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		etch_a_sketch_state = ETCH_A_SKETCH_EXIT;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+	} else 
+#endif
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		state.pen_down = !state.pen_down;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		clear_etch_a_sketch();

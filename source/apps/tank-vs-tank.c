@@ -140,8 +140,10 @@ static void tank_vs_tank_intro(void)
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
@@ -472,6 +474,7 @@ static void adjust_tank_speed(struct tank *t, int amount)
 static void check_buttons(void)
 {
 	int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
 
@@ -479,12 +482,18 @@ static void check_buttons(void)
 		turn_tank(&tank[0], -2 * r0);
 	if (r1)
 		turn_tank(&tank[1], -2 * r1);
+#endif
+	/* TODO: make tank turnable using only d-pad */
 
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
 		fire_gun(&tank[0]);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		fire_gun(&tank[1]);
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+	} else 
+#endif
+#warning "tank-vs-tank.c needs maintenance related to ROTARY SWITCHES"
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		adjust_tank_speed(&tank[1], -TANK_SPEED_INCR);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		adjust_tank_speed(&tank[1], TANK_SPEED_INCR);
@@ -623,7 +632,9 @@ static void tank_vs_tank_confirm_exit(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
+#endif
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		dynmenu_change_current_selection(&quit_menu, 1);
@@ -631,12 +642,17 @@ static void tank_vs_tank_confirm_exit(void)
 	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		dynmenu_change_current_selection(&quit_menu, -1);
 	}
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (r0 > 0)
 		dynmenu_change_current_selection(&quit_menu, 1);
 	if (r0 < 0)
 		dynmenu_change_current_selection(&quit_menu, -1);
-	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+#endif
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)
+#endif
+		) {
 	        tank_vs_tank_state = quit_menu.item[quit_menu.current_item].next_state;
 	}
 }

@@ -306,6 +306,7 @@ static void draw_button_press(struct button_coord *b)
     SDL_RenderFillRect(renderer, &(SDL_Rect) { b->x - 10, b->y - 10, 20, 20} );
 }
 
+#if BADGE_HAS_ROTARY_SWITCHES
 static void draw_rotary_button_position(struct button_coord *button, int which_rotary)
 {
 	float x, y;
@@ -317,6 +318,7 @@ static void draw_rotary_button_position(struct button_coord *button, int which_r
 	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
 	SDL_RenderDrawLine(renderer, button->x, button->y, button->x + x, button->y + y);
 }
+#endif
 
 static void draw_button_inputs(struct sim_lcd_params *slp)
 {
@@ -346,12 +348,14 @@ static void draw_button_inputs(struct sim_lcd_params *slp)
 		draw_button_press(&bcl.dpad_up);
 	if (button_status.dpad_down)
 		draw_button_press(&bcl.dpad_down);
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (button_status.left_rotary_button)
 		draw_button_press(&bcl.left_rotary);
 	if (button_status.right_rotary_button)
 		draw_button_press(&bcl.right_rotary);
 	draw_rotary_button_position(&bcl.right_rotary, 0);
 	draw_rotary_button_position(&bcl.left_rotary, 1);
+#endif
 	sim_button_status_countdown();
 }
 

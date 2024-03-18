@@ -25,6 +25,7 @@ static const int8_t button_to_gpio_pin[BADGE_BUTTON_MAX] = {
     BADGE_GPIO_DPAD_UP,
     BADGE_GPIO_DPAD_RIGHT,
 
+#if BADGE_HAS_ROTARY_SWITCHES
     /* Rotary encoder 1 */
     BADGE_GPIO_SW,
     BADGE_GPIO_ENCODER_A,
@@ -34,6 +35,8 @@ static const int8_t button_to_gpio_pin[BADGE_BUTTON_MAX] = {
     BADGE_GPIO_2_SW,
     BADGE_GPIO_ENCODER_2_A,
     BADGE_GPIO_ENCODER_2_B,
+#endif
+
 };
 
 static critical_section_t critical_section;
@@ -52,6 +55,7 @@ static user_gpio_callback user_cb;
 // forward declaration of GPIO callback since the alarm and GPIO handlers need to refer to each other
 static void gpio_callback(uint gpio_pin, uint32_t events);
 
+#if BADGE_HAS_ROTARY_SWITCHES
 static void process_rotary_pin_state(uint badge_button, int state) {
     int idx;
     int b;
@@ -70,6 +74,7 @@ static void process_rotary_pin_state(uint badge_button, int state) {
         rotation_count[idx] += button_poll(b) ? 1 : -1;
     }
 }
+#endif
 
 int64_t alarm_callback(__attribute__((unused)) alarm_id_t id, void* user_data) {
 
@@ -92,7 +97,9 @@ int64_t alarm_callback(__attribute__((unused)) alarm_id_t id, void* user_data) {
         if (user_cb) {
             user_cb(badge_button, state);
         }
+#if BADGE_HAS_ROTARY_SWITCHES
         process_rotary_pin_state(badge_button, state);
+#endif
         last_change = rtc_get_ms_since_boot();
     }
 

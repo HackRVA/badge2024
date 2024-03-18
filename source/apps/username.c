@@ -164,6 +164,7 @@ static void check_the_buttons(void)
 {
 	int action;
 	int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
 	int rotation = button_get_rotation(0);
 	int rotation1 = button_get_rotation(1);
 
@@ -188,12 +189,18 @@ static void check_the_buttons(void)
 		}
 		something_changed = 1;
 	}
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotation1 < 0) {
+#define ROTATION_NEG(x) ((x) < 0)
+#define ROTATION_POS(x) ((x) > 0)
+#else
+#define ROTATION_NEG(x) 0
+#define ROTATION_POS(x) 0
+#endif
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotation1)) {
 		current_row--;
 		if (current_row < 0)
 			current_row = 4;
 		something_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotation1 > 0) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotation1)) {
 		current_row++;
 		if (current_row > 4)
 			current_row = 0;
@@ -210,7 +217,10 @@ static void check_the_buttons(void)
 		if (current_col > 5)
 			current_col = 0;
 		something_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	} else if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		action = row_col_to_letter(current_row, current_col);
@@ -235,10 +245,13 @@ static void check_the_buttons(void)
 				cursor = NAMESIZE - 1;
 			something_changed = 1;
 		}
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+	}
+#if BADGE_HAS_ROTARY_SWITCHES
+	else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		app_state = EXIT_APP;
 		return;
 	}
+#endif
 	if (something_changed)
 		app_state = DRAW_SCREEN;
         return;

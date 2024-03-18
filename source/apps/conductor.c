@@ -162,11 +162,15 @@ static void run_conductor(uint32_t down_latches)
 {
     unsigned short freq=0;
 
+#if BADGE_HAS_ROTARY_SWITCHES
     if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
     {
         //returnToMenus();
         con_state = SHOW_MENU;
     }
+#else
+    (void) down_latches; /* shut compiler up */
+#endif
 
     if(button_poll(BADGE_BUTTON_UP))
     {
@@ -221,10 +225,13 @@ void conductor_cb(__attribute__((unused)) struct menu_t *m)
             genericMenu(conductor_config_m, MAIN_MENU_STYLE, down_latches);
             break;
         case CONFIG_TOP:
+#if BADGE_HAS_ROTARY_SWITCHES
             if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
-            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            else
+#endif
+            if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 top_note++;
                 audio_out_beep(top_note, 400);
@@ -240,10 +247,13 @@ void conductor_cb(__attribute__((unused)) struct menu_t *m)
             }
             break;
         case CONFIG_BOTTOM:
+#if BADGE_HAS_ROTARY_SWITCHES
             if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
-            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            else
+#endif
+            if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 bottom_note++;
                 audio_out_beep(bottom_note, 400);
@@ -259,10 +269,13 @@ void conductor_cb(__attribute__((unused)) struct menu_t *m)
             }
             break;
         case CONFIG_LEFT:
+#if BADGE_HAS_ROTARY_SWITCHES
             if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
-            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            else
+#endif
+            if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 left_note++;
                 audio_out_beep(left_note, 400);
@@ -278,10 +291,13 @@ void conductor_cb(__attribute__((unused)) struct menu_t *m)
             }
             break;
         case CONFIG_RIGHT:
+#if BADGE_HAS_ROTARY_SWITCHES
             if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
                 con_state = SHOW_MENU;
                 //returnToMenus();
-            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            else
+#endif
+            if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 right_note++;
                 audio_out_beep(right_note, 400);

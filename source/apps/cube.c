@@ -212,7 +212,10 @@ static void docube(void)
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
             BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		cube_state = CUBE_EXIT;
 	}

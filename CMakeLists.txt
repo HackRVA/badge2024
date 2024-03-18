@@ -6,6 +6,7 @@ set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git.
 set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
 set(PRODUCT "badge2024_c")
 set(SIMULATOR_AUDIO "yes") # change to "no" to avoid compiling audio code in simulator
+set(BADGE_HAS_ROTARY_SWITCHES "no")
 
 if (${TARGET} STREQUAL "PICO")
     # Pull in SDK (must be before project).
@@ -56,6 +57,10 @@ endif()
 
 if (${TARGET} STREQUAL "WASM")
 	add_compile_options(-sUSE_SDL=2 -sUSE_LIBPNG)
+endif()
+
+if (${BADGE_HAS_ROTARY_SWITCHES} STREQUAL "yes")
+	add_compile_options(-DBADGE_HAS_ROTARY_SWITCHES=1)
 endif()
 
 add_subdirectory(source)

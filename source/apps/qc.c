@@ -55,6 +55,7 @@ static bool check_button(const struct qc_button *b)
     return true;
 }
 
+#if BADGE_HAS_ROTARY_SWITCHES
 static bool check_encoder(const struct qc_button *b)
 {
     int enc;
@@ -83,6 +84,7 @@ static bool check_encoder(const struct qc_button *b)
 
     return true;
 }
+#endif
 
 static bool check_buttons(const struct qc_button *a, size_t n)
 {
@@ -104,12 +106,13 @@ static const struct qc_button QC_BTN[] = {
     {BADGE_BUTTON_DOWN, "DOWN", 740, check_button},
     {BADGE_BUTTON_LEFT, "LEFT", 784, check_button},
     {BADGE_BUTTON_RIGHT, "RIGHT", 932, check_button},
-
+#if BADGE_HAS_ROTARY_BUTTONS
     {BADGE_BUTTON_ENCODER_SW, "ENC", 698, check_button},
     {BADGE_BUTTON_ENCODER_A, "ENC", 440, check_encoder},
 
     {BADGE_BUTTON_ENCODER_2_SW, "ENC 2", 777, check_button},
     {BADGE_BUTTON_ENCODER_2_A, "ENC 2", 666, check_encoder},
+#endif
 };
 
 static struct note tune0[] = {
@@ -248,11 +251,14 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
         case RUN:
             FbMove(16, 16);
 
+#if BADGE_HAS_ROTARY_SWITCHES
             if (button_poll(BADGE_BUTTON_ENCODER_SW)) {
                 button_hold_count ++;
             } else {
                 button_hold_count = 0;
             }
+#warning "Badge QC app probably needs maintenance around use of encoder switches"
+#endif
 
             if(button_hold_count > 20){
                 ir_remove_callback(ir_callback, IR_APP0);
@@ -276,8 +282,11 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
 
             if (button_poll(BADGE_BUTTON_B)
                 && button_poll(BADGE_BUTTON_DOWN)
+#if BADGE_HAS_ROTARY_SWITCHES
                 && button_poll(BADGE_BUTTON_ENCODER_SW)
-                && button_poll(BADGE_BUTTON_ENCODER_2_SW)) {
+                && button_poll(BADGE_BUTTON_ENCODER_2_SW)
+#endif
+		) {
                 /* Force hard fault */
                 data = *((uint8_t *) 0x8F000000);
             }

@@ -181,6 +181,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
             genericMenu((struct menu_t *)blinkenlights_config_m, MAIN_MENU_STYLE, down_latches);
             break;
         case CONFIG_RED:;
+#if BADGE_HAS_ROTARY_SWITCHES
             if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
@@ -188,7 +189,9 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                 led_pwm_enable(BADGE_LED_RGB_BLUE, 0);
                 bl_state = SHOW_MENU;
             }
-            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            else 
+#endif
+            if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 bl_red += BL_INCR_AMNT;
                 if(bl_red > 100)
@@ -212,6 +215,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
             }
             break;
         case CONFIG_GREEN:
+#if BADGE_HAS_ROTARY_SWITCHES
             if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
@@ -219,7 +223,9 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                 led_pwm_enable(BADGE_LED_RGB_BLUE, 0);
                 bl_state = SHOW_MENU;
             }
-            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            else
+#endif
+            if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 bl_green += BL_INCR_AMNT;
                 if(bl_green > 100)
@@ -243,6 +249,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
             }
             break;
         case CONFIG_BLUE:
+#if BADGE_HAS_ROTARY_SWITCHES
             if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches))
             {
                 led_pwm_enable(BADGE_LED_RGB_RED, 0);
@@ -250,7 +257,9 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                 led_pwm_enable(BADGE_LED_RGB_BLUE, 0);
                 bl_state = SHOW_MENU;
             }
-            else if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+            else
+#endif
+            if(BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
             {
                 bl_blue += BL_INCR_AMNT;
                 if(bl_blue > 100)

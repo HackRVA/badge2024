@@ -10,7 +10,9 @@ struct button_coord {
 struct button_coord_list {
 	struct button_coord a_button;
 	struct button_coord b_button;
+#if BADGE_HAS_ROTARY_SWITCHES
 	struct button_coord left_rotary, right_rotary;
+#endif
 	struct button_coord dpad_up;
 	struct button_coord dpad_down;
 	struct button_coord dpad_left;

@@ -386,14 +386,21 @@ static void display_menu_item_description(__attribute__((unused)) struct menu_t 
 	FbWriteString(menu_item_description);
 	FbSwapBuffers();
 
+#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
+#endif
 	int down_latches = button_down_latches();
-	if (r0 || r1 ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		r0 || r1 ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
@@ -422,10 +429,20 @@ void menus() {
     }
 
     int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
     int rotary0 = button_get_rotation(0);
     int rotary1 = button_get_rotation(1);
+#define ROTATION_POS(x) ((x) > 0)
+#define ROTATION_NEG(x) ((x) < 0)
+#else
+#define ROTATION_POS(x) 0
+#define ROTATION_NEG(x) 0
+#endif
     /* see if physical button has been clicked */
-    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+    if (
+#if BADGE_HAS_ROTARY_SWITCHES
+	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
         BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
 	BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
@@ -471,7 +488,7 @@ void menus() {
         }
 
         G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary0 < 0 || rotary1 < 0) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary0) || ROTATION_NEG(rotary1)) {
         /* handle slider/soft button clicks */
         menu_beep(TEXT_FREQ); /* f */
 
@@ -498,7 +515,7 @@ void menus() {
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         }
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary0 > 0 || rotary1 > 0) {
+    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary0) || ROTATION_POS(rotary1)) {
         menu_beep(MORE_FREQ); /* g */
 
         /* make sure not on last menu item */
@@ -522,7 +539,10 @@ void menus() {
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
         }
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+    } else if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 	/* Left rotary encoder switch can be used to back out of menus */
         menu_beep(BACK_FREQ);
@@ -555,7 +575,10 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
         return;
     }
 
-    if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+    if (
+#if BADGE_HAS_ROTARY_SWITCHES
+	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
         BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
         BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
         switch (L_selectedMenu->type) {

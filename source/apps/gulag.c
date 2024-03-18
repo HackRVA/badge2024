@@ -104,7 +104,9 @@ enum gulag_state_t {
 	GULAG_START_MENU,
 	GULAG_INIT,
 	GULAG_RUN,
+#if BADGE_HAS_ROTARY_SWITCH
 	GULAG_SAFECRACKING,
+#endif
 	GULAG_SAFE_CRACKED,
 	GULAG_PLAYER_DIED,
 	GULAG_MAYBE_EXIT,
@@ -2420,8 +2422,11 @@ static void gulag_scroll_text(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		gulag_state = GULAG_START_MENU;
 }
@@ -2460,8 +2465,11 @@ static void gulag_view_combo(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		gulag_state = GULAG_RUN;
 	}
@@ -2554,8 +2562,11 @@ static void gulag_view_map(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		FbColor(WHITE);
 		FbBackgroundColor(BLACK);
@@ -2584,8 +2595,11 @@ static void gulag_help_screen(void)
 		"BUTTON: QUIT\n");
 	FbSwapBuffers();
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) || 
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) || 
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) || 
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		FbColor(WHITE);
 		FbBackgroundColor(BLACK);
@@ -2629,8 +2643,11 @@ static void gulag_munitions_room(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (player.has_c4 && player.has_detonator)
 			player.planted_bomb = 1;
@@ -2681,8 +2698,11 @@ static void gulag_print_stats(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		gulag_state = GULAG_FLAG;
 	}
@@ -2705,8 +2725,11 @@ static void gulag_flag(void)
 	flag_offset++;
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		gulag_state = GULAG_START_MENU;
 }
@@ -3336,7 +3359,9 @@ static void goto_search_cooldown(void)
 	return;
 }
 
+#if BADGE_HAS_ROTARY_SWITCH
 static void maybe_crack_safe(struct gulag_object *safe);
+#endif
 
 struct search_item {
 	char name[25];
@@ -3379,7 +3404,9 @@ static void maybe_search_for_loot(void)
 				if (o->type != TYPE_SAFE) {
 					set_search_state(search_state_searching, SEARCH_TIME);
 				} else {
+#if BADGE_HAS_ROTARY_SWITCH
 					maybe_crack_safe(o);
+#endif
 					return;
 				}
 			}
@@ -3752,6 +3779,7 @@ static void maybe_search_for_loot(void)
 	}
 }
 
+#if BADGE_HAS_ROTARY_SWITCH
 static void maybe_crack_safe(struct gulag_object *safe)
 {
 	/* Wait some time between safecracking attempts */
@@ -3777,15 +3805,19 @@ static void maybe_crack_safe(struct gulag_object *safe)
 	safe->tsd.safe.second_angle = safe->tsd.safe.angle;
 	safe->tsd.safe.state = COMBO_STATE_WAITING_FOR_FIRST_REV;
 }
+#endif
 
 static void check_buttons(void)
 {
 	static int firing_timer = 0;
 	int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
 	int rotary_switch = button_get_rotation(0);
+#endif
 	int anything_pressed = 0;
 	int n;
 
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (rotary_switch) {
 		short new_angle = player.angle - 3 * rotary_switch;
 		if (new_angle > 127)
@@ -3797,6 +3829,7 @@ static void check_buttons(void)
 		screen_changed = 1;
 		anything_pressed = 1;
 	}
+#endif
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (player.has_flamethrower) {
@@ -3823,9 +3856,11 @@ static void check_buttons(void)
 			player.grenades--;
 		}
 	}
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		gulag_state = GULAG_MAYBE_EXIT;
         }
+#endif
 	if (button_poll(BADGE_BUTTON_LEFT)) {
 		short new_angle = player.angle + 3;
 		if (new_angle > 127)
@@ -3844,7 +3879,11 @@ static void check_buttons(void)
 		screen_changed = 1;
 		anything_pressed = 1;
 	}
-	if (button_poll(BADGE_BUTTON_UP) || button_poll(BADGE_BUTTON_ENCODER_SW)) {
+	if (button_poll(BADGE_BUTTON_UP)
+#if BADGE_HAS_ROTARY_SWITCHES
+		 || button_poll(BADGE_BUTTON_ENCODER_SW)
+#endif
+		) {
 		anything_pressed = 1;
 		int newx, newy;
 		newx = ((-cosine(player.angle) * player_speed) >> 8) + player.x;
@@ -4899,9 +4938,19 @@ static void gulag_start_menu(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
 	int rotary_switch = button_get_rotation(0);
+#define ROTATION_POS(x) ((x) > 0)
+#define ROTATION_NEG(x) ((x) < 0)
+#else
+#define ROTATION_POS(x) 0
+#define ROTATION_NEG(x) 0
+#endif
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		int choice = start_menu.item[start_menu.current_item].cookie;
 		if (choice >= 0 && choice < 5) {
@@ -4910,12 +4959,14 @@ static void gulag_start_menu(void)
 		}
 		gulag_state = start_menu.item[start_menu.current_item].next_state;
 	}
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0)
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary_switch))
 		dynmenu_change_current_selection(&start_menu, 1);
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0)
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary_switch))
 		dynmenu_change_current_selection(&start_menu, -1);
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
 		gulag_state = GULAG_EXIT;
+#endif
 }
 
 static void gulag_maybe_exit(void)
@@ -4933,14 +4984,19 @@ static void gulag_maybe_exit(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCH
 	int rotary_switch = button_get_rotation(0);
+#endif
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		gulag_state = quit_menu.item[quit_menu.current_item].next_state;
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0)
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary_switch))
 		dynmenu_change_current_selection(&quit_menu, 1);
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0)
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary_switch))
 		dynmenu_change_current_selection(&quit_menu, -1);
 }
 
@@ -4983,6 +5039,7 @@ static void gulag_player_died(void)
 	}
 }
 
+#if BADGE_HAS_ROTARY_SWITCH
 static void draw_safecracking_screen(struct gulag_object *s)
 {
 	char buf[4];
@@ -5034,7 +5091,9 @@ static void draw_safecracking_screen(struct gulag_object *s)
 	}
 	FbSwapBuffers();
 }
+#endif
 
+#if BADGE_HAS_ROTARY_SWITCH
 static void gulag_safecracking(void)
 {
 	struct gulag_object *s;
@@ -5052,7 +5111,10 @@ static void gulag_safecracking(void)
 	draw_safecracking_screen(s);
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		printf("Trying combo R%d, L%d, R%d\n", first_number, second_number, third_number);
 		if (first_number == s->tsd.safe.combo[0] &&
@@ -5067,7 +5129,10 @@ static void gulag_safecracking(void)
 			printf("Safe is not opened\n");
 		}
 	}
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		/* Give up on cracking the safe */
 		player.safecracking_cooldown = SAFECRACK_COOLDOWN_TIME;
@@ -5149,6 +5214,7 @@ static void gulag_safecracking(void)
 	}
 	s->tsd.safe.angle = angle;
 }
+#endif
 
 static void gulag_safe_cracked(void)
 {
@@ -5162,7 +5228,10 @@ static void gulag_safe_cracked(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		gulag_state = GULAG_RUN;
 }
@@ -5195,9 +5264,11 @@ void gulag_cb(__attribute__((unused)) struct menu_t *m)
 	case GULAG_PLAYER_DIED:
 		gulag_player_died();
 		break;
+#if BADGE_HAS_ROTARY_SWITCH
 	case GULAG_SAFECRACKING:
 		gulag_safecracking();
 		break;
+#endif
 	case GULAG_SAFE_CRACKED:
 		gulag_safe_cracked();
 		break;

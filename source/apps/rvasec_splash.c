@@ -130,7 +130,10 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
     // Sam: had some buzzer code here prior
     int down_latches = button_down_latches();
 
-    if(BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+    if(
+#if BADGE_HAS_ROTARY_SWITCHES
+	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
        BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)){
         returnToMenus();
     }

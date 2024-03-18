@@ -400,11 +400,15 @@ static void reduce_fuel(struct lander_data *lander, int amount)
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
+	if (
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		/* Pressing the button exits the program. You probably want to change this. */
 		lunarlander_state = LUNARLANDER_EXIT;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+	} else 
+#endif
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 		if (lander.fuel > 0) {
 			lander.vx = lander.vx - (1 << 7);
 			add_sparks(lander.x + (5 << 8), lander.y, lander.vx + (5 << 8), lander.vy, 10);

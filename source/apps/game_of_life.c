@@ -269,8 +269,11 @@ static void render_end_game_screen(void)
 	}
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+		)
 	{
 		game_of_life_state = GAME_OF_LIFE_EXIT;
 		already_rendered = 0;
@@ -296,8 +299,11 @@ static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
+	if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		 || BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+		)
 	{
 		game_of_life_state = GAME_OF_LIFE_EXIT;
 		return;
@@ -347,15 +353,21 @@ static void game_of_life_splash_screen(void)
 		already_rendered_splash_screen = 1;
 	}
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 	{
 		already_rendered_splash_screen = 0;
 		init_cells();
 		game_of_life_state = GAME_OF_LIFE_RUN;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		 || BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+		)
 	{
 		already_rendered_splash_screen = 0;
 		game_of_life_state = GAME_OF_LIFE_EXIT;

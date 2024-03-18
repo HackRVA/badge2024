@@ -768,16 +768,21 @@ static void slot_machine_bet(void)
 		render();
 	}
 	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
-	{
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+	) {
 		slot_machine_state = SLOT_MACHINE_EXIT;
 	}
 	else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
 	{
 		/* TODO implement pay scale screen */
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+	else if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
                  BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 	{
 		pull_handle();

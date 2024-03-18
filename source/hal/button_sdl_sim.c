@@ -14,8 +14,10 @@ int time_to_quit = 0;
 static int down_latches = 0;
 static int up_latches = 0;
 static int button_states = 0;
+#if BADGE_HAS_ROTARY_SWITCHES
 static int rotation_count[2] = { 0 };
 static int rotary_angle[2] = { 0 };
+#endif
 static uint64_t last_change = 0;
 static user_gpio_callback callback = NULL;
 static int control_key_pressed = 0;
@@ -34,6 +36,7 @@ static void countdown_to_zero(int *x)
 		(*x)--;
 }
 
+#if BADGE_HAS_ROTARY_SWITCHES
 static void rotary_angle_delta(int which_rotary, int amount)
 {
 	int new_angle = rotary_angle[which_rotary] + amount * 8;
@@ -43,13 +46,16 @@ static void rotary_angle_delta(int which_rotary, int amount)
 		new_angle -= 128;
 	rotary_angle[which_rotary] = new_angle;
 }
+#endif
 
 void sim_button_status_countdown(void)
 {
 	countdown_to_zero(&sim_button_status.button_a);
 	countdown_to_zero(&sim_button_status.button_b);
+#if BADGE_HAS_ROTARY_SWITCHES
 	countdown_to_zero(&sim_button_status.left_rotary_button);
 	countdown_to_zero(&sim_button_status.right_rotary_button);
+#endif
 	countdown_to_zero(&sim_button_status.dpad_up);
 	countdown_to_zero(&sim_button_status.dpad_down);
 	countdown_to_zero(&sim_button_status.dpad_right);
@@ -137,12 +143,14 @@ int mouse_button_down_cb(SDL_MouseButtonEvent *event, struct button_coord_list *
 	} else if (mouse_close_enough(x, y, &bcl->b_button)) {
             button = BADGE_BUTTON_B;
             sim_button_status.button_b = BUTTON_DISPLAY_DURATION;
+#if BADGE_HAS_ROTARY_SWITCHES
 	} else if (mouse_close_enough(x, y, &bcl->left_rotary)) {
             button = BADGE_BUTTON_ENCODER_2_SW;
             sim_button_status.left_rotary_button = BUTTON_DISPLAY_DURATION;
 	} else if (mouse_close_enough(x, y, &bcl->right_rotary)) {
             button = BADGE_BUTTON_ENCODER_SW;
             sim_button_status.right_rotary_button = BUTTON_DISPLAY_DURATION;
+#endif
 	} else if (mouse_close_enough(x, y, &bcl->dpad_up)) {
                 button = BADGE_BUTTON_UP;
                 sim_button_status.dpad_up = BUTTON_DISPLAY_DURATION;
@@ -207,6 +215,7 @@ int mouse_scroll_cb(SDL_MouseWheelEvent *event, struct button_coord_list *bcl)
 		return 1;
 	}
 
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (mouse_close_enough(x, y, &bcl->left_rotary)) {
 		rotary_angle_delta(1, amount);
 		rotation_count[1] += amount;
@@ -216,6 +225,9 @@ int mouse_scroll_cb(SDL_MouseWheelEvent *event, struct button_coord_list *bcl)
 		rotation_count[0] += amount;
 		last_change = rtc_get_ms_since_boot();
 	}
+#else
+	(void) bcl; /* shut up compiler about unused param */
+#endif
 	return 1;
 }
 
@@ -288,6 +300,7 @@ int key_press_cb(SDL_Keysym *keysym)
             button = BADGE_BUTTON_B;
             sim_button_status.button_b = BUTTON_DISPLAY_DURATION;
         break;
+#if BADGE_HAS_ROTARY_SWITCHES
         case SDLK_v:
             button = BADGE_BUTTON_ENCODER_2_SW; /* left encoder switch */
             sim_button_status.left_rotary_button = BUTTON_DISPLAY_DURATION;
@@ -296,10 +309,12 @@ int key_press_cb(SDL_Keysym *keysym)
             button = BADGE_BUTTON_ENCODER_SW; /* right encoder switch */
             sim_button_status.right_rotary_button = BUTTON_DISPLAY_DURATION;
         break;
+#endif
         case SDLK_q:
         case SDLK_ESCAPE:
 		quit_confirm_active = !quit_confirm_active;
         break;
+#if BADGE_HAS_ROTARY_SWITCHES
         case SDLK_COMMA:
         case SDLK_LESS:
             rotation_count[0] -= 1;
@@ -318,6 +333,7 @@ int key_press_cb(SDL_Keysym *keysym)
             rotation_count[1] += 1;
             rotary_angle_delta(1, 1);
         break;
+#endif
 	case SDLK_LCTRL:
 	case SDLK_RCTRL:
 		control_key_pressed = 1;
@@ -380,12 +396,14 @@ int key_release_cb(SDL_Keysym *keysym)
         case SDLK_b:
             button = BADGE_BUTTON_B;
         break;
+#if BADGE_HAS_ROTARY_SWITCHES
         case SDLK_n:
             button = BADGE_BUTTON_ENCODER_SW;
         break;
         case SDLK_v:
             button = BADGE_BUTTON_ENCODER_2_SW;
         break;
+#endif
         default:
             break;
     }
@@ -475,6 +493,7 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 	int button_pressed = 0;
 	switch (event.type) {
 	case SDL_JOYAXISMOTION: {
+#if BADGE_HAS_ROTARY_SWITCHES
 			SDL_JoyAxisEvent e = event.jaxis;
 			if (e.axis == 0 && axistimer[0] == 0) {
 				if (e.value < -20000) {
@@ -502,16 +521,19 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 					}
 				}
 			}
+#endif
 		}
 		break;
 	case SDL_JOYBUTTONUP: {
 			SDL_JoyButtonEvent e = event.jbutton;
 			if (e.button == 0) {
+#if BADGE_HAS_ROTARY_SWITCHES
 				sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
 				button |= BADGE_BUTTON_ENCODER_SW;
 				down_latches &= ~(1 << BADGE_BUTTON_ENCODER_SW);
 				button_states &= ~(1 << BADGE_BUTTON_ENCODER_SW);
 				button_pressed = 1;
+#endif
 			} else if (e.button == 1) {
 				/* TODO: fill this in */
 			}
@@ -520,11 +542,13 @@ int joystick_event_cb(__attribute__((unused)) SDL_Window *window, SDL_Event even
 	case SDL_JOYBUTTONDOWN: {
 			SDL_JoyButtonEvent e = event.jbutton;
 			if (e.button == 0) {
+#if BADGE_HAS_ROTARY_SWITCHES
 				sim_button_status.button_a = BUTTON_DISPLAY_DURATION;
 				button |= BADGE_BUTTON_ENCODER_SW;
 				down_latches |= (1 << BADGE_BUTTON_ENCODER_SW);
 				button_states |= (1 << BADGE_BUTTON_ENCODER_SW);
 				button_pressed = 1;
+#endif
 			} else if (e.button == 1) {
 				/* TODO: fill this in */
 			}
@@ -681,6 +705,7 @@ void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
 }
 
+#if BADGE_HAS_ROTARY_SWITCHES
 int button_get_rotation(unsigned which_rotary) {
 	if (which_rotary > (sizeof(rotation_count)/sizeof(rotation_count[0]))) {
 		return 0;
@@ -695,3 +720,4 @@ int sim_get_rotary_angle(int which_rotary)
 {
 	return rotary_angle[which_rotary];
 }
+#endif

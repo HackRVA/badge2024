@@ -120,7 +120,7 @@ static void draw_ball(void)
 static void check_buttons(void)
 {
 	int down_latches = button_down_latches();
-
+#if BADGE_HAS_ROTARY_BUTTONS
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
 
@@ -133,7 +133,9 @@ static void check_buttons(void)
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		/* Pressing the button exits the program. You probably want to change this. */
 		pong_state = PONG_EXIT;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+	} else
+#endif
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {

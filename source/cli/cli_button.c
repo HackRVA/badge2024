@@ -13,9 +13,11 @@ static const char* _button_names[BADGE_BUTTON_MAX] = {
         "down",
         "up",
         "right",
+#if BADGE_HAS_ROTARY_SWITCHES
         "switch",
         "enc_a",
         "enc_b",
+#endif
 };
 
 static uint8_t _button_up_counts[BADGE_BUTTON_MAX];

@@ -71,10 +71,15 @@ static void next_screensaver(int direction)
 static void check_buttons(void)
 {
 	int down_latches = button_down_latches();
+#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
+	if (
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		test_screensavers_state = TEST_SCREENSAVERS_EXIT;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
@@ -85,10 +90,12 @@ static void check_buttons(void)
 		next_screensaver(1);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		next_screensaver(-1);
+#if BADGE_HAS_ROTARY_SWITCHES
 	} else if (r0 > 0 || r1 > 0) {
 		next_screensaver(1);
 	} else if (r0 < 0 || r1 < 0) {
 		next_screensaver(-1);
+#endif
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		test_screensavers_state = TEST_SCREENSAVERS_EXIT;
 	}
