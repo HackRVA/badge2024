@@ -62,7 +62,11 @@ struct menu_t *getMenuStack(unsigned char item);
 /* This is only used by settings.c to change the name of menu items in LCD backlight menu */
 struct menu_t *getSelectedMenuStack(unsigned char item);
 
-struct menu_t *display_menu(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style);
+/* The display_menu is a function pointer which is set to either new_display_menu or legacy_display_menu
+ * depending on which menu style is chosen by the user.
+ */
+extern struct menu_t *(*display_menu)(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style);
+
 void returnToMenus(void);
 void menus(void);
 
@@ -75,5 +79,7 @@ void closeMenuAndReturn(void);
 
 /* used by badge.c when going from dormant -> not dormant to redraw the main menu */
 extern unsigned char menu_redraw_main_menu;
+void select_legacy_menu_style(struct menu_t *m);
+void select_new_menu_style(struct menu_t *m);
 
 #endif

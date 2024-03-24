@@ -39,6 +39,7 @@
 
 #define MAIN_MENU_BKG_COLOR GREY2
 
+
 extern const struct menu_t schedule_m[]; /* defined in core/schedule.c */
 
 static const struct menu_t legacy_games_m[] = {
@@ -63,7 +64,14 @@ static const struct menu_t games_m[] = {
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
 };
 
+static const struct menu_t menu_style_menu_m[] = {
+	{"New Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_new_menu_style }, },
+	{"Legacy Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_legacy_menu_style }, },
+	{"Back", VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
+};
+
 static const struct menu_t settings_m[] = {
+   {"Menu Style", VERT_ITEM, MENU, { .menu = menu_style_menu_m }, },
    {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, },
    {"Led", VERT_ITEM, MENU, { .menu = LEDlight_m }, },
    {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, },
@@ -186,11 +194,13 @@ static void maybe_scroll_to(struct menu_t *selected, struct menu_t *current_menu
 		menu_scroll_start_item = position - MENU_MAX_ITEMS_DISPLAYABLE + 1;
 }
 
-/* The reason that display_menu returns a menu_t * instead of void
+/* The reason that legacy_display_menu returns a menu_t * instead of void
    as you might expect is because sometimes it skips over unselectable
-   items
+   items.
+
+   This is always called through the function pointer display_menu.
  */
-struct menu_t *display_menu(struct menu_t *menu,
+static struct menu_t *legacy_display_menu(struct menu_t *menu,
                             struct menu_t *selected,
                             MENU_STYLE style) {
     static unsigned char cursor_x, cursor_y;
@@ -323,6 +333,148 @@ struct menu_t *display_menu(struct menu_t *menu,
     FbPushBuffer();
     return selected;
 }
+
+/* The reason that new_display_menu returns a menu_t * instead of void
+   as you might expect is because sometimes it skips over unselectable
+   items.
+
+   This is always called through the function pointer display_menu.
+ */
+static struct menu_t *new_display_menu(struct menu_t *menu,
+                            struct menu_t *selected,
+                            MENU_STYLE style) {
+    static unsigned char cursor_x, cursor_y;
+    unsigned char c;
+    struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
+    int menu_item_number = 0;
+
+    root_menu = menu;
+
+    switch (style) {
+        case MAIN_MENU_STYLE:
+            FbBackgroundColor(MAIN_MENU_BKG_COLOR);
+            FbClear();
+
+            FbColor(RED);
+            FbMove(2,5);
+            FbRectangle(LCD_XSIZE - 5, LCD_YSIZE - 8);
+
+            FbColor(RED);
+            FbMove(1,4);
+            FbRectangle(LCD_XSIZE - 3, LCD_YSIZE - 6);
+            break;
+
+        case WHITE_ON_BLACK:
+            FbClear();
+            FbBackgroundColor(BLACK);
+            FbTransparentIndex(0);
+            break;
+
+        case BLANK:
+        default:
+            break;
+    }
+
+    cursor_x = MENU_LEFT;
+    //cursor_y = CHAR_HEIGHT;
+    cursor_y = 2; // CHAR_HEIGHT;
+    FbMove(cursor_x, cursor_y);
+
+    while (1) {
+        unsigned char rect_w=0;
+
+        if (menu->attrib & HIDDEN_ITEM) {
+            // don't jump out of the menu array if this is the last item!
+            if(menu->attrib & LAST_ITEM) {
+                break;
+            } else {
+                menu++;
+            }
+            continue;
+        }
+
+	/* Skip menu items until we get to the part of the menu we've scrolled to */
+	if (menu_item_number < menu_scroll_start_item) {
+		menu++;
+		menu_item_number++;
+		continue;
+	}
+
+        for (c=0, rect_w=0; (menu->name[c] != 0); c++) {
+		rect_w += CHAR_WIDTH;
+#ifdef TARGET_SIMULATOR
+		/* Catch overly long menu names */
+		if (c >= sizeof(menu->name) - 1) {
+			printf("menu name too long: '%s'\n", menu->name);
+			abort();
+		}
+#endif
+	}
+
+        if (menu->attrib & VERT_ITEM) {
+            cursor_y += (CHAR_HEIGHT + 2 * SCAN_BLANK);
+        }
+
+        if (!(menu->attrib & HORIZ_ITEM)) {
+            cursor_x = MENU_LEFT;
+        }
+
+        if (selected == menu) {
+            // If we happen to be on a skip ITEM, just increment off it
+            // The menus() method mostly avoids this, except for some cases
+            if (menu->attrib & SKIP_ITEM) selected++;
+        }
+
+        if (selected == NULL) {
+            if (menu->attrib & DEFAULT_ITEM)
+            selected = menu;
+        }
+
+        // Determine selected item color
+        switch(style) {
+            case MAIN_MENU_STYLE:
+                if (menu == selected) {
+                    FbColor(YELLOW);
+
+                    FbMove(3, cursor_y + 1);
+                    FbFilledRectangle(2, 8);
+
+                    // Set the selected color for the coming writeline
+                    FbColor(GREEN);
+                } else {
+                    // unselected writeline color
+                    FbColor(GREY16);
+                }
+                break;
+            case WHITE_ON_BLACK:
+                FbColor((menu == selected) ? GREEN : WHITE);
+                break;
+            case BLANK:
+            default:
+                break;
+        }
+
+        FbMove(cursor_x+1, cursor_y+1);
+        FbWriteLine(menu->name);
+        cursor_x += (rect_w + CHAR_WIDTH);
+        if (menu->attrib & LAST_ITEM) break;
+        menu++;
+	menu_item_number++;
+	if (menu_item_number - menu_scroll_start_item >= MENU_MAX_ITEMS_DISPLAYABLE)
+		break;
+    } // END WHILE
+
+    /* in case last menu item is a skip */
+    if (selected == NULL) {
+        selected = root_menu;
+    }
+
+    // Write menu onto the screen
+    FbPushBuffer();
+    return selected;
+}
+
+struct menu_t *(*display_menu)(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style) = legacy_display_menu;
 
 /* for this increment the units are menu items */
 #define PAGESIZE 8
@@ -662,5 +814,17 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
             L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
         }
     }
+}
+
+void select_new_menu_style(__attribute__((unused)) struct menu_t *m)
+{
+	display_menu = new_display_menu;
+	returnToMenus();
+}
+
+void select_legacy_menu_style(__attribute__((unused)) struct menu_t *m)
+{
+	display_menu = legacy_display_menu;
+	returnToMenus();
 }
 
