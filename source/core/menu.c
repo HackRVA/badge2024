@@ -5,6 +5,10 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#ifdef TARGET_SIMULATOR
+#include <unistd.h>
+#endif
 #include "menu.h"
 #include "settings.h"
 #include "colors.h"
@@ -334,6 +338,14 @@ static struct menu_t *legacy_display_menu(struct menu_t *menu,
     return selected;
 }
 
+static struct point default_menu_drawing[] = { /* just a simple square */
+	{ -40, -40, },
+	{ 40, -40, },
+	{ 40, 40, },
+	{ -40, 40, },
+	{ -40, -40, },
+};
+
 /* The reason that new_display_menu returns a menu_t * instead of void
    as you might expect is because sometimes it skips over unselectable
    items.
@@ -347,6 +359,13 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     unsigned char c;
     struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
     int menu_item_number = 0;
+    static struct menu_t *last_menu_selected = NULL;
+    static int animation_frame = 255;
+
+    if (last_menu_selected != selected) {
+	last_menu_selected = selected;
+	animation_frame = 0;
+    }
 
     root_menu = menu;
 
@@ -433,6 +452,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
         // Determine selected item color
         switch(style) {
             case MAIN_MENU_STYLE:
+#if 0
                 if (menu == selected) {
                     FbColor(YELLOW);
 
@@ -446,6 +466,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
                     FbColor(GREY16);
                 }
                 break;
+#endif
             case WHITE_ON_BLACK:
                 FbColor((menu == selected) ? GREEN : WHITE);
                 break;
@@ -453,9 +474,40 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
             default:
                 break;
         }
-
+#if 0
         FbMove(cursor_x+1, cursor_y+1);
         FbWriteLine(menu->name);
+
+#endif
+	if (selected == menu) {
+		int x = 64 - (strlen(menu->name) / 2) * 8;
+		do {
+			FbClear();
+
+
+			/* Draw new selection item arriving */
+			int drawing_x = 120 + ((255 - animation_frame) * 100 / 255 - 56);
+			int drawing_scale = (1024 * animation_frame) / 255;
+			FbDrawObject(default_menu_drawing, 5, GREEN, drawing_x, 64, drawing_scale);
+
+			/* Draw old selection item leaving */
+			drawing_x = 64 - (64 * animation_frame / 255);
+			drawing_scale = (1024 * (255 - animation_frame)) / 255;
+			FbDrawObject(default_menu_drawing, 5, GREEN, drawing_x, 64, 255 - drawing_scale);
+
+			FbPushBuffer();
+			animation_frame += 10;
+			if (animation_frame > 255)
+				animation_frame = 255;
+#ifdef TARGET_SIMULATOR
+			usleep(10000);
+#endif
+		} while (animation_frame < 255);
+
+		FbMove(x, 120);
+		FbWriteLine(menu->name);
+	}
+
         cursor_x += (rect_w + CHAR_WIDTH);
         if (menu->attrib & LAST_ITEM) break;
         menu++;
