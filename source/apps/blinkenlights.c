@@ -199,7 +199,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
                 
                 set_local_leds();
                 bl_populate_menu(NULL);
-                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_RED], MAIN_MENU_STYLE);
+                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_RED], MAIN_MENU_STYLE, MENU_UNKNOWN);
                 
             }
             else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
@@ -211,7 +211,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
 
                 set_local_leds();
                 bl_populate_menu(NULL);
-                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_RED], MAIN_MENU_STYLE);
+                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_RED], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             break;
         case CONFIG_GREEN:
@@ -233,7 +233,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
 
                 set_local_leds();
                 bl_populate_menu(NULL);
-                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_GREEN], MAIN_MENU_STYLE);
+                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_GREEN], MAIN_MENU_STYLE, MENU_UNKNOWN);
 
             }
             else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
@@ -245,7 +245,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
 
                 set_local_leds();
                 bl_populate_menu(NULL);
-                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_GREEN], MAIN_MENU_STYLE);
+                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_GREEN], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             break;
         case CONFIG_BLUE:
@@ -267,7 +267,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
 
                 set_local_leds();
                 bl_populate_menu(NULL);
-                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_BLUE], MAIN_MENU_STYLE);
+                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_BLUE], MAIN_MENU_STYLE, MENU_UNKNOWN);
 
             }
             else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
@@ -279,7 +279,7 @@ void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
 
                 set_local_leds();
                 bl_populate_menu(NULL);
-                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_BLUE], MAIN_MENU_STYLE);
+                display_menu(blinkenlights_config_m, &blinkenlights_config_m[BLINKENLIGHTS_BLUE], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             break;
     }

@@ -207,7 +207,9 @@ static void maybe_scroll_to(struct menu_t *selected, struct menu_t *current_menu
  */
 static struct menu_t *legacy_display_menu(struct menu_t *menu,
                             struct menu_t *selected,
-                            MENU_STYLE style) {
+                            MENU_STYLE style,
+			    __attribute__((unused)) enum menu_previous came_from)
+{
     static unsigned char cursor_x, cursor_y;
     unsigned char c;
     struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
@@ -371,7 +373,9 @@ static int menu_has_icons(struct menu_t *m)
  */
 static struct menu_t *new_display_menu(struct menu_t *menu,
                             struct menu_t *selected,
-                            MENU_STYLE style) {
+                            MENU_STYLE style,
+			    enum menu_previous came_from)
+{
     static unsigned char cursor_x, cursor_y;
     unsigned char c;
     struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
@@ -379,12 +383,21 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     static struct menu_t *last_menu_selected = NULL;
     static int animation_frame = 255;
 
+#ifdef TARGET_SIMULATOR
+    switch (came_from) {
+	case MENU_PREVIOUS: printf("menu previous\n"); break;
+	case MENU_NEXT: printf("menu next\n"); break;
+	case MENU_PARENT: printf("menu parent\n"); break;
+	case MENU_CHILD: printf("menu child\n"); break;
+	case MENU_UNKNOWN: printf("menu unknown\n"); break;
+    }
+#endif
 
     /* If this menu has no icons defined, just use the old legacy style to display
      * This makes, e.g. the schedule continue to work.
      */
     if (!menu_has_icons(menu))
-       return legacy_display_menu(menu, selected, style);
+       return legacy_display_menu(menu, selected, style, came_from);
 	
 
     if (last_menu_selected != selected) {
@@ -562,7 +575,8 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     return selected;
 }
 
-struct menu_t *(*display_menu)(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style) = new_display_menu;
+struct menu_t *(*display_menu)(struct menu_t *menu, struct menu_t *selected,
+			MENU_STYLE style, enum menu_previous came_from) = new_display_menu;
 
 /* for this increment the units are menu items */
 #define PAGESIZE 8
@@ -589,7 +603,7 @@ static void pop_menu(void)
 	G_currMenu = G_menuStack[G_menuCnt].currMenu;
 	G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu;
 	menu_scroll_start_item = G_menuStack[G_menuCnt].menu_scroll_start_item;
-        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_CHILD);
 }
 
 void closeMenuAndReturn(void) {
@@ -597,7 +611,7 @@ void closeMenuAndReturn(void) {
     G_menuCnt--;
     G_currMenu = G_menuStack[G_menuCnt].currMenu ;
     G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu ;
-    G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+    G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
     runningApp = NULL;
 }
 
@@ -617,7 +631,7 @@ void returnToMenus() {
         G_menuStack[G_menuCnt].selectedMenu = G_selectedMenu;
     }
 
-    G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+    G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
     runningApp = NULL;
 }
 
@@ -670,7 +684,7 @@ void menus() {
         G_currMenu = (struct menu_t *)main_m;
         //selectedMenu = G_currMenu;
         G_selectedMenu = NULL;
-        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
     }
 
     int down_latches = button_down_latches();
@@ -732,7 +746,7 @@ void menus() {
                 break;
         }
 
-        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PARENT);
     } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary0) || ROTATION_NEG(rotary1)) {
         /* handle slider/soft button clicks */
         menu_beep(TEXT_FREQ); /* f */
@@ -751,14 +765,14 @@ void menus() {
 		    }
             }
 	    maybe_scroll_to(G_selectedMenu, G_currMenu); /* Scroll up if necessary */
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_NEXT);
         } else {
             /* Move to the last item if press UP from the first item */
             while (!(G_selectedMenu->attrib & LAST_ITEM)) {
                 G_selectedMenu++;
             }
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_NEXT);
         }
     } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary0) || ROTATION_POS(rotary1)) {
         menu_beep(MORE_FREQ); /* g */
@@ -775,14 +789,14 @@ void menus() {
             }
 
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PREVIOUS);
         } else {
             /* Move to the first item if press DOWN from the last item */
             while (G_selectedMenu > G_currMenu) {
                 G_selectedMenu--;
             }
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE);
+            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PREVIOUS);
         }
     } else if (
 #if BADGE_HAS_ROTARY_SWITCHES
@@ -816,7 +830,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
         L_currMenu = L_menu;
         //L_selectedMenu = L_menu;
         L_selectedMenu = NULL;
-        L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+        L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_UNKNOWN);
         return;
     }
 
@@ -839,7 +853,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
                 L_menuCnt--;
                 L_currMenu = L_menuStack[L_menuCnt] ;
                 L_selectedMenu = L_currMenu;
-                L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+                L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_CHILD);
                 break;
 
             case TEXT: /* maybe highlight if clicked?? */
@@ -853,7 +867,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
                 L_currMenu = (struct menu_t *)L_selectedMenu->data.menu; /* go into this menu */
                 //L_selectedMenu = L_currMenu;
                 L_selectedMenu = NULL;
-                L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+                L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_PARENT);
                 break;
 
             case FUNCTION: /* call the function pointer if clicked */
@@ -885,7 +899,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
                 L_selectedMenu--;
             }
 
-            L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+            L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_NEXT);
         }
     } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
         menu_beep(MORE_FREQ); /* g */
@@ -899,7 +913,7 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches)
                 L_selectedMenu++;
             }
 
-            L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style);
+            L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_PREVIOUS);
         }
     }
 }

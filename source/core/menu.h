@@ -63,10 +63,20 @@ struct menu_t *getMenuStack(unsigned char item);
 /* This is only used by settings.c to change the name of menu items in LCD backlight menu */
 struct menu_t *getSelectedMenuStack(unsigned char item);
 
+/* Passed to menu display function so it knows which way we're coming from */
+enum menu_previous {
+    MENU_PREVIOUS,	/* user came from previous menu item, e.g. scrolling down on legacy style menus */
+    MENU_NEXT,		/* user came from next menu item, e.g. scrolling up on legacy style menus */
+    MENU_PARENT,	/* user came from parent menu, e.g. pressing select, or right on legacy menus */
+    MENU_CHILD,		/* user came from child menu, e.g. selecting "Back" */
+    MENU_UNKNOWN,	/* unknown.  Used by blinkenlights, which does weird things. */
+};
+
 /* The display_menu is a function pointer which is set to either new_display_menu or legacy_display_menu
  * depending on which menu style is chosen by the user.
  */
-extern struct menu_t *(*display_menu)(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style);
+extern struct menu_t *(*display_menu)(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style,
+			enum menu_previous came_from);
 
 void returnToMenus(void);
 void menus(void);

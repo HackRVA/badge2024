@@ -236,14 +236,14 @@ void conductor_cb(__attribute__((unused)) struct menu_t *m)
                 top_note++;
                 audio_out_beep(top_note, 400);
                 populate_menu();
-                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_TOP], MAIN_MENU_STYLE);
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_TOP], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 top_note--;
                 audio_out_beep(top_note, 400);
                 populate_menu();
-                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_TOP], MAIN_MENU_STYLE);
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_TOP], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             break;
         case CONFIG_BOTTOM:
@@ -258,14 +258,14 @@ void conductor_cb(__attribute__((unused)) struct menu_t *m)
                 bottom_note++;
                 audio_out_beep(bottom_note, 400);
                 populate_menu();
-                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_BOTTOM], MAIN_MENU_STYLE);
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_BOTTOM], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 bottom_note--;
                 audio_out_beep(bottom_note, 400);
                 populate_menu();
-                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_BOTTOM], MAIN_MENU_STYLE);
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_BOTTOM], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             break;
         case CONFIG_LEFT:
@@ -280,14 +280,14 @@ void conductor_cb(__attribute__((unused)) struct menu_t *m)
                 left_note++;
                 audio_out_beep(left_note, 400);
                 populate_menu();
-                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_LEFT], MAIN_MENU_STYLE);
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_LEFT], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 left_note--;
                 audio_out_beep(left_note, 400);
                 populate_menu();
-                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_LEFT], MAIN_MENU_STYLE);
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_LEFT], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             break;
         case CONFIG_RIGHT:
@@ -302,14 +302,14 @@ void conductor_cb(__attribute__((unused)) struct menu_t *m)
                 right_note++;
                 audio_out_beep(right_note, 400);
                 populate_menu();
-                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_RIGHT], MAIN_MENU_STYLE);
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_RIGHT], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             else if(BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
             {
                 right_note--;
                 audio_out_beep(right_note, 400);
                 populate_menu();
-                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_RIGHT], MAIN_MENU_STYLE);
+                display_menu(conductor_config_m, &conductor_config_m[CONDUCTOR_RIGHT], MAIN_MENU_STYLE, MENU_UNKNOWN);
             }
             break;
         case RUN_CONDUCTOR:
