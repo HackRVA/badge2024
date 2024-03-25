@@ -5,7 +5,7 @@
 #endif
 
 const struct menu_t day2_p1_m[] = {
-   {"Wednesday", VERT_ITEM|SKIP_ITEM, TEXT, {NULL}},
+   {"Wednesday", VERT_ITEM|SKIP_ITEM, TEXT, {NULL}, NULL},
    {" 7:59 Registrat", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"If you were\n"
@@ -20,6 +20,7 @@ const struct menu_t day2_p1_m[] = {
 		"Top of the\n"
 		"Grand"
 	},
+	NULL,
    },
    {" 8:00 Breakfast", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -37,6 +38,7 @@ const struct menu_t day2_p1_m[] = {
 		"Top of the\n"
 		"Grand",
 	},
+	NULL,
    },
    {" 8:50 Welcome", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -50,6 +52,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom\n"
 		"Jake Kouns",
 	},
+	NULL,
    },
    {" 9:00 Keynote", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -61,6 +64,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom\n"
 		"Andy Ellis",
 	},
+	NULL,
    },
    {"10:00 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -71,6 +75,7 @@ const struct menu_t day2_p1_m[] = {
 		"10:00-10:30\n"
 		"Potomac",
 	},
+	NULL,
    },
    {"10:00 CTF Comp", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -78,6 +83,7 @@ const struct menu_t day2_p1_m[] = {
 		"10:00am-3pm\n"
 		"Shenandoah Room",
 	},
+	NULL,
    },
    {"10:00 Badge", VERT_ITEM, ITEM_DESC,
 	{.description =
@@ -91,6 +97,7 @@ const struct menu_t day2_p1_m[] = {
 		"10:00-4:00\n"
 		"Rappahannock",
 	},
+	NULL,
    },
    {"10:00 Lock Pick", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -109,6 +116,7 @@ const struct menu_t day2_p1_m[] = {
 		"10:00-4:00\n"
 		"Rappahannock",
 	},
+	NULL,
    },
    {"10:30 NSA Cryp", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -126,6 +134,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom C/D\n"
 		"Brendan O'Leary",
 	},
+	NULL,
    },
    {"10:30 CISO", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -135,6 +144,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom A/B\n"
 		"Mark Arnold",
 	},
+	NULL,
    },
    {"10:30 Heap Exp", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -155,6 +165,7 @@ const struct menu_t day2_p1_m[] = {
 		"Magnolia Room\n"
 		"Kevin Massey",
 	},
+	NULL,
    },
    {"11:20 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -165,6 +176,7 @@ const struct menu_t day2_p1_m[] = {
 		"11:20-11:30\n"
 		"Potomac\n",
 	},
+	NULL,
    },
    {"11:30 NIST/CMMC", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -177,6 +189,7 @@ const struct menu_t day2_p1_m[] = {
 		"Magnolia Room\n"
 		"Ian MacRae",
 	},
+	NULL,
    },
    {"11:30 Leadrshp", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -190,6 +203,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom C/D\n"
 		"Kate Collins\n",
 	},
+	NULL,
    },
    {"11:30 Intruder", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -204,6 +218,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom A/B\n"
 		"Dwayne McDaniel",
 	},
+	NULL,
    },
    {"12:20 Lunch", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -228,6 +243,7 @@ const struct menu_t day2_p1_m[] = {
 		"12:20-1:00\n"
 		"James River Foyer",
 	},
+	NULL,
    },
    {" 1:00 Quantum", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -241,6 +257,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom A/B\n"
 		"Denis Mandich",
 	},
+	NULL,
    },
    {" 1:00 Cmnwealth", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -254,6 +271,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom C/D\n"
 		"Aliscia Andrews",
 	},
+	NULL,
    },
    {" 1:50 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -265,6 +283,7 @@ const struct menu_t day2_p1_m[] = {
 		"1:50-2:00\n"
 		"Potomac",
 	},
+	NULL,
    },
    {" 2:00 ChatGPT", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -276,6 +295,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom C/D\n"
 		"David Girvin\n",
 	},
+	NULL,
    },
    {" 2:00 Ransomwre", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -287,6 +307,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom A/B\n"
 		"Drew Schmitt",
 	},
+	NULL,
    },
    {" 2:50 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -299,6 +320,7 @@ const struct menu_t day2_p1_m[] = {
 		"2:50-3:10\n"
 		"Potomac",
 	},
+	NULL,
    }, 
    {" 3:10 Insiders", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -316,6 +338,7 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom\n"
 		"Colin Estep",
 	},
+	NULL,
    },
    {" 4:00 Closing", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -334,12 +357,13 @@ const struct menu_t day2_p1_m[] = {
 		"Ballroom\n"
 		"Chris Sullo",
 	},
+	NULL,
    },
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}, NULL},
 };
 
 const struct menu_t day1_p1_m[] = {
-   {"Tuesday", VERT_ITEM|SKIP_ITEM, TEXT, {NULL}},
+   {"Tuesday", VERT_ITEM|SKIP_ITEM, TEXT, {NULL}, NULL},
    {" 7:59 Registrat", VERT_ITEM, ITEM_DESC,
 	{ .description =
 		"Registration\n\n"
@@ -355,6 +379,7 @@ const struct menu_t day1_p1_m[] = {
 		"the \"Top of\n"
 		"the Grand\".\n",
 	},
+	NULL,
    },
    {" 8:00 Breakfast", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -376,6 +401,7 @@ const struct menu_t day1_p1_m[] = {
 		"11-50-1:00\n"
 		"James River Foyer",
 	},
+	NULL,
    },
    {" 9:00 Welcome", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -394,6 +420,7 @@ const struct menu_t day1_p1_m[] = {
 		"Ballroom\n"
 		"Jake Kouns"
 	},
+	NULL,
    },
    {" 9:30 Keynote", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -405,6 +432,7 @@ const struct menu_t day1_p1_m[] = {
 		"9:30-10:30\n"
 		"Ballroom",
 	},
+	NULL,
    },
    {"10:00 Badge", VERT_ITEM, ITEM_DESC,
 	{.description =
@@ -418,6 +446,7 @@ const struct menu_t day1_p1_m[] = {
 		"10:00am-4:30pm\n"
 		"Rappahannock",
 	},
+	NULL,
    },
    {"10:00 Lock Pick", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -436,6 +465,7 @@ const struct menu_t day1_p1_m[] = {
 		"10am-5pm\n"
 		"Rappahannock",
 	},
+	NULL,
    },
    {"10:30 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -453,6 +483,7 @@ const struct menu_t day1_p1_m[] = {
 		"10:30-11:00\n"
 		"Potomac",
 	},
+	NULL,
    },
    {"11:00 Liability", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -466,6 +497,7 @@ const struct menu_t day1_p1_m[] = {
 		"11-11:50\n"
 		"Andrea Matwyshyn",
 	},
+	NULL,
    },
    {"11:00 Passwd", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -485,6 +517,7 @@ const struct menu_t day1_p1_m[] = {
 		"11-11:50\n"
 		"Adrian Amos",
 	},
+	NULL,
    },
    {"11:50 Lunch", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -505,6 +538,7 @@ const struct menu_t day1_p1_m[] = {
 		"11:50-1:00\n"
 		"James River Foyer",
 	},
+	NULL,
    },
    {" 1:00 Passkeys", VERT_ITEM, ITEM_DESC,
 	{. description =
@@ -517,6 +551,7 @@ const struct menu_t day1_p1_m[] = {
 		"Magnolia Room\n"
 		"Josh Cigna",
 	},
+	NULL,
    },
    {" 1:00 CyberGame", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -529,6 +564,7 @@ const struct menu_t day1_p1_m[] = {
 		"Ballroom C/D\n"
 		"Jason Wonn"
 	},
+	NULL,
    },
    {" 1:00 Tradecrft", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -541,6 +577,7 @@ const struct menu_t day1_p1_m[] = {
 		"Ballroom A/B\n"
 		"Fletcher Davis",
 	},
+	NULL,
    },
    {" 1:00 CTF Prep", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -551,6 +588,7 @@ const struct menu_t day1_p1_m[] = {
 		"1:00-4:00\n"
 		"Shenandoah Room\n",
 	},
+	NULL,
    },
    {" 1:50 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -561,6 +599,7 @@ const struct menu_t day1_p1_m[] = {
 		"1:50-2:00\n"
 		"Potomac\n",
 	},
+	NULL,
    },
    {" 2:00 TTP", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -575,6 +614,7 @@ const struct menu_t day1_p1_m[] = {
 		"Ballroom A/B\n"
 		"Scott Small",
 	},
+	NULL,
    },
    {" 2:00 Enterpris", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -590,6 +630,7 @@ const struct menu_t day1_p1_m[] = {
 		"2:00-2:50\n"
 		"Ballroom C/D",
 	},
+	NULL,
    },
    {" 2:00 SW BoB", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -602,6 +643,7 @@ const struct menu_t day1_p1_m[] = {
 		"Magnolia Room\n"
 		"Andrew Hendela",
 	},
+	NULL,
    },
    {" 2:50 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -612,6 +654,7 @@ const struct menu_t day1_p1_m[] = {
 		"2:50-3:00\n"
 		"Potomac"
 	},
+	NULL,
    },
    {" 3:00 Pentest", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -625,6 +668,7 @@ const struct menu_t day1_p1_m[] = {
 		"Ballroom C/D\n"
 		"Qasim Ijaz",
 	},
+	NULL,
    },
    {" 3:00 Pandemic", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -641,6 +685,7 @@ const struct menu_t day1_p1_m[] = {
 		"Magnolia Room\n"
 		"Dan Han",
 	},
+	NULL,
    },
    {" 3:00 ThreatHnt", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -655,6 +700,7 @@ const struct menu_t day1_p1_m[] = {
 		"Ballroom A/B\n"
 		"Andrew Skatoff",
 	},
+	NULL,
    },
    {" 3:50 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -665,6 +711,7 @@ const struct menu_t day1_p1_m[] = {
 		"3:50-4:00\n"
 		"Potomac",
 	},
+	NULL,
     },
    {" 4:00 NW 201", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -676,6 +723,7 @@ const struct menu_t day1_p1_m[] = {
 		"Magnolia Room\n"
 		"Rick Lull\n",
 	},
+	NULL,
    },
    {" 4:00 No Popo", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -697,6 +745,7 @@ const struct menu_t day1_p1_m[] = {
 		"Ballroom A/B\n"
 		"Amelia Szczuchniak",
 	},
+	NULL,
    },
    {" 4:50 Closing", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -711,6 +760,7 @@ const struct menu_t day1_p1_m[] = {
 		"Jake Kouns\n"
 		"Chris Sullo",
 	},
+	NULL,
    },
    {" 5:00 -Break-", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -724,6 +774,7 @@ const struct menu_t day1_p1_m[] = {
 		"5:00-5:30\n"
 		"James River Foyer\n",
 	},
+	NULL,
    },
    {" 5:30 Aft Party", VERT_ITEM, ITEM_DESC,
 	{ .description =
@@ -736,14 +787,15 @@ const struct menu_t day1_p1_m[] = {
 		"5:30-9:00\n"
 		"Omni Ballroom"
 	},
+	NULL,
    },
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}, NULL},
 };
 
 
 const struct menu_t schedule_m[] = {
-   {"Tuesday", VERT_ITEM|DEFAULT_ITEM, MENU, {day1_p1_m}},
-   {"Wednesday", VERT_ITEM, MENU, {day2_p1_m}},
-   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"Tuesday", VERT_ITEM|DEFAULT_ITEM, MENU, {day1_p1_m}, NULL},
+   {"Wednesday", VERT_ITEM, MENU, {day2_p1_m}, NULL},
+   {"back", VERT_ITEM|LAST_ITEM, BACK, {NULL}, NULL},
 };
 
