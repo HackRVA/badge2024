@@ -68,8 +68,8 @@ void ping_cb(__attribute__((unused)) struct menu_t *menu)
 }
 
 const struct menu_t ping_m[] = {
-    {"Ping",   VERT_ITEM, FUNCTION, { .func = ping_cb} },
-    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
+    {"Ping",   VERT_ITEM, FUNCTION, { .func = ping_cb}, NULL },
+    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 
@@ -97,8 +97,8 @@ void myBadgeid_cb(__attribute__((unused)) struct menu_t *h) {
 }
 
 struct menu_t myBadgeid_m[] = {
-    {"check",   VERT_ITEM, FUNCTION, { .func = myBadgeid_cb} },
-    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
+    {"check",   VERT_ITEM, FUNCTION, { .func = myBadgeid_cb}, NULL },
+    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 
@@ -123,20 +123,20 @@ void backlight_cb(__attribute__((unused)) struct menu_t *h) {
 
 const struct menu_t backlightList_m[] = {
 //    {"       ", 0|VERT_ITEM, FUNCTION, { .func = backlight_cb} }, oh support... why is my screen black?
-    {"      -",  16|VERT_ITEM, FUNCTION, { .func = backlight_cb} },
-    {"     --",  32|VERT_ITEM, FUNCTION, { .func = backlight_cb} },
-    {"    ---",  64|VERT_ITEM, FUNCTION, { .func = backlight_cb} },
-    {"   ----", 128|VERT_ITEM, FUNCTION, { .func = backlight_cb} },
-    {"  -----", 192|VERT_ITEM, FUNCTION, { .func = backlight_cb} },
-    {" ------", 224|VERT_ITEM, FUNCTION, { .func = backlight_cb} },
-    {"-------", 255|VERT_ITEM, FUNCTION, { .func = backlight_cb} },
+    {"      -",  16|VERT_ITEM, FUNCTION, { .func = backlight_cb}, NULL },
+    {"     --",  32|VERT_ITEM, FUNCTION, { .func = backlight_cb}, NULL },
+    {"    ---",  64|VERT_ITEM, FUNCTION, { .func = backlight_cb}, NULL },
+    {"   ----", 128|VERT_ITEM, FUNCTION, { .func = backlight_cb}, NULL },
+    {"  -----", 192|VERT_ITEM, FUNCTION, { .func = backlight_cb}, NULL },
+    {" ------", 224|VERT_ITEM, FUNCTION, { .func = backlight_cb}, NULL },
+    {"-------", 255|VERT_ITEM, FUNCTION, { .func = backlight_cb}, NULL },
 
-    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
+    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 struct menu_t backlight_m[] = {
-    {"-------",   VERT_ITEM,     MENU, {backlightList_m} },
-    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
+    {"-------",   VERT_ITEM,     MENU, {backlightList_m}, NULL },
+    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 #if 0
@@ -171,8 +171,8 @@ static void invert_cb(__attribute__((unused)) struct menu_t *h) {
 }
 
 const struct menu_t rotate_m[] = {
-    {"Inverted",   1|VERT_ITEM, FUNCTION, { .func = invert_cb} },
-    {"Back",      VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
+    {"Inverted",   1|VERT_ITEM, FUNCTION, { .func = invert_cb}, NULL },
+    {"Back",      VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 
@@ -198,19 +198,19 @@ void LEDlight_cb(__attribute__((unused)) struct menu_t *h) {
 
 const struct menu_t LEDlightList_m[] = {
 //    {"       ", 7|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
-    {"      -", 0|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
-    {"     --", 30|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
-    {"    ---", 75|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
-    {"   ----", 100|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
-    {"  -----", 150|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
-    {" ------", 200|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
-    {"-------", 255|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
-    {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL} },
+    {"      -", 0|VERT_ITEM, FUNCTION, { .func = LEDlight_cb}, NULL },
+    {"     --", 30|VERT_ITEM, FUNCTION, { .func = LEDlight_cb}, NULL },
+    {"    ---", 75|VERT_ITEM, FUNCTION, { .func = LEDlight_cb}, NULL },
+    {"   ----", 100|VERT_ITEM, FUNCTION, { .func = LEDlight_cb}, NULL },
+    {"  -----", 150|VERT_ITEM, FUNCTION, { .func = LEDlight_cb}, NULL },
+    {" ------", 200|VERT_ITEM, FUNCTION, { .func = LEDlight_cb}, NULL },
+    {"-------", 255|VERT_ITEM, FUNCTION, { .func = LEDlight_cb}, NULL },
+    {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 struct menu_t LEDlight_m[] = {
-    {"--------",   VERT_ITEM,     MENU, {LEDlightList_m} },
-    {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL} },
+    {"--------",   VERT_ITEM,     MENU, {LEDlightList_m}, NULL },
+    {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 void buzzer_config_cb(__attribute__((unused)) struct menu_t *menu)
@@ -229,17 +229,17 @@ void buzzer_config_cb(__attribute__((unused)) struct menu_t *menu)
 }
 
 const struct menu_t buzzer_config_m[] = {
-    {"Audio: On",   0|VERT_ITEM,     FUNCTION, { .func = buzzer_config_cb} },
-    {"Audio: Off",  1|VERT_ITEM,     FUNCTION, { .func = buzzer_config_cb} },
-    {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL} },
+    {"Audio: On",   0|VERT_ITEM,     FUNCTION, { .func = buzzer_config_cb}, NULL },
+    {"Audio: Off",  1|VERT_ITEM,     FUNCTION, { .func = buzzer_config_cb}, NULL },
+    {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 /*
   not const menu_t ...  because the config status is stored in buzzer_m[0].name[]
 */
 struct menu_t buzzer_m[] = {
-    {"Audio: On",   VERT_ITEM,     MENU, {buzzer_config_m} },
-    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
+    {"Audio: On",   VERT_ITEM,     MENU, {buzzer_config_m}, NULL },
+    {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 void screen_save_lock_cb(__attribute__((unused)) struct menu_t *h) {
@@ -257,11 +257,11 @@ void screen_save_invert_cb(__attribute__((unused)) struct menu_t *menu)
 }
 
 const struct menu_t screen_lock_m[] = {
-    {"ON",       0|VERT_ITEM, FUNCTION, { .func = screen_save_lock_cb} },
-    {"OFF",      1|VERT_ITEM, FUNCTION, { .func = screen_save_lock_cb} },
-    {"INVERT", VERT_ITEM, FUNCTION, { .func = screen_save_invert_cb} },
-    {"STATIC", VERT_ITEM, FUNCTION, { .func = test_screensavers_cb, }, },
-    {"Back",   VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL} },
+    {"ON",       0|VERT_ITEM, FUNCTION, { .func = screen_save_lock_cb}, NULL },
+    {"OFF",      1|VERT_ITEM, FUNCTION, { .func = screen_save_lock_cb}, NULL },
+    {"INVERT", VERT_ITEM, FUNCTION, { .func = screen_save_invert_cb}, NULL },
+    {"STATIC", VERT_ITEM, FUNCTION, { .func = test_screensavers_cb, }, NULL },
+    {"Back",   VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
 
