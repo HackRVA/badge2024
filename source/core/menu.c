@@ -347,6 +347,22 @@ static struct point default_menu_drawing[] = { /* just a simple square */
 	{ -40, -40, },
 };
 
+static int menu_has_icons(struct menu_t *m)
+{
+    /* Check all the menu items and see if any have icons defined.  If not, just use the old menu style */
+    int has_icons = 0;
+    while (1) {
+        if (m->icon != NULL) {
+            has_icons = 1;
+            break;
+        }
+        if (m->attrib & LAST_ITEM)
+		break;
+	m++;
+   }
+   return has_icons;
+}
+
 /* The reason that new_display_menu returns a menu_t * instead of void
    as you might expect is because sometimes it skips over unselectable
    items.
@@ -362,6 +378,14 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     int menu_item_number = 0;
     static struct menu_t *last_menu_selected = NULL;
     static int animation_frame = 255;
+
+
+    /* If this menu has no icons defined, just use the old legacy style to display
+     * This makes, e.g. the schedule continue to work.
+     */
+    if (!menu_has_icons(menu))
+       return legacy_display_menu(menu, selected, style);
+	
 
     if (last_menu_selected != selected) {
 	last_menu_selected = selected;
