@@ -709,6 +709,66 @@ static void display_menu_item_description(__attribute__((unused)) struct menu_t 
 
 extern unsigned char is_dormant;
 
+static int user_made_selection(int down_latches)
+{
+	int selection_direction;
+	if (display_menu == new_display_menu)
+		selection_direction = BADGE_BUTTON_DOWN;
+	else
+		selection_direction = BADGE_BUTTON_RIGHT;
+
+	return	
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(selection_direction, down_latches);
+}
+
+static int user_moved_to_previous_item(int down_latches, int rotary0, int rotary1)
+{
+#if BADGE_HAS_ROTARY_SWITCHES
+#define ROTATION_POS(x) ((x) > 0)
+#define ROTATION_NEG(x) ((x) < 0)
+#else
+#define ROTATION_POS(x) 0
+#define ROTATION_NEG(x) 0
+#endif
+    int previous_button;
+    if (display_menu == new_display_menu)
+        previous_button = BADGE_BUTTON_LEFT;
+    else
+        previous_button = BADGE_BUTTON_UP;
+    return BUTTON_PRESSED(previous_button, down_latches) || ROTATION_NEG(rotary0) || ROTATION_NEG(rotary1);
+}
+
+static int user_moved_to_next_item(int down_latches, int rotary0, int rotary1)
+{
+    int next_button;
+    if (display_menu == new_display_menu)
+        next_button = BADGE_BUTTON_RIGHT;
+    else
+        next_button = BADGE_BUTTON_DOWN;
+    return BUTTON_PRESSED(next_button, down_latches) || ROTATION_NEG(rotary0) || ROTATION_NEG(rotary1);
+}
+
+static int user_backed_out(int down_latches)
+{
+    int back_out_button;
+    if (display_menu == new_display_menu)
+        back_out_button = BADGE_BUTTON_UP;
+    else
+        back_out_button = BADGE_BUTTON_LEFT;
+
+    return
+#if BADGE_HAS_ROTARY_SWITCHES
+	/* Left rotary encoder switch can be used to back out of menus */
+	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
+	BUTTON_PRESSED(back_out_button, down_latches);
+}
+
 void menus() {
     if (runningApp != NULL && !is_dormant) { /* running app is set by menus() not genericMenus() */
 	/* Call the runningApp if non-NULL and the screen saver is not active */
@@ -730,20 +790,12 @@ void menus() {
 #if BADGE_HAS_ROTARY_SWITCHES
     int rotary0 = button_get_rotation(0);
     int rotary1 = button_get_rotation(1);
-#define ROTATION_POS(x) ((x) > 0)
-#define ROTATION_NEG(x) ((x) < 0)
 #else
-#define ROTATION_POS(x) 0
-#define ROTATION_NEG(x) 0
+    int rotary0 = 0;
+    int rotary1 = 0;
 #endif
     /* see if physical button has been clicked */
-    if (
-#if BADGE_HAS_ROTARY_SWITCHES
-	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-#endif
-        BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-        BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-	BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
+    if (user_made_selection(down_latches)) {
         // action happened that will result in menu redraw
         // do_animation = 1;
         switch (G_selectedMenu->type) {
@@ -786,7 +838,7 @@ void menus() {
         }
 
         G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PARENT);
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary0) || ROTATION_NEG(rotary1)) {
+    } else if (user_moved_to_previous_item(down_latches, rotary0, rotary1)) {
         /* handle slider/soft button clicks */
         menu_beep(TEXT_FREQ); /* f */
 
@@ -813,7 +865,7 @@ void menus() {
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_NEXT);
         }
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary0) || ROTATION_POS(rotary1)) {
+    } else if (user_moved_to_next_item(down_latches, rotary0, rotary1)) {
         menu_beep(MORE_FREQ); /* g */
 
         /* make sure not on last menu item */
@@ -837,12 +889,7 @@ void menus() {
 	    maybe_scroll_to(G_selectedMenu, G_currMenu);
             G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PREVIOUS);
         }
-    } else if (
-#if BADGE_HAS_ROTARY_SWITCHES
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
-#endif
-		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
-	/* Left rotary encoder switch can be used to back out of menus */
+    } else if (user_backed_out(down_latches)) {
         menu_beep(BACK_FREQ);
         pop_menu();
         if (G_menuCnt == 0)
