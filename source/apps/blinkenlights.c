@@ -158,14 +158,14 @@ static void set_bl_exit(__attribute__((unused)) struct menu_t *m)
 }
 
 static struct menu_t blinkenlights_config_m[] = {
-    {"Red: ", VERT_ITEM, FUNCTION, { .func = set_red}},
-    {"Blue: ", VERT_ITEM, FUNCTION, { .func = set_blue}},
-    {"Green: ", VERT_ITEM, FUNCTION, { .func = set_green}},
-    {"--CLEAR--", VERT_ITEM, FUNCTION, { .func = bl_clear_colors} },
-    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
-    {"Mode: ", VERT_ITEM, FUNCTION, { .func = set_bl_mode} },
-    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = set_bl_go} },
-    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, { .func =set_bl_exit}},
+    {"Red: ", VERT_ITEM, FUNCTION, { .func = set_red}, NULL},
+    {"Blue: ", VERT_ITEM, FUNCTION, { .func = set_blue}, NULL},
+    {"Green: ", VERT_ITEM, FUNCTION, { .func = set_green}, NULL},
+    {"--CLEAR--", VERT_ITEM, FUNCTION, { .func = bl_clear_colors}, NULL },
+    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}, NULL},
+    {"Mode: ", VERT_ITEM, FUNCTION, { .func = set_bl_mode}, NULL },
+    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = set_bl_go}, NULL },
+    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, { .func =set_bl_exit}, NULL},
 };
 
 void blinkenlights_cb(__attribute__((unused)) struct menu_t *m)
