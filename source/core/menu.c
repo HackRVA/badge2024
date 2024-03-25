@@ -538,7 +538,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     return selected;
 }
 
-struct menu_t *(*display_menu)(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style) = legacy_display_menu;
+struct menu_t *(*display_menu)(struct menu_t *menu, struct menu_t *selected, MENU_STYLE style) = new_display_menu;
 
 /* for this increment the units are menu items */
 #define PAGESIZE 8
