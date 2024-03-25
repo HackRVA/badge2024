@@ -57,15 +57,15 @@ static struct point menu_animation_direction[] = {
 };
 
 static const struct menu_t legacy_games_m[] = {
-   {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, NULL, },
+   {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, &battlezone_icon, },
    {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, NULL, },
    {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, NULL, },
    {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, NULL, },
    {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, NULL, },
    {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, NULL, },
    {"Tank vs Tank", VERT_ITEM, FUNCTION, { .func = tank_vs_tank_cb }, NULL, },
-   {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, NULL, },
-   {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, NULL, },
+   {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, &lunar_rescue_icon, },
+   {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, &badge_monsters_icon, },
    {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, NULL, },
    {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, NULL, },
    {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, NULL, },
@@ -74,7 +74,7 @@ static const struct menu_t legacy_games_m[] = {
 };
 
 static const struct menu_t games_m[] = {
-	{"Legacy Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = legacy_games_m }, &games_icon, },
+	{"Legacy Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = legacy_games_m }, &legacy_games_icon, },
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, &back_icon, },
 };
 
@@ -86,15 +86,15 @@ static const struct menu_t menu_style_menu_m[] = {
 
 static const struct menu_t settings_m[] = {
    {"Menu Style", VERT_ITEM, MENU, { .menu = menu_style_menu_m }, NULL, },
-   {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, NULL, },
-   {"Led", VERT_ITEM, MENU, { .menu = LEDlight_m }, NULL, },
-   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, NULL, },
+   {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, &backlight_icon, },
+   {"LED", VERT_ITEM, MENU, { .menu = LEDlight_m }, &led_icon, },
+   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, &audio_icon, },
    {"Invert Display", VERT_ITEM, MENU, { .menu = rotate_m, }, NULL, },
    {"User Name", VERT_ITEM, FUNCTION, { .func = username_cb }, NULL, },
    {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, NULL, },
    {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, NULL, },
    {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, NULL, },
-   {"Clear NVRAM", VERT_ITEM, FUNCTION, { .func = clear_nvram_cb }, NULL, },
+   {"Clear NVRAM", VERT_ITEM, FUNCTION, { .func = clear_nvram_cb }, &clear_nvram_icon, },
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}, &back_icon, },
 };
 
