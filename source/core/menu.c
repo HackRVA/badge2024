@@ -208,6 +208,33 @@ static void maybe_scroll_to(struct menu_t *selected, struct menu_t *current_menu
 		menu_scroll_start_item = position - MENU_MAX_ITEMS_DISPLAYABLE + 1;
 }
 
+/* Find the next menu item on menu from current_item */
+struct menu_t *find_next_menu_item(struct menu_t *menu, struct menu_t *current_item)
+{
+	if (current_item->attrib & LAST_ITEM)
+		return menu;
+        current_item++;
+        // Last item should never be a skipped item!!
+        while ( ((current_item->attrib & SKIP_ITEM) || (current_item->attrib & HIDDEN_ITEM))
+                 && (!(current_item->attrib & LAST_ITEM)) )
+             current_item++;
+	return current_item;
+}
+
+struct menu_t *find_prev_menu_item(struct menu_t *menu, struct menu_t *current_item)
+{
+	if (current_item == menu) { /* current is first item, need to return last item */
+		while (!(current_item->attrib & LAST_ITEM))
+			current_item++;
+		return current_item;
+	}
+	current_item--;
+        while (((current_item->attrib & SKIP_ITEM) || (current_item->attrib & HIDDEN_ITEM))
+                 && (current_item != menu))
+             current_item--;
+	return current_item;
+}
+
 /* The reason that legacy_display_menu returns a menu_t * instead of void
    as you might expect is because sometimes it skips over unselectable
    items.
@@ -587,6 +614,32 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 			usleep(10000);
 #endif
 		} while (animation_frame < 255);
+
+		if (came_from == MENU_PREVIOUS) {
+			/* draw the "next" menu item incoming */
+			struct menu_t *next_item = find_next_menu_item(root_menu, selected);
+			if (next_item && next_item->icon) {
+				int drawing_x = 64 + 56;
+				int drawing_y = 64;
+				int drawing_scale = (1024 * (255 - 250 / 2)) / 255 / 2;
+				points = next_item->icon->points;
+				int npoints = next_item->icon->npoints;
+				FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
+			}
+		}
+
+		if (came_from == MENU_NEXT) {
+			/* draw the "next" menu item incoming */
+			struct menu_t *prev_item = find_prev_menu_item(root_menu, selected);
+			if (prev_item && prev_item->icon) {
+				int drawing_x = 64 - 56;
+				int drawing_y = 64;
+				int drawing_scale = (1024 * (255 - 250 / 2)) / 255 / 2;
+				points = prev_item->icon->points;
+				int npoints = prev_item->icon->npoints;
+				FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
+			}
+		}
 
 		FbMove(x, 120);
 		FbWriteLine(menu->name);
