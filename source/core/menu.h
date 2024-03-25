@@ -53,6 +53,7 @@ struct menu_t {
       char *description;
       void *generic;
    } data;
+   struct menu_icon *icon;
 };
 
 #if 0

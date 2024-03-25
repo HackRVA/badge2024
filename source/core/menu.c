@@ -20,6 +20,7 @@
 #include "audio.h"
 #include "led_pwm.h"
 #include "music.h"
+#include "menu_icon.h"
 
 // Apps
 #include "about_badge.h"
@@ -47,52 +48,52 @@
 extern const struct menu_t schedule_m[]; /* defined in core/schedule.c */
 
 static const struct menu_t legacy_games_m[] = {
-   {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, },
-   {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, },
-   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, },
-   {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, },
-   {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, },
-   {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, },
-   {"Tank vs Tank", VERT_ITEM, FUNCTION, { .func = tank_vs_tank_cb }, },
-   {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, },
-   {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, },
-   {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, },
-   {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, },
-   {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, },
-   {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, },
-   {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
+   {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, NULL, },
+   {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, NULL, },
+   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, NULL, },
+   {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, NULL, },
+   {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, NULL, },
+   {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, NULL, },
+   {"Tank vs Tank", VERT_ITEM, FUNCTION, { .func = tank_vs_tank_cb }, NULL, },
+   {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, NULL, },
+   {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, NULL, },
+   {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, NULL, },
+   {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, NULL, },
+   {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, NULL, },
+   {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, NULL, },
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, &back_icon, },
 };
 
 static const struct menu_t games_m[] = {
-	{"Legacy Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = legacy_games_m }, },
-	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
+	{"Legacy Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = legacy_games_m }, &games_icon, },
+	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, &back_icon, },
 };
 
 static const struct menu_t menu_style_menu_m[] = {
-	{"New Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_new_menu_style }, },
-	{"Legacy Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_legacy_menu_style }, },
-	{"Back", VERT_ITEM|LAST_ITEM, BACK, { NULL }, },
+	{"New Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_new_menu_style }, NULL, },
+	{"Legacy Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_legacy_menu_style }, NULL, },
+	{"Back", VERT_ITEM|LAST_ITEM, BACK, { NULL }, &back_icon, },
 };
 
 static const struct menu_t settings_m[] = {
-   {"Menu Style", VERT_ITEM, MENU, { .menu = menu_style_menu_m }, },
-   {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, },
-   {"Led", VERT_ITEM, MENU, { .menu = LEDlight_m }, },
-   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, },
-   {"Invert Display", VERT_ITEM, MENU, { .menu = rotate_m, }},
-   {"User Name", VERT_ITEM, FUNCTION, { .func = username_cb }, },
-   {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, },
-   {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, },
-   {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, },
-   {"Clear NVRAM", VERT_ITEM, FUNCTION, { .func = clear_nvram_cb }, },
-   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"Menu Style", VERT_ITEM, MENU, { .menu = menu_style_menu_m }, NULL, },
+   {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, NULL, },
+   {"Led", VERT_ITEM, MENU, { .menu = LEDlight_m }, NULL, },
+   {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, NULL, },
+   {"Invert Display", VERT_ITEM, MENU, { .menu = rotate_m, }, NULL, },
+   {"User Name", VERT_ITEM, FUNCTION, { .func = username_cb }, NULL, },
+   {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, NULL, },
+   {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, NULL, },
+   {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, NULL, },
+   {"Clear NVRAM", VERT_ITEM, FUNCTION, { .func = clear_nvram_cb }, NULL, },
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}, &back_icon, },
 };
 
 static const struct menu_t main_m[] = {
-   {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, },
-   {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = games_m }, },
-   {"Settings",    VERT_ITEM, MENU, { .menu = settings_m }, },
-   {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, { .func = about_badge_cb }, },
+   {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, &schedule_icon, },
+   {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = games_m }, &games_icon, },
+   {"Settings",    VERT_ITEM, MENU, { .menu = settings_m }, &settings_icon, },
+   {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, { .func = about_badge_cb }, &about_icon, },
 };
 
 /* hack for badge.c to trigger redraw of menu on transition from dormant -> not dormant */
@@ -481,14 +482,25 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 #endif
 	if (selected == menu) {
 		int x = 64 - (strlen(menu->name) / 2) * 8;
+		/* Draw new selection item arriving */
+		int npoints;
+		struct point *points;
+
+		if (menu->icon) {
+			npoints = menu->icon->npoints;
+			points = menu->icon->points;
+		} else {
+			npoints = 0;
+			points = NULL;
+		}
+
 		do {
 			FbClear();
 
-
-			/* Draw new selection item arriving */
 			int drawing_x = 120 + ((255 - animation_frame) * 100 / 255 - 56);
 			int drawing_scale = (1024 * animation_frame) / 255;
 			FbDrawObject(default_menu_drawing, 5, GREEN, drawing_x, 64, drawing_scale);
+			FbDrawObject(points, npoints, GREEN, drawing_x, 64, drawing_scale / 2);
 
 			/* Draw old selection item leaving */
 			drawing_x = 64 - (64 * animation_frame / 255);
