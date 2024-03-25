@@ -25,15 +25,15 @@ static void set_mode(struct menu_t *m);
 static void set_go(struct menu_t *m);
 
 static struct menu_t conductor_config_m[] = {
-    {"Top: ", VERT_ITEM, FUNCTION, { .func = set_conductor_top_note} },
-    {"Bottom: ", VERT_ITEM, FUNCTION, { .func = set_conductor_bottom_note} },
-    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
-    {"Left: ", VERT_ITEM, FUNCTION, { .func = set_conductor_left_note} },
-    {"Right: ", VERT_ITEM, FUNCTION, { .func = set_conductor_right_note} },
-    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}},
-    {"Mode: ", VERT_ITEM, FUNCTION, { .func = set_mode} },
-    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = set_go} },
-    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, { .func = set_exit}},
+    {"Top: ", VERT_ITEM, FUNCTION, { .func = set_conductor_top_note}, NULL },
+    {"Bottom: ", VERT_ITEM, FUNCTION, { .func = set_conductor_bottom_note}, NULL },
+    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}, NULL},
+    {"Left: ", VERT_ITEM, FUNCTION, { .func = set_conductor_left_note}, NULL },
+    {"Right: ", VERT_ITEM, FUNCTION, { .func = set_conductor_right_note}, NULL },
+    {"", VERT_ITEM|SKIP_ITEM, TEXT, {0}, NULL},
+    {"Mode: ", VERT_ITEM, FUNCTION, { .func = set_mode}, NULL },
+    {"Go!!", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = set_go}, NULL },
+    {"Exit", VERT_ITEM|LAST_ITEM, FUNCTION, { .func = set_exit}, NULL},
 };
 
 
