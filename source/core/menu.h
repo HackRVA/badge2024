@@ -65,7 +65,7 @@ struct menu_t *getSelectedMenuStack(unsigned char item);
 
 /* Passed to menu display function so it knows which way we're coming from */
 enum menu_previous {
-    MENU_PREVIOUS,	/* user came from previous menu item, e.g. scrolling down on legacy style menus */
+    MENU_PREVIOUS = 0,	/* user came from previous menu item, e.g. scrolling down on legacy style menus */
     MENU_NEXT,		/* user came from next menu item, e.g. scrolling up on legacy style menus */
     MENU_PARENT,	/* user came from parent menu, e.g. pressing select, or right on legacy menus */
     MENU_CHILD,		/* user came from child menu, e.g. selecting "Back" */

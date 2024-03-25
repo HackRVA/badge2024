@@ -47,6 +47,15 @@
 
 extern const struct menu_t schedule_m[]; /* defined in core/schedule.c */
 
+/* offsets for menu animation direction depending on where we came from */
+static struct point menu_animation_direction[] = {
+    { -1, 0 }, /* MENU_PREVIOUS, animation moves left */
+    { 1, 0 },  /* MENU_NEXT, animatino moves right */
+    { 0, -1 }, /* MENU_PARENT, animation moves up */
+    { 0, 1 },  /* MENU_CHILD, animatino moves down */
+    { 0, 0 },  /* MENU_UNKNOWN, no movement */
+};
+
 static const struct menu_t legacy_games_m[] = {
    {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, NULL, },
    {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, NULL, },
@@ -382,6 +391,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     int menu_item_number = 0;
     static struct menu_t *last_menu_selected = NULL;
     static int animation_frame = 255;
+    static struct menu_icon *previous_icon = NULL;
 
 #ifdef TARGET_SIMULATOR
     switch (came_from) {
@@ -484,7 +494,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 
         if (selected == NULL) {
             if (menu->attrib & DEFAULT_ITEM)
-            selected = menu;
+		    selected = menu;
         }
 
         // Determine selected item color
@@ -520,29 +530,54 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 	if (selected == menu) {
 		int x = 64 - (strlen(menu->name) / 2) * 8;
 		/* Draw new selection item arriving */
-		int npoints;
-		struct point *points;
+		int npoints, old_npoints;
+		struct point *points, *old_points;
 
 		if (menu->icon) {
 			npoints = menu->icon->npoints;
 			points = menu->icon->points;
 		} else {
-			npoints = 0;
-			points = NULL;
+			npoints = 5;
+			points = default_menu_drawing;
 		}
+
+		if (previous_icon) {
+			old_npoints = previous_icon->npoints;
+			old_points = previous_icon->points;
+		} else {
+			old_npoints = 5;
+			old_points = default_menu_drawing;
+		}
+
+		int xd = menu_animation_direction[came_from].x;
+		int yd = menu_animation_direction[came_from].y;
 
 		do {
 			FbClear();
 
-			int drawing_x = 120 + ((255 - animation_frame) * 100 / 255 - 56);
-			int drawing_scale = (1024 * animation_frame) / 255;
-			FbDrawObject(default_menu_drawing, 5, GREEN, drawing_x, 64, drawing_scale);
-			FbDrawObject(points, npoints, GREEN, drawing_x, 64, drawing_scale / 2);
+			/* Draw new selection entering */
+			// int drawing_x = 120 + ((255 - animation_frame) * 100 / 255 - 56);
+			int startx = 64 + 56 * -xd; /* 8, or 120 */
+			int xoffset = xd * 56 * animation_frame / 255; /* slides from +/- 56 to zero */
+			int starty = 64 + 56 * -yd;
+			int yoffset = yd * 56 * animation_frame / 255;
+			int drawing_x = startx + xoffset;
+			int drawing_y = starty + yoffset;
+			int drawing_scale = (1024 * animation_frame) / 255 / 2;
+			FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
 
-			/* Draw old selection item leaving */
-			drawing_x = 64 - (64 * animation_frame / 255);
-			drawing_scale = (1024 * (255 - animation_frame)) / 255;
-			FbDrawObject(default_menu_drawing, 5, GREEN, drawing_x, 64, 255 - drawing_scale);
+			if (came_from != MENU_UNKNOWN) {
+				/* Draw previous selection leaving */
+				// drawing_x = 64 - (64 * animation_frame / 255);
+				startx = 64;
+				xoffset = xd * 56 * animation_frame / 255; /* slides from 0 to +/- 56 */
+				starty = 64;
+				yoffset = yd * 56 * animation_frame / 255;
+				drawing_x = startx + xoffset;
+				drawing_y = starty + yoffset;
+				drawing_scale = (1024 * (255 - animation_frame / 2)) / 255 / 2;
+				FbDrawObject(old_points, old_npoints, GREEN, drawing_x, drawing_y, drawing_scale);
+			}
 
 			FbPushBuffer();
 			animation_frame += 10;
@@ -565,6 +600,10 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 		break;
     } // END WHILE
 
+	if (selected)
+		previous_icon = selected->icon;
+	else
+		previous_icon = NULL;
     /* in case last menu item is a skip */
     if (selected == NULL) {
         selected = root_menu;
