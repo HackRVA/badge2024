@@ -29,18 +29,18 @@
 #include "game_of_life.h"
 #include "hacking_simulator.h"
 #include "lunarlander.h"
-#include "pong.h"
+// #include "pong.h"
 #include "qc.h"
 #include "smashout.h"
 #include "username.h"
 #include "slot_machine.h"
-#include "gulag.h"
+// #include "gulag.h"
 #include "asteroids.h"
-#include "etch-a-sketch.h"
-#include "magic-8-ball.h"
+// #include "etch-a-sketch.h"
+// #include "magic-8-ball.h"
 #include "rvasec_splash.h"
 #include "test-screensavers.h"
-#include "tank-vs-tank.h"
+// #include "tank-vs-tank.h"
 
 #define MAIN_MENU_BKG_COLOR GREY2
 
@@ -59,11 +59,11 @@ static struct point menu_animation_direction[] = {
 static const struct menu_t legacy_games_m[] = {
    {"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, &battlezone_icon, },
    {"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, NULL, },
-   {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, NULL, },
-   {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, NULL, },
-   {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, NULL, },
-   {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, NULL, },
-   {"Tank vs Tank", VERT_ITEM, FUNCTION, { .func = tank_vs_tank_cb }, NULL, },
+   // {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, NULL, },
+   // {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, NULL, },
+   // {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, NULL, },
+   // {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, NULL, },
+   // {"Tank vs Tank", VERT_ITEM, FUNCTION, { .func = tank_vs_tank_cb }, NULL, },
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, &lunar_rescue_icon, },
    {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, &badge_monsters_icon, },
    {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, NULL, },
