@@ -267,23 +267,23 @@ static void add_sparks(int x, int y, int v, int n)
 static void check_buttons(void)
 {
 	static int first_time = 1;
-#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
-#endif
 	int down_latches = button_down_latches();
 	if (game_over_counter || player_dead_counter)
 		return;
+	if (
 #if BADGE_HAS_ROTARY_SWITCHES
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		asteroids_state = ASTEROIDS_EXIT;
 	}
 	if (r0)
 		turn(&player, 2 * r0);
 	if (r1)
 		turn(&player, 2 * r1);
-#endif
 	if (button_poll(BADGE_BUTTON_LEFT))
 		turn(&player, -player_rotation_speed);
 	if (button_poll(BADGE_BUTTON_RIGHT))
