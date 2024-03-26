@@ -8,6 +8,8 @@
 #include "fxp_sqrt.h"
 #include "xorshift.h"
 #include "random.h"
+#include "dynmenu.h"
+#include <string.h>
 
 #if TARGET_PICO
 #define printf(...)
@@ -31,6 +33,9 @@ static int lives;
 static int score;
 static int player_dead_counter;
 static int game_over_counter;
+
+static struct dynmenu quitmenu;
+static struct dynmenu_item quitmenu_item[2];
 
 struct pos_vel {
 	int x, y, vx, vy;
@@ -112,6 +117,7 @@ static void add_bullet(int x, int y, int vx, int vy, int life)
 enum asteroids_state_t {
 	ASTEROIDS_INIT,
 	ASTEROIDS_RUN,
+	ASTEROIDS_MAYBE_EXIT,
 	ASTEROIDS_EXIT,
 };
 
@@ -176,6 +182,11 @@ static void asteroids_init(void)
 	game_over_counter = 0;
 	nbullets = 0;
 	nsparks = 0;
+	dynmenu_init(&quitmenu, quitmenu_item, 2);
+	dynmenu_clear(&quitmenu);
+	strcpy(quitmenu.title, "Quit?");
+	dynmenu_add_item(&quitmenu, "No", ASTEROIDS_RUN, 0);
+	dynmenu_add_item(&quitmenu, "Yes", ASTEROIDS_EXIT, 0);
 }
 
 static void turn(struct ship *player, int angle)
@@ -278,7 +289,7 @@ static void check_buttons(void)
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 #endif
 		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-		asteroids_state = ASTEROIDS_EXIT;
+		asteroids_state = ASTEROIDS_MAYBE_EXIT;
 	}
 	if (r0)
 		turn(&player, 2 * r0);
@@ -583,6 +594,20 @@ static void asteroids_run(void)
 	draw_screen();
 }
 
+static void asteroids_maybe_exit(void)
+{
+	dynmenu_draw(&quitmenu);
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+		dynmenu_change_current_selection(&quitmenu, 1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+		dynmenu_change_current_selection(&quitmenu, -1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		asteroids_state = quitmenu.item[quitmenu.current_item].next_state;
+	}
+	FbSwapBuffers();
+}
+
 static void asteroids_exit(void)
 {
 	asteroids_state = ASTEROIDS_INIT; /* So that when we start again, we do not immediately exit */
@@ -597,6 +622,9 @@ void asteroids_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case ASTEROIDS_RUN:
 		asteroids_run();
+		break;
+	case ASTEROIDS_MAYBE_EXIT:
+		asteroids_maybe_exit();
 		break;
 	case ASTEROIDS_EXIT:
 		asteroids_exit();
