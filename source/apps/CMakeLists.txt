@@ -22,6 +22,7 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/rvasec_splash.c
         ${CMAKE_CURRENT_LIST_DIR}/slot_machine.c
         ${CMAKE_CURRENT_LIST_DIR}/test-screensavers.c
+        ${CMAKE_CURRENT_LIST_DIR}/badge-app-template.c
         )
 add_subdirectory(clue_assets)
 add_subdirectory(new_badge_monsters_assets)

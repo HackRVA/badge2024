@@ -7,6 +7,6 @@
    and delete this comment from your copy.
 */
 
-void myapp_cb(struct menu_t *m);
+void myprogram_cb(struct menu_t *m);
 
 #endif

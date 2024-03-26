@@ -42,6 +42,7 @@
 #include "test-screensavers.h"
 // #include "tank-vs-tank.h"
 #include "clue.h"
+#include "badge-app-template.h"
 
 #define MAIN_MENU_BKG_COLOR GREY2
 
@@ -75,6 +76,7 @@ static const struct menu_t legacy_games_m[] = {
 };
 
 static const struct menu_t games_m[] = {
+	{"Sample App", VERT_ITEM, FUNCTION, { .func = myprogram_cb }, NULL },
 	{"Clue", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = clue_cb }, &clue_icon },
 	{"Legacy Games",       VERT_ITEM, MENU, { .menu = legacy_games_m }, &legacy_games_icon, },
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, &back_icon, },

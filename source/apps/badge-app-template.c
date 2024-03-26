@@ -52,8 +52,8 @@ void (*runningApp)() = app_cb; // Don't commit this change; just for local testi
 const struct menu_t games_m[] = {
    {"Blinkenlights", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = blinkenlights_cb}},
    ...
-   {"My App",    VERT_ITEM, FUNCTION, { .func = app_cb},
-   {"Back",	     VERT_ITEM|LAST_ITEM, BACK, {NULL}},
+   {"Sample App",    VERT_ITEM, FUNCTION, { .func = myprogram_cb}, NULL },
+   {"Back",	     VERT_ITEM|LAST_ITEM, BACK, {NULL}, NULL},
 };
 ...
 
@@ -98,11 +98,14 @@ static void myprogram_init(void)
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
-#warning "badge_app_template.c needs maintenance, no way to exit program without encoders"
 	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		myprogram_state = MYPROGRAM_EXIT;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		myprogram_state = MYPROGRAM_EXIT;
 	}
 }
 
