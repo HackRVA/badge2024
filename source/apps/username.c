@@ -164,7 +164,6 @@ static void check_the_buttons(void)
 {
 	int action;
 	int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCHES
 	int rotation = button_get_rotation(0);
 	int rotation1 = button_get_rotation(1);
 
@@ -189,18 +188,12 @@ static void check_the_buttons(void)
 		}
 		something_changed = 1;
 	}
-#define ROTATION_NEG(x) ((x) < 0)
-#define ROTATION_POS(x) ((x) > 0)
-#else
-#define ROTATION_NEG(x) 0
-#define ROTATION_POS(x) 0
-#endif
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotation1)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotation1 < 0) {
 		current_row--;
 		if (current_row < 0)
 			current_row = 4;
 		something_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotation1)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotation1 > 0) {
 		current_row++;
 		if (current_row > 4)
 			current_row = 0;

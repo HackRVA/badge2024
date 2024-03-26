@@ -320,15 +320,8 @@ static void clear_nvram_run(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
-#define ROTATION_POS(x) ((x) > 0)
-#define ROTATION_NEG(x) ((x) < 0)
-#else
-#define ROTATION_POS(x) 0
-#define ROTATION_NEG(x) 0
-#endif
 
 #if BADGE_HAS_ROTARY_SWITCHES
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
@@ -336,10 +329,10 @@ static void clear_nvram_run(void)
 		return;
 	}
 #endif
-	if (ROTATION_NEG(r0) || ROTATION_NEG(r1) || BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+	if (r0 < 0 || r1 < 0 || BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		dynmenu_change_current_selection(&clear_nvram_menu, -1);
 	}
-	if (ROTATION_POS(r0) || ROTATION_POS(r1) || BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	if (r0 > 0 || r1 > 0 || BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		dynmenu_change_current_selection(&clear_nvram_menu, 1);
 	}
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||

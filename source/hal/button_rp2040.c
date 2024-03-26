@@ -201,7 +201,14 @@ void button_reset_last_input_timestamp(void) {
     last_change = rtc_get_ms_since_boot();
 }
 
-int button_get_rotation(unsigned int i) {
+#if BADGE_HAS_ROTARY_SWITCHES
+#define ROTARY_PARAM
+#else
+#define ROTARY_PARAM __attribute__((unused))
+#endif
+
+int button_get_rotation(ROTARY_PARAM unsigned int i) {
+#if BADGE_HAS_ROTARY_SWITCHES
     if (ARRAY_SIZE(rotation_count) < i) {
         return 0;
     }
@@ -214,6 +221,10 @@ int button_get_rotation(unsigned int i) {
     critical_section_exit(&critical_section);
 
     return count;
+#else
+    (void) rotation_count[0]; /* shut the compiler up */
+    return 0;
+#endif
 }
 
 

@@ -3811,13 +3811,10 @@ static void check_buttons(void)
 {
 	static int firing_timer = 0;
 	int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCHES
 	int rotary_switch = button_get_rotation(0);
-#endif
 	int anything_pressed = 0;
 	int n;
 
-#if BADGE_HAS_ROTARY_SWITCHES
 	if (rotary_switch) {
 		short new_angle = player.angle - 3 * rotary_switch;
 		if (new_angle > 127)
@@ -3829,7 +3826,6 @@ static void check_buttons(void)
 		screen_changed = 1;
 		anything_pressed = 1;
 	}
-#endif
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (player.has_flamethrower) {
@@ -4938,15 +4934,7 @@ static void gulag_start_menu(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCHES
 	int rotary_switch = button_get_rotation(0);
-#define ROTATION_POS(x) ((x) > 0)
-#define ROTATION_NEG(x) ((x) < 0)
-#else
-#define ROTATION_POS(x) 0
-#define ROTATION_NEG(x) 0
-#endif
-
 	if (
 #if BADGE_HAS_ROTARY_SWITCHES
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
@@ -4959,9 +4947,9 @@ static void gulag_start_menu(void)
 		}
 		gulag_state = start_menu.item[start_menu.current_item].next_state;
 	}
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary_switch))
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0)
 		dynmenu_change_current_selection(&start_menu, 1);
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary_switch))
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0)
 		dynmenu_change_current_selection(&start_menu, -1);
 #if BADGE_HAS_ROTARY_SWITCHES
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
@@ -4984,9 +4972,7 @@ static void gulag_maybe_exit(void)
 	FbSwapBuffers();
 
 	int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCHES
 	int rotary_switch = button_get_rotation(0);
-#endif
 
 	if (
 #if BADGE_HAS_ROTARY_SWITCHES
@@ -4994,9 +4980,9 @@ static void gulag_maybe_exit(void)
 #endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches))
 		gulag_state = quit_menu.item[quit_menu.current_item].next_state;
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(rotary_switch))
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0)
 		dynmenu_change_current_selection(&quit_menu, 1);
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(rotary_switch))
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0)
 		dynmenu_change_current_selection(&quit_menu, -1);
 }
 

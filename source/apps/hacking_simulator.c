@@ -702,15 +702,8 @@ static void check_buttons(void)
 	static int button_presses = 0;
 
 	int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
-#define ROTATION_POS(x) ((x) > 0)
-#define ROTATION_NEG(x) ((x) < 0)
-#else
-#define ROTATION_POS(x) 0
-#define ROTATION_NEG(x) 0
-#endif
 
 	if (
 #if BADGE_HAS_ROTARY_SWITCHES
@@ -736,25 +729,25 @@ static void check_buttons(void)
 		}
 		screen_changed = 1;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) || ROTATION_NEG(r0))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) || r0 < 0)
 	{
 		button_presses = 0;
 		cursor_x_index--;
 		screen_changed = 1;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) || ROTATION_POS(r0))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) || r0 > 0)
 	{
 		button_presses = 0;
 		cursor_x_index++;
 		screen_changed = 1;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(r1))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || r1 < 0)
 	{
 		button_presses = 0;
 		cursor_y_index--;
 		screen_changed = 1;
 	}
-	else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(r1))
+	else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || r1 > 0)
 	{
 		button_presses = 0;
 		cursor_y_index++;
@@ -1090,14 +1083,7 @@ static void hackingsimulator_quit_confirm(void)
 static void hackingsimulator_quit_input(void)
 {
 	int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
-#define ROTATION_POS(x) ((x) > 0)
-#define ROTATION_NEG(x) ((x) < 0)
-#else
-#define ROTATION_POS(x) 0
-#define ROTATION_NEG(x) 0
-#endif
 
 	if (
 #if BADGE_HAS_ROTARY_SWITCHES
@@ -1108,11 +1094,11 @@ static void hackingsimulator_quit_input(void)
 		hacking_simulator_state =
 			(enum hacking_simulator_state_t) quitmenu.item[quitmenu.current_item].next_state;
 		return;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || ROTATION_NEG(r0)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || r0 < 0) {
 		dynmenu_change_current_selection(&quitmenu, -1);
 		dynmenu_draw(&quitmenu);
 		FbSwapBuffers();
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || ROTATION_POS(r0)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || r0 > 0) {
 		dynmenu_change_current_selection(&quitmenu, 1);
 		dynmenu_draw(&quitmenu);
 		FbSwapBuffers();

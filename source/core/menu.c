@@ -737,16 +737,10 @@ static void display_menu_item_description(__attribute__((unused)) struct menu_t 
 	FbWriteString(menu_item_description);
 	FbSwapBuffers();
 
-#if BADGE_HAS_ROTARY_SWITCHES
 	int r0 = button_get_rotation(0);
 	int r1 = button_get_rotation(1);
-#endif
 	int down_latches = button_down_latches();
-	if (
-#if BADGE_HAS_ROTARY_SWITCHES
-		r0 || r1 ||
-#endif
-		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+	if (r0 || r1 || BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
 #if BADGE_HAS_ROTARY_SWITCHES
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
@@ -779,36 +773,26 @@ static int user_made_selection(struct menu_t *menu, int down_latches)
 		BUTTON_PRESSED(selection_direction, down_latches);
 }
 
-#if BADGE_HAS_ROTARY_SWITCHES
-#define ROTATION_POS(x) ((x) > 0)
-#define ROTATION_NEG(x) ((x) < 0)
-#define ROTARY_PARAM
-#else
-#define ROTATION_POS(x) 0
-#define ROTATION_NEG(x) 0
-#define ROTARY_PARAM __attribute__((unused))
-#endif
 static int user_moved_to_previous_item(struct menu_t *menu, int down_latches,
-		ROTARY_PARAM int rotary0, ROTARY_PARAM int rotary1)
+		int rotary0, int rotary1)
 {
     int previous_button;
     if (display_menu == new_display_menu && menu_has_icons(menu))
         previous_button = BADGE_BUTTON_LEFT;
     else
         previous_button = BADGE_BUTTON_UP;
-    return BUTTON_PRESSED(previous_button, down_latches) || ROTATION_NEG(rotary0) || ROTATION_NEG(rotary1);
+    return BUTTON_PRESSED(previous_button, down_latches) || rotary0 < 0 || rotary1 < 0;
 }
 
 static int user_moved_to_next_item(struct menu_t *menu, int down_latches,
-			ROTARY_PARAM int rotary0,
-			ROTARY_PARAM int rotary1)
+			int rotary0, int rotary1)
 {
     int next_button;
     if (display_menu == new_display_menu && menu_has_icons(menu))
         next_button = BADGE_BUTTON_RIGHT;
     else
         next_button = BADGE_BUTTON_DOWN;
-    return BUTTON_PRESSED(next_button, down_latches) || ROTATION_NEG(rotary0) || ROTATION_NEG(rotary1);
+    return BUTTON_PRESSED(next_button, down_latches) || rotary0 < 0 || rotary1 < 0;
 }
 
 static int user_backed_out(struct menu_t *menu, int down_latches)
@@ -845,13 +829,8 @@ void menus() {
     }
 
     int down_latches = button_down_latches();
-#if BADGE_HAS_ROTARY_SWITCHES
     int rotary0 = button_get_rotation(0);
     int rotary1 = button_get_rotation(1);
-#else
-    int rotary0 = 0;
-    int rotary1 = 0;
-#endif
     /* see if physical button has been clicked */
     if (user_made_selection(G_currMenu, down_latches)) {
         // action happened that will result in menu redraw

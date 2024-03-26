@@ -706,7 +706,13 @@ void button_reset_last_input_timestamp(void) {
 }
 
 #if BADGE_HAS_ROTARY_SWITCHES
-int button_get_rotation(unsigned which_rotary) {
+#define ROTARY_PARAM
+#else
+#define ROTARY_PARAM __attribute__((unused))
+#endif
+
+int button_get_rotation(ROTARY_PARAM unsigned which_rotary) {
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (which_rotary > (sizeof(rotation_count)/sizeof(rotation_count[0]))) {
 		return 0;
 	}
@@ -714,10 +720,16 @@ int button_get_rotation(unsigned which_rotary) {
     int count = rotation_count[which_rotary];
     rotation_count[which_rotary] = 0;
     return count;
+#else
+    return 0;
+#endif
 }
 
-int sim_get_rotary_angle(int which_rotary)
+int sim_get_rotary_angle(ROTARY_PARAM int which_rotary)
 {
+#if BADGE_HAS_ROTARY_SWITCHES
 	return rotary_angle[which_rotary];
-}
+#else
+	return 0;
 #endif
+}
