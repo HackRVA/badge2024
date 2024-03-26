@@ -874,7 +874,7 @@ then core/menu.h won't help you (source/apps/maze.c has menu items like this).
 
 The source/core/menu system now has two display methods, one of which uses icons
 in a kind of icon carousel.  The icons are drawn with FbDrawObject() (see
-above).  See [source/core/menu\_icons.h](https://github.com/HackRVA/badge2024/blob/master/source/core/menu_icons.h).  Menu items are not required to have an icon (though it is best if they
+above).  See [source/core/menu\_icons.h](https://github.com/HackRVA/badge2024/blob/master/source/core/menu_icon.h).  Menu items are not required to have an icon (though it is best if they
 do). If the menu icon for a menu item is NULL, then a blank square will be used as
 the default icon.
 
