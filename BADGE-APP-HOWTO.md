@@ -859,12 +859,12 @@ Menus
 
 There is a library for badge app menus. The interface for this library is defined in
 [source/core/dynmenu.h](https://github.com/HackRVA/badge2024/blob/master/source/core/dynmenu.h)
-and the implementation is in [source/core/dynmenu.c](https://github.com/HackRVA/badge2020/blob/master/source/core/dynmenu.c).
+and the implementation is in [source/core/dynmenu.c](https://github.com/HackRVA/badge2024/blob/master/source/core/dynmenu.c).
 The types and functions declared in dynmenu.h and the way they are meant to be used are are
-fairly well documented within [the header file](https://github.com/HackRVA/badge2020/blob/master/include/dynmenu.h).
+fairly well documented within [the header file](https://github.com/HackRVA/badge2024/blob/master/include/dynmenu.h).
 
 There is also *another*, different menu system defined in
-[source/core/menu.h](https://github.com/HackRVA/badge2020/blob/master/source/core/menu.h),
+[source/core/menu.h](https://github.com/HackRVA/badge2024/blob/master/source/core/menu.h),
 which is used for the badge main menu, and it can also be used by badge apps.
 The API for this is a bit more complicated, while at the same time more
 limiting, at least in some ways, as it does not (I think) allow for dynamically
@@ -874,7 +874,7 @@ then core/menu.h won't help you (source/apps/maze.c has menu items like this).
 
 The source/core/menu system now has two display methods, one of which uses icons
 in a kind of icon carousel.  The icons are drawn with FbDrawObject() (see
-above).  See [source/core/menu\_icons.h](https://github.com/HackRVA/badge2020/blob/master/source/core/menu._icons.h).  Menu items are not required to have an icon (though it is best if they
+above).  See [source/core/menu\_icons.h](https://github.com/HackRVA/badge2024/blob/master/source/core/menu_icons.h).  Menu items are not required to have an icon (though it is best if they
 do). If the menu icon for a menu item is NULL, then a blank square will be used as
 the default icon.
 
