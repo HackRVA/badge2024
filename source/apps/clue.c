@@ -349,12 +349,18 @@ static void clue_main_menu(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0) {
 		dynmenu_change_current_selection(&main_menu, -1);
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)
+#endif
+		) {
 		change_clue_state(main_menu.item[main_menu.current_item].next_state);
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+	}
+#if BADGE_HAS_ROTARY_SWITCHES
+	 else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		change_clue_state(CLUE_EXIT);
 	}
+#endif
 }
 
 static void suppress_screensaver(void)
@@ -400,14 +406,20 @@ static void clue_run(void)
 			dynmenu_change_current_selection(&game_menu, -1);
 		clue_run_idle_time = rtc_get_ms_since_boot();
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)
+#endif
+		) {
 		if (!idle)
 			change_clue_state(game_menu.item[game_menu.current_item].next_state);
 		clue_run_idle_time = rtc_get_ms_since_boot();
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+	}
+#if BADGE_HAS_ROTARY_SWITCHES
+	else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
 		change_clue_state(CLUE_INIT_MAIN_MENU);
 	}
+#endif
 }
 
 static void clue_how_to_play(void)
@@ -443,12 +455,16 @@ static void clue_how_to_play(void)
 		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		change_clue_state(CLUE_RUN);
 	}
+#if BADGE_HAS_ROTARY_SWITCHES
 	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
 		change_clue_state(CLUE_EXIT);
+#endif
 }
 
 static void clue_exit(void)
@@ -585,8 +601,11 @@ static void clue_notebook(void)
 		if (col < 0)
 			col = 0;
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)
+#endif
+			) {
 		unsigned char nc = '?';
 		switch (notebook.k[row][col]) {
 		case '?':
@@ -606,8 +625,11 @@ static void clue_notebook(void)
 		}
 		notebook.k[row][col] = nc;
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+		) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
 		change_clue_state(CLUE_RUN);
 	}
@@ -676,9 +698,12 @@ static void clue_evidence(void)
 			n = 0;
 		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+		) {
 		new_evidence = -1;
 		clue_run_idle_time = rtc_get_ms_since_boot();
 		change_clue_state(CLUE_RUN);
@@ -797,8 +822,11 @@ static void clue_interview(int making_accusation)
 			break;
 		}
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)
+#endif
+		) {
 		if (n == 3 && question.person >= 0 && question.weapon >= 6 + 9 && question.location >= 6) {
 			if (!making_accusation) {
 				questions_asked++;
@@ -808,8 +836,11 @@ static void clue_interview(int making_accusation)
 			}
 		}
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		 || BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+		) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
 		change_clue_state(CLUE_RUN);
 	}
@@ -852,8 +883,10 @@ static void clue_received_answer(void)
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
@@ -875,8 +908,11 @@ static void clue_confirm_accuse(void)
 	update_screen();
 
 	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
+#endif
+		) {
 		clue_run_idle_time = rtc_get_ms_since_boot();
 		change_clue_state(CLUE_RUN);
 		return;
@@ -943,9 +979,12 @@ static void clue_end(int lucky)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)
+#endif
+		) {
 		game_in_progress = 0;
 		change_clue_state(CLUE_INIT);
 	}
@@ -1012,9 +1051,12 @@ static void clue_wrong_accusation(void)
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)) {
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
+#if BADGE_HAS_ROTARY_SWITCHES
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)
+#endif
+		) {
 		game_in_progress = 0;
 		change_clue_state(CLUE_INIT);
 	}
@@ -1102,8 +1144,10 @@ static void clue_transmit_question(void)
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
 		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		change_clue_state(CLUE_INTERVIEW);
