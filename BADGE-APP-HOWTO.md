@@ -361,16 +361,18 @@ button_reset_last_input_timestamp() to suppress the screensaver, if you need to.
 NOTE: the 2024 badge does NOT have rotary encoders.
 
 There are two rotary encoders, 0 and 1, which can be queried:
+(For 2024, button\_get\_rotation() exists, but it always returns 0.)
 
 ```
 	#include "button.h"
 
 	// Get rotary encoder rotations! Rotation count is automatically cleared between calls.
 	// Positive indicates CW, negative indicates CCW.
-	int button_get_rotation(int which_rotary);
+	int button_get_rotation(int which_rotary); // always returns 0 in 2024 badge.
 ```
 
 The four enumeration values associated with the rotary encoders
+(These enumeration values do not exist in the 2024 badge.)
 
 ```
 	#include "button.h"
@@ -383,7 +385,7 @@ The four enumeration values associated with the rotary encoders
 
 have to do with how the rotation information is encoded.  You should almost certainly not
 use these enumeration values directly but instead get the rotation information by calling
-button_get_rotation();
+button\_get\_rotation();
 
 ```
 	#include "button.h"
