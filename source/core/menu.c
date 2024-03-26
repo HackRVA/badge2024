@@ -779,15 +779,18 @@ static int user_made_selection(struct menu_t *menu, int down_latches)
 		BUTTON_PRESSED(selection_direction, down_latches);
 }
 
-static int user_moved_to_previous_item(struct menu_t *menu, int down_latches, int rotary0, int rotary1)
-{
 #if BADGE_HAS_ROTARY_SWITCHES
 #define ROTATION_POS(x) ((x) > 0)
 #define ROTATION_NEG(x) ((x) < 0)
+#define ROTARY_PARAM
 #else
 #define ROTATION_POS(x) 0
 #define ROTATION_NEG(x) 0
+#define ROTARY_PARAM __attribute__((unused))
 #endif
+static int user_moved_to_previous_item(struct menu_t *menu, int down_latches,
+		ROTARY_PARAM int rotary0, ROTARY_PARAM int rotary1)
+{
     int previous_button;
     if (display_menu == new_display_menu && menu_has_icons(menu))
         previous_button = BADGE_BUTTON_LEFT;
@@ -796,7 +799,9 @@ static int user_moved_to_previous_item(struct menu_t *menu, int down_latches, in
     return BUTTON_PRESSED(previous_button, down_latches) || ROTATION_NEG(rotary0) || ROTATION_NEG(rotary1);
 }
 
-static int user_moved_to_next_item(struct menu_t *menu, int down_latches, int rotary0, int rotary1)
+static int user_moved_to_next_item(struct menu_t *menu, int down_latches,
+			ROTARY_PARAM int rotary0,
+			ROTARY_PARAM int rotary1)
 {
     int next_button;
     if (display_menu == new_display_menu && menu_has_icons(menu))
