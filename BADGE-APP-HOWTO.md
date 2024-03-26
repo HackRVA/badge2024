@@ -273,6 +273,9 @@ Writing Strings to the Framebuffer
 Buttons, Directional-Pad Inputs and Rotary Encoders
 ---------------------------------------------------
 
+NOTE: The 2024 badge does not have rotary encoders, just the D-pad
+and A and B buttons.
+
 The API for badge-apps to deal with buttons and rotary encoders is defined
 in [source/hal/button.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/button.h)
 
@@ -286,13 +289,14 @@ There is an enumerated type defining a value for each button in source/hal/butto
 		BADGE_BUTTON_DOWN,		/* Down dpad button */
 		BADGE_BUTTON_UP,		/* Up dpad button */
 		BADGE_BUTTON_RIGHT,		/* Right dpad button */
+        #if BADGE_HAS_ROTARY_ENCODERS
 		BADGE_BUTTON_ENCODER_SW,	/* Push button on the Right rotary encoder */
 		BADGE_BUTTON_ENCODER_A,		/* You probably don't want to use this one */
 		BADGE_BUTTON_ENCODER_B,		/* You probably don't want to use this one */
 		BADGE_BUTTON_ENCODER_2_SW,	/* Push button on the Left rotary encoder */
 		BADGE_BUTTON_ENCODER_2_A,	/* You probably don't want to use this one */
 		BADGE_BUTTON_ENCODER_2_B,	/* You probably don't want to use this one */
-		BADGE_BUTTON_SW2,		/* Push button on the Left rotary encoder */
+        #endif
 		BADGE_BUTTON_MAX		/* sentinal value, does not correspond to a button */
 	} BADGE_BUTTON;
 ```
@@ -354,6 +358,7 @@ button_reset_last_input_timestamp() to suppress the screensaver, if you need to.
 	unsigned int button_last_input_timestamp(void);
 	void button_reset_last_input_timestamp(void);
 ```
+NOTE: the 2024 badge does NOT have rotary encoders.
 
 There are two rotary encoders, 0 and 1, which can be queried:
 
@@ -601,6 +606,8 @@ and a user assignable name (using the username badge app).
 Audio
 -----
 
+TODO: In 2024, there is some PWM stuff that needs to be explained/documented.
+
 See: [source/hal/audio.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/audio.h)
 
 There are two main audio functions:
@@ -689,13 +696,7 @@ Look into gulag.c for an example of how to create a kind of "explosiony" sound.
 Setting the Flair LED Color
 ---------------------------
 
-This year's badge has only a RED flair LED. The API to control this LED is defined in
-led_pwm.h.
-
-The API looks as if the LED is an RGB LED, as it has been in years past, but this year
-it's only red, as we ran out of gpio pins.  (On the plus side the reason we ran out of
-gpio pins is that this year we have two rotary encoders and 3 more buttons, a pretty
-good tradeoff.)
+We have an RGB LED that apps can control.
 
 ```
 	typedef enum {
@@ -716,6 +717,17 @@ good tradeoff.)
 	void led_pwm_disable(BADGE_LED led);
 		Turns off the LED or the display backlight.
 ```
+
+Sensors
+-------
+
+TODO: Document the sensors
+
+* Thermistor
+* Hall Effect Sensor
+* Conductivity
+* I2C color sensor
+* PDM microphone
 
 Flash Memory Access
 -------------------
@@ -857,6 +869,12 @@ limiting, at least in some ways, as it does not (I think) allow for dynamically
 changing the menu elements. That is, if you need to have a menu item like "Take X",
 where X is replaced at runtime with some other value not known at compile time,
 then core/menu.h won't help you (source/apps/maze.c has menu items like this).
+
+The source/core/menu system now has two display methods, one of which uses icons
+in a kind of icon carousel.  The icons are drawn with FbDrawObject() (see
+above).  See [source/core/menu\_icons.h](https://github.com/HackRVA/badge2020/blob/master/source/core/menu._icons.h).  Menu items are not required to have an icon (though it is best if they
+do). If the menu icon for a menu item is NULL, then a blank square will be used as
+the default icon.
 
 Pathfinding
 -----------
