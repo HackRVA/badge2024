@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "colors.h"
 #include "menu.h"
@@ -12,6 +13,7 @@
 #include "xorshift.h"
 #include "random.h"
 #include "rtc.h"
+#include "dynmenu.h"
 
 #if TARGET_PICO
 #define printf(...)
@@ -535,6 +537,7 @@ static void init_mountains(void)
 /* Program states.  Initial state is BATTLEZONE_INIT */
 enum battlezone_state_t {
 	BATTLEZONE_INIT,
+	BATTLEZONE_SETUP,
 	BATTLEZONE_RUN,
 	BATTLEZONE_EXIT,
 };
@@ -621,8 +624,44 @@ static void battlezone_init(void)
 
 	FbInit();
 	FbClear();
-	battlezone_state = BATTLEZONE_RUN;
+	battlezone_state = BATTLEZONE_SETUP;
 	screen_changed = 1;
+}
+
+static void battlezone_setup(void)
+{
+	static struct dynmenu setup_menu;
+	static struct dynmenu_item setup_item[5];
+	static int menu_setup = 0;
+
+	if (!menu_setup) {
+		dynmenu_init(&setup_menu, setup_item, 5);
+		dynmenu_clear(&setup_menu);
+		strcpy(setup_menu.title, "BATTLEZONE");
+		dynmenu_add_item(&setup_menu, "PLAY GAME", BATTLEZONE_RUN, 0);
+		dynmenu_add_item(&setup_menu, "QUIT", BATTLEZONE_EXIT, 1);
+		menu_setup = 1;
+	}
+
+	dynmenu_draw(&setup_menu);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+		dynmenu_change_current_selection(&setup_menu, 1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+		dynmenu_change_current_selection(&setup_menu, -1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		switch (setup_menu.current_item) {
+		case 0: /* play game */
+			battlezone_state = BATTLEZONE_RUN;
+			break;
+		case 1: /* quit */
+		default:
+			battlezone_state = BATTLEZONE_EXIT;
+			break;
+		}
+	}
 }
 
 static void bump_player(void)
@@ -821,6 +860,8 @@ static void check_buttons(void)
 			bump_player();
 		}
 	}
+	if (button_poll(BADGE_BUTTON_B)) /* allow exiting game with B button */
+		battlezone_state = BATTLEZONE_SETUP;
 }
 
 static void project_vertex(struct camera *c, struct bz_vertex *v, struct bz_object *o)
@@ -1592,6 +1633,9 @@ void battlezone_cb(__attribute__((unused)) struct menu_t *m)
 	switch (battlezone_state) {
 	case BATTLEZONE_INIT:
 		battlezone_init();
+		break;
+	case BATTLEZONE_SETUP:
+		battlezone_setup();
 		break;
 	case BATTLEZONE_RUN:
 		battlezone_run();
