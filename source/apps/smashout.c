@@ -14,6 +14,7 @@
 #include "framebuffer.h"
 #include "rtc.h"
 #include "xorshift.h"
+#include "dynmenu.h"
 
 /* TODO figure out where these should really come from */
 #define PADDLE_HEIGHT 12
@@ -68,6 +69,7 @@ static unsigned int xorshift_state;
 enum smashout_program_state_t {
 	SMASHOUT_GAME_INIT,
 	SMASHOUT_GAME_PLAY,
+	SMASHOUT_GAME_MAYBE_EXIT,
 	SMASHOUT_GAME_EXIT,
 };
 
@@ -114,13 +116,15 @@ static void smashout_check_buttons(void)
 #endif
 	int down_latches = button_down_latches();
 
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)
 #if BADGE_HAS_ROTARY_SWITCHES
-	if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches))
-		smashout_program_state = SMASHOUT_GAME_EXIT;
-	else
+		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)
 #endif
-	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
+	)
+		smashout_program_state = SMASHOUT_GAME_MAYBE_EXIT;
+	else if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches))
 		paddle.vx = -PADDLE_SPEED;
 	else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches))
 		paddle.vx = PADDLE_SPEED;
@@ -410,6 +414,36 @@ static void smashout_game_play(void)
 	smashout_draw_screen();
 }
 
+static void smashout_game_maybe_exit(void)
+{
+	static int menu_setup = 0;
+	static struct dynmenu exit_menu;
+	static struct dynmenu_item exit_item[2];
+
+	if (!menu_setup) {
+		dynmenu_init(&exit_menu, exit_item, 2);
+		dynmenu_clear(&exit_menu);
+		strcpy(exit_menu.title, "SMASHOUT");
+		dynmenu_add_item(&exit_menu, "PLAY GAME", SMASHOUT_GAME_PLAY, 0);
+		dynmenu_add_item(&exit_menu, "QUIT", SMASHOUT_GAME_EXIT, 1);
+		menu_setup = 1;
+	}
+
+	dynmenu_draw(&exit_menu);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+		dynmenu_change_current_selection(&exit_menu, 1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+		dynmenu_change_current_selection(&exit_menu, -1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		smashout_program_state = exit_menu.item[exit_menu.current_item].next_state;
+	}
+}
+
 static void smashout_game_exit(void)
 {
 	smashout_program_state = SMASHOUT_GAME_INIT;
@@ -424,6 +458,9 @@ void smashout_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case SMASHOUT_GAME_PLAY:
 		smashout_game_play();
+		break;
+	case SMASHOUT_GAME_MAYBE_EXIT:
+		smashout_game_maybe_exit();
 		break;
 	case SMASHOUT_GAME_EXIT:
 		smashout_game_exit();
