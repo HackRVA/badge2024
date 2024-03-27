@@ -13,6 +13,7 @@ Author: Stephen M. Cameron <stephenmcameron@gmail.com>
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
+#include "dynmenu.h"
 
 #include "xorshift.h"
 
@@ -30,6 +31,7 @@ int astronauts_rescued = 0;
 /* Program states.  Initial state is LUNARLANDER_INIT */
 enum lunarlander_state_t {
 	LUNARLANDER_INIT,
+	LUNARLANDER_SETUP,
 	LUNARLANDER_RUN,
 	LUNARLANDER_EXIT
 };
@@ -156,6 +158,18 @@ static struct lander_data {
 #define VERTICAL_FUEL (768 * 3)
 	int alive;
 } lander;
+
+static int difficulty_level = 0;
+static struct difficulty_setting {
+	int max_landing_speed;
+	int horiz_fuel_burn_rate;
+	int vert_fuel_burn_rate;
+	int ground_sensitivity;
+} difficulty[] = {
+	{ 256 * 4, HORIZONTAL_FUEL / 4, VERTICAL_FUEL / 4, 4, }, /* easy */
+	{ 256 * 2, HORIZONTAL_FUEL / 2, VERTICAL_FUEL / 2, 2, }, /* medium */
+	{ 256 * 1, HORIZONTAL_FUEL / 1, VERTICAL_FUEL / 1, 0, }, /* hard */
+};
 
 #define NUM_LANDING_ZONES 5
 struct fuel_tank {
@@ -378,7 +392,7 @@ static void lunarlander_init(void)
 	add_landing_zones(terrain_y, 0, NUM_TERRAIN_POINTS - 1, NUM_LANDING_ZONES);
 	place_astronauts();
 	place_lunar_base();
-	lunarlander_state = LUNARLANDER_RUN;
+	lunarlander_state = LUNARLANDER_SETUP;
 	lander.x = 100 << 8;
 	lander.y = (terrain_y[9] - 60) * 256;
 	lander.vx = 0;
@@ -387,6 +401,53 @@ static void lunarlander_init(void)
 	lander.alive = 1;
 	mission_success = 0;
 	set_message("MOVE RIGHT", 30);
+}
+
+static void lunarlander_setup(void)
+{
+	static struct dynmenu setup_menu;
+	static struct dynmenu_item setup_item[5];
+	static int menu_ready = 0;
+	char *level[] = { "EASY", "MEDIUM", "HARD" };
+
+	if (!menu_ready) {
+		dynmenu_init(&setup_menu, setup_item, 5);
+		dynmenu_clear(&setup_menu);
+		strcpy(setup_menu.title, "LUNAR RESCUE");
+		dynmenu_add_item(&setup_menu, "EASY <==", LUNARLANDER_SETUP, 0);
+		dynmenu_add_item(&setup_menu, "MEDIUM", LUNARLANDER_SETUP, 1);
+		dynmenu_add_item(&setup_menu, "HARD", LUNARLANDER_SETUP, 2);
+		dynmenu_add_item(&setup_menu, "PLAY NOW", LUNARLANDER_SETUP, 3);
+		dynmenu_add_item(&setup_menu, "QUIT", LUNARLANDER_SETUP, 4);
+		menu_ready = 1;
+	}
+	dynmenu_draw(&setup_menu);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+		dynmenu_change_current_selection(&setup_menu, 1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+		dynmenu_change_current_selection(&setup_menu, -1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		int c = setup_menu.current_item;
+		switch(c) {
+			case 0:
+			case 1:
+			case 2:
+				difficulty_level = c;
+				for (int i = 0; i < 3; i++)
+					strcpy(setup_menu.item[i].text, level[i]);
+				strcat(setup_menu.item[c].text, " <==");
+				break;
+			case 3:
+				lunarlander_state = LUNARLANDER_RUN;
+				break;
+			case 4:
+				lunarlander_state = LUNARLANDER_EXIT;
+				break;
+		}
+	}
 }
 
 static void reduce_fuel(struct lander_data *lander, int amount)
@@ -412,21 +473,24 @@ static void check_buttons(void)
 		if (lander.fuel > 0) {
 			lander.vx = lander.vx - (1 << 7);
 			add_sparks(lander.x + (5 << 8), lander.y, lander.vx + (5 << 8), lander.vy, 10);
-			reduce_fuel(&lander, HORIZONTAL_FUEL);
+			reduce_fuel(&lander, difficulty[difficulty_level].horiz_fuel_burn_rate);
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
 		if (lander.fuel > 0) {
 			lander.vx = lander.vx + (1 << 7);
 			add_sparks(lander.x - (5 << 8), lander.y, lander.vx - (5 << 8), lander.vy, 10);
-			reduce_fuel(&lander, HORIZONTAL_FUEL);
+			reduce_fuel(&lander, difficulty[difficulty_level].horiz_fuel_burn_rate);
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 		if (lander.fuel > 0) {
 			lander.vy = lander.vy - (1 << 7);
 			add_sparks(lander.x, lander.y + (5 << 8), lander.vx, lander.vy + (5 << 8), 10);
-			reduce_fuel(&lander, VERTICAL_FUEL);
+			reduce_fuel(&lander, difficulty[difficulty_level].vert_fuel_burn_rate);
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+			lunarlander_state = LUNARLANDER_SETUP;
 	}
 }
 
@@ -477,14 +541,17 @@ static void draw_terrain_segment(struct lander_data *lander, int i, int color)
 		return;
 	if (x1 <= (lander->x >> 8) && x2 >= (lander->x >> 8) && color != BLACK) {
 		if ((lander->y >> 8) >= y2 - 8) {
-			if (lander->alive > 0 && y2 != y1) {
-				/* Explode lander if not on level ground */
+			if (lander->alive > 0 &&
+				abs(y2 - y1) > difficulty[difficulty_level].ground_sensitivity) {
+				/* Explode lander if not on level enough ground */
 				FbColor(color);
 				explosion(lander);
 				lander->alive = -100;
 			} else {
+				int max_speed = difficulty[difficulty_level].max_landing_speed;
 				/* Explode lander if it hits too hard. */
-				if ((lander->vy > 256 || lander->vx > 256 || lander->vx < -256) && lander->alive > 0) {
+				if ((lander->vy > max_speed || lander->vx > max_speed ||
+					lander->vx < -max_speed) && lander->alive > 0) {
 					explosion(lander);
 					lander->alive = -100;
 				} else {
@@ -701,6 +768,9 @@ int lunarlander_cb(__attribute__((unused)) struct menu_t *m)
 	switch (lunarlander_state) {
 	case LUNARLANDER_INIT:
 		lunarlander_init();
+		break;
+	case LUNARLANDER_SETUP:
+		lunarlander_setup();
 		break;
 	case LUNARLANDER_RUN:
 		lunarlander_run();
