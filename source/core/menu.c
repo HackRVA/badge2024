@@ -8,6 +8,7 @@
 #include <string.h>
 #ifdef TARGET_SIMULATOR
 #include <unistd.h>
+#include <stdlib.h> /* for exit() */
 #endif
 #include "menu.h"
 #include "settings.h"
@@ -21,6 +22,7 @@
 #include "led_pwm.h"
 #include "music.h"
 #include "menu_icon.h"
+#include "stacktrace.h"
 
 // Apps
 #include "about_badge.h"
@@ -212,30 +214,105 @@ static void maybe_scroll_to(struct menu_t *selected, struct menu_t *current_menu
 		menu_scroll_start_item = position - MENU_MAX_ITEMS_DISPLAYABLE + 1;
 }
 
-/* Find the next menu item on menu from current_item */
-struct menu_t *find_next_menu_item(struct menu_t *menu, struct menu_t *current_item)
+#ifdef TARGET_SIMULATOR
+/* This function detects this situation in which we get into an infinite loop
+   when searching for the "next" or "previous" item in a menu, as might happen
+   if all the menu items were "skip" items.  This loop detection code only exists
+   in the simulator.
+ */
+void detect_infinite_loop_in_menus(struct menu_t *menu, struct menu_t *current_item, int reset)
 {
-	if (current_item->attrib & LAST_ITEM)
-		return menu;
-        current_item++;
-        // Last item should never be a skipped item!!
-        while ( ((current_item->attrib & SKIP_ITEM) || (current_item->attrib & HIDDEN_ITEM))
-                 && (!(current_item->attrib & LAST_ITEM)) )
-             current_item++;
+	static int counter = 0;
+
+	if (menu->attrib & LAST_ITEM) {
+		stacktrace("Infinite loop detected in menu (first item == last item).\n");
+		exit(1);
+	}
+	if (reset == 1) {
+		counter = 0;
+		return;
+	}
+
+	if (current_item == menu)
+		counter++;
+	if (counter > 1) {
+		stacktrace("Detected infinite loop in menu.\n");
+		exit(1);
+	}
+}
+#else
+#define detect_infinite_loop_in_menus(menu, current, reset)
+#endif
+
+/* Find the next menu item on menu from current_item, skipping items with excluded
+   attributes (SKIP_ITEM | HIDDEN_ITEM, typically) optionally skipping "BACK" items,
+   and wrapping around to the beginning of the menu as necessary. */
+struct menu_t *find_next_menu_item(struct menu_t *menu, struct menu_t *current_item,
+		int exclude_attribs, int skip_back_item)
+{
+	detect_infinite_loop_in_menus(menu, current_item, 1);
+
+	/* If at the last item, we need to wrap around to first item */
+	if (current_item->attrib & LAST_ITEM) {
+		current_item = menu; /* wrap around to first menu item, */
+		if ((current_item->type != BACK || !skip_back_item) &&
+			(!(current_item->attrib & exclude_attribs)))
+			return current_item;
+	}
+        while (1) {
+		detect_infinite_loop_in_menus(menu, current_item, 0);
+
+		/* Advance to next item in menu, wrapping around if need be */
+		current_item++;
+		if (current_item->attrib & LAST_ITEM) { /* maybe wrap around to beginning */
+			if ((current_item->type == BACK && skip_back_item) ||
+				current_item->attrib & exclude_attribs) {
+				current_item = menu;
+			} else {
+				return current_item;
+			}
+		}
+		detect_infinite_loop_in_menus(menu, current_item, 0);
+		if (current_item->attrib & exclude_attribs)
+			continue;
+		if (current_item->type == BACK && skip_back_item)
+			continue;
+		break;
+	}
 	return current_item;
 }
 
-struct menu_t *find_prev_menu_item(struct menu_t *menu, struct menu_t *current_item)
+/* Find the previous menu item on menu from current_item, skipping items with
+   excluded attributes (HIDDEN_ITEM | SKIP_ITEM, typically) optionally skipping
+   "BACK" items, and wrapping around to the end of the menu as necessary. */
+struct menu_t *find_prev_menu_item(struct menu_t *menu, struct menu_t *current_item,
+					int exclude_attribs, int skip_back_item)
 {
+	detect_infinite_loop_in_menus(menu, current_item, 1);
 	if (current_item == menu) { /* current is first item, need to return last item */
 		while (!(current_item->attrib & LAST_ITEM))
 			current_item++;
-		return current_item;
+		if ((!skip_back_item || current_item->type != BACK) && 
+			!(current_item->attrib & exclude_attribs))
+			return current_item;
+		/* else, keep looking backwards ... */
 	}
-	current_item--;
-        while (((current_item->attrib & SKIP_ITEM) || (current_item->attrib & HIDDEN_ITEM))
-                 && (current_item != menu))
-             current_item--;
+	while (1) {
+		/* Advance to previous item... */
+		if (current_item == menu) { /* wrap around to last item */
+			while (!(current_item->attrib & LAST_ITEM))
+				current_item++;
+		} else { 
+			current_item--;
+		}
+		detect_infinite_loop_in_menus(menu, current_item, 0);
+
+		if (current_item->type == BACK && skip_back_item)
+			continue;
+		if (current_item->attrib & exclude_attribs)
+			continue;
+		break;
+	}
 	return current_item;
 }
 
@@ -424,16 +501,6 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     static int animation_frame = 255;
     static struct menu_icon *previous_icon = NULL;
 
-#ifdef TARGET_SIMULATOR
-    switch (came_from) {
-	case MENU_PREVIOUS: printf("menu previous\n"); break;
-	case MENU_NEXT: printf("menu next\n"); break;
-	case MENU_PARENT: printf("menu parent\n"); break;
-	case MENU_CHILD: printf("menu child\n"); break;
-	case MENU_UNKNOWN: printf("menu unknown\n"); break;
-    }
-#endif
-
     /* If this menu has no icons defined, just use the old legacy style to display
      * This makes, e.g. the schedule continue to work.
      */
@@ -621,7 +688,8 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 
 		if (came_from == MENU_PREVIOUS) {
 			/* draw the "next" menu item incoming */
-			struct menu_t *next_item = find_next_menu_item(root_menu, selected);
+			struct menu_t *next_item =
+				find_next_menu_item(root_menu, selected, SKIP_ITEM | HIDDEN_ITEM, 1);
 			if (next_item && next_item->icon) {
 				int drawing_x = 64 + 56;
 				int drawing_y = 64;
@@ -634,7 +702,8 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 
 		if (came_from == MENU_NEXT) {
 			/* draw the "next" menu item incoming */
-			struct menu_t *prev_item = find_prev_menu_item(root_menu, selected);
+			struct menu_t *prev_item =
+				find_prev_menu_item(root_menu, selected, SKIP_ITEM | HIDDEN_ITEM, 1);
 			if (prev_item && prev_item->icon) {
 				int drawing_x = 64 - 56;
 				int drawing_y = 64;
