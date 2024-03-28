@@ -951,54 +951,18 @@ void menus() {
     } else if (user_moved_to_previous_item(G_currMenu, down_latches, rotary0, rotary1)) {
         /* handle slider/soft button clicks */
         menu_beep(TEXT_FREQ); /* f */
-
-        /* make sure not on first menu item */
-        if (G_selectedMenu > G_currMenu) {
-            G_selectedMenu--;
-
-            while ( ((G_selectedMenu->attrib & SKIP_ITEM) || (G_selectedMenu->attrib & HIDDEN_ITEM))
-                    && G_selectedMenu > G_currMenu) {
-                G_selectedMenu--;
-            }
-            if (G_selectedMenu->attrib & SKIP_ITEM) { /* It seems the first item is a SKIP_ITEM */
-		    while (!(G_selectedMenu->attrib & LAST_ITEM)) { /* Move to the last item */
-			G_selectedMenu++;
-		    }
-            }
-	    maybe_scroll_to(G_selectedMenu, G_currMenu); /* Scroll up if necessary */
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_NEXT);
-        } else {
-            /* Move to the last item if press UP from the first item */
-            while (!(G_selectedMenu->attrib & LAST_ITEM)) {
-                G_selectedMenu++;
-            }
-	    maybe_scroll_to(G_selectedMenu, G_currMenu);
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_NEXT);
-        }
+	int skip_back_menu_items = display_menu == new_display_menu && menu_has_icons(G_currMenu);
+	G_selectedMenu = find_prev_menu_item(G_currMenu, G_selectedMenu,
+				SKIP_ITEM | HIDDEN_ITEM, skip_back_menu_items);
+	maybe_scroll_to(G_selectedMenu, G_currMenu); /* Scroll up if necessary */
+	G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_NEXT);
     } else if (user_moved_to_next_item(G_currMenu, down_latches, rotary0, rotary1)) {
         menu_beep(MORE_FREQ); /* g */
-
-        /* make sure not on last menu item */
-        if (!(G_selectedMenu->attrib & LAST_ITEM)) {
-            G_selectedMenu++;
-
-
-            //Last item should never be a skipped item!!
-            while ( ((G_selectedMenu->attrib & SKIP_ITEM) || (G_selectedMenu->attrib & HIDDEN_ITEM))
-                    && (!(G_selectedMenu->attrib & LAST_ITEM)) ) {
-                G_selectedMenu++;
-            }
-
-	    maybe_scroll_to(G_selectedMenu, G_currMenu);
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PREVIOUS);
-        } else {
-            /* Move to the first item if press DOWN from the last item */
-            while (G_selectedMenu > G_currMenu) {
-                G_selectedMenu--;
-            }
-	    maybe_scroll_to(G_selectedMenu, G_currMenu);
-            G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PREVIOUS);
-        }
+	int skip_back_menu_items = display_menu == new_display_menu && menu_has_icons(G_currMenu);
+	G_selectedMenu = find_next_menu_item(G_currMenu, G_selectedMenu,
+				SKIP_ITEM | HIDDEN_ITEM, skip_back_menu_items);
+	maybe_scroll_to(G_selectedMenu, G_currMenu);
+	G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PREVIOUS);
     } else if (user_backed_out(G_currMenu, down_latches)) {
         menu_beep(BACK_FREQ);
         pop_menu();
