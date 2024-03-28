@@ -314,6 +314,37 @@ struct menu_t *find_prev_menu_item(struct menu_t *menu, struct menu_t *current_i
 	return current_item;
 }
 
+static void sanity_check_menu(struct menu_t *menu)
+{
+#ifdef TARGET_SIMULATOR
+	int i;
+	int last_found = 0;
+	int non_skipped_found = 0;
+	struct menu_t *orig = menu;
+
+	for (i = 0; i < 100; i++) {
+		if (menu->attrib & LAST_ITEM) {
+			last_found = 1;
+			break;
+		}
+		if (!(menu->attrib & SKIP_ITEM))
+			non_skipped_found = 1;
+		menu++;
+	}
+	if (!last_found || !non_skipped_found) {
+		if (!last_found)
+			fprintf(stderr, "menu '%s' has no LAST_ITEM\n", orig->name);
+		if (!non_skipped_found)
+			fprintf(stderr, "menu '%s' has only SKIP_ITEM items\n", orig->name);
+		raise(SIGTRAP);
+	}
+	if (i > 100) { /* unlikely we'll get here without crashing first */
+		fprintf(stderr, "menu '%s' has suspiciously large number of entries\n", orig->name);
+		raise(SIGTRAP);
+	}
+#endif
+}
+
 /* The reason that legacy_display_menu returns a menu_t * instead of void
    as you might expect is because sometimes it skips over unselectable
    items.
@@ -331,6 +362,8 @@ static struct menu_t *legacy_display_menu(struct menu_t *menu,
     int menu_item_number = 0;
 
     root_menu = menu;
+
+    sanity_check_menu(menu);
 
     switch (style) {
         case MAIN_MENU_STYLE:
@@ -488,6 +521,8 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     static struct menu_t *last_menu_selected = NULL;
     static int animation_frame = 255;
     static struct menu_icon *previous_icon = NULL;
+
+    sanity_check_menu(menu);
 
     /* If this menu has no icons defined, just use the old legacy style to display
      * This makes, e.g. the schedule continue to work.
