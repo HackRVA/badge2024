@@ -674,7 +674,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 			int yoffset = yd * 56 * animation_frame / 255;
 			int drawing_x = startx + xoffset;
 			int drawing_y = starty + yoffset;
-			int drawing_scale = (1024 * animation_frame) / 255 / 2;
+			int drawing_scale = (1024 * (animation_frame + 255) / 2) / 255 / 2;
 			FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
 
 			if (came_from != MENU_UNKNOWN) {
