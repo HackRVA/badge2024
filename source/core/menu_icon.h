@@ -11,17 +11,6 @@ struct menu_icon {
 	struct point *points;
 };
 
-struct point back_icon_points[] = {
-	{ -60, -1 },
-	{ 0, -55 },
-	{ 0, -25 },
-	{ 45, -25 },
-	{ 45, 24 },
-	{ 0, 23 },
-	{ 0, 53 },
-	{ -59, 0 },
-};
-
 struct point games_icon_points[] = {
 	{ -60, 28 },
 	{ -45, -38 },
@@ -856,13 +845,6 @@ struct point clue_icon_points[] = {
 	{ -44, 23 },
 	{ -43, 28 },
 	{ -51, 40 },
-};
-
-
-struct menu_icon back_icon = {
-	.npoints = ARRAYSIZE(back_icon_points),
-	.color = GREEN,
-	.points = &back_icon_points[0],
 };
 
 struct menu_icon games_icon = {

@@ -74,20 +74,20 @@ static const struct menu_t legacy_games_m[] = {
    {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, NULL, },
    {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, &game_of_life_icon, },
    {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, &slotmachine_icon, },
-   {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, &back_icon, },
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 
 static const struct menu_t games_m[] = {
 	{"Sample App", VERT_ITEM, FUNCTION, { .func = myprogram_cb }, NULL },
 	{"Clue", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = clue_cb }, &clue_icon },
 	{"Legacy Games",       VERT_ITEM, MENU, { .menu = legacy_games_m }, &legacy_games_icon, },
-	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, &back_icon, },
+	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 
 static const struct menu_t menu_style_menu_m[] = {
 	{"New Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_new_menu_style }, NULL, },
 	{"Legacy Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_legacy_menu_style }, NULL, },
-	{"Back", VERT_ITEM|LAST_ITEM, BACK, { NULL }, &back_icon, },
+	{"Back", VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 
 static const struct menu_t settings_m[] = {
@@ -101,7 +101,7 @@ static const struct menu_t settings_m[] = {
    {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, NULL, },
    {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, NULL, },
    {"Clear NVRAM", VERT_ITEM, FUNCTION, { .func = clear_nvram_cb }, &clear_nvram_icon, },
-   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}, &back_icon, },
+   {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}, NULL, },
 };
 
 static const struct menu_t main_m[] = {
