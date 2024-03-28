@@ -1068,6 +1068,59 @@ struct point screensaver_icon_points[] = {
 	{ 41, 11 },
 };
 
+struct point hacker_sim_icon_points[] = {
+	{ -32, 45 },
+	{ 36, 44 },
+	{ 43, 0 },
+	{ -43, -1 },
+	{ -32, 43 },
+	{ -128, -128 },
+	{ -24, -4 },
+	{ -28, -13 },
+	{ -32, -24 },
+	{ -28, -34 },
+	{ -22, -41 },
+	{ -8, -41 },
+	{ 9, -42 },
+	{ 24, -39 },
+	{ 29, -29 },
+	{ 28, -17 },
+	{ 22, -7 },
+	{ 20, 0 },
+	{ -128, -128 },
+	{ -22, -39 },
+	{ -21, -24 },
+	{ -16, -7 },
+	{ -5, -1 },
+	{ 7, -4 },
+	{ 15, -13 },
+	{ 16, -27 },
+	{ 16, -37 },
+	{ -128, -128 },
+	{ 3, -21 },
+	{ 2, -32 },
+	{ -128, -128 },
+	{ -40, 36 },
+	{ -52, 35 },
+	{ -57, 20 },
+	{ -57, 0 },
+	{ -51, -20 },
+	{ -43, -28 },
+	{ -35, -28 },
+	{ -24, -48 },
+	{ -1, -62 },
+	{ 25, -44 },
+	{ 30, -31 },
+	{ 32, -27 },
+	{ 41, -23 },
+	{ 47, -17 },
+	{ 51, -6 },
+	{ 50, 12 },
+	{ 50, 29 },
+	{ 44, 38 },
+	{ 37, 38 },
+};
+
 struct menu_icon games_icon = {
 	.npoints = ARRAYSIZE(games_icon_points),
 	.color = GREEN,
@@ -1204,6 +1257,12 @@ struct menu_icon screensaver_icon = {
 	.npoints = ARRAYSIZE(screensaver_icon_points),
 	.color = GREEN,
 	.points = &screensaver_icon_points[0],
+};
+
+struct menu_icon hacker_sim_icon = {
+	.npoints = ARRAYSIZE(hacker_sim_icon_points),
+	.color = GREEN,
+	.points = &hacker_sim_icon_points[0],
 };
 
 #endif

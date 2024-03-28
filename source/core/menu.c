@@ -71,7 +71,7 @@ static const struct menu_t legacy_games_m[] = {
    {"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, &lunar_rescue_icon, },
    {"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, &badge_monsters_icon, },
    {"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, &breakout_icon, },
-   {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, NULL, },
+   {"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, &hacker_sim_icon, },
    {"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, &game_of_life_icon, },
    {"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, &slotmachine_icon, },
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
