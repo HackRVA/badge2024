@@ -91,16 +91,16 @@ static const struct menu_t menu_style_menu_m[] = {
 };
 
 static const struct menu_t settings_m[] = {
-   {"Menu Style", VERT_ITEM, MENU, { .menu = menu_style_menu_m }, NULL, },
    {"Backlight", VERT_ITEM, MENU, { .menu = backlight_m }, &backlight_icon, },
    {"LED", VERT_ITEM, MENU, { .menu = LEDlight_m }, &led_icon, },
    {"Audio", VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = buzzer_m }, &audio_icon, },
-   {"Invert Display", VERT_ITEM, MENU, { .menu = rotate_m, }, NULL, },
-   {"User Name", VERT_ITEM, FUNCTION, { .func = username_cb }, NULL, },
-   {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, NULL, },
-   {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, NULL, },
-   {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, NULL, },
+   {"Invert Display", VERT_ITEM, MENU, { .menu = rotate_m, }, &invert_display_icon, },
+   {"User Name", VERT_ITEM, FUNCTION, { .func = username_cb }, &username_icon, },
+   {"Screensaver", VERT_ITEM, MENU, { .menu = screen_lock_m }, &screensaver_icon, },
+   {"ID", VERT_ITEM, MENU, { .menu = myBadgeid_m }, &id_icon, },
+   {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, &qc_icon, },
    {"Clear NVRAM", VERT_ITEM, FUNCTION, { .func = clear_nvram_cb }, &clear_nvram_icon, },
+   {"Menu Style", VERT_ITEM, MENU, { .menu = menu_style_menu_m }, &menu_style_icon, },
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}, NULL, },
 };
 
