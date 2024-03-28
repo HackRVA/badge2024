@@ -14,7 +14,6 @@ enum attrib_bits {
     HORIZ_BIT,
     SKIP_BIT, /* skip when scrolling */
     DEFAULT_BIT,
-    HIDDEN_BIT,
     LAST_BIT,
 };
 
@@ -22,7 +21,6 @@ enum attrib_bits {
 #define HORIZ_ITEM   (1 << HORIZ_BIT)
 #define SKIP_ITEM    (1 << SKIP_BIT)
 #define DEFAULT_ITEM (1 << DEFAULT_BIT)
-#define HIDDEN_ITEM  (1 << HIDDEN_BIT)
 #define LAST_ITEM (1 << LAST_BIT)
 
 enum type {

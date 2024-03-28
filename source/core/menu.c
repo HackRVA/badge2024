@@ -204,8 +204,6 @@ static void maybe_scroll_to(struct menu_t *selected, struct menu_t *current_menu
 	if (selected == NULL) {
 		position = 0;
 	} else {
-		/* I think HIDDEN_ITEMs breaks this, but I don't think we use any HIDDEN_ITEMs
-		 * and we should probably just delete the concept of HIDDEN_ITEMs */
 		position = selected - current_menu;
 	}
 	if (position < menu_scroll_start_item)
@@ -245,7 +243,7 @@ void detect_infinite_loop_in_menus(struct menu_t *menu, struct menu_t *current_i
 #endif
 
 /* Find the next menu item on menu from current_item, skipping items with excluded
-   attributes (SKIP_ITEM | HIDDEN_ITEM, typically) optionally skipping "BACK" items,
+   attributes (SKIP_ITEM, typically) optionally skipping "BACK" items,
    and wrapping around to the beginning of the menu as necessary. */
 struct menu_t *find_next_menu_item(struct menu_t *menu, struct menu_t *current_item,
 		int exclude_attribs, int skip_back_item)
@@ -283,7 +281,7 @@ struct menu_t *find_next_menu_item(struct menu_t *menu, struct menu_t *current_i
 }
 
 /* Find the previous menu item on menu from current_item, skipping items with
-   excluded attributes (HIDDEN_ITEM | SKIP_ITEM, typically) optionally skipping
+   excluded attributes (SKIP_ITEM, typically) optionally skipping
    "BACK" items, and wrapping around to the end of the menu as necessary. */
 struct menu_t *find_prev_menu_item(struct menu_t *menu, struct menu_t *current_item,
 					int exclude_attribs, int skip_back_item)
@@ -366,16 +364,6 @@ static struct menu_t *legacy_display_menu(struct menu_t *menu,
 
     while (1) {
         unsigned char rect_w=0;
-
-        if (menu->attrib & HIDDEN_ITEM) {
-            // don't jump out of the menu array if this is the last item!
-            if(menu->attrib & LAST_ITEM) {
-                break;
-            } else {
-                menu++;
-            }
-            continue;
-        }
 
 	/* Skip menu items until we get to the part of the menu we've scrolled to */
 	if (menu_item_number < menu_scroll_start_item) {
@@ -548,16 +536,6 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     while (1) {
         unsigned char rect_w=0;
 
-        if (menu->attrib & HIDDEN_ITEM) {
-            // don't jump out of the menu array if this is the last item!
-            if(menu->attrib & LAST_ITEM) {
-                break;
-            } else {
-                menu++;
-            }
-            continue;
-        }
-
 	/* Skip menu items until we get to the part of the menu we've scrolled to */
 	if (menu_item_number < menu_scroll_start_item) {
 		menu++;
@@ -689,7 +667,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 		if (came_from == MENU_PREVIOUS) {
 			/* draw the "next" menu item incoming */
 			struct menu_t *next_item =
-				find_next_menu_item(root_menu, selected, SKIP_ITEM | HIDDEN_ITEM, 1);
+				find_next_menu_item(root_menu, selected, SKIP_ITEM, 1);
 			if (next_item && next_item->icon) {
 				int drawing_x = 64 + 56;
 				int drawing_y = 64;
@@ -703,7 +681,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 		if (came_from == MENU_NEXT) {
 			/* draw the "next" menu item incoming */
 			struct menu_t *prev_item =
-				find_prev_menu_item(root_menu, selected, SKIP_ITEM | HIDDEN_ITEM, 1);
+				find_prev_menu_item(root_menu, selected, SKIP_ITEM, 1);
 			if (prev_item && prev_item->icon) {
 				int drawing_x = 64 - 56;
 				int drawing_y = 64;
@@ -953,14 +931,14 @@ void menus() {
         menu_beep(TEXT_FREQ); /* f */
 	int skip_back_menu_items = display_menu == new_display_menu && menu_has_icons(G_currMenu);
 	G_selectedMenu = find_prev_menu_item(G_currMenu, G_selectedMenu,
-				SKIP_ITEM | HIDDEN_ITEM, skip_back_menu_items);
+				SKIP_ITEM, skip_back_menu_items);
 	maybe_scroll_to(G_selectedMenu, G_currMenu); /* Scroll up if necessary */
 	G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_NEXT);
     } else if (user_moved_to_next_item(G_currMenu, down_latches, rotary0, rotary1)) {
         menu_beep(MORE_FREQ); /* g */
 	int skip_back_menu_items = display_menu == new_display_menu && menu_has_icons(G_currMenu);
 	G_selectedMenu = find_next_menu_item(G_currMenu, G_selectedMenu,
-				SKIP_ITEM | HIDDEN_ITEM, skip_back_menu_items);
+				SKIP_ITEM, skip_back_menu_items);
 	maybe_scroll_to(G_selectedMenu, G_currMenu);
 	G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PREVIOUS);
     } else if (user_backed_out(G_currMenu, down_latches)) {
