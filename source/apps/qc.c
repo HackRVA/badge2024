@@ -251,15 +251,11 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
         case RUN:
             FbMove(16, 16);
 
-#if BADGE_HAS_ROTARY_SWITCHES
-            if (button_poll(BADGE_BUTTON_ENCODER_SW)) {
+            if (button_poll(BADGE_BUTTON_UP) && button_poll(BADGE_BUTTON_B)) {
                 button_hold_count ++;
             } else {
                 button_hold_count = 0;
             }
-#else
-#warning "Badge QC app probably needs maintenance around use of encoder switches"
-#endif
 
             if(button_hold_count > 20){
                 ir_remove_callback(ir_callback, IR_APP0);
@@ -283,10 +279,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
 
             if (button_poll(BADGE_BUTTON_B)
                 && button_poll(BADGE_BUTTON_DOWN)
-#if BADGE_HAS_ROTARY_SWITCHES
-                && button_poll(BADGE_BUTTON_ENCODER_SW)
-                && button_poll(BADGE_BUTTON_ENCODER_2_SW)
-#endif
+                && button_poll(BADGE_BUTTON_A)
 		) {
                 /* Force hard fault */
                 data = *((uint8_t *) 0x8F000000);
@@ -325,7 +318,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             }
 
 	    FbMove(10, 130);
-	    FbWriteString("PRESS AND HOLD\nRIGHT ROTARY\nSWITCH TO EXIT");
+	    FbWriteString("PRESS AND HOLD\nUP and B\nTO EXIT");
 
             if (redraw)
                 FbSwapBuffers();
