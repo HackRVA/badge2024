@@ -8,7 +8,7 @@
 #include <string.h>
 #ifdef TARGET_SIMULATOR
 #include <unistd.h>
-#include <stdlib.h> /* for exit() */
+#include <signal.h> /* for raise() */
 #endif
 #include "menu.h"
 #include "settings.h"
@@ -224,7 +224,7 @@ void detect_infinite_loop_in_menus(struct menu_t *menu, struct menu_t *current_i
 
 	if (menu->attrib & LAST_ITEM) {
 		stacktrace("Infinite loop detected in menu (first item == last item).\n");
-		exit(1);
+		raise(SIGTRAP); /* break into debugger, or exit */
 	}
 	if (reset == 1) {
 		counter = 0;
@@ -235,7 +235,7 @@ void detect_infinite_loop_in_menus(struct menu_t *menu, struct menu_t *current_i
 		counter++;
 	if (counter > 1) {
 		stacktrace("Detected infinite loop in menu.\n");
-		exit(1);
+		raise(SIGTRAP); /* break into debugger, or exit */
 	}
 }
 #else
