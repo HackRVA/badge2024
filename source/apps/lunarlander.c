@@ -23,7 +23,7 @@ Author: Stephen M. Cameron <stephenmcameron@gmail.com>
 #define DIMFACT 64
 
 static int lander_time = 0;
-char lunar_lander_msg[20] = { 0 };
+char lunar_lander_msg[60] = { 0 };
 int lunar_lander_msg_timer = 30;
 int mission_success = 0;
 int astronauts_rescued = 0;
@@ -213,14 +213,14 @@ static void draw_lunar_lander_msg(int color)
 {
 	FbMove(5, 15);
 	FbColor(color);
-	FbWriteLine(lunar_lander_msg);
+	FbWriteString(lunar_lander_msg);
 }
 
 static void set_message(char *msg, int time)
 {
 	draw_lunar_lander_msg(BLACK);
 	strncpy(lunar_lander_msg, msg, sizeof(lunar_lander_msg));
-	lunar_lander_msg[19] = '\0';
+	lunar_lander_msg[sizeof(lunar_lander_msg) - 1] = '\0';
 	lunar_lander_msg_timer = time;
 	draw_lunar_lander_msg(YELLOW);
 }
@@ -244,7 +244,6 @@ static void explosion(struct lander_data *lander)
 		spark[i].vy = ((xorshift(&xorshift_state) >> 16) & 0xff) - 128;
 		spark[i].alive = 100;
 	}
-	set_message("MISSION FAILED", 60);
 }
 
 static void move_sparks(void)
@@ -546,6 +545,7 @@ static void draw_terrain_segment(struct lander_data *lander, int i, int color)
 				/* Explode lander if not on level enough ground */
 				FbColor(color);
 				explosion(lander);
+				set_message("MISSION FAILED\nUNEVEN GROUND", 60);
 				lander->alive = -100;
 			} else {
 				int max_speed = difficulty[difficulty_level].max_landing_speed;
@@ -554,6 +554,10 @@ static void draw_terrain_segment(struct lander_data *lander, int i, int color)
 					lander->vx < -max_speed) && lander->alive > 0) {
 					explosion(lander);
 					lander->alive = -100;
+					if (abs(lander->vx) > abs(lander->vy))
+						set_message("MISSION FAILED\nVX TOO HIGH", 60);
+					else
+						set_message("MISSION FAILED\nVY TOO HIGH", 60);
 				} else {
 					if (lander->vy > 0)
 						lander->vy = 0; /* Allow lander to land */
