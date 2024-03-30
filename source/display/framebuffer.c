@@ -712,7 +712,7 @@ void FbRectangle(unsigned char width, unsigned char height)
     G_Fb.changed = 1;
 }
 
-static int onscreen(int x, int y)
+int FbOnScreen(int x, int y)
 {
 	if (x < 0 || x >= LCD_XSIZE)
 		return 0;
@@ -730,21 +730,21 @@ void FbCircle(int cx, int cy, int r)
 		dy1 = (sine(i) * r) >> 8;
 		dx2 = (cosine(i + 1) * r) >> 8;
 		dy2 = (sine(i + 1) * r) >> 8;
-		if (onscreen(cx + dx1, cy + dy1) && onscreen(cx + dx2, cy + dy2))
+		if (FbOnScreen(cx + dx1, cy + dy1) && FbOnScreen(cx + dx2, cy + dy2))
 			FbLine(cx + dx1, cy + dy1, cx + dx2, cy + dy2);
-		if (onscreen(cx + dy1, cy + dx1) && onscreen(cx + dy2, cy + dx2))
+		if (FbOnScreen(cx + dy1, cy + dx1) && FbOnScreen(cx + dy2, cy + dx2))
 			FbLine(cx + dy1, cy + dx1, cx + dy2, cy + dx2);
-		if (onscreen(cx + dx1, cy - dy1) && onscreen(cx + dx2, cy - dy2))
+		if (FbOnScreen(cx + dx1, cy - dy1) && FbOnScreen(cx + dx2, cy - dy2))
 			FbLine(cx + dx1, cy - dy1, cx + dx2, cy - dy2);
-		if (onscreen(cx + dy1, cy - dx1) && onscreen(cx + dy2, cy - dx2))
+		if (FbOnScreen(cx + dy1, cy - dx1) && FbOnScreen(cx + dy2, cy - dx2))
 			FbLine(cx + dy1, cy - dx1, cx + dy2, cy - dx2);
-		if (onscreen(cx - dy1, cy - dx1) && onscreen(cx - dy2, cy - dx2))
+		if (FbOnScreen(cx - dy1, cy - dx1) && FbOnScreen(cx - dy2, cy - dx2))
 			FbLine(cx - dy1, cy - dx1, cx - dy2, cy - dx2);
-		if (onscreen(cx - dx1, cy - dy1) && onscreen(cx - dx2, cy - dy2))
+		if (FbOnScreen(cx - dx1, cy - dy1) && FbOnScreen(cx - dx2, cy - dy2))
 			FbLine(cx - dx1, cy - dy1, cx - dx2, cy - dy2);
-		if (onscreen(cx - dx1, cy + dy1) && onscreen(cx - dx2, cy + dy2))
+		if (FbOnScreen(cx - dx1, cy + dy1) && FbOnScreen(cx - dx2, cy + dy2))
 			FbLine(cx - dx1, cy + dy1, cx - dx2, cy + dy2);
-		if (onscreen(cx - dy1, cy + dx1) && onscreen(cx - dy2, cy + dx2))
+		if (FbOnScreen(cx - dy1, cy + dx1) && FbOnScreen(cx - dy2, cy + dx2))
 			FbLine(cx - dy1, cy + dx1, cx - dy2, cy + dx2);
 	}
 }
@@ -890,8 +890,8 @@ void FbDrawObject(const struct point drawing[], int npoints, int color, int x, i
 	y1 = ycenter + ((drawing[i].y * scale) >> 10);
 	x2 = xcenter + ((drawing[i + 1].x * scale) >> 10);
 	y2 = ycenter + ((drawing[i + 1].y * scale) >> 10);
-	o1 = onscreen(x1, y1);
-	o2 = onscreen(x2, y2);
+	o1 = FbOnScreen(x1, y1);
+	o2 = FbOnScreen(x2, y2);
 	if (o1 && o2)
 		FbLine(x1, y1, x2, y2);
 	else if (o1 || o2)
