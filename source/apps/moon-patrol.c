@@ -379,9 +379,11 @@ static void moonpatrol_setup(void)
 		case 3:
 			if (music_on) {
 				music_on = 0;
+				stop_tune();
 				strcpy(setup_menu.item[3].text, "MUSIC: OFF");
 			} else {
 				music_on = 1;
+				play_theme((void *) 0);
 				strcpy(setup_menu.item[3].text, "MUSIC: ON");
 			}
 			break;
