@@ -23,10 +23,10 @@ static int screen_changed = 0;
 static int num_rocks = 20;
 static int num_craters = 20;
 static int ground_level = 148 << 8;
-#define GRAVITY (1 << 8)
+#define GRAVITY 64 
 #define BULLET_VEL (5 << 8)
-#define JUMP_VEL (8 << 8)
-#define PLAYER_VEL_INC (1 << 8)
+#define JUMP_VEL (3 << 8)
+#define PLAYER_VEL_INC 64 
 
 #define TERRAIN_LEN 1024
 #define TERRAIN_SEG_LENGTH 16
@@ -193,6 +193,16 @@ static void moonpatrol_shoot(void)
 	add_bullet(player.x, player.y - (5 << 8), player.vx + BULLET_VEL, 0);
 }
 
+static void player_maybe_jump(void)
+{
+	int playeri = ((player.x >> 8) / TERRAIN_SEG_LENGTH);
+	int dy = player.y - terrainy[playeri];
+	printf("py = %d, ty = %d, dy = %d\n", player.y, terrainy[playeri], dy);
+	if (-dy < (3 << 8)) { /* prevent mid-air jumping */
+		player.vy = -JUMP_VEL;
+	}
+}
+
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
@@ -206,8 +216,7 @@ static void check_buttons(void)
 		if (player.vx > MAX_PLAYER_VX)
 			player.vx = MAX_PLAYER_VX;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
-		if (player.vy == 0)
-			player.vy = -JUMP_VEL;
+		player_maybe_jump();
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		moonpatrol_shoot();
