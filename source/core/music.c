@@ -14,9 +14,9 @@ static void next_note(void)
 		return;
 	current_note++;
 	if (current_note >= current_tune->num_notes) {
+		current_tune = NULL;
 		if (finish_callback)
 			finish_callback();
-		current_tune = NULL;
 		return;
 	}
 	if (!stop_the_music) {
