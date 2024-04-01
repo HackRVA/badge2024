@@ -81,7 +81,7 @@ static const struct menu_t legacy_games_m[] = {
 static const struct menu_t games_m[] = {
 	{"Sample App", VERT_ITEM, FUNCTION, { .func = myprogram_cb }, NULL },
 	{"Clue", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = clue_cb }, &clue_icon },
-	{"Moon Patrol", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = moonpatrol_cb }, NULL, },
+	{"Moon Patrol", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = moonpatrol_cb }, &moonpatrol_icon, },
 	{"Legacy Games",       VERT_ITEM, MENU, { .menu = legacy_games_m }, &legacy_games_icon, },
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
