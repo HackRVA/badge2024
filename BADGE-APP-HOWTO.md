@@ -189,6 +189,10 @@ integer types (e.g. "int") as these will be wrapped into the range 0-255.
 	void FbCircle(int x, int y, int r);
 		draws a circle centered at (x, y) with radius r.
 
+	int FbOnScreen(int x, int y);
+		returns true if x, y is on the display, false otherwise.
+		(0 <= x < LCD_XSIZE and 0 <= y < LCD_YSIZE)
+
 	struct point
 	{
 		signed char x, y;
