@@ -48,6 +48,7 @@ static char terrain_feature[TERRAIN_LEN];
 #define FEATURE_CRATER (1 << 0)
 #define FEATURE_ROCK (1 << 1)
 #define FEATURE_SAUCER_TRIGGER (1 << 2)
+#define FEATURE_SAUCER_TRIGGER2 (1 << 3)
 
 #define MIN_PLAYER_VX (2 << 8)
 #define MAX_PLAYER_VX (25 << 8)
@@ -81,7 +82,7 @@ struct saucer {
 	int x, y, vx, vy;
 	int target_altitude;
 	int target_xoffset;
-	int alive;
+	int alive, type;
 } saucer[MAXSAUCERS];
 int nsaucers;
 
@@ -169,6 +170,34 @@ static struct point saucer_points[] = {
 	{ 29, -19 },
 };
 
+static struct point saucer2_points[] = {
+	{ -61, 0 },
+	{ -42, -10 },
+	{ 50, -11 },
+	{ 62, -1 },
+	{ 55, 13 },
+	{ 40, 19 },
+	{ 25, 25 },
+	{ -25, 24 },
+	{ -53, 10 },
+	{ -60, -1 },
+	{ -128, -128 },
+	{ -17, 25 },
+	{ -14, 32 },
+	{ 15, 31 },
+	{ 18, 23 },
+	{ -128, -128 },
+	{ -31, -11 },
+	{ -14, -31 },
+	{ -3, -36 },
+	{ 5, -36 },
+	{ 20, -29 },
+	{ 37, -11 },
+	{ -128, -128 },
+	{ -19, -18 },
+	{ -8, -30 },
+};
+
 static void init_player(void);
 
 static void move_player(void)
@@ -188,7 +217,7 @@ static void move_player(void)
 	}
 }
 
-static void add_saucer(void)
+static void add_saucer(int type)
 {
 	static unsigned int r = 0x5a5a5a5a;
 
@@ -202,15 +231,16 @@ static void add_saucer(void)
 	saucer[nsaucers].target_altitude = 60 << 8;
 	saucer[nsaucers].target_xoffset = 70 << 8;
 	saucer[nsaucers].alive = 400;
+	saucer[nsaucers].type = type;
 	nsaucers++;
 	printf("Added saucer!\n");
 }
 
-static void add_saucers(int count)
+static void add_saucers(int count, int type)
 {
 	count = 1; /* temporary */
 	for (int i = 0; i < count; i++)
-		add_saucer();
+		add_saucer(type);
 }
 
 static void draw_saucer(int i)
@@ -221,7 +251,10 @@ static void draw_saucer(int i)
 
 	x = (saucer[i].x - screenx) >> 8;
 	y = saucer[i].y >> 8;
-	FbDrawObject(saucer_points, ARRAYSIZE(saucer_points), YELLOW, x, y, 128);
+	if (saucer[i].type == 0)
+		FbDrawObject(saucer_points, ARRAYSIZE(saucer_points), YELLOW, x, y, 128);
+	else
+		FbDrawObject(saucer2_points, ARRAYSIZE(saucer2_points), x11_lime_green, x, y, 128);
 }
 
 static void draw_saucers(void)
@@ -406,6 +439,11 @@ static void generate_terrain(void)
 		int x = 10 + (xorshift(&rstate) % (TERRAIN_LEN - 11));
 		terrain_feature[x] |= FEATURE_SAUCER_TRIGGER;
 		printf("saucer trigger at %d\n", x);
+	}
+	for (int i = 0; i < num_saucer_triggers; i++) {
+		int x = 10 + (xorshift(&rstate) % (TERRAIN_LEN - 11));
+		terrain_feature[x] |= FEATURE_SAUCER_TRIGGER2;
+		printf("saucer2 trigger at %d\n", x);
 	}
 }
 
@@ -819,8 +857,12 @@ static void moonpatrol_run(void)
 		}
 	}
 	if (terrain_feature[playeri] & FEATURE_SAUCER_TRIGGER) {
-		add_saucers((playeri % 3) + 1); /* add 1 to 3 saucers */
+		add_saucers((playeri % 3) + 1, 0); /* add 1 to 3 saucers */
 		terrain_feature[playeri] &= ~FEATURE_SAUCER_TRIGGER; /* prevent multiple triggers */
+	}
+	if (terrain_feature[playeri] & FEATURE_SAUCER_TRIGGER2) {
+		add_saucers((playeri % 3) + 1, 1); /* add 1 to 3 saucers */
+		terrain_feature[playeri] &= ~FEATURE_SAUCER_TRIGGER2; /* prevent multiple triggers */
 	}
 }
 
