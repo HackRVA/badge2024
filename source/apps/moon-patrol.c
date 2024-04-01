@@ -10,10 +10,12 @@
 #include "xorshift.h"
 #include "audio.h"
 #include "music.h"
+#include "dynmenu.h"
 
 /* Program states.  Initial state is MOONPATROL_INIT */
 enum moonpatrol_state_t {
 	MOONPATROL_INIT,
+	MOONPATROL_SETUP,
 	MOONPATROL_RUN,
 	MOONPATROL_EXIT,
 };
@@ -31,6 +33,8 @@ static int screen_changed = 0;
 static int num_rocks = 20;
 static int num_craters = 20;
 static int ground_level = 148 << 8;
+static int difficulty_level = 0;
+static int music_on = 1;
 #define GRAVITY 64 
 #define BULLET_VEL (5 << 8)
 #define JUMP_VEL (3 << 8)
@@ -254,12 +258,70 @@ static void moonpatrol_init(void)
 	generate_terrain();
 	generate_hills(foothill, FOOTHILLS_LEN, 120 << 8, 80 << 8, 20);
 	generate_hills(mountain, MOUNTAINS_LEN, 60 << 8, 20 << 8, 10);
-	moonpatrol_state = MOONPATROL_RUN;
+	moonpatrol_state = MOONPATROL_SETUP;
 	screen_changed = 1;
 	init_player();
 	memset(bullet, 0, sizeof(bullet));
 	nbullets = 0;
 	// play_tune(&moon_patrol_theme, NULL);
+}
+
+static void moonpatrol_setup(void)
+{
+	static struct dynmenu setup_menu;
+	static struct dynmenu_item setup_item[6];
+	static int menu_ready = 0;
+        char *level[] = { "EASY", "MEDIUM", "HARD" };
+
+        if (!menu_ready) {
+                dynmenu_init(&setup_menu, setup_item, 5);
+                dynmenu_clear(&setup_menu);
+                strcpy(setup_menu.title, "LUNAR RESCUE");
+                dynmenu_add_item(&setup_menu, "EASY <==", MOONPATROL_SETUP, 0);
+                dynmenu_add_item(&setup_menu, "MEDIUM", MOONPATROL_SETUP, 1);
+                dynmenu_add_item(&setup_menu, "HARD", MOONPATROL_SETUP, 2);
+		dynmenu_add_item(&setup_menu, "MUSIC: ON", MOONPATROL_SETUP, 3);
+                dynmenu_add_item(&setup_menu, "PLAY NOW", MOONPATROL_SETUP, 4);
+                dynmenu_add_item(&setup_menu, "QUIT", MOONPATROL_SETUP, 5);
+                menu_ready = 1;
+        }
+	dynmenu_draw(&setup_menu);
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
+		dynmenu_change_current_selection(&setup_menu, 1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
+		dynmenu_change_current_selection(&setup_menu, -1);
+	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+
+		int c = setup_menu.current_item;
+		switch(c) {
+		case 0:
+		case 1:
+		case 2:
+			difficulty_level = c;
+			for (int i = 0; i < 3; i++)
+				strcpy(setup_menu.item[i].text, level[i]);
+			strcat(setup_menu.item[c].text, " <==");
+			break;
+		case 3:
+			if (music_on) {
+				music_on = 0;
+				strcpy(setup_menu.item[3].text, "MUSIC: OFF");
+			} else {
+				music_on = 1;
+				strcpy(setup_menu.item[3].text, "MUSIC: ON");
+			}
+			break;
+		case 4:
+			moonpatrol_state = MOONPATROL_RUN;
+			break;
+		case 5:
+			moonpatrol_state = MOONPATROL_EXIT;
+			break;
+		}
+	}
 }
 
 static void moonpatrol_shoot(void)
@@ -562,6 +624,9 @@ void moonpatrol_cb(__attribute__((unused)) struct menu_t *m)
 	switch (moonpatrol_state) {
 	case MOONPATROL_INIT:
 		moonpatrol_init();
+		break;
+	case MOONPATROL_SETUP:
+		moonpatrol_setup();
 		break;
 	case MOONPATROL_RUN:
 		moonpatrol_run();
