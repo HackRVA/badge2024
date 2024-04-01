@@ -43,9 +43,9 @@ static int screenx = 0;
 static int screeny = 0;
 
 static struct player {
-	int x, y, vx, vy;
+	int x, y, vx, vy, alive;
 } player = {
-	0, 0, 10, 0,
+	0, 0, 10, 0, 1,
 };
 
 #define MAXBULLETS 10
@@ -54,6 +54,13 @@ static struct bullet {
 	int alive;
 } bullet[MAXBULLETS];
 static int nbullets = 0;
+
+#define MAXSPARKS 100 
+static struct spark {
+	int x, y, vx, vy;
+	int alive;
+} spark[MAXSPARKS];
+static int nsparks;
 
 #define whole_note 3200
 #define half_note 1600
@@ -80,6 +87,8 @@ static struct tune moon_patrol_theme = {
 	.note = &moon_patrol_theme_notes[0],
 };
 
+static void init_player(void);
+
 static void move_player(void)
 {
 	player.x += player.vx;
@@ -90,7 +99,14 @@ static void move_player(void)
 	} else {
 		player.vy += GRAVITY;
 	}
+	if (player.alive <= 0) {
+		player.alive++;
+		if (player.alive == 0)
+			init_player();
+	}
 }
+
+static void add_explosion(int x, int y, int count, int life);
 
 static void move_bullet(int n)
 {
@@ -109,6 +125,8 @@ static void move_bullet(int n)
 		if (dy < 16) {
 			terrain_feature[bi] &= ~FEATURE_ROCK;
 			printf("blasted rock! dy = %d\n", dy);
+			add_explosion(bullet[n].x, bullet[n].y, 40, 50);
+			bullet[n].alive = 0;
 		}
 	}
 }
@@ -171,6 +189,15 @@ static void generate_terrain(void)
 	}
 }
 
+static void init_player(void)
+{
+	player.x = 0;
+	player.y = 148 << 8;
+	player.vx = 0;
+	player.vy = 0;
+	player.alive = 1;
+}
+
 static void moonpatrol_init(void)
 {
 	FbInit();
@@ -178,10 +205,7 @@ static void moonpatrol_init(void)
 	generate_terrain();
 	moonpatrol_state = MOONPATROL_RUN;
 	screen_changed = 1;
-	player.x = 0;
-	player.y = 148 << 8;
-	player.vx = 0;
-	player.vy = 0;
+	init_player();
 	memset(bullet, 0, sizeof(bullet));
 	nbullets = 0;
 	// play_tune(&moon_patrol_theme, NULL);
@@ -278,11 +302,89 @@ static void draw_player(void)
 	int x = (player.x - screenx) >> 8;
 	int y = (player.y - screeny) >> 8;
 
+	if (player.alive < 0)
+		return;
+
 	FbColor(MAGENTA);
 	FbMove(x - 5, y - 5);
 	FbRectangle(10, 5);
 
 	screenx = player.x - (10 << 8);
+}
+
+static void draw_spark(int i)
+{
+	int x, y;
+
+	x = (spark[i].x - screenx) >> 8;
+	y = (spark[i].y - screeny) >> 8;
+	if (FbOnScreen(x, y)) {
+		FbColor(YELLOW);
+		FbPoint(x, y);
+	}
+}
+
+static void draw_sparks(void)
+{
+	for (int i = 0; i < nsparks; i++)
+		draw_spark(i);
+}
+
+static void move_spark(int i)
+{
+	spark[i].x += spark[i].vx;
+	spark[i].y += spark[i].vy;
+	spark[i].vy += (GRAVITY >> 1); /* >> 1 because it looks better */
+	if (spark[i].alive > 0)
+		spark[i].alive--;
+}
+
+static void delete_spark(int i)
+{
+	if (i >= nsparks)
+		return;
+	if (i < nsparks)
+		spark[i] = spark[nsparks - 1];
+	nsparks--;
+}
+
+static void move_sparks(void)
+{
+	int i = 0;
+
+	while (i < nsparks) {
+		move_spark(i);
+		if (!spark[i].alive)
+			delete_spark(i);
+		else
+			i++;
+	}
+
+}
+
+static void add_spark(int x, int y, int vx, int vy, int lifetime)
+{
+	if (nsparks >= MAXSPARKS)
+		return;
+	spark[nsparks].x = x;
+	spark[nsparks].y = y;
+	spark[nsparks].vx = vx;
+	spark[nsparks].vy = vy;
+	spark[nsparks].alive = lifetime;
+	nsparks++;
+}
+
+static void add_explosion(int x, int y, int count, int life)
+{
+	static unsigned int xorshift_state = 0xa5a5a5a5;
+        for (int i = 0; i < count; i++) {
+		int vx, vy;
+                vx = xorshift(&xorshift_state) % (5 << 8);
+                vy = xorshift(&xorshift_state) % (5 << 8);
+		vx = vx - ((5 << 8) / 2);
+		vy = vy - ((5 << 8) / 2);
+		add_spark(x, y, vx, vy, xorshift(&xorshift_state) % life);
+        }
 }
 
 static void draw_bullet(int i)
@@ -317,6 +419,7 @@ static void draw_screen(void)
 	draw_terrain();
 	draw_player();
 	draw_bullets();
+	draw_sparks();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
@@ -326,6 +429,7 @@ static void moonpatrol_run(void)
 	check_buttons();
 	move_player();
 	move_bullets();
+	move_sparks();
 	draw_screen();
 	screen_changed = 1;
 
@@ -335,8 +439,13 @@ static void moonpatrol_run(void)
 			int dy = (player.y - terrainy[playeri]) >> 8;
 			if (dy < 0)
 				dy = -dy;
-			if (dy < 3)
+			if (dy < 3 && player.alive > 0) {
 				printf("hit rock!\n");
+				player.alive = -50;
+				player.vx = 0;
+				player.vy = 0;
+				add_explosion(player.x, player.y, 50, 100); 
+			}
 		}
 	}
 	if (terrain_feature[playeri] & FEATURE_CRATER) {
@@ -344,8 +453,13 @@ static void moonpatrol_run(void)
 			int dy = (player.y - terrainy[playeri]) >> 8;
 			if (dy < 0)
 				dy = -dy;
-			if (dy < 3)
+			if (dy < 3 && player.alive > 0) {
 				printf("hit crater!\n");
+				player.alive = -50;
+				player.vx = 0;
+				player.vy = 0;
+				add_explosion(player.x, player.y, 50, 100); 
+			}
 		}
 	}
 }
