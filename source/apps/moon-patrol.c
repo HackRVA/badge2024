@@ -814,13 +814,11 @@ static void draw_screen(void)
 
 static void kill_player(void)
 {
-#if 0
 	player.alive = -50;
 	player.vx = 0;
 	player.vy = 0;
 	nsaucers = 0;
 	add_explosion(player.x, player.y, 50, 100); 
-#endif
 }
 
 static void moonpatrol_run(void)
