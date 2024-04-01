@@ -34,6 +34,7 @@ static int num_rocks = 20;
 static int num_craters = 20;
 static int ground_level = 148 << 8;
 static int difficulty_level = 0;
+static int num_saucer_triggers = 20;
 static int music_on = 1;
 #define GRAVITY 64 
 #define BULLET_VEL (5 << 8)
@@ -46,6 +47,7 @@ static int terrainy[TERRAIN_LEN];
 static char terrain_feature[TERRAIN_LEN];
 #define FEATURE_CRATER (1 << 0)
 #define FEATURE_ROCK (1 << 1)
+#define FEATURE_SAUCER_TRIGGER (1 << 2)
 
 #define MIN_PLAYER_VX (2 << 8)
 #define MAX_PLAYER_VX (25 << 8)
@@ -73,6 +75,15 @@ static struct spark {
 	int alive;
 } spark[MAXSPARKS];
 static int nsparks;
+
+#define MAXSAUCERS 5
+struct saucer {
+	int x, y, vx, vy;
+	int target_altitude;
+	int target_xoffset;
+	int alive;
+} saucer[MAXSAUCERS];
+int nsaucers;
 
 #define whole_note (2000) 
 #define half_note (whole_note / 2)
@@ -138,6 +149,26 @@ static struct tune moon_patrol_theme_5 = {
 	.note = &moon_patrol_theme_five[0],
 };
 
+static struct point saucer_points[] = {
+	{ -62, -1 },
+	{ -36, -17 },
+	{ 1, -16 },
+	{ 42, -16 },
+	{ 63, -1 },
+	{ 35, 9 },
+	{ 23, 0 },
+	{ -21, 1 },
+	{ -33, 9 },
+	{ -62, 2 },
+	{ -128, -128 },
+	{ -27, -18 },
+	{ -26, -35 },
+	{ -13, -44 },
+	{ 15, -44 },
+	{ 28, -32 },
+	{ 29, -19 },
+};
+
 static void init_player(void);
 
 static void move_player(void)
@@ -154,6 +185,98 @@ static void move_player(void)
 		player.alive++;
 		if (player.alive == 0)
 			init_player();
+	}
+}
+
+static void add_saucer(void)
+{
+	static unsigned int r = 0x5a5a5a5a;
+
+	if (nsaucers >= MAXSAUCERS)
+		return;
+
+	saucer[nsaucers].x = player.x + xorshift(&r) % (50 << 8);
+	saucer[nsaucers].y = -(20 << 8);
+	saucer[nsaucers].vx = player.vx;
+	saucer[nsaucers].vy = 128;
+	saucer[nsaucers].target_altitude = 60 << 8;
+	saucer[nsaucers].target_xoffset = 70 << 8;
+	saucer[nsaucers].alive = 400;
+	nsaucers++;
+	printf("Added saucer!\n");
+}
+
+static void add_saucers(int count)
+{
+	count = 1; /* temporary */
+	for (int i = 0; i < count; i++)
+		add_saucer();
+}
+
+static void draw_saucer(int i)
+{
+	if (i >= nsaucers)
+		return;
+	int x, y;
+
+	x = (saucer[i].x - screenx) >> 8;
+	y = saucer[i].y >> 8;
+	FbDrawObject(saucer_points, ARRAYSIZE(saucer_points), YELLOW, x, y, 128);
+}
+
+static void draw_saucers(void)
+{
+	for (int i = 0; i < nsaucers; i++)
+		draw_saucer(i);
+}
+
+static void remove_saucer(int i)
+{
+	if (i != nsaucers - 1)
+		saucer[i] = saucer[nsaucers - 1];
+	nsaucers--;
+}
+
+static void move_saucer(int i)
+{
+	unsigned int r = 0x5a5a5a5a;
+	int dx, dy;
+	saucer[i].x += saucer[i].vx;
+	saucer[i].y += saucer[i].vy;
+	if (saucer[i].alive > 0)
+		saucer[i].alive--;
+	dx = (player.x + saucer[i].target_xoffset) - saucer[i].x;
+	if ((dx < 0 && dx > -(10 << 8)) || (dx > 0 && dx < (10 << 8))) {
+		/* close enough, choose a new target xoffset */
+		if (saucer[i].target_xoffset > 0)
+			saucer[i].target_xoffset = -(10 << 8);
+		else
+			saucer[i].target_xoffset = (60 << 8);
+	}
+	dy = saucer[i].target_altitude - saucer[i].y;
+	if ((dy < 0 && dy > -(1 << 8)) || (dy > 0 && dy < (1 << 8))) {
+		/* choose a new target altitude */ 
+		saucer[i].target_altitude = 40 + (xorshift(&r) % 20);
+	}
+	dy = saucer[i].target_altitude - saucer[i].y;
+	if (dy < 0 && saucer[i].vy > -(1 << 8))
+		saucer[i].vy -= 20;
+	else if (dy > 0 && saucer[i].vy < (1 << 8))
+		saucer[i].vy += 20;
+	if (dx < 0 && saucer[i].vx > player.vx - (5 << 8))
+		saucer[i].vx -= 20;
+	if (dx > 0 && saucer[i].vx < player.vx + (5 << 8))
+		saucer[i].vx += 20;
+}
+
+static void move_saucers(void)
+{
+	for (int i = 0; i < nsaucers;) {
+		move_saucer(i);
+		if (saucer[i].alive)
+			i++;
+		else
+			remove_saucer(i);
 	}
 }
 
@@ -278,6 +401,11 @@ static void generate_terrain(void)
 			terrain_feature[x] |= FEATURE_ROCK;
 			printf("rock at %d\n", x);
 		}
+	}
+	for (int i = 0; i < num_saucer_triggers; i++) {
+		int x = 10 + (xorshift(&rstate) % (TERRAIN_LEN - 11));
+		terrain_feature[x] |= FEATURE_SAUCER_TRIGGER;
+		printf("saucer trigger at %d\n", x);
 	}
 }
 
@@ -639,16 +767,29 @@ static void draw_screen(void)
 	draw_hills(foothill, FOOTHILLS_LEN, FOOTHILLS_SEG_LEN, 2, x11_lime_green);
 	draw_hills(mountain, MOUNTAINS_LEN, MOUNTAINS_SEG_LEN, 4, WHITE);
 	draw_player();
+	draw_saucers();
 	draw_bullets();
 	draw_sparks();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
 
+static void kill_player(void)
+{
+#if 0
+	player.alive = -50;
+	player.vx = 0;
+	player.vy = 0;
+	nsaucers = 0;
+	add_explosion(player.x, player.y, 50, 100); 
+#endif
+}
+
 static void moonpatrol_run(void)
 {
 	check_buttons();
 	move_player();
+	move_saucers();
 	move_bullets();
 	move_sparks();
 	draw_screen();
@@ -662,10 +803,7 @@ static void moonpatrol_run(void)
 				dy = -dy;
 			if (dy < 3 && player.alive > 0) {
 				printf("hit rock!\n");
-				player.alive = -50;
-				player.vx = 0;
-				player.vy = 0;
-				add_explosion(player.x, player.y, 50, 100); 
+				kill_player();
 			}
 		}
 	}
@@ -676,12 +814,13 @@ static void moonpatrol_run(void)
 				dy = -dy;
 			if (dy < 3 && player.alive > 0) {
 				printf("hit crater!\n");
-				player.alive = -50;
-				player.vx = 0;
-				player.vy = 0;
-				add_explosion(player.x, player.y, 50, 100); 
+				kill_player();
 			}
 		}
+	}
+	if (terrain_feature[playeri] & FEATURE_SAUCER_TRIGGER) {
+		add_saucers((playeri % 3) + 1); /* add 1 to 3 saucers */
+		terrain_feature[playeri] &= ~FEATURE_SAUCER_TRIGGER; /* prevent multiple triggers */
 	}
 }
 
