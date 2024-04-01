@@ -109,7 +109,7 @@ struct tune {
 	struct note *note;
 };
 
-void play_tune(struct tune *tune, void (*finished_callback)(void));
+void play_tune(struct tune *tune, void (*finished_callback)(void *cookie), void *cookie);
 
 void stop_tune(void);
 

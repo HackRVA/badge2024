@@ -5,8 +5,9 @@
 
 static struct tune *current_tune;
 static int current_note = 0;
-static void (*finish_callback)(void) = NULL;
+static void (*finish_callback)(void *) = NULL;
 static int stop_the_music = 0;
+static void *cookie = NULL;
 
 static void next_note(void)
 {
@@ -16,7 +17,7 @@ static void next_note(void)
 	if (current_note >= current_tune->num_notes) {
 		current_tune = NULL;
 		if (finish_callback)
-			finish_callback();
+			finish_callback(cookie);
 		return;
 	}
 	if (!stop_the_music) {
@@ -29,11 +30,12 @@ static void next_note(void)
 	}
 }
 
-void play_tune(struct tune *tune, void (*finished_callback)(void))
+void play_tune(struct tune *tune, void (*finished_callback)(void *kookie), void *kookie)
 {
 	stop_the_music = 0;
 	current_note = 0;
 	current_tune = tune;
+	cookie = kookie;
 	finish_callback = finished_callback;
 	audio_out_beep_with_cb(current_tune->note[current_note].freq,
 			current_tune->note[current_note].duration, next_note);

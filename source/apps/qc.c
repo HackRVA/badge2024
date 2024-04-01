@@ -211,7 +211,7 @@ static bool qc_accel(void)
 
     if (trigger_accel_sound) {
 	trigger_accel_sound = 0;
-	play_tune(&accel_tune[max_axis], NULL);
+	play_tune(&accel_tune[max_axis], NULL, NULL);
     }
 
     return true;

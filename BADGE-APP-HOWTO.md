@@ -693,7 +693,56 @@ You could play the scale with this code:
 
 	...
 
-	play_tune(&scale);
+	play_tune(&scale, NULL, NULL);
+```
+
+The last two arguments of play tune are a callback function and
+a cookie.  When the tune reaches the end, the callback function is
+called, passing the cookie.  You can use this to arrange measures
+of music.  For instance, suppose you have four measures of music
+for a 12 bar blues.  You could play in a loop like it like this:
+
+```
+extern struct tune one, four, five, turnaround;
+
+void play_blues(void *cookie)
+{
+	intptr_t measure = (intptr_t) cookie;
+
+	switch (cookie % 12) {
+	case 0:
+	case 1:
+	case 2:
+	case 3:
+		play_tune(one, play_blues, (void *) (measure + 1));
+		break;
+	case 4:
+	case 5:
+		play_tune(four, play_blues, (void *) (measure + 1));
+		break;
+	case 6:
+	case 7:
+		play_tune(one, play_blues, (void *) (measure + 1));
+		break;
+	case 8:
+	case 9:
+		play_tune(five, play_blues, (void *) (measure + 1));
+		break;
+	case 10:
+		play_tune(one, play_blues, (void *) (measure + 1));
+		break;
+	case 11:
+		play_tune(turnaround, play_blues, (void *) (measure + 1));
+		break;
+	}
+}
+
+```
+
+The first time, you'd call it like:
+
+```
+	play_blues(one, play_blues, (void *) 1);
 ```
 
 Look into gulag.c for an example of how to create a kind of "explosiony" sound.

@@ -2437,7 +2437,7 @@ static void gulag_intro(void)
 	gulag_text_scroll_lines = ARRAYSIZE(intro_text);
 	gulag_text_offset = 0;
 	gulag_text_offset_limit = 425;
-	play_tune(&ukrainian_natl_anthem, NULL);
+	play_tune(&ukrainian_natl_anthem, NULL, NULL);
 	gulag_state = GULAG_SCROLL_TEXT;
 }
 
@@ -2449,7 +2449,7 @@ static void gulag_player_wins(void)
 	gulag_text_scroll_lines = ARRAYSIZE(win_text);
 	gulag_text_offset = 0;
 	gulag_text_offset_limit = 275;
-	play_tune(&ukrainian_natl_anthem, NULL);
+	play_tune(&ukrainian_natl_anthem, NULL, NULL);
 	gulag_state = GULAG_SCROLL_TEXT;
 }
 
