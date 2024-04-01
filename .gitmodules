@@ -1,3 +1,3 @@
 [submodule "source/hal/driver-ST7735S"]
 	path = source/hal/driver-ST7735S
-	url = https://github.com/michal037/driver-ST7735S.git
+	url = https://github.com/HackRVA/driver-ST7735S.git
