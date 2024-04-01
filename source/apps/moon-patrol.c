@@ -18,6 +18,14 @@ enum moonpatrol_state_t {
 	MOONPATROL_EXIT,
 };
 
+#define MOUNTAINS_LEN 256
+#define MOUNTAINS_SEG_LEN 8
+static int mountain[MOUNTAINS_LEN];
+
+#define FOOTHILLS_LEN 512
+#define FOOTHILLS_SEG_LEN 8
+static int foothill[FOOTHILLS_LEN];
+
 static enum moonpatrol_state_t moonpatrol_state = MOONPATROL_INIT;
 static int screen_changed = 0;
 static int num_rocks = 20;
@@ -165,6 +173,47 @@ static void move_bullets(void)
 	}
 }
 
+static unsigned int foothills_state = 0xa5a5a5a5;
+
+static void generate_foothill(int foothill[], int y1, int y2, int start, int end)
+{
+	foothill[start] = y1;
+	foothill[end] = y2;
+	int mid = ((end - start) / 2) + start;
+	if (mid < end && mid > start) {
+		int dy = y1 - y2;
+		if (dy < 0)
+			dy = -dy;
+		int r = (xorshift(&foothills_state) % 200) - 100; /* +/- 100 */
+		int d = (dy * r) / 250; /* up to 40% deviation from mid point */
+		int y3 = ((y1 + y2) / 2) + d;
+		foothill[mid] = y3;
+		generate_foothill(foothill, y1, y3, start, mid);
+		generate_foothill(foothill, y3, y2, mid, end);
+	}
+}
+
+static void generate_hills(int foothill[], int len, int low, int high, int interval)
+{
+	int i = 0;
+	int a = low;
+	int b;
+	do {
+		int i2 = i + interval;
+		if (i2 > len - 1)
+			i2 = len - 1;
+		if (a == low)
+			b = high;
+		else
+			b = low;
+		generate_foothill(foothill, a, b, i, i2);
+		i = i2;
+		a = b;
+		if (i == len - 1)
+			break;
+	} while (1);
+}
+
 static void generate_terrain(void)
 {
 	static unsigned int rstate = 0xa5a5a5a5;
@@ -203,6 +252,8 @@ static void moonpatrol_init(void)
 	FbInit();
 	FbClear();
 	generate_terrain();
+	generate_hills(foothill, FOOTHILLS_LEN, 120 << 8, 80 << 8, 20);
+	generate_hills(mountain, MOUNTAINS_LEN, 60 << 8, 20 << 8, 10);
 	moonpatrol_state = MOONPATROL_RUN;
 	screen_changed = 1;
 	init_player();
@@ -294,6 +345,39 @@ static void draw_terrain(void)
 
 		if (x1 < ((player.x - screenx) >> 8) && x2 > ((player.x - screenx) >> 8))
 			ground_level = ((y1 + y2) / 2) << 8;
+	} while(1);
+}
+
+static void draw_hills(int hill[], int len, int seglen, int factor, int color)
+{
+	int i = (((screenx / factor) >> 8) / seglen) - 2;
+	int x1, y1, x2, y2, i2;
+
+	x1 = i * seglen - ((screenx / factor) >> 8);
+	if (i < 0)
+		i += len;
+	x2 = x1 + seglen;
+	y1 = hill[i] >> 8;
+	i2 = i + 1;
+	if (i2 >= len)
+		i2 = i2 - len;
+	y2 = hill[i2] >> 8;
+
+	FbColor(color);
+	do {
+		if (FbOnScreen(x1, y1) || FbOnScreen(x2, y2)) {
+			FbClippedLine(x1, y1, x2, y2);
+		}
+		i2 = (i2 + 1) % len;
+		i = (i + 1) % len;
+		y1 = y2;
+		if (i2 >= len)
+			i2 = i2 - len;
+		y2 = hill[i2] >> 8;
+		x1 += seglen;
+		x2 += seglen;
+		if (x1 >= LCD_XSIZE)
+			break;
 	} while(1);
 }
 
@@ -417,6 +501,8 @@ static void draw_screen(void)
 	if (!screen_changed)
 		return;
 	draw_terrain();
+	draw_hills(foothill, FOOTHILLS_LEN, FOOTHILLS_SEG_LEN, 2, x11_lime_green);
+	draw_hills(mountain, MOUNTAINS_LEN, MOUNTAINS_SEG_LEN, 4, WHITE);
 	draw_player();
 	draw_bullets();
 	draw_sparks();
