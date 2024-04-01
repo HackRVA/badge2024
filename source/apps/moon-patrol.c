@@ -22,8 +22,11 @@ static enum moonpatrol_state_t moonpatrol_state = MOONPATROL_INIT;
 static int screen_changed = 0;
 static int num_rocks = 20;
 static int num_craters = 20;
-static int ground_level = 148;
-#define JUMP_VEL 8;
+static int ground_level = 148 << 8;
+#define GRAVITY (1 << 8)
+#define BULLET_VEL (5 << 8)
+#define JUMP_VEL (8 << 8)
+#define PLAYER_VEL_INC (1 << 8)
 
 #define TERRAIN_LEN 1024
 #define TERRAIN_SEG_LENGTH 16
@@ -32,8 +35,8 @@ static char terrain_feature[TERRAIN_LEN];
 #define FEATURE_CRATER (1 << 0)
 #define FEATURE_ROCK (1 << 1)
 
-#define MIN_PLAYER_VX 2
-#define MAX_PLAYER_VX 25
+#define MIN_PLAYER_VX (2 << 8)
+#define MAX_PLAYER_VX (25 << 8)
 
 /* Position of upper left of screen in game world */
 static int screenx = 0;
@@ -85,7 +88,7 @@ static void move_player(void)
 		player.y = ground_level;
 		player.vy = 0;
 	} else {
-		player.vy += 1;
+		player.vy += GRAVITY;
 	}
 }
 
@@ -93,13 +96,14 @@ static void move_bullet(int n)
 {
 	bullet[n].x += bullet[n].vx;
 	bullet[n].y += bullet[n].vy;
-	if (bullet[n].x - screenx >= LCD_XSIZE)
+	if (bullet[n].x - screenx >= (LCD_XSIZE << 8))
 		bullet[n].alive = 0;
 	if (bullet[n].y <= 0)
 		bullet[n].alive = 0;
-	int bi = (bullet[n].x / TERRAIN_SEG_LENGTH);
+	int bi = ((bullet[n].x >> 8) / TERRAIN_SEG_LENGTH);
 	if (terrain_feature[bi] & FEATURE_ROCK) {
 		int dy = terrainy[bi] - bullet[n].y;
+		dy = dy >> 8;
 		if (dy < 0)
 			dy = -dy;
 		if (dy < 16) {
@@ -149,6 +153,7 @@ static void generate_terrain(void)
 
 	for (int i = 0; i < TERRAIN_LEN; i++) {
 		terrainy[i] = LCD_YSIZE - 10 - (xorshift(&rstate) % 8); /* TODO: something better */
+		terrainy[i] = terrainy[i] << 8;
 	}
 	terrainy[0] = terrainy[TERRAIN_LEN - 1];
 	memset(terrain_feature, 0, sizeof(terrain_feature));
@@ -174,7 +179,7 @@ static void moonpatrol_init(void)
 	moonpatrol_state = MOONPATROL_RUN;
 	screen_changed = 1;
 	player.x = 0;
-	player.y = 148;
+	player.y = 148 << 8;
 	player.vx = 0;
 	player.vy = 0;
 	memset(bullet, 0, sizeof(bullet));
@@ -184,20 +189,20 @@ static void moonpatrol_init(void)
 
 static void moonpatrol_shoot(void)
 {
-	add_bullet(player.x, player.y, player.vx, -5);
-	add_bullet(player.x, player.y - 5, player.vx + 5, 0);
+	add_bullet(player.x, player.y, player.vx, -BULLET_VEL);
+	add_bullet(player.x, player.y - (5 << 8), player.vx + BULLET_VEL, 0);
 }
 
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
-		player.vx -= 1;
+		player.vx -= PLAYER_VEL_INC;
 		if (player.vx < MIN_PLAYER_VX)
 			player.vx = MIN_PLAYER_VX;
 		screenx--;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
-		player.vx += 1;
+		player.vx += PLAYER_VEL_INC;
 		if (player.vx > MAX_PLAYER_VX)
 			player.vx = MAX_PLAYER_VX;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
@@ -213,18 +218,18 @@ static void check_buttons(void)
 
 static void draw_terrain(void)
 {
-	int i = (screenx / TERRAIN_SEG_LENGTH) - 2;
+	int i = ((screenx >> 8) / TERRAIN_SEG_LENGTH) - 2;
 	int x1, y1, x2, y2, i2;
 
-	x1 = i * TERRAIN_SEG_LENGTH - screenx;
+	x1 = i * TERRAIN_SEG_LENGTH - (screenx >> 8);
 	if (i < 0)
 		i += TERRAIN_LEN;
 	x2 = x1 + TERRAIN_SEG_LENGTH;
-	y1 = terrainy[i];
+	y1 = terrainy[i] >> 8;
 	i2 = i + 1;
 	if (i2 >= TERRAIN_LEN)
 		i2 = i2 - TERRAIN_LEN;
-	y2 = terrainy[i2];
+	y2 = terrainy[i2] >> 8;
 
 	FbColor(WHITE);
 	do {
@@ -248,39 +253,46 @@ static void draw_terrain(void)
 		y1 = y2;
 		if (i2 >= TERRAIN_LEN)
 			i2 = i2 - TERRAIN_LEN;
-		y2 = terrainy[i2];
+		y2 = terrainy[i2] >> 8;
 		x1 += TERRAIN_SEG_LENGTH;
 		x2 += TERRAIN_SEG_LENGTH;
 		if (x1 >= LCD_XSIZE)
 			break;
 
-		if (x1 < (player.x - screenx) && x2 > (player.x - screenx))
-			ground_level = (y1 + y2) / 2;
+		if (x1 < ((player.x - screenx) >> 8) && x2 > ((player.x - screenx) >> 8))
+			ground_level = ((y1 + y2) / 2) << 8;
 	} while(1);
 }
 
 static void draw_player(void)
 {
-	int x = player.x - screenx;
-	int y = player.y - screeny;
+	int x = (player.x - screenx) >> 8;
+	int y = (player.y - screeny) >> 8;
 
 	FbColor(MAGENTA);
 	FbMove(x - 5, y - 5);
 	FbRectangle(10, 5);
 
-	screenx = player.x - 10;
+	screenx = player.x - (10 << 8);
 }
 
 static void draw_bullet(int i)
 {
+	int x1, y1, x2, y2;
+
 	FbColor(WHITE);
 	if (bullet[i].vy != 0) {
-		FbClippedLine(bullet[i].x - screenx, bullet[i].y + bullet[i].vy,
-				bullet[i].x - screenx, bullet[i].y);
+		x1 = (bullet[i].x - screenx) >> 8;
+		y1 = (bullet[i].y + bullet[i].vy) >> 8;
+		x2 = x1;
+		y2 = bullet[i].y >> 8;
 	} else {
-		FbClippedLine(bullet[i].x - screenx - bullet[i].vx, bullet[i].y,
-				bullet[i].x - screenx, bullet[i].y);
+		x1 = (bullet[i].x - screenx - bullet[i].vx) >> 8;
+		y1 = bullet[i].y >> 8;
+		x2 = (bullet[i].x - screenx) >> 8;
+		y2 = y1;
 	}
+	FbClippedLine(x1, y1, x2, y2);
 }
 
 static void draw_bullets(void)
@@ -308,10 +320,10 @@ static void moonpatrol_run(void)
 	draw_screen();
 	screen_changed = 1;
 
-	int playeri = (player.x / TERRAIN_SEG_LENGTH);
+	int playeri = ((player.x >> 8) / TERRAIN_SEG_LENGTH);
 	if (terrain_feature[playeri] & FEATURE_ROCK) {
 		if (player.vy == 0) {
-			int dy = player.y - terrainy[playeri];
+			int dy = (player.y - terrainy[playeri]) >> 8;
 			if (dy < 0)
 				dy = -dy;
 			if (dy < 3)
@@ -320,7 +332,7 @@ static void moonpatrol_run(void)
 	}
 	if (terrain_feature[playeri] & FEATURE_CRATER) {
 		if (player.vy == 0) {
-			int dy = player.y - terrainy[playeri];
+			int dy = (player.y - terrainy[playeri]) >> 8;
 			if (dy < 0)
 				dy = -dy;
 			if (dy < 3)
@@ -337,6 +349,7 @@ static void moonpatrol_exit(void)
 
 void moonpatrol_cb(__attribute__((unused)) struct menu_t *m)
 {
+	(void) moon_patrol_theme;
 	switch (moonpatrol_state) {
 	case MOONPATROL_INIT:
 		moonpatrol_init();
