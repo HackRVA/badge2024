@@ -274,7 +274,7 @@ static void moonpatrol_setup(void)
         char *level[] = { "EASY", "MEDIUM", "HARD" };
 
         if (!menu_ready) {
-                dynmenu_init(&setup_menu, setup_item, 5);
+                dynmenu_init(&setup_menu, setup_item, 6);
                 dynmenu_clear(&setup_menu);
                 strcpy(setup_menu.title, "LUNAR RESCUE");
                 dynmenu_add_item(&setup_menu, "EASY <==", MOONPATROL_SETUP, 0);
