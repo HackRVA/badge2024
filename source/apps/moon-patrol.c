@@ -74,29 +74,68 @@ static struct spark {
 } spark[MAXSPARKS];
 static int nsparks;
 
-#define whole_note 3200
-#define half_note 1600
-#define quarter_note 800
-#define dotted_quarter 1200
-#define eighth_note 400
-#define sixteenth_note 200
-#define thirtysecond_note 100
+#define whole_note (2000) 
+#define half_note (whole_note / 2)
+#define quarter_note (whole_note / 4)
+#define dotted_quarter ((3 * whole_note) / 8)
+#define eighth_note (whole_note / 8)
+#define sixteenth_note (whole_note / 16)
+#define thirtysecond_note (whole_note / 32)
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
-static struct note moon_patrol_theme_notes[] = {
+static struct note moon_patrol_theme_one[] = {
         { NOTE_E3, eighth_note, },
         { NOTE_E3, eighth_note, },
         { NOTE_E4, quarter_note, },
+        { NOTE_D4, eighth_note, },
+        { NOTE_D4, sixteenth_note, },
+        { NOTE_B3, eighth_note, },
+        { NOTE_B3, eighth_note, },
+        { NOTE_D4, sixteenth_note, },
+        { NOTE_Ef4, sixteenth_note, },
         { NOTE_E4, eighth_note, },
-        { NOTE_D4, eighth_note, },
-        { NOTE_D4, eighth_note, },
-        { NOTE_B4, eighth_note, },
 };
 
-static struct tune moon_patrol_theme = {
-	.num_notes = ARRAYSIZE(moon_patrol_theme_notes),
-	.note = &moon_patrol_theme_notes[0],
+static struct note moon_patrol_theme_four[] = {
+        { NOTE_A4, eighth_note, },
+        { NOTE_A4, eighth_note, },
+        { NOTE_A5, quarter_note, },
+        { NOTE_G5, eighth_note, },
+        { NOTE_G5, sixteenth_note, },
+        { NOTE_E5, eighth_note, },
+        { NOTE_E5, eighth_note, },
+        { NOTE_G5, sixteenth_note, },
+        { NOTE_Af5, sixteenth_note, },
+        { NOTE_A5, eighth_note, },
+};
+
+static struct note moon_patrol_theme_five[] = {
+        { NOTE_B4, eighth_note, },
+        { NOTE_B4, eighth_note, },
+        { NOTE_B5, quarter_note, },
+        { NOTE_A5, eighth_note, },
+        { NOTE_A5, sixteenth_note, },
+        { NOTE_Fs5, eighth_note, },
+        { NOTE_Fs5, eighth_note, },
+        { NOTE_A5, sixteenth_note, },
+        { NOTE_Bf5, sixteenth_note, },
+        { NOTE_B5, eighth_note, },
+};
+
+static struct tune moon_patrol_theme_1 = {
+	.num_notes = ARRAYSIZE(moon_patrol_theme_one),
+	.note = &moon_patrol_theme_one[0],
+};
+
+static struct tune moon_patrol_theme_4 = {
+	.num_notes = ARRAYSIZE(moon_patrol_theme_four),
+	.note = &moon_patrol_theme_four[0],
+};
+
+static struct tune moon_patrol_theme_5 = {
+	.num_notes = ARRAYSIZE(moon_patrol_theme_five),
+	.note = &moon_patrol_theme_five[0],
 };
 
 static void init_player(void);
@@ -251,6 +290,38 @@ static void init_player(void)
 	player.alive = 1;
 }
 
+static void play_theme(void *cookie)
+{
+	intptr_t measure = (intptr_t) cookie;
+
+	switch (measure % 12) {
+		case 0:
+		case 1:
+		case 2:
+		case 3:
+		case 6:
+		case 7:
+			play_tune(&moon_patrol_theme_1, play_theme, (void *) (measure + 1));
+			break;
+		case 4:
+		case 5:
+			play_tune(&moon_patrol_theme_4, play_theme, (void *) (measure + 1));
+			break;
+		case 8:
+			play_tune(&moon_patrol_theme_5, play_theme, (void *) (measure + 1));
+			break;
+		case 9:
+			play_tune(&moon_patrol_theme_4, play_theme, (void *) (measure + 1));
+			break;
+		case 10:
+			play_tune(&moon_patrol_theme_1, play_theme, (void *) (measure + 1));
+			break;
+		case 11:
+			play_tune(&moon_patrol_theme_1, play_theme, (void *) (measure + 1));
+			break;
+	}
+}
+
 static void moonpatrol_init(void)
 {
 	FbInit();
@@ -262,8 +333,8 @@ static void moonpatrol_init(void)
 	screen_changed = 1;
 	init_player();
 	memset(bullet, 0, sizeof(bullet));
+	play_theme((void *) 0);
 	nbullets = 0;
-	// play_tune(&moon_patrol_theme, NULL);
 }
 
 static void moonpatrol_setup(void)
@@ -620,7 +691,6 @@ static void moonpatrol_exit(void)
 
 void moonpatrol_cb(__attribute__((unused)) struct menu_t *m)
 {
-	(void) moon_patrol_theme;
 	switch (moonpatrol_state) {
 	case MOONPATROL_INIT:
 		moonpatrol_init();
