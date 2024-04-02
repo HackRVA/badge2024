@@ -54,6 +54,9 @@ dkms.conf
 # IDE Settings for CLion (not commonly used)
 .idea/
 
+# clangd cache
+.cache/
+
 # Build artifacts
 build/
 build_sim/
