@@ -84,7 +84,6 @@ struct menu_t *getSelectedMenu(void);
 
 extern void (*runningApp)(struct menu_t *menu) ;
 void genericMenu(struct menu_t *L_menu, MENU_STYLE, uint32_t button_latches);
-void closeMenuAndReturn(void);
 
 /* used by badge.c when going from dormant -> not dormant to redraw the main menu */
 extern unsigned char menu_redraw_main_menu;

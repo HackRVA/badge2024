@@ -786,15 +786,6 @@ static void pop_menu(void)
         G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_CHILD);
 }
 
-void closeMenuAndReturn(void) {
-    if (G_menuCnt == 0) return; /* stack is empty, error or main menu */
-    G_menuCnt--;
-    G_currMenu = G_menuStack[G_menuCnt].currMenu ;
-    G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu ;
-    G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
-    runningApp = NULL;
-}
-
 /*
    NOTE-
      apps will call this but since this returns to the callback
