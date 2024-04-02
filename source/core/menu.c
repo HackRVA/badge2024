@@ -131,6 +131,8 @@ static void menu_beep(uint16_t freq)
 	audio_out_beep(freq, NOTEDUR);
 }
 
+#define QC
+
 #ifdef QC
 #  define INITIAL_BADGE_APP QC_cb
 #else

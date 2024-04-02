@@ -10,7 +10,6 @@
 #include "audio.h"
 #include "led_pwm.h"
 #include "delay.h"
-#include <accelerometer.h>
 #include "music.h"
 
 #include <utils.h>
@@ -30,11 +29,16 @@ void ir_callback(const IR_DATA * ir_data) {
 
 static unsigned char screen_brightness = 255;
 
+#define SUPPRESS_BEEP ((uint16_t) -1)
+
 struct qc_button {
     int button;
     const char *name;
     uint16_t freq;
     bool (*check)(const struct qc_button *b);
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
 };
 
 static bool check_button(const struct qc_button *b)
@@ -48,9 +52,12 @@ static bool check_button(const struct qc_button *b)
     snprintf(msg, sizeof(msg), "%s\n", b->name);
     FbWriteString(msg);
 
-#define SUPPRESS_BEEP ((uint16_t) -1)
     if (b->freq != SUPPRESS_BEEP)
 	    audio_out_beep(b->freq, 100);
+
+    led_pwm_enable(BADGE_LED_RGB_RED, b->r);
+    led_pwm_enable(BADGE_LED_RGB_GREEN, b->g);
+    led_pwm_enable(BADGE_LED_RGB_BLUE, b->b);
 
     return true;
 }
@@ -99,13 +106,13 @@ static bool check_buttons(const struct qc_button *a, size_t n)
 }
 
 static const struct qc_button QC_BTN[] = {
-    {BADGE_BUTTON_A, "A", 999, check_button},
-    {BADGE_BUTTON_B, "B", SUPPRESS_BEEP, check_button},
+    {BADGE_BUTTON_A, "A", 999, check_button, 0, 255, 0},
+    {BADGE_BUTTON_B, "B", 698, check_button, 0, 0, 255},
 
-    {BADGE_BUTTON_UP, "UP", 1046, check_button},
-    {BADGE_BUTTON_DOWN, "DOWN", 740, check_button},
-    {BADGE_BUTTON_LEFT, "LEFT", 784, check_button},
-    {BADGE_BUTTON_RIGHT, "RIGHT", 932, check_button},
+    {BADGE_BUTTON_UP, "UP", 1046, check_button, 255, 0, 0},
+    {BADGE_BUTTON_DOWN, "DOWN", 740, check_button, 255, 127, 0},
+    {BADGE_BUTTON_LEFT, "LEFT", 784, check_button, 127, 127, 0},
+    {BADGE_BUTTON_RIGHT, "RIGHT", 932, check_button, 127, 255, 0},
 #if BADGE_HAS_ROTARY_BUTTONS
     {BADGE_BUTTON_ENCODER_SW, "ENC", 698, check_button},
     {BADGE_BUTTON_ENCODER_A, "ENC", 440, check_encoder},
@@ -114,108 +121,6 @@ static const struct qc_button QC_BTN[] = {
     {BADGE_BUTTON_ENCODER_2_A, "ENC 2", 666, check_encoder},
 #endif
 };
-
-static struct note tune0[] = {
-	{ NOTE_C4, 100 },
-};
-
-static struct note tune1[] = {
-	{ NOTE_C4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_D4, 100 },
-};
-
-static struct note tune2[] = {
-	{ NOTE_C4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_D4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_E4, 100 },
-};
-
-static struct note tune3[] = {
-	{ NOTE_C4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_D4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_E4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_F4, 100 },
-};
-
-static struct note tune4[] = {
-	{ NOTE_C4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_D4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_E4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_F4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_G4, 100 },
-};
-
-static struct note tune5[] = {
-	{ NOTE_C4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_D4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_E4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_F4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_G4, 100 },
-	{ NOTE_REST, 100 },
-	{ NOTE_A4, 100 },
-};
-
-static struct tune accel_tune[] = {
-	{ ARRAY_SIZE(tune0), tune0, },
-	{ ARRAY_SIZE(tune1), tune1, },
-	{ ARRAY_SIZE(tune2), tune2, },
-	{ ARRAY_SIZE(tune3), tune3, },
-	{ ARRAY_SIZE(tune4), tune4, },
-	{ ARRAY_SIZE(tune5), tune5, },
-};
-
-static int trigger_accel_sound = 0;
-
-static bool qc_accel(void)
-{
-    union acceleration a = accelerometer_last_sample();
-    static char *axis_name[] = { "-X", "+X", "-Y", "+Y", "-Z", "+Z" };
-    int max_axis = -1;
-    int max_accel;
-
-    char msg[64] = {0};
-    snprintf(msg, sizeof(msg), "whoami:0x%02x\nx:%d\ny:%d\nz:%d\n",
-             accelerometer_whoami(), a.x, a.y, a.z);
-    FbWriteString(msg);
-
-    max_accel = a.x;
-    max_axis = a.x < 0 ? 0 : 1;
-    if (abs(a.y) > abs(max_accel)) {
-        max_accel = a.y;
-	max_axis = a.y < 0 ? 2 : 3;
-    }
-    if (abs(a.z) > abs(max_accel)) {
-        max_accel = a.z;
-	max_axis = a.z < 0 ? 4 : 5;
-	if (a.z < 0) {
-		screen_brightness = 0;
-		led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, screen_brightness);
-	}
-    }
-    snprintf(msg, sizeof(msg), "Max Accel: %s\n", axis_name[max_axis]);
-    FbWriteString(msg);
-
-    if (trigger_accel_sound) {
-	trigger_accel_sound = 0;
-	play_tune(&accel_tune[max_axis], NULL, NULL);
-    }
-
-    return true;
-}
 
 void QC_cb(__attribute__((unused)) struct menu_t *menu)
 {
@@ -267,11 +172,6 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 return;
             }
 
-            if (qc_accel())
-            {
-                redraw = 1;
-            }
-
             if (check_buttons(QC_BTN, ARRAY_SIZE(QC_BTN)))
             {
                 redraw = 1;
@@ -288,7 +188,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
 	    int down_latches = button_down_latches();
 
             if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		trigger_accel_sound = 1;
+                // Do nothing
 	    }
 
             // Send QC ping

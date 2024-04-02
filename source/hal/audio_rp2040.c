@@ -89,9 +89,6 @@ static void audio_in_iqr_handler(void)
 
 void audio_init_gpio(void)
 {
-    /* Initialize audio gpio */
-    gpio_init(BADGE_GPIO_AUDIO_INPUT);
-
     /* Configure PWM slew rate, drive strength, and pwm slice/channel */
     gpio_init(BADGE_GPIO_AUDIO_PWM);
     gpio_disable_pulls(BADGE_GPIO_AUDIO_PWM);
@@ -107,31 +104,6 @@ void audio_init_gpio(void)
     gpio_set_input_enabled(BADGE_GPIO_AUDIO_STANDBY, false);
     gpio_put(BADGE_GPIO_AUDIO_STANDBY, 0);
     gpio_set_dir(BADGE_GPIO_AUDIO_STANDBY, true);
-}
-
-static void audio_in_init(void)
-{
-    adc_init();
-    adc_gpio_init(BADGE_GPIO_AUDIO_INPUT);
-    adc_select_input(2);
-    adc_fifo_setup(true, false, 1, false, true);
-    adc_set_clkdiv(1000.0f); // 48 MHz / 1000 = 48kHz
-
-    adc_irq_set_enabled(true);
-    irq_set_exclusive_handler(ADC_IRQ_FIFO, &audio_in_iqr_handler);
-    irq_set_enabled(ADC_IRQ_FIFO, true);
-
-    // g_adc_dma_chan = dma_claim_unused_channel(true);
-    // dma_channel_config config = dma_channel_get_default_config(g_adc_dma_chan);
-    // channel_config_set_transfer_data_size(&config, DMA_SIZE_8);
-    // channel_config_set_read_increment(&config, false);
-    // channel_config_set_write_increment(&config, false);
-    // channel_config_set_dreq(&config, DREQ_ADC);
-    // dma_channel_configure(g_adc_dma_chan, &config, ((void *) pwm_hw->slice[slice].cc) + 2, &adc_hw->fifo, UINT32_MAX / 2, true);
-
-    adc_run(true);
-
-    return;
 }
 
 static void audio_out_init(void)
@@ -152,7 +124,6 @@ static void audio_out_init(void)
 void audio_init(void)
 {
     audio_out_init();
-    //audio_in_init();
 }
 
 /*- Standby Pin Control ------------------------------------------------------*/
