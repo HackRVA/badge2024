@@ -54,11 +54,11 @@ extern const struct menu_t schedule_m[]; /* defined in core/schedule.c */
 
 /* offsets for menu animation direction depending on where we came from */
 static struct point menu_animation_direction[] = {
-    { -1, 0 }, /* MENU_PREVIOUS, animation moves left */
-    { 1, 0 },  /* MENU_NEXT, animatino moves right */
-    { 0, -1 }, /* MENU_PARENT, animation moves up */
-    { 0, 1 },  /* MENU_CHILD, animatino moves down */
-    { 0, 0 },  /* MENU_UNKNOWN, no movement */
+    { -1, 0 }, /* came from MENU_PREVIOUS, animation moves left */
+    { 1, 0 },  /* came from MENU_NEXT, animation moves right */
+    { 0, -1 }, /* came from MENU_PARENT, animation moves up */
+    { 0, 1 },  /* came from MENU_CHILD, animation moves down */
+    { 0, 0 },  /* came from MENU_UNKNOWN, no movement */
 };
 
 static const struct menu_t legacy_games_m[] = {
@@ -347,6 +347,19 @@ static void sanity_check_menu(struct menu_t *menu)
 #endif
 }
 
+static int menu_animation_in_progress = 0;
+static struct menu_animation_state {
+	int frame;
+	enum menu_previous came_from;
+	int npoints, old_npoints;
+	struct point *points, *old_points;
+	struct menu_t *root_menu;
+	struct menu_t *last_menu_selected;
+	struct menu_t *selected;
+	struct menu_icon *previous_icon;
+	int text_label_x;
+} menu_animation;
+
 /* The reason that legacy_display_menu returns a menu_t * instead of void
    as you might expect is because sometimes it skips over unselectable
    items.
@@ -363,6 +376,7 @@ static struct menu_t *legacy_display_menu(struct menu_t *menu,
     struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
     int menu_item_number = 0;
 
+    menu_animation_in_progress = 0; /* legacy menus don't animate */
     root_menu = menu;
 
     sanity_check_menu(menu);
@@ -505,6 +519,104 @@ static int menu_has_icons(struct menu_t *m)
    return has_icons;
 }
 
+static void animate_menu(struct menu_animation_state *animation)
+{
+	enum menu_previous came_from = animation->came_from;
+	int xd = menu_animation_direction[came_from].x;
+	int yd = menu_animation_direction[came_from].y;
+	int npoints = animation->npoints;
+	struct point *points = animation->points;
+	int old_npoints = animation->old_npoints;
+	struct point *old_points = animation->old_points;
+	struct menu_t *root_menu = animation->root_menu;
+	struct menu_t *last_menu_selected = animation->last_menu_selected;
+	struct menu_icon *previous_icon = animation->previous_icon;
+	struct menu_t *selected = animation->selected;
+
+	FbClear();
+
+	/* Draw new selection entering */
+	// int drawing_x = 120 + ((255 - menu_animation.frame) * 100 / 255 - 56);
+	int startx = 64 + 56 * -xd; /* 8, or 120 */
+	int xoffset = xd * 56 * animation->frame / 255; /* slides from +/- 56 to zero */
+	int starty = 64 + 56 * -yd;
+	int yoffset = yd * 56 * animation->frame / 255;
+	int drawing_x = startx + xoffset;
+	int drawing_y = starty + yoffset;
+	int drawing_scale = (1024 * (animation->frame + 255) / 2) / 255 / 2;
+	FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
+
+	if (came_from != MENU_UNKNOWN) {
+		/* Draw previous selection leaving */
+		// drawing_x = 64 - (64 * animation->frame / 255);
+		startx = 64;
+		xoffset = xd * 56 * animation->frame / 255; /* slides from 0 to +/- 56 */
+		starty = 64;
+		yoffset = yd * 56 * animation->frame / 255;
+		drawing_x = startx + xoffset;
+		drawing_y = starty + yoffset;
+		drawing_scale = (1024 * (255 - animation->frame / 2)) / 255 / 2;
+		FbDrawObject(old_points, old_npoints, GREEN, drawing_x, drawing_y, drawing_scale);
+	}
+
+	animation->frame += 20;
+	if (animation->frame > 255)
+		animation->frame = 255;
+
+	if (menu_animation.frame < 255) {
+		/* Save menu animation animation state for next frame */
+		animation->came_from = came_from;
+		animation->npoints = npoints;
+		animation->points = points;
+		animation->old_npoints = old_npoints;
+		animation->old_points = old_points;
+		animation->root_menu = root_menu;
+		animation->last_menu_selected = last_menu_selected;
+		animation->previous_icon = previous_icon;
+		menu_animation_in_progress = 1;
+		FbPushBuffer();
+		return;
+	} else {
+		root_menu = animation->root_menu;
+		last_menu_selected = animation->last_menu_selected;
+		previous_icon = animation->previous_icon;
+		menu_animation_in_progress = 0; /* we've finished the animation */
+		animation->frame = 0;
+	}
+	/* End of menu animation code */
+
+	if (came_from == MENU_PREVIOUS) {
+		/* draw the "next" menu item incoming */
+		struct menu_t *next_item =
+			find_next_menu_item(root_menu, selected, SKIP_ITEM, 1);
+		if (next_item && next_item->icon) {
+			int drawing_x = 64 + 56;
+			int drawing_y = 64;
+			int drawing_scale = (1024 * (255 - 250 / 2)) / 255 / 2;
+			points = next_item->icon->points;
+			int npoints = next_item->icon->npoints;
+			FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
+		}
+	}
+
+	if (came_from == MENU_NEXT) {
+		/* draw the "next" menu item incoming */
+		struct menu_t *prev_item =
+			find_prev_menu_item(root_menu, selected, SKIP_ITEM, 1);
+		if (prev_item && prev_item->icon) {
+			int drawing_x = 64 - 56;
+			int drawing_y = 64;
+			int drawing_scale = (1024 * (255 - 250 / 2)) / 255 / 2;
+			points = prev_item->icon->points;
+			int npoints = prev_item->icon->npoints;
+			FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
+		}
+	}
+	FbMove(animation->text_label_x, 120);
+	FbWriteLine(selected->name);
+	FbPushBuffer();
+}
+
 /* The reason that new_display_menu returns a menu_t * instead of void
    as you might expect is because sometimes it skips over unselectable
    items.
@@ -521,7 +633,6 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     struct menu_t *root_menu; /* keep a copy in case menu has a bad structure */
     int menu_item_number = 0;
     static struct menu_t *last_menu_selected = NULL;
-    static int animation_frame = 255;
     static struct menu_icon *previous_icon = NULL;
 
     sanity_check_menu(menu);
@@ -529,46 +640,18 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     /* If this menu has no icons defined, just use the old legacy style to display
      * This makes, e.g. the schedule continue to work.
      */
-    if (!menu_has_icons(menu))
+    if (!menu_has_icons(menu)) {
+       menu_animation_in_progress = 0;
        return legacy_display_menu(menu, selected, style, came_from);
-	
+    }
 
     if (last_menu_selected != selected) {
 	last_menu_selected = selected;
-	animation_frame = 0;
+	menu_animation.frame = 0;
+	menu_animation_in_progress = 1;
     }
 
     root_menu = menu;
-
-    switch (style) {
-        case MAIN_MENU_STYLE:
-            FbBackgroundColor(MAIN_MENU_BKG_COLOR);
-            FbClear();
-
-            FbColor(RED);
-            FbMove(2,5);
-            FbRectangle(LCD_XSIZE - 5, LCD_YSIZE - 8);
-
-            FbColor(RED);
-            FbMove(1,4);
-            FbRectangle(LCD_XSIZE - 3, LCD_YSIZE - 6);
-            break;
-
-        case WHITE_ON_BLACK:
-            FbClear();
-            FbBackgroundColor(BLACK);
-            FbTransparentIndex(0);
-            break;
-
-        case BLANK:
-        default:
-            break;
-    }
-
-    cursor_x = MENU_LEFT;
-    //cursor_y = CHAR_HEIGHT;
-    cursor_y = 2; // CHAR_HEIGHT;
-    FbMove(cursor_x, cursor_y);
 
     while (1) {
         unsigned char rect_w=0;
@@ -610,37 +693,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 		    selected = menu;
         }
 
-        // Determine selected item color
-        switch(style) {
-            case MAIN_MENU_STYLE:
-#if 0
-                if (menu == selected) {
-                    FbColor(YELLOW);
-
-                    FbMove(3, cursor_y + 1);
-                    FbFilledRectangle(2, 8);
-
-                    // Set the selected color for the coming writeline
-                    FbColor(GREEN);
-                } else {
-                    // unselected writeline color
-                    FbColor(GREY16);
-                }
-                break;
-#endif
-            case WHITE_ON_BLACK:
-                FbColor((menu == selected) ? GREEN : WHITE);
-                break;
-            case BLANK:
-            default:
-                break;
-        }
-#if 0
-        FbMove(cursor_x+1, cursor_y+1);
-        FbWriteLine(menu->name);
-
-#endif
-	if (selected == menu) {
+	if (selected == menu) { /* wtf does this mean? */
 		int x = 64 - (strlen(menu->name) / 2) * 8;
 		/* Draw new selection item arriving */
 		int npoints, old_npoints;
@@ -661,76 +714,11 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 			old_npoints = 5;
 			old_points = default_menu_drawing;
 		}
-
-		int xd = menu_animation_direction[came_from].x;
-		int yd = menu_animation_direction[came_from].y;
-
-		do {
-			FbClear();
-
-			/* Draw new selection entering */
-			// int drawing_x = 120 + ((255 - animation_frame) * 100 / 255 - 56);
-			int startx = 64 + 56 * -xd; /* 8, or 120 */
-			int xoffset = xd * 56 * animation_frame / 255; /* slides from +/- 56 to zero */
-			int starty = 64 + 56 * -yd;
-			int yoffset = yd * 56 * animation_frame / 255;
-			int drawing_x = startx + xoffset;
-			int drawing_y = starty + yoffset;
-			int drawing_scale = (1024 * (animation_frame + 255) / 2) / 255 / 2;
-			FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
-
-			if (came_from != MENU_UNKNOWN) {
-				/* Draw previous selection leaving */
-				// drawing_x = 64 - (64 * animation_frame / 255);
-				startx = 64;
-				xoffset = xd * 56 * animation_frame / 255; /* slides from 0 to +/- 56 */
-				starty = 64;
-				yoffset = yd * 56 * animation_frame / 255;
-				drawing_x = startx + xoffset;
-				drawing_y = starty + yoffset;
-				drawing_scale = (1024 * (255 - animation_frame / 2)) / 255 / 2;
-				FbDrawObject(old_points, old_npoints, GREEN, drawing_x, drawing_y, drawing_scale);
-			}
-
-			FbPushBuffer();
-			animation_frame += 10;
-			if (animation_frame > 255)
-				animation_frame = 255;
-#ifdef TARGET_SIMULATOR
-			usleep(10000);
-#endif
-		} while (animation_frame < 255);
-
-		if (came_from == MENU_PREVIOUS) {
-			/* draw the "next" menu item incoming */
-			struct menu_t *next_item =
-				find_next_menu_item(root_menu, selected, SKIP_ITEM, 1);
-			if (next_item && next_item->icon) {
-				int drawing_x = 64 + 56;
-				int drawing_y = 64;
-				int drawing_scale = (1024 * (255 - 250 / 2)) / 255 / 2;
-				points = next_item->icon->points;
-				int npoints = next_item->icon->npoints;
-				FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
-			}
-		}
-
-		if (came_from == MENU_NEXT) {
-			/* draw the "next" menu item incoming */
-			struct menu_t *prev_item =
-				find_prev_menu_item(root_menu, selected, SKIP_ITEM, 1);
-			if (prev_item && prev_item->icon) {
-				int drawing_x = 64 - 56;
-				int drawing_y = 64;
-				int drawing_scale = (1024 * (255 - 250 / 2)) / 255 / 2;
-				points = prev_item->icon->points;
-				int npoints = prev_item->icon->npoints;
-				FbDrawObject(points, npoints, GREEN, drawing_x, drawing_y, drawing_scale);
-			}
-		}
-
-		FbMove(x, 120);
-		FbWriteLine(menu->name);
+		menu_animation.npoints = npoints;
+		menu_animation.points = points;
+		menu_animation.old_npoints = old_npoints;
+		menu_animation.old_points = old_points;
+		menu_animation.text_label_x = x;
 	}
 
         cursor_x += (rect_w + CHAR_WIDTH);
@@ -741,17 +729,22 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 		break;
     } // END WHILE
 
-	if (selected)
-		previous_icon = selected->icon;
-	else
-		previous_icon = NULL;
+    menu_animation.frame = 0;
+    menu_animation.came_from = came_from;
+    menu_animation.root_menu = root_menu;
+    menu_animation.last_menu_selected = last_menu_selected;
+    menu_animation.selected = selected;
+    menu_animation.previous_icon = previous_icon;
+
+    if (selected)
+	previous_icon = selected->icon;
+    else
+	previous_icon = NULL;
+
     /* in case last menu item is a skip */
     if (selected == NULL) {
         selected = root_menu;
     }
-
-    // Write menu onto the screen
-    FbPushBuffer();
     return selected;
 }
 
@@ -784,6 +777,8 @@ static void pop_menu(void)
 	G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu;
 	menu_scroll_start_item = G_menuStack[G_menuCnt].menu_scroll_start_item;
         G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_CHILD);
+	menu_animation_in_progress = 1;
+	menu_animation.frame = 0;
 }
 
 /*
@@ -801,7 +796,8 @@ void returnToMenus() {
         G_menuStack[G_menuCnt].currMenu = G_currMenu;
         G_menuStack[G_menuCnt].selectedMenu = G_selectedMenu;
     }
-
+    menu_animation_in_progress = 1;
+    menu_animation.frame = 0;
     G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
     runningApp = NULL;
 }
@@ -890,7 +886,12 @@ static int user_backed_out(struct menu_t *menu, int down_latches)
 	BUTTON_PRESSED(back_out_button, down_latches);
 }
 
-void menus() {
+void menus()
+{
+    if (menu_animation_in_progress) {
+	animate_menu(&menu_animation);
+	return;
+    }
     if (runningApp != NULL && !is_dormant) { /* running app is set by menus() not genericMenus() */
 	/* Call the runningApp if non-NULL and the screen saver is not active */
         (*runningApp)(NULL);
@@ -912,6 +913,7 @@ void menus() {
     int rotary1 = button_get_rotation(1);
     /* see if physical button has been clicked */
     if (user_made_selection(G_currMenu, down_latches)) {
+	int via_back_item = 0;
         // action happened that will result in menu redraw
         // do_animation = 1;
         switch (G_selectedMenu->type) {
@@ -925,8 +927,11 @@ void menus() {
             case BACK: /* return from menu */
                 menu_beep(BACK_FREQ);
 		pop_menu();
-                if (G_menuCnt == 0)
+		via_back_item = 1;
+                if (G_menuCnt == 0) {
+			menu_animation.came_from = MENU_UNKNOWN;
 			return; /* stack is empty, error or main menu */
+		}
                 break;
 
             case TEXT: /* maybe highlight if clicked?? */
@@ -952,8 +957,8 @@ void menus() {
             default:
                 break;
         }
-
-        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PARENT);
+        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE,
+			via_back_item ? MENU_UNKNOWN : MENU_PARENT);
     } else if (user_moved_to_previous_item(G_currMenu, down_latches, rotary0, rotary1)) {
         /* handle slider/soft button clicks */
         menu_beep(TEXT_FREQ); /* f */
