@@ -14,6 +14,7 @@ if (${TARGET} STREQUAL "PICO")
             ${CMAKE_CURRENT_LIST_DIR}/uid_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/display_st7735s_rp2040.c
             ${CMAKE_CURRENT_LIST_DIR}/driver-ST7735S/source/st7735s.c
+            ${CMAKE_CURRENT_LIST_DIR}/analog_rp2040.c
             )
 
     target_include_directories(${PRODUCT} PUBLIC ./driver-ST7735S/source)

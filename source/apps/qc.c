@@ -11,6 +11,7 @@
 #include "led_pwm.h"
 #include "delay.h"
 #include "music.h"
+#include "analog.h"
 
 #include <utils.h>
 
@@ -122,6 +123,33 @@ static const struct qc_button QC_BTN[] = {
 #endif
 };
 
+bool qc_analog(void)
+{
+    char msg[16];
+
+    float ohms = analog_get_resistance_ohms();
+    snprintf(msg, sizeof(msg), "R:%1.1e\n", ohms);
+    FbWriteString(msg);
+
+    uint16_t therm_mV = analog_get_chan_mV(ANALOG_CHAN_THERMISTOR);
+    snprintf(msg, sizeof(msg), "ThermV:%1d.%02d\n", therm_mV / 1000, therm_mV % 1000 / 10);
+    FbWriteString(msg);
+    
+    uint16_t hall_effect_mV = analog_get_chan_mV(ANALOG_CHAN_HALL_EFFECT);
+    snprintf(msg, sizeof(msg), "HallV:%1d.%02d\n", hall_effect_mV / 1000, hall_effect_mV % 1000 / 10);
+    FbWriteString(msg);
+
+    uint16_t batt_mV = analog_get_batt_mV();
+    snprintf(msg, sizeof(msg), "BattV:%1d.%02d\n", batt_mV / 1000, batt_mV % 1000 / 10);
+    FbWriteString(msg);
+
+    int8_t mcu_temp = analog_get_mcu_temp_C();
+    snprintf(msg, sizeof(msg), "MCUTC:%d\n", mcu_temp);
+    FbWriteString(msg);
+
+    return true;
+}
+
 void QC_cb(__attribute__((unused)) struct menu_t *menu)
 {
     //static unsigned char call_count = 0;
@@ -170,6 +198,11 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 sleep_ms(1000);
                 returnToMenus();
                 return;
+            }
+
+            if (qc_analog())
+            {
+                redraw = 1;
             }
 
             if (check_buttons(QC_BTN, ARRAY_SIZE(QC_BTN)))

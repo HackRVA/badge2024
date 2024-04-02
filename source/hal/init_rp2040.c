@@ -1,8 +1,13 @@
-#include <sys/cdefs.h>
 //
 // Created by Samuel Jones on 11/9/21.
 //
 
+#include <stdint.h>
+
+#include <sys/cdefs.h>
+
+#include "analog.h"
+#include "hardware/gpio.h"
 #include "pico/multicore.h"
 #include "pico/stdio.h"
 #include "hardware/watchdog.h"
@@ -89,11 +94,15 @@ _Noreturn void core1_procedure(void) {
 }
 
 static void _init_gpios(void) {
-
     display_init_gpio();
     led_pwm_init_gpio();
     button_init_gpio();
     audio_init_gpio();
+    analog_init_gpio();
+
+    /* FIXME - manage power of hall effect sensor. -PMW */
+    gpio_set_dir(BADGE_GPIO_HALL_EFFECT_ENABLE, true);
+    gpio_put(BADGE_GPIO_HALL_EFFECT_ENABLE, true);
 }
 
 void hal_init(void) {
@@ -105,6 +114,7 @@ void hal_init(void) {
     display_reset();
     rtc_init_badge(0);
     audio_init();
+    analog_init();
 
     exception_set_exclusive_handler(HARDFAULT_EXCEPTION, hard_fault_handler);
 
