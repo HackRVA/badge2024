@@ -491,7 +491,7 @@ static void write_notebook_header(void)
 	write_suspect_initial(x, y, WHITE, "W"); x += 8;
 	write_suspect_initial(x, y, GREEN, "G"); x += 8;
 	write_suspect_initial(x, y, CYAN, "P"); x += 8;
-	write_suspect_initial(x, y, MAGENTA, "P"); x += 8;
+	write_suspect_initial(x, y, MAGENTA, "P");
 }
 
 static void set_cursor_color(int color, int invert)
