@@ -336,6 +336,19 @@ static void move_bullet(int n)
 			bullet[n].alive = 0;
 		}
 	}
+	/* Check to see if we killed any saucers ... */
+	for (int i = 0; i < nsaucers; i++) {
+		int dx, dy;
+
+		dx = (bullet[n].x - saucer[i].x) / 256;
+		dy = (bullet[n].y - saucer[i].y) / 256;
+		dx *= dx;
+		dy *= dy;
+		if (dx + dy < 25) { /* < 5 pixels */
+			add_explosion(saucer[i].x, saucer[i].y, 20, 50);
+			remove_saucer(i);
+		}
+	}
 }
 
 static void remove_bullet(int n)
