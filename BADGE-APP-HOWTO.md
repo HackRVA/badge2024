@@ -1239,36 +1239,48 @@ beyond the scope of this document. Google "space partitioning collision detectio
 
 ## A few miscellaneous debugging tips
 
-The badge simulator is compiled with debugging information and with the address sanitizer and
-the undefined behavior sanitizer enabled, which should help to catch bugs early and enable
-easy debugging with gdb.
+* Address Sanitizer and Undefined Behavior Sanitizer
 
-By default, if the sanitizers catch something, they print messages and halt the program.
-If you do the following:
+  The badge simulator is compiled with debugging information and with the address sanitizer and
+  the undefined behavior sanitizer enabled, which should help to catch bugs early and enable
+  easy debugging with gdb.
+
+  By default, if the sanitizers catch something, they print messages and halt the program.
+  If you do the following:
 
 ```
 	export ASAN_OPTIONS=abort_on_error=1:halt_on_error=1
 	export UBSAN_OPTIONS=abort_on_error=1:halt_on_error=1
 ```
 
-it will make the sanitizers trap rather than halt, which is much, much better when
-running under gdb, as you can continue debugging, print back traces, values, etc,
-which you cannot if the program has halted.
+  it will make the sanitizers trap rather than halt, which is much, much better when
+  running under gdb, as you can continue debugging, print back traces, values, etc,
+  which you cannot if the program has halted.
 
-In gdb, so-called "tui mode" can be activated by pressing "Ctrl-x" then "a" (I remember this
-by the mnemonic "eXtra Awesome mode").  You may occasionally need to refresh the screen if
-it is disturbed by output of your program by pressing Ctrl-L.
+* clang scan-build static analyzer
 
-You can switch between source, assembly and combined views by the command "layout next".
+  For the simulator code, you can use clang's static analyzer to help find bugs.
+  There's a script in the top level directory,
+  [scan_build.sh](https://github.com/HackRVA/badge2024/blob/main/scan_build.sh) to invoke it.
 
-When running the hardware badge, printf statements will be sent via USB serial back to your
-computer.  If you find a problem which manifests on the physical badge, but not on the
-simulator, judicious use of printfs may help you find the problem.  You can see this output
-by using a terminal program.  On linux, minicom works reasonably well:
+* gdb "TUI mode"
+
+  In gdb, so-called "tui mode" can be activated by pressing "Ctrl-x" then "a" (I remember this
+  by the mnemonic "eXtra Awesome mode").  You may occasionally need to refresh the screen if
+  it is disturbed by output of your program by pressing Ctrl-L.
+
+  You can switch between source, assembly and combined views by the command "layout next".
+
+* Serial debug via USB
+
+  When running the hardware badge, printf statements will be sent via USB serial back to your
+  computer.  If you find a problem which manifests on the physical badge, but not on the
+  simulator, judicious use of printfs may help you find the problem.  You can see this output
+  by using a terminal program.  On linux, minicom works reasonably well:
 
 ```
 	minicom -D /dev/ttyACM0 -8
 ```
 
-You may need to install minicom.
+  You may need to install minicom.
 

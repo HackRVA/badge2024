@@ -61,6 +61,7 @@ build-pico/
 build-simulator/
 build_sdl_sim/
 docs/html/*
+zscan_build/*
 
 # Mac clutter
 **/.DS_Store
