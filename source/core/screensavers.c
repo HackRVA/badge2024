@@ -167,7 +167,6 @@ void holly_screensaver(void)
 	int n;
 
 	FbMove(0, 33);
-	n = 1;
 	if ((animation_count % 30) < 15)
 		n = 1;
 	else
