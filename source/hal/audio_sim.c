@@ -162,7 +162,10 @@ int audio_out_beep_with_cb(uint16_t freq,  uint16_t duration, void (*beep_finish
 	if (duration <= 0)
 		return 0;
 
-	if (freq == 0 && beep_finished != NULL) { /* We're being asked to play a rest? Ok. */
+	if (freq == 0) {
+		if (beep_finished == NULL) /* no callback provided?  Ok... */
+			return 0;
+		/* We're being asked to play a rest? Ok. */
 		pthread_mutex_lock(&audio_lock);
 		memset(audio_buffer, 0, sizeof(audio_buffer));
 		user_callback_fn = beep_finished;
