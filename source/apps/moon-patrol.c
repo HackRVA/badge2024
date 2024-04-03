@@ -32,13 +32,13 @@ static enum moonpatrol_state_t moonpatrol_state = MOONPATROL_INIT;
 static int screen_changed = 0;
 static int num_rocks = 20;
 static int num_craters = 20;
-static int ground_level = 148 << 8;
+static int ground_level = 148 * 256;
 static int difficulty_level = 0;
 static int num_saucer_triggers = 20;
 static int music_on = 1;
 #define GRAVITY 64 
-#define BULLET_VEL (5 << 8)
-#define JUMP_VEL (3 << 8)
+#define BULLET_VEL (5 * 256)
+#define JUMP_VEL (3 * 256)
 #define PLAYER_VEL_INC 64 
 
 #define TERRAIN_LEN 1024
@@ -50,8 +50,8 @@ static char terrain_feature[TERRAIN_LEN];
 #define FEATURE_SAUCER_TRIGGER (1 << 2)
 #define FEATURE_SAUCER_TRIGGER2 (1 << 3)
 
-#define MIN_PLAYER_VX (2 << 8)
-#define MAX_PLAYER_VX (25 << 8)
+#define MIN_PLAYER_VX (2 * 256)
+#define MAX_PLAYER_VX (25 * 256)
 
 /* Position of upper left of screen in game world */
 static int screenx = 0;
@@ -224,12 +224,12 @@ static void add_saucer(int type)
 	if (nsaucers >= MAXSAUCERS)
 		return;
 
-	saucer[nsaucers].x = player.x + xorshift(&r) % (50 << 8);
-	saucer[nsaucers].y = -(20 << 8);
+	saucer[nsaucers].x = player.x + xorshift(&r) % (50 * 256);
+	saucer[nsaucers].y = -(20 * 256);
 	saucer[nsaucers].vx = player.vx;
 	saucer[nsaucers].vy = 128;
-	saucer[nsaucers].target_altitude = 60 << 8;
-	saucer[nsaucers].target_xoffset = 70 << 8;
+	saucer[nsaucers].target_altitude = 60 * 256;
+	saucer[nsaucers].target_xoffset = 70 * 256;
 	saucer[nsaucers].alive = 400;
 	saucer[nsaucers].type = type;
 	nsaucers++;
@@ -249,8 +249,8 @@ static void draw_saucer(int i)
 		return;
 	int x, y;
 
-	x = (saucer[i].x - screenx) >> 8;
-	y = saucer[i].y >> 8;
+	x = (saucer[i].x - screenx) / 256;
+	y = saucer[i].y / 256;
 	if (saucer[i].type == 0)
 		FbDrawObject(saucer_points, ARRAYSIZE(saucer_points), YELLOW, x, y, 128);
 	else
@@ -279,26 +279,26 @@ static void move_saucer(int i)
 	if (saucer[i].alive > 0)
 		saucer[i].alive--;
 	dx = (player.x + saucer[i].target_xoffset) - saucer[i].x;
-	if ((dx < 0 && dx > -(10 << 8)) || (dx > 0 && dx < (10 << 8))) {
+	if ((dx < 0 && dx > -(10 * 256)) || (dx > 0 && dx < (10 * 256))) {
 		/* close enough, choose a new target xoffset */
 		if (saucer[i].target_xoffset > 0)
-			saucer[i].target_xoffset = -(10 << 8);
+			saucer[i].target_xoffset = -(10 * 256);
 		else
-			saucer[i].target_xoffset = (60 << 8);
+			saucer[i].target_xoffset = (60 * 256);
 	}
 	dy = saucer[i].target_altitude - saucer[i].y;
-	if ((dy < 0 && dy > -(1 << 8)) || (dy > 0 && dy < (1 << 8))) {
+	if ((dy < 0 && dy > -(1 * 256)) || (dy > 0 && dy < (1 * 256))) {
 		/* choose a new target altitude */ 
 		saucer[i].target_altitude = 40 + (xorshift(&r) % 20);
 	}
 	dy = saucer[i].target_altitude - saucer[i].y;
-	if (dy < 0 && saucer[i].vy > -(1 << 8))
+	if (dy < 0 && saucer[i].vy > -(1 * 256))
 		saucer[i].vy -= 20;
-	else if (dy > 0 && saucer[i].vy < (1 << 8))
+	else if (dy > 0 && saucer[i].vy < (1 * 256))
 		saucer[i].vy += 20;
-	if (dx < 0 && saucer[i].vx > player.vx - (5 << 8))
+	if (dx < 0 && saucer[i].vx > player.vx - (5 * 256))
 		saucer[i].vx -= 20;
-	if (dx > 0 && saucer[i].vx < player.vx + (5 << 8))
+	if (dx > 0 && saucer[i].vx < player.vx + (5 * 256))
 		saucer[i].vx += 20;
 }
 
@@ -319,14 +319,14 @@ static void move_bullet(int n)
 {
 	bullet[n].x += bullet[n].vx;
 	bullet[n].y += bullet[n].vy;
-	if (bullet[n].x - screenx >= (LCD_XSIZE << 8))
+	if (bullet[n].x - screenx >= (LCD_XSIZE * 256))
 		bullet[n].alive = 0;
 	if (bullet[n].y <= 0)
 		bullet[n].alive = 0;
-	int bi = ((bullet[n].x >> 8) / TERRAIN_SEG_LENGTH);
+	int bi = ((bullet[n].x / 256) / TERRAIN_SEG_LENGTH);
 	if (terrain_feature[bi] & FEATURE_ROCK) {
 		int dy = terrainy[bi] - bullet[n].y;
-		dy = dy >> 8;
+		dy = dy / 256;
 		if (dy < 0)
 			dy = -dy;
 		if (dy < 16) {
@@ -432,7 +432,7 @@ static void generate_terrain(void)
 
 	for (int i = 0; i < TERRAIN_LEN; i++) {
 		terrainy[i] = LCD_YSIZE - 10 - (xorshift(&rstate) % 8); /* TODO: something better */
-		terrainy[i] = terrainy[i] << 8;
+		terrainy[i] = terrainy[i] * 256;
 	}
 	terrainy[0] = terrainy[TERRAIN_LEN - 1];
 	memset(terrain_feature, 0, sizeof(terrain_feature));
@@ -463,7 +463,7 @@ static void generate_terrain(void)
 static void init_player(void)
 {
 	player.x = 0;
-	player.y = 148 << 8;
+	player.y = 148 * 256;
 	player.vx = 0;
 	player.vy = 0;
 	player.alive = 1;
@@ -506,8 +506,8 @@ static void moonpatrol_init(void)
 	FbInit();
 	FbClear();
 	generate_terrain();
-	generate_hills(foothill, FOOTHILLS_LEN, 120 << 8, 80 << 8, 20);
-	generate_hills(mountain, MOUNTAINS_LEN, 60 << 8, 20 << 8, 10);
+	generate_hills(foothill, FOOTHILLS_LEN, 120 * 256, 80 * 256, 20);
+	generate_hills(mountain, MOUNTAINS_LEN, 60 * 256, 20 * 256, 10);
 	moonpatrol_state = MOONPATROL_SETUP;
 	screen_changed = 1;
 	init_player();
@@ -579,15 +579,15 @@ static void moonpatrol_setup(void)
 static void moonpatrol_shoot(void)
 {
 	add_bullet(player.x, player.y, player.vx, -BULLET_VEL);
-	add_bullet(player.x, player.y - (5 << 8), player.vx + BULLET_VEL, 0);
+	add_bullet(player.x, player.y - (5 * 256), player.vx + BULLET_VEL, 0);
 }
 
 static void player_maybe_jump(void)
 {
-	int playeri = ((player.x >> 8) / TERRAIN_SEG_LENGTH);
+	int playeri = ((player.x / 256) / TERRAIN_SEG_LENGTH);
 	int dy = player.y - terrainy[playeri];
 	printf("py = %d, ty = %d, dy = %d\n", player.y, terrainy[playeri], dy);
-	if (-dy < (3 << 8)) { /* prevent mid-air jumping */
+	if (-dy < (3 * 256)) { /* prevent mid-air jumping */
 		player.vy = -JUMP_VEL;
 	}
 }
@@ -616,18 +616,18 @@ static void check_buttons(void)
 
 static void draw_terrain(void)
 {
-	int i = ((screenx >> 8) / TERRAIN_SEG_LENGTH) - 2;
+	int i = ((screenx / 256) / TERRAIN_SEG_LENGTH) - 2;
 	int x1, y1, x2, y2, i2;
 
-	x1 = i * TERRAIN_SEG_LENGTH - (screenx >> 8);
+	x1 = i * TERRAIN_SEG_LENGTH - (screenx / 256);
 	if (i < 0)
 		i += TERRAIN_LEN;
 	x2 = x1 + TERRAIN_SEG_LENGTH;
-	y1 = terrainy[i] >> 8;
+	y1 = terrainy[i] / 256;
 	i2 = i + 1;
 	if (i2 >= TERRAIN_LEN)
 		i2 = i2 - TERRAIN_LEN;
-	y2 = terrainy[i2] >> 8;
+	y2 = terrainy[i2] / 256;
 
 	FbColor(WHITE);
 	do {
@@ -651,31 +651,31 @@ static void draw_terrain(void)
 		y1 = y2;
 		if (i2 >= TERRAIN_LEN)
 			i2 = i2 - TERRAIN_LEN;
-		y2 = terrainy[i2] >> 8;
+		y2 = terrainy[i2] / 256;
 		x1 += TERRAIN_SEG_LENGTH;
 		x2 += TERRAIN_SEG_LENGTH;
 		if (x1 >= LCD_XSIZE)
 			break;
 
-		if (x1 < ((player.x - screenx) >> 8) && x2 > ((player.x - screenx) >> 8))
-			ground_level = ((y1 + y2) / 2) << 8;
+		if (x1 < ((player.x - screenx) / 256) && x2 > ((player.x - screenx) / 256))
+			ground_level = ((y1 + y2) / 2) * 256;
 	} while(1);
 }
 
 static void draw_hills(int hill[], int len, int seglen, int factor, int color)
 {
-	int i = (((screenx / factor) >> 8) / seglen) - 2;
+	int i = (((screenx / factor) / 256) / seglen) - 2;
 	int x1, y1, x2, y2, i2;
 
-	x1 = i * seglen - ((screenx / factor) >> 8);
+	x1 = i * seglen - ((screenx / factor) / 256);
 	if (i < 0)
 		i += len;
 	x2 = x1 + seglen;
-	y1 = hill[i] >> 8;
+	y1 = hill[i] / 256;
 	i2 = i + 1;
 	if (i2 >= len)
 		i2 = i2 - len;
-	y2 = hill[i2] >> 8;
+	y2 = hill[i2] / 256;
 
 	FbColor(color);
 	do {
@@ -687,7 +687,7 @@ static void draw_hills(int hill[], int len, int seglen, int factor, int color)
 		y1 = y2;
 		if (i2 >= len)
 			i2 = i2 - len;
-		y2 = hill[i2] >> 8;
+		y2 = hill[i2] / 256;
 		x1 += seglen;
 		x2 += seglen;
 		if (x1 >= LCD_XSIZE)
@@ -697,8 +697,8 @@ static void draw_hills(int hill[], int len, int seglen, int factor, int color)
 
 static void draw_player(void)
 {
-	int x = (player.x - screenx) >> 8;
-	int y = (player.y - screeny) >> 8;
+	int x = (player.x - screenx) / 256;
+	int y = (player.y - screeny) / 256;
 
 	if (player.alive < 0)
 		return;
@@ -707,15 +707,15 @@ static void draw_player(void)
 	FbMove(x - 5, y - 5);
 	FbRectangle(10, 5);
 
-	screenx = player.x - (10 << 8);
+	screenx = player.x - (10 * 256);
 }
 
 static void draw_spark(int i)
 {
 	int x, y;
 
-	x = (spark[i].x - screenx) >> 8;
-	y = (spark[i].y - screeny) >> 8;
+	x = (spark[i].x - screenx) / 256;
+	y = (spark[i].y - screeny) / 256;
 	if (FbOnScreen(x, y)) {
 		FbColor(YELLOW);
 		FbPoint(x, y);
@@ -732,7 +732,7 @@ static void move_spark(int i)
 {
 	spark[i].x += spark[i].vx;
 	spark[i].y += spark[i].vy;
-	spark[i].vy += (GRAVITY >> 1); /* >> 1 because it looks better */
+	spark[i].vy += (GRAVITY / 2); /* / 2 because it looks better */
 	if (spark[i].alive > 0)
 		spark[i].alive--;
 }
@@ -777,10 +777,10 @@ static void add_explosion(int x, int y, int count, int life)
 	static unsigned int xorshift_state = 0xa5a5a5a5;
         for (int i = 0; i < count; i++) {
 		int vx, vy;
-                vx = xorshift(&xorshift_state) % (5 << 8);
-                vy = xorshift(&xorshift_state) % (5 << 8);
-		vx = vx - ((5 << 8) / 2);
-		vy = vy - ((5 << 8) / 2);
+                vx = xorshift(&xorshift_state) % (5 * 256);
+                vy = xorshift(&xorshift_state) % (5 * 256);
+		vx = vx - ((5 * 256) / 2);
+		vy = vy - ((5 * 256) / 2);
 		add_spark(x, y, vx, vy, xorshift(&xorshift_state) % life);
         }
 }
@@ -791,14 +791,14 @@ static void draw_bullet(int i)
 
 	FbColor(WHITE);
 	if (bullet[i].vy != 0) {
-		x1 = (bullet[i].x - screenx) >> 8;
-		y1 = (bullet[i].y + bullet[i].vy) >> 8;
+		x1 = (bullet[i].x - screenx) / 256;
+		y1 = (bullet[i].y + bullet[i].vy) / 256;
 		x2 = x1;
-		y2 = bullet[i].y >> 8;
+		y2 = bullet[i].y / 256;
 	} else {
-		x1 = (bullet[i].x - screenx - bullet[i].vx) >> 8;
-		y1 = bullet[i].y >> 8;
-		x2 = (bullet[i].x - screenx) >> 8;
+		x1 = (bullet[i].x - screenx - bullet[i].vx) / 256;
+		y1 = bullet[i].y / 256;
+		x2 = (bullet[i].x - screenx) / 256;
 		y2 = y1;
 	}
 	FbClippedLine(x1, y1, x2, y2);
@@ -844,10 +844,10 @@ static void moonpatrol_run(void)
 	draw_screen();
 	screen_changed = 1;
 
-	int playeri = ((player.x >> 8) / TERRAIN_SEG_LENGTH);
+	int playeri = ((player.x / 256) / TERRAIN_SEG_LENGTH);
 	if (terrain_feature[playeri] & FEATURE_ROCK) {
 		if (player.vy == 0) {
-			int dy = (player.y - terrainy[playeri]) >> 8;
+			int dy = (player.y - terrainy[playeri]) / 256;
 			if (dy < 0)
 				dy = -dy;
 			if (dy < 3 && player.alive > 0) {
@@ -858,7 +858,7 @@ static void moonpatrol_run(void)
 	}
 	if (terrain_feature[playeri] & FEATURE_CRATER) {
 		if (player.vy == 0) {
-			int dy = (player.y - terrainy[playeri]) >> 8;
+			int dy = (player.y - terrainy[playeri]) / 256;
 			if (dy < 0)
 				dy = -dy;
 			if (dy < 3 && player.alive > 0) {
