@@ -356,7 +356,6 @@ static struct menu_animation_state {
 	struct menu_t *root_menu;
 	struct menu_t *last_menu_selected;
 	struct menu_t *selected;
-	struct menu_icon *previous_icon;
 	int text_label_x;
 } menu_animation;
 
@@ -530,7 +529,6 @@ static void animate_menu(struct menu_animation_state *animation)
 	struct point *old_points = animation->old_points;
 	struct menu_t *root_menu = animation->root_menu;
 	struct menu_t *last_menu_selected = animation->last_menu_selected;
-	struct menu_icon *previous_icon = animation->previous_icon;
 	struct menu_t *selected = animation->selected;
 
 	FbClear();
@@ -572,14 +570,12 @@ static void animate_menu(struct menu_animation_state *animation)
 		animation->old_points = old_points;
 		animation->root_menu = root_menu;
 		animation->last_menu_selected = last_menu_selected;
-		animation->previous_icon = previous_icon;
 		menu_animation_in_progress = 1;
 		FbPushBuffer();
 		return;
 	} else {
 		root_menu = animation->root_menu;
 		last_menu_selected = animation->last_menu_selected;
-		previous_icon = animation->previous_icon;
 		menu_animation_in_progress = 0; /* we've finished the animation */
 		animation->frame = 0;
 	}
@@ -734,7 +730,6 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     menu_animation.root_menu = root_menu;
     menu_animation.last_menu_selected = last_menu_selected;
     menu_animation.selected = selected;
-    menu_animation.previous_icon = previous_icon;
 
     if (selected)
 	previous_icon = selected->icon;
