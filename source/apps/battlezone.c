@@ -980,7 +980,6 @@ static void draw_mountains(void)
 		x2 = x1 + 1423;
 		FbClippedLine(x1 >> 8, y1, x2 >> 8, y2);
 		x1 = x2;
-		y1 = y2;
 	}
 }
 
