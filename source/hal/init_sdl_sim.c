@@ -388,7 +388,6 @@ static void draw_flare_led(struct sim_lcd_params *slp)
 	struct button_coord_list bcl = get_button_coords(slp, w, h);
 	x = bcl.led.x - led_width / 2;
 	y = bcl.led.y - led_height / 2;
-	p = led_pixels;
 	for (i = 0; i < led_height; i++) {
 		for (j = 0; j < led_width; j++) {
 			p = &led_pixels[i * led_width * 4 + j * 4];
