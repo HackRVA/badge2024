@@ -23,6 +23,7 @@
 #define BOMB_COLOR WHITE
 #define PLAYER_COLOR MAGENTA
 #define WHEEL_COLOR CYAN
+#define WAYPOINT_COLOR WHITE
 
 /* Program states.  Initial state is MOONPATROL_INIT */
 enum moonpatrol_state_t {
@@ -77,6 +78,22 @@ static struct player {
 } player = {
 	0, 0, 10, 0, 1,
 };
+
+#define NUMWAYPOINTS 8
+static struct waypoint {
+	int x, y;
+	char label;
+} waypoint[NUMWAYPOINTS] = {
+	{ (0 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, '0' },
+	{ (1 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'A' },
+	{ (2 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'B' },
+	{ (3 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'C' },
+	{ (4 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'D' },
+	{ (5 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'E' },
+	{ (6 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'F' },
+	{ (7 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'G' },
+};
+static int last_waypoint_reached = 0;
 
 #define MAXBULLETS 10
 static struct bullet {
@@ -653,7 +670,7 @@ static void generate_terrain(void)
 
 static void init_player(void)
 {
-	player.x = 0;
+	player.x = waypoint[last_waypoint_reached].x;
 	player.y = 148 * 256;
 	player.vx = 0;
 	player.vy = 0;
@@ -1024,6 +1041,30 @@ static void draw_bombs(void)
 	}
 }
 
+static void draw_waypoint(int i)
+{
+	int x, y;
+	char waypoint_label[2];
+	x = (waypoint[i].x - screenx) / 256;
+	y = (waypoint[i].y - screeny) / 256;
+	if (!FbOnScreen(x, y))
+		return;
+	FbColor(WAYPOINT_COLOR);
+	FbMove(x, y);
+	waypoint_label[0] = waypoint[i].label;
+	waypoint_label[1] = '\0';
+	FbWriteString(waypoint_label);
+}
+
+static void draw_waypoints(void)
+{
+	for (int i = 0; i < NUMWAYPOINTS; i++) {
+		draw_waypoint(i);
+		if (player.x > waypoint[i].x && i > last_waypoint_reached)
+			last_waypoint_reached = i;
+	}
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
@@ -1036,6 +1077,7 @@ static void draw_screen(void)
 	draw_bullets();
 	draw_bombs();
 	draw_sparks();
+	draw_waypoints();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
