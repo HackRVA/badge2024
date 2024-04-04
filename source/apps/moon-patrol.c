@@ -22,6 +22,7 @@
 #define BULLET_COLOR x11_orange_red
 #define BOMB_COLOR WHITE
 #define PLAYER_COLOR MAGENTA
+#define WHEEL_COLOR CYAN
 
 /* Program states.  Initial state is MOONPATROL_INIT */
 enum moonpatrol_state_t {
@@ -107,6 +108,70 @@ static struct bomb {
 	int x, y, vx, vy, type, alive;
 } bomb[MAXBOMBS];
 static int nbombs = 0;
+
+static struct point moon_buggy_points[] = {
+	{ -63, 3 },
+	{ -54, -6 },
+	{ -32, -7 },
+	{ -29, -15 },
+	{ -27, -15 },
+	{ -24, -35 },
+	{ -22, -35 },
+	{ -21, -16 },
+	{ -17, -15 },
+	{ -17, -7 },
+	{ -12, -8 },
+	{ 8, -18 },
+	{ 32, -19 },
+	{ 62, -1 },
+	{ 61, 11 },
+	{ 58, 21 },
+	{ 39, 28 },
+	{ -56, 27 },
+	{ -61, 13 },
+	{ -63, 4 },
+	{ -128, -128 },
+	{ 13, -17 },
+	{ 17, -4 },
+	{ 45, -3 },
+	{ 55, -4 },
+};
+
+static struct point wheel_points[] = {
+	{ -62, -2 },
+	{ -55, -26 },
+	{ -42, -42 },
+	{ -19, -59 },
+	{ 1, -62 },
+	{ 20, -58 },
+	{ 37, -52 },
+	{ 55, -33 },
+	{ 62, -16 },
+	{ 63, 0 },
+	{ 61, 20 },
+	{ 51, 40 },
+	{ 30, 54 },
+	{ 13, 60 },
+	{ 0, 61 },
+	{ -21, 58 },
+	{ -40, 48 },
+	{ -55, 28 },
+	{ -61, -1 },
+	{ -128, -128 },
+	{ -31, -1 },
+	{ -27, -14 },
+	{ -14, -27 },
+	{ -1, -29 },
+	{ 17, -28 },
+	{ 27, -17 },
+	{ 33, -2 },
+	{ 30, 17 },
+	{ 16, 30 },
+	{ -1, 35 },
+	{ -12, 31 },
+	{ -27, 20 },
+	{ -31, 0 },
+};
 
 #define whole_note (2000) 
 #define half_note (whole_note / 2)
@@ -824,15 +889,22 @@ static void draw_hills(int hill[], int len, int seglen, int factor, int color)
 
 static void draw_player(void)
 {
+	static unsigned int rstate = 0xa5a5a5a5;
 	int x = (player.x - screenx) / 256;
 	int y = (player.y - screeny) / 256;
 
 	if (player.alive < 0)
 		return;
 
-	FbColor(PLAYER_COLOR);
-	FbMove(x - 5, y - 5);
-	FbRectangle(10, 5);
+	int wyo = xorshift(&rstate);
+	int wyo1 = wyo & 0x01;
+	int wyo2 = (wyo >> 1) & 0x01;
+	int wyo3 = (wyo >> 2) & 0x01;
+
+	FbDrawObject(moon_buggy_points, ARRAYSIZE(moon_buggy_points), PLAYER_COLOR, x, y - 5, 128);
+	FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x - 6, y + wyo1, 32);
+	FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x + 0, y + wyo2, 32);
+	FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x + 6, y + wyo3, 32);
 }
 
 static void draw_spark(int i)
