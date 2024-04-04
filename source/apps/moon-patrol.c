@@ -786,7 +786,7 @@ static void moonpatrol_setup(void)
 
 static void moonpatrol_shoot(void)
 {
-	add_bullet(player.x, player.y, player.vx, -BULLET_VEL);
+	add_bullet(player.x - (3 * 256), player.y, player.vx, -BULLET_VEL);
 	add_bullet(player.x, player.y - (5 * 256), player.vx + BULLET_VEL, 0);
 }
 
