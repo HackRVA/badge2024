@@ -15,6 +15,7 @@
 #include <stdint.h>
 
 #include <pico.h>
+#include <pico/time.h>
 #include <hardware/i2c.h>
 
 #include "hardware/gpio.h"
@@ -173,7 +174,7 @@ static void color_sensor_up(struct color_sensor_context *ctx)
     ctx->last_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] = 0xffff;
 
     /* Ensure we have allowed the color sensor time to boot up. */
-    while(time_us_64() < (1 * 1000 * 1000));
+    sleep_until(from_us_since_boot(1 * 1000 * 1000 /* 1 sec */));
 
     /* Bring up the I2C controller. */
     i2c_init(m_ctx.i2c, BADGE_I2C_COLOR_SENSOR_BAUD);
@@ -271,7 +272,7 @@ static void color_sensor_down(struct color_sensor_context *ctx)
 /*- API ----------------------------------------------------------------------*/
 void color_sensor_init(void)
 {
-    color_sensor_up(&m_ctx);
+    //color_sensor_up(&m_ctx); // defer to first use
 }
 
 enum color_sensor_state color_sensor_get_state(void)
@@ -284,12 +285,11 @@ enum color_sensor_state color_sensor_power_ctl(enum color_sensor_power_cmd cmd)
     enum color_sensor_state state = color_sensor_get_state();
     
     if ((COLOR_SENSOR_POWER_CMD_UP == cmd)
-        && (COLOR_SENSOR_STATE_POWER_DOWN == state)) {
+        && (COLOR_SENSOR_STATE_READY != state)) {
+        /* Clear any errors and try again. */
         color_sensor_up(&m_ctx);
     } else if ((COLOR_SENSOR_POWER_CMD_DOWN == cmd)
-               && ((COLOR_SENSOR_STATE_READY == state)
-                   || (COLOR_SENSOR_STATE_ERROR == state)))
-    {
+               && (COLOR_SENSOR_STATE_POWER_DOWN != state)) {
         color_sensor_down(&m_ctx);
     }
     
