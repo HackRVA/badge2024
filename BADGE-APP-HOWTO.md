@@ -170,7 +170,7 @@ integer types (e.g. "int") as these will be wrapped into the range 0-255.
 	void FbLine(unsigned char x1, unsigned char y1, unsigned char x2, unsigned char y2);
 		draws a line from (x1, y1) to (x2, y2)
 
-	void FbClippedLine(unsigned short x1, unsigned short y1, unsigned short x2, unsigned short y2);
+	void FbClippedLine(signed short x1, signed short y1, signed short x2, signed short y2);
 		draws a line from (x1, y1) to (x2, y2), clipped to the screen dimensions.  At least one
 		of (x1, y1), (x2, y2) must be on screen.  This function does a per-pixel test, so is slightly
 		slower than FbLine().
