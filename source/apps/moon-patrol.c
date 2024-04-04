@@ -13,6 +13,16 @@
 #include "music.h"
 #include "dynmenu.h"
 
+#define GROUND_COLOR x11_DarkGoldenrod
+#define ROCK_COLOR x11_LightSlateGray
+#define FOOTHILL_COLOR x11_spring_green
+#define MOUNTAIN_COLOR x11_LightSteelBlue
+#define SAUCER_COLOR YELLOW
+#define SAUCER2_COLOR x11_lime_green
+#define BULLET_COLOR x11_orange_red
+#define BOMB_COLOR WHITE
+#define PLAYER_COLOR MAGENTA
+
 /* Program states.  Initial state is MOONPATROL_INIT */
 enum moonpatrol_state_t {
 	MOONPATROL_INIT,
@@ -278,9 +288,9 @@ static void draw_saucer(int i)
 	x = (saucer[i].x - screenx) / 256;
 	y = saucer[i].y / 256;
 	if (saucer[i].type == 0)
-		FbDrawObject(saucer_points, ARRAYSIZE(saucer_points), YELLOW, x, y, 128);
+		FbDrawObject(saucer_points, ARRAYSIZE(saucer_points), SAUCER_COLOR, x, y, 128);
 	else
-		FbDrawObject(saucer2_points, ARRAYSIZE(saucer2_points), x11_lime_green, x, y, 128);
+		FbDrawObject(saucer2_points, ARRAYSIZE(saucer2_points), SAUCER2_COLOR, x, y, 128);
 }
 
 static void draw_saucers(void)
@@ -745,14 +755,14 @@ static void draw_terrain(void)
 		i2 = i2 - TERRAIN_LEN;
 	y2 = terrainy[i2] / 256;
 
-	FbColor(WHITE);
+	FbColor(GROUND_COLOR);
 	do {
 		if (FbOnScreen(x1, y1) || FbOnScreen(x2, y2)) {
 			if (feature_active(i, FEATURE_ROCK)) {
-				FbColor(x11_orange);
+				FbColor(ROCK_COLOR);
 				FbClippedLine(x1, y1, x1 + (x2 - x1) / 2, y1 - 10);
 				FbClippedLine(x1 + (x2 - x1) / 2, y1 - 10, x2, y2);
-				FbColor(WHITE);
+				FbColor(GROUND_COLOR);
 				FbClippedLine(x1, y1, x2, y2);
 			} else if (feature_active(i, FEATURE_CRATER) ||
 					(terrain_feature[i] & FEATURE_BOMB_CRATER)) {
@@ -820,7 +830,7 @@ static void draw_player(void)
 	if (player.alive < 0)
 		return;
 
-	FbColor(MAGENTA);
+	FbColor(PLAYER_COLOR);
 	FbMove(x - 5, y - 5);
 	FbRectangle(10, 5);
 }
@@ -904,7 +914,7 @@ static void draw_bullet(int i)
 {
 	int x1, y1, x2, y2;
 
-	FbColor(WHITE);
+	FbColor(BULLET_COLOR);
 	if (bullet[i].vy != 0) {
 		x1 = (bullet[i].x - screenx) / 256;
 		y1 = (bullet[i].y + bullet[i].vy) / 256;
@@ -931,13 +941,12 @@ static void draw_bomb(int i)
 	int y = bomb[i].y / 256;
 
 	if (FbOnScreen(x, y)) {
-		FbColor(GREEN);
+		FbColor(BOMB_COLOR);
 		FbClippedLine(x, y, x + 2, y);
 	}
 }
 static void draw_bombs(void)
 {
-	FbColor(WHITE);
 	for (int i = 0; i < nbombs; i++) {
 		draw_bomb(i);
 	}
@@ -948,8 +957,8 @@ static void draw_screen(void)
 	if (!screen_changed)
 		return;
 	draw_terrain();
-	draw_hills(foothill, FOOTHILLS_LEN, FOOTHILLS_SEG_LEN, 2, x11_lime_green);
-	draw_hills(mountain, MOUNTAINS_LEN, MOUNTAINS_SEG_LEN, 4, WHITE);
+	draw_hills(foothill, FOOTHILLS_LEN, FOOTHILLS_SEG_LEN, 2, FOOTHILL_COLOR);
+	draw_hills(mountain, MOUNTAINS_LEN, MOUNTAINS_SEG_LEN, 4, MOUNTAIN_COLOR);
 	draw_player();
 	draw_saucers();
 	draw_bullets();
