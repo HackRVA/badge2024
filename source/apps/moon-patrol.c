@@ -49,6 +49,7 @@ static char terrain_feature[TERRAIN_LEN];
 #define FEATURE_ROCK (1 << 1)
 #define FEATURE_SAUCER_TRIGGER (1 << 2)
 #define FEATURE_SAUCER_TRIGGER2 (1 << 3)
+#define FEATURE_ACTIVE (1 << 4)
 
 #define MIN_PLAYER_VX (2 * 256)
 #define MAX_PLAYER_VX (25 * 256)
@@ -315,6 +316,21 @@ static void move_saucers(void)
 
 static void add_explosion(int x, int y, int count, int life);
 
+static inline int feature_active(int index, int feature_type)
+{
+	return (terrain_feature[index] & FEATURE_ACTIVE) && (terrain_feature[index] & feature_type);
+}
+
+static inline void deactivate_feature(int index)
+{
+	terrain_feature[index] &= ~FEATURE_ACTIVE;
+}
+
+static inline void activate_feature(int index)
+{
+	terrain_feature[index] |= FEATURE_ACTIVE;
+}
+
 static void move_bullet(int n)
 {
 	bullet[n].x += bullet[n].vx;
@@ -324,13 +340,13 @@ static void move_bullet(int n)
 	if (bullet[n].y <= 0)
 		bullet[n].alive = 0;
 	int bi = ((bullet[n].x / 256) / TERRAIN_SEG_LENGTH);
-	if (terrain_feature[bi] & FEATURE_ROCK) {
+	if (feature_active(bi, FEATURE_ROCK)) {
 		int dy = terrainy[bi] - bullet[n].y;
 		dy = dy / 256;
 		if (dy < 0)
 			dy = -dy;
 		if (dy < 16) {
-			terrain_feature[bi] &= ~FEATURE_ROCK;
+			deactivate_feature(bi);
 			printf("blasted rock! dy = %d\n", dy);
 			add_explosion(bullet[n].x, bullet[n].y, 40, 50);
 			bullet[n].alive = 0;
@@ -426,6 +442,24 @@ static void generate_hills(int foothill[], int len, int low, int high, int inter
 	} while (1);
 }
 
+static void place_feature(int feature)
+{
+	static unsigned int rstate = 0xa5a5a5a5;
+	int x;
+
+	do {
+		x = 10 + (xorshift(&rstate) % (TERRAIN_LEN - 11));
+	} while (terrain_feature[x] != 0);
+	terrain_feature[x] |= (feature | FEATURE_ACTIVE);
+}
+
+static void reset_features(void)
+{
+	for (int i = 0; i < TERRAIN_LEN; i++)
+		if (terrain_feature[i] != 0)
+			activate_feature(i);
+}
+
 static void generate_terrain(void)
 {
 	static unsigned int rstate = 0xa5a5a5a5;
@@ -436,28 +470,14 @@ static void generate_terrain(void)
 	}
 	terrainy[0] = terrainy[TERRAIN_LEN - 1];
 	memset(terrain_feature, 0, sizeof(terrain_feature));
-	for (int i = 0; i < num_craters; i++) {
-		int x = 10 + (xorshift(&rstate) % (TERRAIN_LEN - 11));
-		terrain_feature[x] |= FEATURE_CRATER;
-		printf("Crater at %d\n", x);
-	}
-	for (int i = 0; i < num_rocks; i++) {
-		int x = 10 + (xorshift(&rstate) % (TERRAIN_LEN - 11));
-		if (!(terrain_feature[x] & FEATURE_CRATER)) {
-			terrain_feature[x] |= FEATURE_ROCK;
-			printf("rock at %d\n", x);
-		}
-	}
-	for (int i = 0; i < num_saucer_triggers; i++) {
-		int x = 10 + (xorshift(&rstate) % (TERRAIN_LEN - 11));
-		terrain_feature[x] |= FEATURE_SAUCER_TRIGGER;
-		printf("saucer trigger at %d\n", x);
-	}
-	for (int i = 0; i < num_saucer_triggers; i++) {
-		int x = 10 + (xorshift(&rstate) % (TERRAIN_LEN - 11));
-		terrain_feature[x] |= FEATURE_SAUCER_TRIGGER2;
-		printf("saucer2 trigger at %d\n", x);
-	}
+	for (int i = 0; i < num_craters; i++)
+		place_feature(FEATURE_CRATER);
+	for (int i = 0; i < num_rocks; i++)
+		place_feature(FEATURE_ROCK);
+	for (int i = 0; i < num_saucer_triggers; i++)
+		place_feature(FEATURE_SAUCER_TRIGGER);
+	for (int i = 0; i < num_saucer_triggers; i++)
+		place_feature(FEATURE_SAUCER_TRIGGER2);
 }
 
 static void init_player(void)
@@ -632,13 +652,13 @@ static void draw_terrain(void)
 	FbColor(WHITE);
 	do {
 		if (FbOnScreen(x1, y1) || FbOnScreen(x2, y2)) {
-			if (terrain_feature[i] & FEATURE_ROCK) {
+			if (feature_active(i, FEATURE_ROCK)) {
 				FbColor(x11_orange);
 				FbClippedLine(x1, y1, x1 + (x2 - x1) / 2, y1 - 10);
 				FbClippedLine(x1 + (x2 - x1) / 2, y1 - 10, x2, y2);
 				FbColor(WHITE);
 				FbClippedLine(x1, y1, x2, y2);
-			} else if (terrain_feature[i] & FEATURE_CRATER) {
+			} else if (feature_active(i, FEATURE_CRATER)) {
 				FbClippedLine(x1, y1, x1 + (x2 - x1) / 3, 159);
 				FbClippedLine(x1 + (x2 - x1) / 3, 159, x1 + 2 * (x2 - x1) / 3, 159);
 				FbClippedLine(x1 + 2 * (x2 - x1) / 3, 159, x2, y2);
@@ -832,6 +852,7 @@ static void kill_player(void)
 	player.vy = 0;
 	nsaucers = 0;
 	add_explosion(player.x, player.y, 50, 100); 
+	reset_features();
 }
 
 static void moonpatrol_run(void)
@@ -845,7 +866,7 @@ static void moonpatrol_run(void)
 	screen_changed = 1;
 
 	int playeri = ((player.x / 256) / TERRAIN_SEG_LENGTH);
-	if (terrain_feature[playeri] & FEATURE_ROCK) {
+	if (feature_active(playeri, FEATURE_ROCK)) {
 		if (player.vy == 0) {
 			int dy = (player.y - terrainy[playeri]) / 256;
 			if (dy < 0)
@@ -856,7 +877,7 @@ static void moonpatrol_run(void)
 			}
 		}
 	}
-	if (terrain_feature[playeri] & FEATURE_CRATER) {
+	if (feature_active(playeri, FEATURE_CRATER)) {
 		if (player.vy == 0) {
 			int dy = (player.y - terrainy[playeri]) / 256;
 			if (dy < 0)
@@ -867,13 +888,13 @@ static void moonpatrol_run(void)
 			}
 		}
 	}
-	if (terrain_feature[playeri] & FEATURE_SAUCER_TRIGGER) {
+	if (feature_active(playeri, FEATURE_SAUCER_TRIGGER)) {
 		add_saucers((playeri % 3) + 1, 0); /* add 1 to 3 saucers */
-		terrain_feature[playeri] &= ~FEATURE_SAUCER_TRIGGER; /* prevent multiple triggers */
+		deactivate_feature(playeri); /* prevent multiple triggers */
 	}
-	if (terrain_feature[playeri] & FEATURE_SAUCER_TRIGGER2) {
+	if (feature_active(playeri, FEATURE_SAUCER_TRIGGER2)) {
 		add_saucers((playeri % 3) + 1, 1); /* add 1 to 3 saucers */
-		terrain_feature[playeri] &= ~FEATURE_SAUCER_TRIGGER2; /* prevent multiple triggers */
+		deactivate_feature(playeri); /* prevent multiple triggers */
 	}
 }
 
