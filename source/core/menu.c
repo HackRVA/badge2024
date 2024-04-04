@@ -316,9 +316,9 @@ struct menu_t *find_prev_menu_item(struct menu_t *menu, struct menu_t *current_i
 	return current_item;
 }
 
+#ifdef TARGET_SIMULATOR
 static void sanity_check_menu(struct menu_t *menu)
 {
-#ifdef TARGET_SIMULATOR
 	int i;
 	int last_found = 0;
 	int non_skipped_found = 0;
@@ -344,8 +344,10 @@ static void sanity_check_menu(struct menu_t *menu)
 		fprintf(stderr, "menu '%s' has suspiciously large number of entries\n", orig->name);
 		raise(SIGTRAP);
 	}
-#endif
 }
+#else
+#define sanity_check_menu(x)
+#endif
 
 static int menu_animation_in_progress = 0;
 static struct menu_animation_state {
