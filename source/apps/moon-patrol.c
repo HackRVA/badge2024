@@ -81,13 +81,21 @@ static struct spark {
 static int nsparks;
 
 #define MAXSAUCERS 5
-struct saucer {
+static struct saucer {
 	int x, y, vx, vy;
 	int target_altitude;
 	int target_xoffset;
 	int alive, type;
+	int bombs;
+	int bombtimer;
 } saucer[MAXSAUCERS];
-int nsaucers;
+static int nsaucers;
+
+#define MAXBOMBS  5
+static struct bomb {
+	int x, y, vx, vy, type, alive;
+} bomb[MAXBOMBS];
+static int nbombs = 0;
 
 #define whole_note (2000) 
 #define half_note (whole_note / 2)
@@ -247,6 +255,8 @@ static void add_saucer(int type)
 	saucer[nsaucers].target_xoffset = 70 * 256;
 	saucer[nsaucers].alive = 400;
 	saucer[nsaucers].type = type;
+	saucer[nsaucers].bombtimer = 100;
+	saucer[nsaucers].bombs = 3;
 	nsaucers++;
 	printf("Added saucer!\n");
 }
@@ -285,6 +295,48 @@ static void remove_saucer(int i)
 	nsaucers--;
 }
 
+static void drop_bomb(int x, int y, int vx, int vy, int type)
+{
+	if (nbombs >= MAXBOMBS)
+		return;
+	bomb[nbombs].x = x;
+	bomb[nbombs].y = y;
+	bomb[nbombs].vx = vx;
+	bomb[nbombs].vy = vy;
+	bomb[nbombs].type = type;
+	bomb[nbombs].alive = 200;
+	nbombs++;
+	printf("Dropped bomb!\n");
+}
+
+static void move_bomb(int i)
+{
+	bomb[i].x += bomb[i].vx;
+	bomb[i].y += bomb[i].vy;
+	bomb[i].vy += GRAVITY;
+	if (bomb[i].alive > 0)
+		bomb[i].alive--;
+	/* TODO: collide with ground */
+}
+
+static void remove_bomb(int i)
+{
+	if (i != nbombs - 1)
+		bomb[i] = bomb[nbombs - 1];
+	nbombs--;
+}
+
+static void move_bombs(void)
+{
+	for (int i = 0; i < nbombs;) {
+		move_bomb(i);
+		if (!bomb[i].alive)
+			remove_bomb(i);
+		else
+			i++;
+	}
+}
+
 static void move_saucer(int i)
 {
 	unsigned int r = 0x5a5a5a5a;
@@ -315,6 +367,17 @@ static void move_saucer(int i)
 		saucer[i].vx -= 20;
 	if (dx > 0 && saucer[i].vx < player.vx + (5 * 256))
 		saucer[i].vx += 20;
+	if (saucer[i].bombs > 0 && saucer[i].bombtimer > 0)
+		saucer[i].bombtimer--;
+	if (saucer[i].bombtimer == 0) {
+		int x, y;
+		x = (saucer[i].x - screenx) / 256;
+		y = (saucer[i].y - screeny) / 256;
+		if (saucer[i].bombtimer == 0 && FbOnScreen(x, y)) {
+			saucer[i].bombtimer = 100;
+			drop_bomb(saucer[i].x, saucer[i].y, saucer[i].vx, 0, saucer[i].type);
+		}
+	}
 }
 
 static void move_saucers(void)
@@ -842,6 +905,24 @@ static void draw_bullets(void)
 		draw_bullet(i);
 }
 
+static void draw_bomb(int i)
+{
+	int x = (bomb[i].x - screenx) / 256;
+	int y = bomb[i].y / 256;
+
+	if (FbOnScreen(x, y)) {
+		FbColor(GREEN);
+		FbClippedLine(x, y, x + 2, y);
+	}
+}
+static void draw_bombs(void)
+{
+	FbColor(WHITE);
+	for (int i = 0; i < nbombs; i++) {
+		draw_bomb(i);
+	}
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
@@ -852,6 +933,7 @@ static void draw_screen(void)
 	draw_player();
 	draw_saucers();
 	draw_bullets();
+	draw_bombs();
 	draw_sparks();
 	FbSwapBuffers();
 	screen_changed = 0;
@@ -874,6 +956,7 @@ static void moonpatrol_run(void)
 	move_screen();
 	move_saucers();
 	move_bullets();
+	move_bombs();
 	move_sparks();
 	draw_screen();
 	screen_changed = 1;
