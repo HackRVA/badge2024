@@ -24,6 +24,7 @@ if (${TARGET} STREQUAL "PICO")
             hardware_irq
             hardware_sleep
             hardware_spi
+            hardware_i2c
             nec_transmit_library
             nec_receive_library)
 

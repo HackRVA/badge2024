@@ -12,6 +12,7 @@
 #include "delay.h"
 #include "music.h"
 #include "analog.h"
+#include "color_sensor.h"
 
 #include <utils.h>
 
@@ -150,6 +151,26 @@ bool qc_analog(void)
     return true;
 }
 
+bool qc_color_sensor(void) {
+    char msg[15];
+    struct color_sample sample;
+    int rc = color_sensor_get_sample(&sample);
+    if (rc < 0) {
+        snprintf(msg, sizeof(msg), "cls bad)\n");
+        FbWriteString(msg);
+        return true;
+    }
+    
+    const char color[COLOR_SAMPLE_INDEX_COUNT] = {'r', 'g', 'b', 'w', 'i'};
+    for (int i = 0; i < COLOR_SAMPLE_INDEX_COUNT; i++) {
+        snprintf(msg, sizeof(msg), "%c:%d\n", color[i],
+                 sample.error_flags & (1U << i) ? -1 : sample.rgbwi[i]);
+        FbWriteString(msg);
+    }
+    
+    return true;
+}
+
 void QC_cb(__attribute__((unused)) struct menu_t *menu)
 {
     //static unsigned char call_count = 0;
@@ -202,6 +223,10 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
 
             if (qc_analog())
             {
+                redraw = 1;
+            }
+
+            if (qc_color_sensor()) {
                 redraw = 1;
             }
 
