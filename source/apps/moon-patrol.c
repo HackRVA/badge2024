@@ -94,6 +94,8 @@ static struct waypoint {
 	{ (7 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'G' },
 };
 static int last_waypoint_reached = 0;
+#define MAXLIVES 3
+static int lives = MAXLIVES;
 
 #define MAXBULLETS 10
 static struct bullet {
@@ -670,6 +672,10 @@ static void generate_terrain(void)
 
 static void init_player(void)
 {
+	if (lives <= 0) {
+		last_waypoint_reached = 0;
+		lives = 3;
+	}
 	player.x = waypoint[last_waypoint_reached].x;
 	player.y = 148 * 256;
 	player.vx = 0;
@@ -904,6 +910,14 @@ static void draw_hills(int hill[], int len, int seglen, int factor, int color)
 	} while(1);
 }
 
+static void draw_buggy(int x, int y)
+{
+	FbDrawObject(moon_buggy_points, ARRAYSIZE(moon_buggy_points), PLAYER_COLOR, x, y - 5, 64);
+	// FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x - 6, y, 32);
+	// FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x + 0, y, 32);
+	// FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x + 6, y, 32);
+}
+
 static void draw_player(void)
 {
 	static unsigned int rstate = 0xa5a5a5a5;
@@ -913,6 +927,7 @@ static void draw_player(void)
 	if (player.alive < 0)
 		return;
 
+	/* wheel y offsets, makes the wheels wiggle */
 	int wyo = xorshift(&rstate);
 	int wyo1 = wyo & 0x01;
 	int wyo2 = (wyo >> 1) & 0x01;
@@ -1065,6 +1080,15 @@ static void draw_waypoints(void)
 	}
 }
 
+static void draw_lives(void)
+{
+	int y = 10;
+	for (int i = 0; i < lives; i++) {
+		draw_buggy(LCD_XSIZE - 13, y);
+		y += 8;
+	}
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
@@ -1078,12 +1102,14 @@ static void draw_screen(void)
 	draw_bombs();
 	draw_sparks();
 	draw_waypoints();
+	draw_lives();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
 
 static void kill_player(void)
 {
+	lives--;
 	player.alive = -50;
 	player.vx = 0;
 	player.vy = 0;
