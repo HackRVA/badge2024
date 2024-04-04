@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "colors.h"
 #include "x11_colors.h"
@@ -57,6 +58,7 @@ static char terrain_feature[TERRAIN_LEN];
 /* Position of upper left of screen in game world */
 static int screenx = 0;
 static int screeny = 0;
+static int screenvx = 0;
 
 static struct player {
 	int x, y, vx, vy, alive;
@@ -216,6 +218,18 @@ static void move_player(void)
 		if (player.alive == 0)
 			init_player();
 	}
+}
+
+static void move_screen(void)
+{
+	int dsx = player.x - (20 * 256);
+	if (abs(dsx) < 40 * 256)
+		screenvx = (dsx - screenx) / 16;
+	if (abs(dsx) < 80 * 256)
+		screenvx = (dsx - screenx) / 8;
+	else
+		screenvx = (dsx - screenx) / 4;
+	screenx += screenvx;
 }
 
 static void add_saucer(int type)
@@ -726,8 +740,6 @@ static void draw_player(void)
 	FbColor(MAGENTA);
 	FbMove(x - 5, y - 5);
 	FbRectangle(10, 5);
-
-	screenx = player.x - (10 * 256);
 }
 
 static void draw_spark(int i)
@@ -859,6 +871,7 @@ static void moonpatrol_run(void)
 {
 	check_buttons();
 	move_player();
+	move_screen();
 	move_saucers();
 	move_bullets();
 	move_sparks();
