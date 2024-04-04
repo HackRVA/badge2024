@@ -100,10 +100,6 @@ static void _init_gpios(void) {
     button_init_gpio();
     audio_init_gpio();
     analog_init_gpio();
-
-    /* FIXME - manage power of hall effect sensor. -PMW */
-    gpio_set_dir(BADGE_GPIO_HALL_EFFECT_ENABLE, true);
-    gpio_put(BADGE_GPIO_HALL_EFFECT_ENABLE, true);
 }
 
 void hal_init(void) {

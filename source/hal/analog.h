@@ -49,6 +49,25 @@ static inline int8_t analog_get_mcu_temp_C(void)
     return 27 - ((raw - 0.706f) / 0.001721f);
 }
 
+enum analog_sensor_power {
+    ANALOG_SENSOR_POWER_DISABLED = 0,
+    ANALOG_SENSOR_POWER_ENABLED,
+};
+
+/** Get sensor power rail enabled or disabled.
+ *
+ *  @return  value from enum analog_sensor_power.
+ */
+enum analog_sensor_power analog_get_sensor_power(void);
+
+/** Set sensor power rail enabled or disabled.
+ *
+ *  @note   Must be enabled to measure hall effect sensor.
+ *
+ *  @param  power   Power enabled or disabled.
+ */
+void analog_set_sensor_power(enum analog_sensor_power power);
+
 /*! @} */ // BADGE_ANALOG
 
 #endif /* BADGE_C_ANALOG_H */

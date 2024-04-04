@@ -15,6 +15,7 @@
 #include <hardware/adc.h>
 
 #include "analog.h"
+#include "hardware/gpio.h"
 #include "pinout_rp2040.h"
 
 /*- Private Methods ----------------------------------------------------------*/
@@ -33,6 +34,11 @@ void analog_init(void)
 
 void analog_init_gpio(void)
 {
+    gpio_init(BADGE_GPIO_HALL_EFFECT_ENABLE);
+    gpio_set_dir(BADGE_GPIO_HALL_EFFECT_ENABLE, true);
+    gpio_set_input_enabled(BADGE_GPIO_HALL_EFFECT_ENABLE, true);
+    gpio_disable_pulls(BADGE_GPIO_HALL_EFFECT_ENABLE); // saves power when asserted
+
     adc_gpio_init(BADGE_GPIO_ADC_CONDUCTIVITY);
     adc_gpio_init(BADGE_GPIO_ADC_THERMISTOR);
     adc_gpio_init(BADGE_GPIO_ADC_HALL_EFFECT);
@@ -47,3 +53,15 @@ uint32_t analog_get_chan_mV(enum analog_channel channel)
     return count;
 }
 
+enum analog_sensor_power analog_get_sensor_power(void)
+{
+    return gpio_get(BADGE_GPIO_HALL_EFFECT_ENABLE) ? ANALOG_SENSOR_POWER_DISABLED
+                                                   : ANALOG_SENSOR_POWER_ENABLED;
+}
+
+void analog_set_sensor_power(enum analog_sensor_power power)
+{
+    /* Despite the naming, this signal is active low. */
+    gpio_put(BADGE_GPIO_HALL_EFFECT_ENABLE,
+            ANALOG_SENSOR_POWER_ENABLED == power ? false : true);
+}
