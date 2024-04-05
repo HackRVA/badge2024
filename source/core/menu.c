@@ -23,6 +23,7 @@
 #include "music.h"
 #include "menu_icon.h"
 #include "stacktrace.h"
+#include "key_value_storage.h"
 
 // Apps
 #include "about_badge.h"
@@ -88,7 +89,14 @@ static const struct menu_t games_m[] = {
 
 static const struct menu_t menu_style_menu_m[] = {
 	{"New Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_new_menu_style }, NULL, },
-	{"Legacy Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_legacy_menu_style }, NULL, },
+	{"Legacy Menus", VERT_ITEM, FUNCTION, { .func = select_legacy_menu_style }, NULL, },
+	{"Back", VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
+};
+
+static const struct menu_t menu_speed_m[] = {
+	{"Fast Menu", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_menu_speed_fast }, NULL, },
+	{"Medium Menu", VERT_ITEM, FUNCTION, { .func = select_menu_speed_medium }, NULL, },
+	{"Slow Menu", VERT_ITEM, FUNCTION, { .func = select_menu_speed_slow }, NULL, },
 	{"Back", VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 
@@ -103,6 +111,7 @@ static const struct menu_t settings_m[] = {
    {"QC",  VERT_ITEM, FUNCTION, { .func = QC_cb }, &qc_icon, },
    {"Clear NVRAM", VERT_ITEM, FUNCTION, { .func = clear_nvram_cb }, &clear_nvram_icon, },
    {"Menu Style", VERT_ITEM, MENU, { .menu = menu_style_menu_m }, &menu_style_icon, },
+   {"Menu Speed", VERT_ITEM, MENU, { .menu = menu_speed_m }, &menu_speed_icon, },
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}, NULL, },
 };
 
@@ -350,6 +359,7 @@ static void sanity_check_menu(struct menu_t *menu)
 #endif
 
 static int menu_animation_in_progress = 0;
+static int menu_animation_speed = -1;
 static struct menu_animation_state {
 	int frame;
 	enum menu_previous came_from;
@@ -519,6 +529,24 @@ static int menu_has_icons(struct menu_t *m)
    return has_icons;
 }
 
+static int get_menu_animation_speed(void)
+{
+	if (menu_animation_speed > 0)
+		return menu_animation_speed;
+	if (!flash_kv_get_int("MENU_SPEED", &menu_animation_speed))
+		menu_animation_speed = 20;
+	switch (menu_animation_speed) {
+	case 10:
+	case 20:
+	case 40:
+		break;
+	default:
+		menu_animation_speed = 20;
+		break;
+	}
+	return menu_animation_speed;
+}
+
 static void animate_menu(struct menu_animation_state *animation)
 {
 	enum menu_previous came_from = animation->came_from;
@@ -557,7 +585,7 @@ static void animate_menu(struct menu_animation_state *animation)
 		FbDrawObject(old_points, old_npoints, GREEN, drawing_x, drawing_y, drawing_scale);
 	}
 
-	animation->frame += 20;
+	animation->frame += get_menu_animation_speed();
 	if (animation->frame > 255)
 		animation->frame = 255;
 
@@ -1090,6 +1118,27 @@ void select_new_menu_style(__attribute__((unused)) struct menu_t *m)
 void select_legacy_menu_style(__attribute__((unused)) struct menu_t *m)
 {
 	display_menu = legacy_display_menu;
+	returnToMenus();
+}
+
+void select_menu_speed_fast(__attribute__((unused)) struct menu_t *m)
+{
+	menu_animation_speed = 40;
+	flash_kv_store_int("MENU_SPEED", menu_animation_speed);
+	returnToMenus();
+}
+
+void select_menu_speed_medium(__attribute__((unused)) struct menu_t *m)
+{
+	menu_animation_speed = 20;
+	flash_kv_store_int("MENU_SPEED", menu_animation_speed);
+	returnToMenus();
+}
+
+void select_menu_speed_slow(__attribute__((unused)) struct menu_t *m)
+{
+	menu_animation_speed = 10;
+	flash_kv_store_int("MENU_SPEED", menu_animation_speed);
 	returnToMenus();
 }
 

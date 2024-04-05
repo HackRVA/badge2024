@@ -89,5 +89,8 @@ void genericMenu(struct menu_t *L_menu, MENU_STYLE, uint32_t button_latches);
 extern unsigned char menu_redraw_main_menu;
 void select_legacy_menu_style(struct menu_t *m);
 void select_new_menu_style(struct menu_t *m);
+void select_menu_speed_fast(struct menu_t *m);
+void select_menu_speed_medium(struct menu_t *m);
+void select_menu_speed_slow(struct menu_t *m);
 
 #endif
