@@ -12,6 +12,7 @@
 #include "audio.h"
 #include "music.h"
 #include "dynmenu.h"
+#include "rtc.h"
 
 #define GROUND_COLOR x11_DarkGoldenrod
 #define ROCK_COLOR x11_LightSlateGray
@@ -28,6 +29,7 @@
 /* Program states.  Initial state is MOONPATROL_INIT */
 enum moonpatrol_state_t {
 	MOONPATROL_INIT,
+	MOONPATROL_GAMEOVER,
 	MOONPATROL_SETUP,
 	MOONPATROL_RUN,
 	MOONPATROL_EXIT,
@@ -42,7 +44,6 @@ static int mountain[MOUNTAINS_LEN];
 static int foothill[FOOTHILLS_LEN];
 
 static enum moonpatrol_state_t moonpatrol_state = MOONPATROL_INIT;
-static int screen_changed = 0;
 static int num_rocks = 20;
 static int num_craters = 20;
 static int ground_level = 148 * 256;
@@ -675,6 +676,7 @@ static void init_player(void)
 	if (lives <= 0) {
 		last_waypoint_reached = 0;
 		lives = 3;
+		moonpatrol_state = MOONPATROL_GAMEOVER;
 	}
 	player.x = waypoint[last_waypoint_reached].x;
 	player.y = 148 * 256;
@@ -723,7 +725,6 @@ static void moonpatrol_init(void)
 	generate_hills(foothill, FOOTHILLS_LEN, 120 * 256, 80 * 256, 20);
 	generate_hills(mountain, MOUNTAINS_LEN, 60 * 256, 20 * 256, 10);
 	moonpatrol_state = MOONPATROL_SETUP;
-	screen_changed = 1;
 	init_player();
 	memset(bullet, 0, sizeof(bullet));
 	play_theme((void *) 0);
@@ -1091,8 +1092,6 @@ static void draw_lives(void)
 
 static void draw_screen(void)
 {
-	if (!screen_changed)
-		return;
 	draw_terrain();
 	draw_hills(foothill, FOOTHILLS_LEN, FOOTHILLS_SEG_LEN, 2, FOOTHILL_COLOR);
 	draw_hills(mountain, MOUNTAINS_LEN, MOUNTAINS_SEG_LEN, 4, MOUNTAIN_COLOR);
@@ -1103,8 +1102,6 @@ static void draw_screen(void)
 	draw_sparks();
 	draw_waypoints();
 	draw_lives();
-	FbSwapBuffers();
-	screen_changed = 0;
 }
 
 static void kill_player(void)
@@ -1118,6 +1115,27 @@ static void kill_player(void)
 	reset_features();
 }
 
+static void moonpatrol_gameover(void)
+{
+	draw_screen();
+
+	uint64_t t = rtc_get_ms_since_boot();
+
+	/* Blink "GAME OVER" at 2Hz */
+	t = t / 500;
+	if ((t % 2) == 1) {
+		FbMove((LCD_XSIZE / 2) - (5 /* chars */ * 8 /* pixels */), LCD_YSIZE / 2);
+		FbWriteString("GAME OVER");
+	}
+	FbSwapBuffers();
+
+	int down_latches = button_down_latches();
+	if (down_latches) {
+		moonpatrol_state = MOONPATROL_SETUP;
+		screenx = 0; /* so we just snap to beginning instead of scrolling backwards */
+	}
+}
+
 static void moonpatrol_run(void)
 {
 	check_buttons();
@@ -1128,7 +1146,7 @@ static void moonpatrol_run(void)
 	move_bombs();
 	move_sparks();
 	draw_screen();
-	screen_changed = 1;
+	FbSwapBuffers();
 
 	int playeri = ((player.x / 256) / TERRAIN_SEG_LENGTH);
 	if (feature_active(playeri, FEATURE_ROCK)) {
@@ -1183,6 +1201,9 @@ void moonpatrol_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case MOONPATROL_EXIT:
 		moonpatrol_exit();
+		break;
+	case MOONPATROL_GAMEOVER:
+		moonpatrol_gameover();
 		break;
 	default:
 		break;
