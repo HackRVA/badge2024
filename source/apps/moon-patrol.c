@@ -742,11 +742,11 @@ static void moonpatrol_setup(void)
                 dynmenu_init(&setup_menu, setup_item, 6);
                 dynmenu_clear(&setup_menu);
                 strcpy(setup_menu.title, "LUNAR RESCUE");
+                dynmenu_add_item(&setup_menu, "PLAY GAME", MOONPATROL_SETUP, 4);
                 dynmenu_add_item(&setup_menu, "EASY <==", MOONPATROL_SETUP, 0);
                 dynmenu_add_item(&setup_menu, "MEDIUM", MOONPATROL_SETUP, 1);
                 dynmenu_add_item(&setup_menu, "HARD", MOONPATROL_SETUP, 2);
 		dynmenu_add_item(&setup_menu, "MUSIC: ON", MOONPATROL_SETUP, 3);
-                dynmenu_add_item(&setup_menu, "PLAY NOW", MOONPATROL_SETUP, 4);
                 dynmenu_add_item(&setup_menu, "QUIT", MOONPATROL_SETUP, 5);
                 menu_ready = 1;
         }
@@ -763,26 +763,26 @@ static void moonpatrol_setup(void)
 		int c = setup_menu.current_item;
 		switch(c) {
 		case 0:
-		case 1:
-		case 2:
-			difficulty_level = c;
-			for (int i = 0; i < 3; i++)
-				strcpy(setup_menu.item[i].text, level[i]);
-			strcat(setup_menu.item[c].text, " <==");
-			break;
-		case 3:
-			if (music_on) {
-				music_on = 0;
-				strcpy(setup_menu.item[3].text, "MUSIC: OFF");
-			} else {
-				music_on = 1;
-				strcpy(setup_menu.item[3].text, "MUSIC: ON");
-			}
-			break;
-		case 4:
 			moonpatrol_state = MOONPATROL_RUN;
 			if (music_on)
 				play_theme((void *) 0);
+			break;
+		case 1:
+		case 2:
+		case 3:
+			difficulty_level = c - 1;
+			for (int i = 1; i < 4; i++)
+				strcpy(setup_menu.item[i].text, level[i - 1]);
+			strcat(setup_menu.item[c].text, " <==");
+			break;
+		case 4:
+			if (music_on) {
+				music_on = 0;
+				strcpy(setup_menu.item[4].text, "MUSIC: OFF");
+			} else {
+				music_on = 1;
+				strcpy(setup_menu.item[4].text, "MUSIC: ON");
+			}
 			break;
 		case 5:
 			moonpatrol_state = MOONPATROL_EXIT;
