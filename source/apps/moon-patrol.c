@@ -259,7 +259,7 @@ static struct tune moon_patrol_theme_5 = {
 	.note = &moon_patrol_theme_five[0],
 };
 
-static struct point saucer_points[] = {
+static const struct point saucer_points[] = {
 	{ -62, -1 },
 	{ -36, -17 },
 	{ 1, -16 },
@@ -279,7 +279,7 @@ static struct point saucer_points[] = {
 	{ 29, -19 },
 };
 
-static struct point saucer2_points[] = {
+static const struct point saucer2_points[] = {
 	{ -61, 0 },
 	{ -42, -10 },
 	{ 50, -11 },
@@ -307,7 +307,7 @@ static struct point saucer2_points[] = {
 	{ -8, -30 },
 };
 
-static struct point moonbase_points[] = {
+static const struct point moonbase_points[] = {
 	{ -63, 16 },
 	{ -63, -2 },
 	{ -61, -14 },
