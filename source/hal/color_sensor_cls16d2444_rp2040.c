@@ -106,7 +106,8 @@
 #define CLS_REG_PROD_ID_H   (0xBD)
 #define CLS_PRODUCT_ID      (0x0712)
 
-#define CLS_TRX_TIMEOUT_US  (1000) /* 1 ms */
+#define CLS_TRX_TIMEOUT_US      (1000) /* 1 ms */
+#define CLS_SAMPLE_TIMEOUT_US   (10000) /* 10 ms */
 
 /*- Private Variables --------------------------------------------------------*/
 static struct color_sensor_context {
@@ -153,9 +154,9 @@ static int i2c_memrd(struct color_sensor_context *ctx, uint8_t reg,
         return rc;
     }
 
-    rc = i2c_read_timeout_us(ctx->i2c, ctx->addr,
-                             dst, dst_sz,
-                             false, t);
+    rc = i2c_read_blocking_until(ctx->i2c, ctx->addr,
+                                 dst, dst_sz,
+                                 false, t);
     if (rc != (int) dst_sz) {
         ctx->error_code |= COLOR_SENSOR_ERROR_MEMRD_READ;
         set_i2c_error(ctx, rc, dst_sz);
@@ -363,7 +364,7 @@ int color_sensor_get_sample(struct color_sample *sample)
 
     rc = i2c_memrd(&m_ctx, CLS_REG_RCH_DATA_L,
                    sample->rgbwi, sizeof(sample->rgbwi),
-		   CLS_TRX_TIMEOUT_US);
+		   CLS_SAMPLE_TIMEOUT_US);
     if (rc != sizeof(sample->rgbwi))
     {
         set_error_location(&m_ctx, COLOR_SENSOR_ERROR_SAMP_READ);
