@@ -364,7 +364,7 @@ static struct menu_animation_state {
 	int frame;
 	enum menu_previous came_from;
 	int npoints, old_npoints;
-	struct point *points, *old_points;
+	struct point const *points, *old_points;
 	struct menu_t *root_menu;
 	struct menu_t *selected;
 	int text_label_x;
@@ -553,9 +553,9 @@ static void animate_menu(struct menu_animation_state *animation)
 	int xd = menu_animation_direction[came_from].x;
 	int yd = menu_animation_direction[came_from].y;
 	int npoints = animation->npoints;
-	struct point *points = animation->points;
+	struct point const *points = animation->points;
 	int old_npoints = animation->old_npoints;
-	struct point *old_points = animation->old_points;
+	struct point const *old_points = animation->old_points;
 	struct menu_t *root_menu = animation->root_menu;
 	struct menu_t *selected = animation->selected;
 
@@ -719,7 +719,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 		int x = 64 - (strlen(menu->name) / 2) * 8;
 		/* Draw new selection item arriving */
 		int npoints, old_npoints;
-		struct point *points, *old_points;
+		struct point const *points, *old_points;
 
 		if (menu->icon) {
 			npoints = menu->icon->npoints;

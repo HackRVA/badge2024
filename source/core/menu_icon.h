@@ -8,10 +8,10 @@
 struct menu_icon {
 	int npoints;
 	int color;
-	struct point *points;
+	const struct point *points;
 };
 
-struct point games_icon_points[] = {
+const struct point games_icon_points[] = {
 	{ -60, 28 },
 	{ -45, -38 },
 	{ -35, -44 },
@@ -67,7 +67,7 @@ struct point games_icon_points[] = {
 	{ -128, -128 },
 };
 
-struct point settings_icon_points[] = {
+const struct point settings_icon_points[] = {
 	{ -7, -58 },
 	{ 11, -58 },
 	{ 11, -46 },
@@ -117,7 +117,7 @@ struct point settings_icon_points[] = {
 	{ 1, -24 },
 };
 
-struct point schedule_icon_points[] = {
+const struct point schedule_icon_points[] = {
 	{ -55, -40 },
 	{ -48, -48 },
 	{ 30, -47 },
@@ -171,7 +171,7 @@ struct point schedule_icon_points[] = {
 	{ 16, -40 },
 };
 
-struct point about_icon_points[] = {
+const struct point about_icon_points[] = {
 	{ -53, -1 },
 	{ -53, -26 },
 	{ -47, -40 },
@@ -213,7 +213,7 @@ struct point about_icon_points[] = {
 	{ -15, -38 },
 };
 
-struct point battlezone_icon_points[] = {
+const struct point battlezone_icon_points[] = {
 	{ -39, 15 },
 	{ 42, 14 },
 	{ 53, -4 },
@@ -243,7 +243,7 @@ struct point battlezone_icon_points[] = {
 	{ -128, -128 },
 };
 
-struct point lunar_rescue_icon_points[] = {
+const struct point lunar_rescue_icon_points[] = {
 	{ -64, 20 },
 	{ -47, 23 },
 	{ -32, 23 },
@@ -318,7 +318,7 @@ struct point lunar_rescue_icon_points[] = {
 	{ -14, -13 },
 };
 
-struct point legacy_games_icon_points[] = {
+const struct point legacy_games_icon_points[] = {
 	{ -52, 26 },
 	{ -52, 50 },
 	{ 51, 51 },
@@ -359,7 +359,7 @@ struct point legacy_games_icon_points[] = {
 	{ -26, 21 },
 };
 
-struct point badge_monsters_icon_points[] = {
+const struct point badge_monsters_icon_points[] = {
 	{ -48, -47 },
 	{ -41, -58 },
 	{ 40, -58 },
@@ -431,7 +431,7 @@ struct point badge_monsters_icon_points[] = {
 	{ 1, -34 },
 };
 
-struct point backlight_icon_points[] = {
+const struct point backlight_icon_points[] = {
 	{ -1, -38 },
 	{ -15, -37 },
 	{ -25, -28 },
@@ -494,7 +494,7 @@ struct point backlight_icon_points[] = {
 	{ 7, 51 },
 };
 
-struct point led_icon_points[] = {
+const struct point led_icon_points[] = {
 	{ -32, 19 },
 	{ -33, 29 },
 	{ 35, 29 },
@@ -546,7 +546,7 @@ struct point led_icon_points[] = {
 	{ 55, -9 },
 };
 
-struct point audio_icon_points[] = {
+const struct point audio_icon_points[] = {
 	{ -38, -27 },
 	{ -38, 19 },
 	{ -25, 18 },
@@ -580,7 +580,7 @@ struct point audio_icon_points[] = {
 	{ -25, -24 },
 };
 
-struct point clear_nvram_icon_points[] = {
+const struct point clear_nvram_icon_points[] = {
 	{ 24, 30 },
 	{ 24, 45 },
 	{ 53, 26 },
@@ -639,7 +639,7 @@ struct point clear_nvram_icon_points[] = {
 	{ -6, -3 },
 };
 
-struct point game_of_life_icon_points[] = {
+const struct point game_of_life_icon_points[] = {
 	{ -59, 27 },
 	{ -60, 55 },
 	{ -32, 56 },
@@ -671,7 +671,7 @@ struct point game_of_life_icon_points[] = {
 	{ 19, -16 },
 };
 
-struct point breakout_icon_points[] = {
+const struct point breakout_icon_points[] = {
 	{ -64, -52 },
 	{ 62, -51 },
 	{ -128, -128 },
@@ -713,7 +713,7 @@ struct point breakout_icon_points[] = {
 	{ 25, 13 },
 };
 
-struct point asteroids_icon_points[] = {
+const struct point asteroids_icon_points[] = {
 	{ 19, 20 },
 	{ 38, 57 },
 	{ 42, 42 },
@@ -730,7 +730,7 @@ struct point asteroids_icon_points[] = {
 	{ -61, -56 },
 };
 
-struct point slotmachine_icon_points[] = {
+const struct point slotmachine_icon_points[] = {
 	{ -30, -55 },
 	{ -31, 54 },
 	{ 39, 52 },
@@ -780,7 +780,7 @@ struct point slotmachine_icon_points[] = {
 	{ 19, -37 },
 };
 
-struct point clue_icon_points[] = {
+const struct point clue_icon_points[] = {
 	{ -51, 41 },
 	{ -42, 46 },
 	{ -18, 46 },
@@ -847,7 +847,7 @@ struct point clue_icon_points[] = {
 	{ -51, 40 },
 };
 
-struct point qc_icon_points[] = {
+const struct point qc_icon_points[] = {
 	{ -37, -11 },
 	{ -20, -10 },
 	{ -19, 27 },
@@ -875,7 +875,7 @@ struct point qc_icon_points[] = {
 	{ -18, 24 },
 };
 
-struct point menu_style_icon_points[] = {
+const struct point menu_style_icon_points[] = {
 	{ -53, -8 },
 	{ -49, -3 },
 	{ 46, -1 },
@@ -915,7 +915,7 @@ struct point menu_style_icon_points[] = {
 	{ 37, 52 },
 };
 
-struct point invert_display_icon_points[] = {
+const struct point invert_display_icon_points[] = {
 	{ 43, 0 },
 	{ 44, -17 },
 	{ 36, -33 },
@@ -939,7 +939,7 @@ struct point invert_display_icon_points[] = {
 	{ -9, 28 },
 };
 
-struct point username_icon_points[] = {
+const struct point username_icon_points[] = {
 	{ -46, -1 },
 	{ -45, -22 },
 	{ -31, -34 },
@@ -980,7 +980,7 @@ struct point username_icon_points[] = {
 	{ -128, -128 },
 };
 
-struct point id_icon_points[] = {
+const struct point id_icon_points[] = {
 	{ -42, -54 },
 	{ 44, -55 },
 	{ 45, 53 },
@@ -1013,7 +1013,7 @@ struct point id_icon_points[] = {
 	{ -9, -23 },
 };
 
-struct point screensaver_icon_points[] = {
+const struct point screensaver_icon_points[] = {
 	{ -59, -41 },
 	{ 56, -42 },
 	{ 56, 28 },
@@ -1068,7 +1068,7 @@ struct point screensaver_icon_points[] = {
 	{ 41, 11 },
 };
 
-struct point hacker_sim_icon_points[] = {
+const struct point hacker_sim_icon_points[] = {
 	{ -32, 45 },
 	{ 36, 44 },
 	{ 43, 0 },
@@ -1121,7 +1121,7 @@ struct point hacker_sim_icon_points[] = {
 	{ 37, 38 },
 };
 
-struct point moonpatrol_icon_points[] = {
+const struct point moonpatrol_icon_points[] = {
 	{ -62, -10 },
 	{ -61, -32 },
 	{ -14, -33 },
@@ -1238,7 +1238,7 @@ struct point moonpatrol_icon_points[] = {
 	{ 45, 5 },
 };
 
-struct point menu_speed_icon_points[] = {
+const struct point menu_speed_icon_points[] = {
 	{ -31, -27 },
 	{ -26, -37 },
 	{ -18, -41 },
