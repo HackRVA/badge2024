@@ -113,11 +113,33 @@ static struct color_sensor_context {
     i2c_inst_t *i2c;
     uint8_t addr;
     enum color_sensor_state state;
+    enum color_sensor_error_code error_code;
     uint16_t product_id_read;
     struct color_sample last_sample;
 } m_ctx;
 
 /*- Private Methods ----------------------------------------------------------*/
+static void set_error_location(struct color_sensor_context *ctx,
+                               enum color_sensor_error_code location)
+{
+    ctx->error_code &= ~COLOR_SENSOR_ERROR_LOCATION;
+    ctx->error_code |= (location & COLOR_SENSOR_ERROR_LOCATION);
+}
+
+static void set_i2c_error(struct color_sensor_context *ctx, int rc, 
+                          int expected_length)
+{
+    enum color_sensor_error_code e = COLOR_SENSOR_ERROR_NONE;
+    if (PICO_ERROR_GENERIC == rc) {
+        e = COLOR_SENSOR_ERROR_I2C_NOADACK;
+    } else if (PICO_ERROR_TIMEOUT == rc) {
+        e = COLOR_SENSOR_ERROR_I2C_TIMEOUT;
+    } else if (rc != expected_length) {
+        e = COLOR_SENSOR_ERROR_I2C_DATALEN;
+    }
+    ctx->error_code |= e;
+}
+
 static int i2c_memrd(struct color_sensor_context *ctx, uint8_t reg,
                      void *dst, size_t dst_sz, uint32_t timeout_us)
 {
@@ -126,12 +148,19 @@ static int i2c_memrd(struct color_sensor_context *ctx, uint8_t reg,
                                       &reg, sizeof(reg),
                                       true, t);
     if ((rc < 0) || (rc != sizeof(reg))) {
+        ctx->error_code |= COLOR_SENSOR_ERROR_MEMRD_WRITE;
+        set_i2c_error(ctx, rc, sizeof(reg));
         return rc;
     }
 
     rc = i2c_read_timeout_us(ctx->i2c, ctx->addr,
                              dst, dst_sz,
                              false, t);
+    if (rc != (int) dst_sz) {
+        ctx->error_code |= COLOR_SENSOR_ERROR_MEMRD_READ;
+        set_i2c_error(ctx, rc, dst_sz);
+    }
+
     return rc;
 }
 
@@ -144,6 +173,8 @@ static int i2c_regmodify(struct color_sensor_context *ctx, uint8_t reg,
     absolute_time_t t = make_timeout_time_us(timeout_us);
     int rc = i2c_memrd(ctx, reg, &data[1], sizeof(data[1]), timeout_us);
     if (rc != sizeof(data[1])) {
+        ctx->error_code |= COLOR_SENSOR_ERROR_RGMOD_MEMRD;
+        set_i2c_error(ctx, rc, sizeof(data));
         return rc;
     }
 
@@ -153,6 +184,8 @@ static int i2c_regmodify(struct color_sensor_context *ctx, uint8_t reg,
     rc = i2c_write_blocking_until(ctx->i2c, ctx->addr, 
                                   data, sizeof(data), false, t);
     if (rc != sizeof(data)) {
+        ctx->error_code |= COLOR_SENSOR_ERROR_RGMOD_WRITE;
+        set_i2c_error(ctx, rc, sizeof(data));
         return rc;
     }
 
@@ -165,6 +198,7 @@ static void color_sensor_up(struct color_sensor_context *ctx)
     ctx->i2c = BADGE_I2C_COLOR_SENSOR;
     ctx->addr = BADGE_I2C_COLOR_SENSOR_ADDR;
     ctx->state = COLOR_SENSOR_STATE_NO_INIT;
+    ctx->error_code = COLOR_SENSOR_ERROR_NONE;
     ctx->product_id_read = 0xffff;
     ctx->last_sample.error_flags = 0x1f;
     ctx->last_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] = 0xffff;
@@ -190,16 +224,18 @@ static void color_sensor_up(struct color_sensor_context *ctx)
                        1 * 1000 * 1000 /* 1 sec for first read */);
     if ((rc < 0) || (rc != sizeof(product_id))
         || (CLS_PRODUCT_ID != product_id)) {
+        set_error_location(ctx, COLOR_SENSOR_ERROR_UP_PID);
         ctx->state = COLOR_SENSOR_STATE_ERROR;
         return;
     }
 
-    for (int retries = 1; retries > 0; retries --) {
+    for (int retries = 1; retries > 0; retries--) {
         uint8_t int_flag;
         rc = i2c_memrd(ctx, CLS_REG_INT_FLAG, 
                        &int_flag, sizeof(int_flag),
                        CLS_TRX_TIMEOUT_US);
         if (rc != sizeof(int_flag)) {
+            set_error_location(ctx, COLOR_SENSOR_ERROR_UP_IFLG);
             ctx->state = COLOR_SENSOR_STATE_ERROR;
             return;
         }
@@ -214,6 +250,7 @@ static void color_sensor_up(struct color_sensor_context *ctx)
                                       tx_data, sizeof(tx_data),
                                       false, CLS_TRX_TIMEOUT_US);
             if (rc != sizeof(tx_data)) {
+                set_error_location(ctx, COLOR_SENSOR_ERROR_UP_POR);
                 ctx->state = COLOR_SENSOR_STATE_ERROR;
                 return;
             }
@@ -224,6 +261,7 @@ static void color_sensor_up(struct color_sensor_context *ctx)
             /* Fuck, we need to reset this */
             if (retries == 0) {
                 /* Fuuuuuuck we did that already. */
+                set_error_location(ctx, COLOR_SENSOR_ERROR_UP_RTRY);
                 ctx->state = COLOR_SENSOR_STATE_ERROR;
                 return;
             }
@@ -232,6 +270,7 @@ static void color_sensor_up(struct color_sensor_context *ctx)
                                (uint8_t) ~CLS_SWRST, CLS_SWRST,
                                CLS_TRX_TIMEOUT_US);
             if (rc != 1) {
+                set_error_location(ctx, COLOR_SENSOR_ERROR_UP_RST);
                 ctx->state = COLOR_SENSOR_STATE_ERROR;
                 return;
             }
@@ -244,6 +283,7 @@ static void color_sensor_up(struct color_sensor_context *ctx)
                        CLS_EN_IR | CLS_EN_CLS,
                        CLS_TRX_TIMEOUT_US);
     if (rc != 1) {
+        set_error_location(ctx, COLOR_SENSOR_ERROR_UP_EN);
         ctx->state = COLOR_SENSOR_STATE_ERROR;
         return;
     }
@@ -259,6 +299,7 @@ static void color_sensor_down(struct color_sensor_context *ctx)
                            (uint8_t) ~CLS_EN_CLS, 0,
                            CLS_TRX_TIMEOUT_US);
     if (rc != 1) {
+        set_error_location(ctx, COLOR_SENSOR_ERROR_DOWN);
         ctx->state = COLOR_SENSOR_STATE_ERROR;
     }
     else
@@ -278,6 +319,11 @@ void color_sensor_init(void)
 enum color_sensor_state color_sensor_get_state(void)
 {
     return m_ctx.state;
+}
+
+enum color_sensor_error_code color_sensor_get_error_code(void)
+{
+    return m_ctx.error_code;
 }
 
 enum color_sensor_state color_sensor_power_ctl(enum color_sensor_power_cmd cmd)
@@ -310,6 +356,7 @@ int color_sensor_get_sample(struct color_sample *sample)
                        CLS_TRX_TIMEOUT_US);
     if (rc != sizeof(sample->error_flags))
     {
+        set_error_location(&m_ctx, COLOR_SENSOR_ERROR_SAMP_EFLG);
         m_ctx.state = COLOR_SENSOR_STATE_ERROR;
         return rc;
     }
@@ -319,6 +366,7 @@ int color_sensor_get_sample(struct color_sample *sample)
 		   CLS_TRX_TIMEOUT_US);
     if (rc != sizeof(sample->rgbwi))
     {
+        set_error_location(&m_ctx, COLOR_SENSOR_ERROR_SAMP_READ);
         m_ctx.state = COLOR_SENSOR_STATE_ERROR;
         return rc;
     }
