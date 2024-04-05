@@ -313,7 +313,7 @@ static void color_sensor_down(struct color_sensor_context *ctx)
 /*- API ----------------------------------------------------------------------*/
 void color_sensor_init(void)
 {
-    //color_sensor_up(&m_ctx); // defer to first use
+    color_sensor_up(&m_ctx); // FIXME
 }
 
 enum color_sensor_state color_sensor_get_state(void)
