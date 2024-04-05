@@ -25,6 +25,7 @@
 #define PLAYER_COLOR MAGENTA
 #define WHEEL_COLOR CYAN
 #define WAYPOINT_COLOR WHITE
+#define MOONBASE_COLOR CYAN
 
 /* Program states.  Initial state is MOONPATROL_INIT */
 enum moonpatrol_state_t {
@@ -303,6 +304,77 @@ static struct point saucer2_points[] = {
 	{ -128, -128 },
 	{ -19, -18 },
 	{ -8, -30 },
+};
+
+static struct point moonbase_points[] = {
+	{ -63, 16 },
+	{ -63, -2 },
+	{ -61, -14 },
+	{ -56, -21 },
+	{ -50, -29 },
+	{ -40, -34 },
+	{ -31, -35 },
+	{ -22, -32 },
+	{ -14, -25 },
+	{ -8, -16 },
+	{ -7, -6 },
+	{ -7, -1 },
+	{ 62, 1 },
+	{ -8, 18 },
+	{ -8, 0 },
+	{ -128, -128 },
+	{ -9, 17 },
+	{ -30, 19 },
+	{ -46, 19 },
+	{ -63, 15 },
+	{ -128, -128 },
+	{ -47, -35 },
+	{ -47, -62 },
+	{ -128, -128 },
+	{ 11, 41 },
+	{ 23, 21 },
+	{ 42, 7 },
+	{ 28, 25 },
+	{ 12, 40 },
+	{ 15, 42 },
+	{ 29, 37 },
+	{ 40, 26 },
+	{ 44, 11 },
+	{ 43, 8 },
+	{ -128, -128 },
+	{ 29, 25 },
+	{ 15, 11 },
+	{ -128, -128 },
+	{ 34, 34 },
+	{ 33, 40 },
+	{ 40, 41 },
+	{ 41, 33 },
+	{ 36, 33 },
+	{ -128, -128 },
+	{ 32, 40 },
+	{ 20, 56 },
+	{ 50, 58 },
+	{ 41, 42 },
+	{ 22, 54 },
+	{ -128, -128 },
+	{ 32, 41 },
+	{ 47, 56 },
+	{ -128, -128 },
+	{ -59, -9 },
+	{ -54, -8 },
+	{ -128, -128 },
+	{ -47, -7 },
+	{ -40, -7 },
+	{ -128, -128 },
+	{ -31, -7 },
+	{ -22, -7 },
+	{ -128, -128 },
+	{ -2, 5 },
+	{ 6, 4 },
+	{ -128, -128 },
+	{ 14, 3 },
+	{ 22, 4 },
+	{ -128, -128 },
 };
 
 static void init_player(void);
@@ -1092,6 +1164,15 @@ static void draw_lives(void)
 	}
 }
 
+static void maybe_draw_moonbase(void)
+{
+	// if (screenx > LCD_XSIZE * 256)
+	//	return;
+	int x = (0 - screenx) / 256;
+	int y = (LCD_YSIZE - 10);
+	FbDrawObject(moonbase_points, ARRAYSIZE(moonbase_points), MOONBASE_COLOR, x, y, 512);
+}
+
 static void draw_screen(void)
 {
 	draw_terrain();
@@ -1103,6 +1184,7 @@ static void draw_screen(void)
 	draw_bombs();
 	draw_sparks();
 	draw_waypoints();
+	maybe_draw_moonbase();
 	draw_lives();
 }
 
