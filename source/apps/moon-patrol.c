@@ -66,8 +66,8 @@ static char terrain_feature[TERRAIN_LEN];
 #define FEATURE_ACTIVE (1 << 4)
 #define FEATURE_BOMB_CRATER (1 << 5)
 
-#define MIN_PLAYER_VX (2 * 256)
-#define MAX_PLAYER_VX (25 * 256)
+#define MIN_PLAYER_VX (1 * 256)
+#define MAX_PLAYER_VX (5 * 256)
 
 /* Position of upper left of screen in game world */
 static int screenx = 0;
@@ -827,6 +827,8 @@ static void check_buttons(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		moonpatrol_state = MOONPATROL_EXIT;
 	}
+	if (player.vx > 0 && player.vx < MIN_PLAYER_VX) /* auto increase to min x speed */
+		player.vx += PLAYER_VEL_INC;
 }
 
 static void draw_terrain(void)
