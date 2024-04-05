@@ -677,6 +677,7 @@ static void init_player(void)
 		last_waypoint_reached = 0;
 		lives = 3;
 		moonpatrol_state = MOONPATROL_GAMEOVER;
+		stop_tune();
 	}
 	player.x = waypoint[last_waypoint_reached].x;
 	player.y = 148 * 256;
@@ -727,7 +728,6 @@ static void moonpatrol_init(void)
 	moonpatrol_state = MOONPATROL_SETUP;
 	init_player();
 	memset(bullet, 0, sizeof(bullet));
-	play_theme((void *) 0);
 	nbullets = 0;
 }
 
@@ -773,16 +773,16 @@ static void moonpatrol_setup(void)
 		case 3:
 			if (music_on) {
 				music_on = 0;
-				stop_tune();
 				strcpy(setup_menu.item[3].text, "MUSIC: OFF");
 			} else {
 				music_on = 1;
-				play_theme((void *) 0);
 				strcpy(setup_menu.item[3].text, "MUSIC: ON");
 			}
 			break;
 		case 4:
 			moonpatrol_state = MOONPATROL_RUN;
+			if (music_on)
+				play_theme((void *) 0);
 			break;
 		case 5:
 			moonpatrol_state = MOONPATROL_EXIT;
