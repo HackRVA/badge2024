@@ -156,7 +156,8 @@ bool qc_color_sensor(void) {
     struct color_sample sample;
     int rc = color_sensor_get_sample(&sample);
     if (rc < 0) {
-        snprintf(msg, sizeof(msg), "cls bad)\n");
+        snprintf(msg, sizeof(msg), "cls err:%04x\n", 
+                 color_sensor_get_error_code());
         FbWriteString(msg);
         return true;
     }
