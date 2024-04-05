@@ -13,6 +13,7 @@
 #include "music.h"
 #include "dynmenu.h"
 #include "rtc.h"
+#include "key_value_storage.h"
 
 #define GROUND_COLOR x11_DarkGoldenrod
 #define ROCK_COLOR x11_LightSlateGray
@@ -792,6 +793,8 @@ static void play_theme(void *cookie)
 
 static void moonpatrol_init(void)
 {
+	int music_pref;
+
 	FbInit();
 	FbClear();
 	generate_terrain();
@@ -801,6 +804,10 @@ static void moonpatrol_init(void)
 	init_player();
 	memset(bullet, 0, sizeof(bullet));
 	nbullets = 0;
+	if (flash_kv_get_int("MOONPATROL_MUSIC_PREF", &music_pref))
+		music_on = music_pref;
+	else
+		music_on = 1;
 }
 
 static void moonpatrol_setup(void)
@@ -851,9 +858,11 @@ static void moonpatrol_setup(void)
 			if (music_on) {
 				music_on = 0;
 				strcpy(setup_menu.item[4].text, "MUSIC: OFF");
+				(void) flash_kv_store_int("MOONPATROL_MUSIC_PREF", music_on);
 			} else {
 				music_on = 1;
 				strcpy(setup_menu.item[4].text, "MUSIC: ON");
+				(void) flash_kv_store_int("MOONPATROL_MUSIC_PREF", music_on);
 			}
 			break;
 		case 5:
