@@ -23,7 +23,6 @@
 #define SAUCER2_COLOR x11_lime_green
 #define BULLET_COLOR x11_orange_red
 #define BOMB_COLOR WHITE
-#define PLAYER_COLOR MAGENTA
 #define WHEEL_COLOR CYAN
 #define WAYPOINT_COLOR WHITE
 #define MOONBASE_COLOR CYAN
@@ -47,6 +46,19 @@ static int mountain[MOUNTAINS_LEN];
 #define FOOTHILLS_SEG_LEN 8
 static int foothill[FOOTHILLS_LEN];
 
+static const struct difficulty_level {
+	int buggy_color;
+	int lives;
+	int num_rocks;
+	int num_craters;
+	int num_saucer_triggers;
+	int num_saucer_trigger2s;
+} difficulty[] = {
+	{ GREEN, 5, 10, 10, 5, 0 },
+	{ MAGENTA, 3, 10, 10, 10, 10 },
+	{ RED, 20, 3, 20, 20, 20 },
+};
+
 static enum moonpatrol_state_t moonpatrol_state = MOONPATROL_INIT;
 static int intermission_in_progress = 0;
 #define INTERMISSION_DURATION_SECS 5
@@ -54,8 +66,9 @@ static uint64_t intermission_start_time = 0;
 static int num_rocks = 20;
 static int num_craters = 20;
 static int ground_level = 148 * 256;
-static int difficulty_level = 0;
+static int difficulty_level = 1;
 static int num_saucer_triggers = 20;
+static int num_saucer_trigger2s = 20;
 static int music_on = 1;
 #define GRAVITY 64 
 #define BULLET_VEL (5 * 256)
@@ -93,18 +106,19 @@ static struct waypoint {
 	int x, y;
 	char label;
 } waypoint[NUMWAYPOINTS] = {
-	{ (0 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, '0' },
-	{ (1 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'A' },
-	{ (2 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'B' },
-	{ (3 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'C' },
-	{ (4 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'D' },
-	{ (5 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'E' },
-	{ (6 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'F' },
-	{ (7 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / NUMWAYPOINTS, 256 * 150, 'G' },
+	{ (0 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 1), 256 * 150, '0' },
+	{ (1 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 1), 256 * 150, 'A' },
+	{ (2 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 1), 256 * 150, 'B' },
+	{ (3 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 1), 256 * 150, 'C' },
+	{ (4 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 1), 256 * 150, 'D' },
+	{ (5 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 1), 256 * 150, 'E' },
+	{ (6 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 1), 256 * 150, 'F' },
+	{ (7 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 1), 256 * 150, 'G' },
 };
 static int last_waypoint_reached = 0;
-#define MAXLIVES 3
+#define MAXLIVES 5
 static int lives = MAXLIVES;
+static const int invincible = 0;
 static uint64_t ms_to_waypoint[NUMWAYPOINTS];
 
 #define MAXBULLETS 10
@@ -751,6 +765,11 @@ static void generate_terrain(void)
 {
 	static unsigned int rstate = 0xa5a5a5a5;
 
+	num_rocks = difficulty[difficulty_level].num_rocks;
+	num_craters = difficulty[difficulty_level].num_craters;
+	num_saucer_triggers = difficulty[difficulty_level].num_saucer_triggers;
+	num_saucer_trigger2s = difficulty[difficulty_level].num_saucer_trigger2s;
+
 	for (int i = 0; i < TERRAIN_LEN; i++) {
 		terrainy[i] = LCD_YSIZE - 10 - (xorshift(&rstate) % 8); /* TODO: something better */
 		terrainy[i] = terrainy[i] * 256;
@@ -763,7 +782,7 @@ static void generate_terrain(void)
 		place_feature(FEATURE_ROCK);
 	for (int i = 0; i < num_saucer_triggers; i++)
 		place_feature(FEATURE_SAUCER_TRIGGER);
-	for (int i = 0; i < num_saucer_triggers; i++)
+	for (int i = 0; i < num_saucer_trigger2s; i++)
 		place_feature(FEATURE_SAUCER_TRIGGER2);
 }
 
@@ -772,7 +791,7 @@ static void init_player(void)
 	if (lives <= 0) {
 		last_waypoint_reached = 0;
 		memset(ms_to_waypoint, 0, sizeof(ms_to_waypoint));
-		lives = 3;
+		lives = difficulty[difficulty_level].lives;
 		moonpatrol_state = MOONPATROL_GAMEOVER;
 		stop_tune();
 	}
@@ -850,8 +869,8 @@ static void moonpatrol_setup(void)
                 dynmenu_clear(&setup_menu);
                 strcpy(setup_menu.title, "LUNAR RESCUE");
                 dynmenu_add_item(&setup_menu, "PLAY GAME", MOONPATROL_SETUP, 4);
-                dynmenu_add_item(&setup_menu, "EASY <==", MOONPATROL_SETUP, 0);
-                dynmenu_add_item(&setup_menu, "MEDIUM", MOONPATROL_SETUP, 1);
+                dynmenu_add_item(&setup_menu, "EASY", MOONPATROL_SETUP, 0);
+                dynmenu_add_item(&setup_menu, "MEDIUM <==", MOONPATROL_SETUP, 1);
                 dynmenu_add_item(&setup_menu, "HARD", MOONPATROL_SETUP, 2);
 		dynmenu_add_item(&setup_menu, "MUSIC: ON", MOONPATROL_SETUP, 3);
                 dynmenu_add_item(&setup_menu, "QUIT", MOONPATROL_SETUP, 5);
@@ -1024,7 +1043,9 @@ static void draw_hills(int hill[], int len, int seglen, int factor, int color)
 
 static void draw_buggy(int x, int y)
 {
-	FbDrawObject(moon_buggy_points, ARRAYSIZE(moon_buggy_points), PLAYER_COLOR, x, y - 5, 64);
+	int buggy_color = difficulty[difficulty_level].buggy_color;
+
+	FbDrawObject(moon_buggy_points, ARRAYSIZE(moon_buggy_points), buggy_color, x, y - 5, 64);
 	// FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x - 6, y, 32);
 	// FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x + 0, y, 32);
 	// FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x + 6, y, 32);
@@ -1035,6 +1056,7 @@ static void draw_player(void)
 	static unsigned int rstate = 0xa5a5a5a5;
 	int x = (player.x - screenx) / 256;
 	int y = (player.y - screeny) / 256;
+	int buggy_color = difficulty[difficulty_level].buggy_color;
 
 	if (player.alive < 0)
 		return;
@@ -1045,7 +1067,7 @@ static void draw_player(void)
 	int wyo2 = (wyo >> 1) & 0x01;
 	int wyo3 = (wyo >> 2) & 0x01;
 
-	FbDrawObject(moon_buggy_points, ARRAYSIZE(moon_buggy_points), PLAYER_COLOR, x, y - 5, 128);
+	FbDrawObject(moon_buggy_points, ARRAYSIZE(moon_buggy_points), buggy_color, x, y - 5, 128);
 	FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x - 6, y + wyo1, 32);
 	FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x + 0, y + wyo2, 32);
 	FbDrawObject(wheel_points, ARRAYSIZE(wheel_points), WHEEL_COLOR, x + 6, y + wyo3, 32);
@@ -1261,6 +1283,8 @@ static void draw_screen(void)
 
 static void kill_player(void)
 {
+	if (invincible)
+		return;
 	lives--;
 	player.alive = -50;
 	player.vx = 0;
