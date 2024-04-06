@@ -34,6 +34,8 @@ enum moonpatrol_state_t {
 	MOONPATROL_GAMEOVER,
 	MOONPATROL_SETUP,
 	MOONPATROL_RUN,
+	MOONPATROL_INTERMISSION,
+	MOONPATROL_NEW_LEVEL,
 	MOONPATROL_EXIT,
 };
 
@@ -46,6 +48,9 @@ static int mountain[MOUNTAINS_LEN];
 static int foothill[FOOTHILLS_LEN];
 
 static enum moonpatrol_state_t moonpatrol_state = MOONPATROL_INIT;
+static int intermission_in_progress = 0;
+#define INTERMISSION_DURATION_SECS 5
+static uint64_t intermission_start_time = 0;
 static int num_rocks = 20;
 static int num_craters = 20;
 static int ground_level = 148 * 256;
@@ -78,8 +83,9 @@ static int screenvx = 0;
 
 static struct player {
 	int x, y, vx, vy, alive;
+	uint64_t start_time;
 } player = {
-	0, 0, 10, 0, 1,
+	0, 0, 10, 0, 1, 0,
 };
 
 #define NUMWAYPOINTS 8
@@ -99,6 +105,7 @@ static struct waypoint {
 static int last_waypoint_reached = 0;
 #define MAXLIVES 3
 static int lives = MAXLIVES;
+static uint64_t ms_to_waypoint[NUMWAYPOINTS];
 
 #define MAXBULLETS 10
 static struct bullet {
@@ -257,6 +264,22 @@ static struct tune moon_patrol_theme_4 = {
 static struct tune moon_patrol_theme_5 = {
 	.num_notes = ARRAYSIZE(moon_patrol_theme_five),
 	.note = &moon_patrol_theme_five[0],
+};
+
+static struct note moonpatrol_intermission_notes[] = {
+	{ NOTE_C3, eighth_note, },
+	{ NOTE_D3, eighth_note, },
+	{ NOTE_E3, eighth_note, },
+	{ NOTE_F3, eighth_note, },
+	{ NOTE_G3, eighth_note, },
+	{ NOTE_A3, eighth_note, },
+	{ NOTE_B3, eighth_note, },
+	{ NOTE_C4, eighth_note, },
+};
+
+static struct tune moonpatrol_intermission_tune = {
+	.num_notes = ARRAYSIZE(moonpatrol_intermission_notes),
+	.note = &moonpatrol_intermission_notes[0],
 };
 
 static const struct point saucer_points[] = {
@@ -748,6 +771,7 @@ static void init_player(void)
 {
 	if (lives <= 0) {
 		last_waypoint_reached = 0;
+		memset(ms_to_waypoint, 0, sizeof(ms_to_waypoint));
 		lives = 3;
 		moonpatrol_state = MOONPATROL_GAMEOVER;
 		stop_tune();
@@ -757,6 +781,10 @@ static void init_player(void)
 	player.vx = 0;
 	player.vy = 0;
 	player.alive = 1;
+	if (last_waypoint_reached < NUMWAYPOINTS) {
+		ms_to_waypoint[last_waypoint_reached + 1] = 0;
+		player.start_time = rtc_get_ms_since_boot();
+	}
 }
 
 static void play_theme(void *cookie)
@@ -1159,8 +1187,24 @@ static void draw_waypoints(void)
 {
 	for (int i = 0; i < NUMWAYPOINTS; i++) {
 		draw_waypoint(i);
-		if (player.x > waypoint[i].x && i > last_waypoint_reached)
+		if (player.x > waypoint[i].x && i > last_waypoint_reached) {
 			last_waypoint_reached = i;
+			ms_to_waypoint[i] = rtc_get_ms_since_boot() - player.start_time;
+			player.start_time = rtc_get_ms_since_boot();
+			switch (waypoint[i].label) {
+			case 'E':
+			case 'J':
+			case 'O':
+			case 'T':
+			case 'Z':
+				moonpatrol_state = MOONPATROL_INTERMISSION;
+				intermission_start_time = rtc_get_ms_since_boot();
+				intermission_in_progress = 0;
+				break;
+			default:
+				break;
+			}
+		}
 	}
 }
 
@@ -1182,6 +1226,23 @@ static void maybe_draw_moonbase(void)
 	FbDrawObject(moonbase_points, ARRAYSIZE(moonbase_points), MOONBASE_COLOR, x, y, 512);
 }
 
+static void draw_time(void)
+{
+	char time[100];
+
+	uint64_t the_time = rtc_get_ms_since_boot();
+	uint64_t elapsed_time_ms = (the_time - player.start_time);
+	uint64_t ms = elapsed_time_ms % 1000;
+	uint64_t sec = (elapsed_time_ms - ms) / 1000 /* ms/sec */;
+	uint64_t secs = sec % 60;
+	uint64_t minute = (sec - secs) / 60 /* sec/min */;
+
+	snprintf(time, sizeof(time), "%02lu:%02lu", minute, secs);
+	FbColor(WHITE);
+	FbMove(3, 3);
+	FbWriteString(time);
+}
+
 static void draw_screen(void)
 {
 	draw_terrain();
@@ -1194,6 +1255,7 @@ static void draw_screen(void)
 	draw_sparks();
 	draw_waypoints();
 	maybe_draw_moonbase();
+	draw_time();
 	draw_lives();
 }
 
@@ -1274,6 +1336,59 @@ static void moonpatrol_run(void)
 	}
 }
 
+static void moonpatrol_intermission(void)
+{
+	char time[100];
+	uint64_t now = rtc_get_ms_since_boot();
+	uint64_t elapsed_ms = now - intermission_start_time;
+	if (elapsed_ms > INTERMISSION_DURATION_SECS * 1000) { /* 10 seconds */
+		if (music_on)
+			play_theme((void *) 0);
+		moonpatrol_state = MOONPATROL_NEW_LEVEL;
+	}
+
+	if (intermission_in_progress == 0 && music_on)
+		play_tune(&moonpatrol_intermission_tune, NULL, NULL);
+	intermission_in_progress = 1;
+	draw_screen();
+
+	uint64_t total_ms = 0;
+	for (int i = 0; i < NUMWAYPOINTS; i++)
+		total_ms += ms_to_waypoint[i];
+
+	FbColor(WHITE);
+	FbMove(10, 70);
+	FbWriteString("CONGRATULATIONS!\n");
+	FbWriteString("ELAPSED TIME:\n    ");
+
+	uint64_t ms = total_ms % 1000;
+	uint64_t sec = (total_ms - ms) / 1000 /* ms/sec */;
+	uint64_t secs = sec % 60;
+	uint64_t minute = (sec - secs) / 60 /* sec/min */;
+
+	snprintf(time, sizeof(time), "%02lu:%02lu", minute, secs);
+	FbWriteString(time);
+	FbSwapBuffers();
+}
+
+static void moonpatrol_new_level(void)
+{
+	generate_terrain();
+	generate_hills(foothill, FOOTHILLS_LEN, 120 * 256, 80 * 256, 20);
+	generate_hills(mountain, MOUNTAINS_LEN, 60 * 256, 20 * 256, 10);
+	last_waypoint_reached = 0;
+	memset(ms_to_waypoint, 0, sizeof(ms_to_waypoint));
+	player.x = waypoint[last_waypoint_reached].x;
+	player.y = 148 * 256;
+	player.vx = 0;
+	player.vy = 0;
+	player.alive = 1;
+	screenx = 0;
+	memset(bullet, 0, sizeof(bullet));
+	nbullets = 0;
+	moonpatrol_state = MOONPATROL_RUN;
+}
+
 static void moonpatrol_exit(void)
 {
 	moonpatrol_state = MOONPATROL_INIT; /* So that when we start again, we do not immediately exit */
@@ -1291,6 +1406,12 @@ void moonpatrol_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case MOONPATROL_RUN:
 		moonpatrol_run();
+		break;
+	case MOONPATROL_INTERMISSION:
+		moonpatrol_intermission();
+		break;
+	case MOONPATROL_NEW_LEVEL:
+		moonpatrol_new_level();
 		break;
 	case MOONPATROL_EXIT:
 		moonpatrol_exit();
