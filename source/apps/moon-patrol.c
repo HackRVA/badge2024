@@ -106,14 +106,14 @@ static struct waypoint {
 	int x, y;
 	char label;
 } waypoint[NUMWAYPOINTS] = {
-	{ (0 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 2), 256 * 150, '0' },
-	{ (1 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 2), 256 * 150, 'A' },
-	{ (2 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 2), 256 * 150, 'B' },
-	{ (3 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 2), 256 * 150, 'C' },
-	{ (4 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 2), 256 * 150, 'D' },
-	{ (5 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 2), 256 * 150, 'E' },
-	{ (6 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 2), 256 * 150, 'F' },
-	{ (7 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 2), 256 * 150, 'G' },
+	{ (0 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 4), 256 * 150, '0' },
+	{ (1 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 4), 256 * 150, 'A' },
+	{ (2 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 4), 256 * 150, 'B' },
+	{ (3 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 4), 256 * 150, 'C' },
+	{ (4 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 4), 256 * 150, 'D' },
+	{ (5 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 4), 256 * 150, 'E' },
+	{ (6 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 4), 256 * 150, 'F' },
+	{ (7 * 256 * TERRAIN_SEG_LENGTH * TERRAIN_LEN) / (NUMWAYPOINTS + 4), 256 * 150, 'G' },
 };
 static int last_waypoint_reached = 0;
 #define MAXLIVES 5
@@ -1194,6 +1194,10 @@ static void draw_waypoint(int i)
 {
 	int x, y;
 	char waypoint_label[2];
+
+	if (waypoint[i].label == '0') /* don't draw the very first waypoint */
+		return;
+
 	x = (waypoint[i].x - screenx) / 256;
 	y = (waypoint[i].y - screeny) / 256;
 	if (!FbOnScreen(x, y))
@@ -1241,8 +1245,8 @@ static void draw_lives(void)
 
 static void maybe_draw_moonbase(void)
 {
-	// if (screenx > LCD_XSIZE * 256)
-	//	return;
+	if (waypoint[0].label != '0') /* only draw moonbase at the very first starting point */
+		return;
 	int x = (0 - screenx) / 256;
 	int y = (LCD_YSIZE - 10);
 	FbDrawObject(moonbase_points, ARRAYSIZE(moonbase_points), MOONBASE_COLOR, x, y, 512);
@@ -1397,6 +1401,8 @@ static void moonpatrol_intermission(void)
 
 static void moonpatrol_new_level(void)
 {
+	char label;
+
 	generate_terrain();
 	generate_hills(foothill, FOOTHILLS_LEN, 120 * 256, 80 * 256, 20);
 	generate_hills(mountain, MOUNTAINS_LEN, 60 * 256, 20 * 256, 10);
@@ -1410,6 +1416,18 @@ static void moonpatrol_new_level(void)
 	screenx = 0;
 	memset(bullet, 0, sizeof(bullet));
 	nbullets = 0;
+
+	/* Advance waypoint labels to the next set */
+	label = waypoint[5].label;
+	if (label == 'Y') /* Wrap around to label first waypoint at the end. */
+		label = '0';
+	for (int i = 0; i < NUMWAYPOINTS; i++) {
+		waypoint[i].label = label;
+		if (label == '0')
+			label = 'A';
+		else
+			label++;
+	}
 	moonpatrol_state = MOONPATROL_RUN;
 }
 
