@@ -38,6 +38,12 @@ enum moonpatrol_state_t {
 	MOONPATROL_EXIT,
 };
 
+#define ROCK_SCORE 25
+#define SAUCER_SCORE 50
+#define CHECKPOINT_SCORE 1000
+#define TIME_SCORE 100
+#define TIME_BONUS_MIN 60
+
 #define MOUNTAINS_LEN 256
 #define MOUNTAINS_SEG_LEN 8
 static int mountain[MOUNTAINS_LEN];
@@ -120,6 +126,8 @@ static int last_waypoint_reached = 0;
 static int lives = MAXLIVES;
 static const int invincible = 0;
 static uint64_t ms_to_waypoint[NUMWAYPOINTS];
+static int score = 0;
+static int time_bonus = 0;
 
 #define MAXBULLETS 10
 static struct bullet {
@@ -643,9 +651,9 @@ static void move_bullet(int n)
 			dy = -dy;
 		if (dy < 16) {
 			deactivate_feature(bi);
-			printf("blasted rock! dy = %d\n", dy);
 			add_explosion(bullet[n].x, bullet[n].y, 40, 50);
 			bullet[n].alive = 0;
+			score += ROCK_SCORE;
 		}
 	}
 	/* Check to see if we killed any saucers ... */
@@ -659,6 +667,7 @@ static void move_bullet(int n)
 		if (dx + dy < 25) { /* < 5 pixels */
 			add_explosion(saucer[i].x, saucer[i].y, 20, 50);
 			remove_saucer(i);
+			score += SAUCER_SCORE;
 		}
 	}
 }
@@ -889,6 +898,7 @@ static void moonpatrol_setup(void)
 		int c = setup_menu.current_item;
 		switch(c) {
 		case 0:
+			score = 0;
 			moonpatrol_state = MOONPATROL_RUN;
 			if (music_on)
 				play_theme((void *) 0);
@@ -1209,6 +1219,20 @@ static void draw_waypoint(int i)
 	FbWriteString(waypoint_label);
 }
 
+static void compute_time_bonus(void)
+{
+	uint64_t total_time = 0;
+
+	for (int i = 0; i < NUMWAYPOINTS; i++)
+		total_time += ms_to_waypoint[i];
+
+	if (total_time < 1000 * TIME_BONUS_MIN) {
+		time_bonus = TIME_SCORE * ((1000 * TIME_BONUS_MIN - total_time) / 1000);
+	} else {
+		time_bonus = 0;
+	}
+}
+
 static void draw_waypoints(void)
 {
 	for (int i = 0; i < NUMWAYPOINTS; i++) {
@@ -1226,6 +1250,9 @@ static void draw_waypoints(void)
 				moonpatrol_state = MOONPATROL_INTERMISSION;
 				intermission_start_time = rtc_get_ms_since_boot();
 				intermission_in_progress = 0;
+				score += CHECKPOINT_SCORE;
+				compute_time_bonus();
+				score += time_bonus;
 				break;
 			default:
 				break;
@@ -1273,6 +1300,15 @@ static void draw_time(void)
 	FbWriteString(time);
 }
 
+static void draw_score(void)
+{
+	char score_text[12];
+	snprintf(score_text, sizeof(score_text), "%d", score);
+	FbColor(WHITE);
+	FbMove(50, 3);
+	FbWriteString(score_text);
+}
+
 static void draw_screen(void)
 {
 	draw_terrain();
@@ -1287,6 +1323,7 @@ static void draw_screen(void)
 	maybe_draw_moonbase();
 	if (!intermission_in_progress)
 		draw_time();
+	draw_score();
 	draw_lives();
 }
 
@@ -1396,14 +1433,22 @@ static void moonpatrol_intermission(void)
 	FbMove(10, 70);
 	FbWriteString("CONGRATULATIONS!\n");
 	FbWriteString("ELAPSED TIME:\n    ");
+	
 
 	uint64_t ms = total_ms % 1000;
 	uint64_t sec = (total_ms - ms) / 1000 /* ms/sec */;
 	uint64_t secs = sec % 60;
 	uint64_t minute = (sec - secs) / 60 /* sec/min */;
 
-	snprintf(time, sizeof(time), "%02lu:%02lu", minute, secs);
+	snprintf(time, sizeof(time), "%02lu:%02lu\n", minute, secs);
 	FbWriteString(time);
+
+	if (time_bonus > 0) {
+		FbMove(10, 98);
+		snprintf(time, sizeof(time), "TIME BONUS:\n    %d", time_bonus);
+		FbWriteString(time);
+	}
+
 	FbSwapBuffers();
 }
 
