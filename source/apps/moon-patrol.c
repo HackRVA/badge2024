@@ -1255,9 +1255,13 @@ static void maybe_draw_moonbase(void)
 static void draw_time(void)
 {
 	char time[100];
+	uint64_t previous_times = 0;
+
+	for (int i = 0; i <= last_waypoint_reached; i++)
+		previous_times += ms_to_waypoint[i];
 
 	uint64_t the_time = rtc_get_ms_since_boot();
-	uint64_t elapsed_time_ms = (the_time - player.start_time);
+	uint64_t elapsed_time_ms = previous_times + (the_time - player.start_time);
 	uint64_t ms = elapsed_time_ms % 1000;
 	uint64_t sec = (elapsed_time_ms - ms) / 1000 /* ms/sec */;
 	uint64_t secs = sec % 60;
@@ -1281,7 +1285,8 @@ static void draw_screen(void)
 	draw_sparks();
 	draw_waypoints();
 	maybe_draw_moonbase();
-	draw_time();
+	if (!intermission_in_progress)
+		draw_time();
 	draw_lives();
 }
 
@@ -1373,6 +1378,9 @@ static void moonpatrol_intermission(void)
 		if (music_on)
 			play_theme((void *) 0);
 		moonpatrol_state = MOONPATROL_NEW_LEVEL;
+		player.start_time = rtc_get_ms_since_boot();
+		intermission_in_progress = 0;
+		return;
 	}
 
 	if (intermission_in_progress == 0 && music_on)
