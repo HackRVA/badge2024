@@ -37,6 +37,8 @@ if (${TARGET} STREQUAL "SIMULATOR")
             ${CMAKE_CURRENT_LIST_DIR}/rtc_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/random_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/uid_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/analog_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/color_sensor_sim.c
             )
 
     cmake_policy(SET CMP0079 NEW)
@@ -70,7 +72,8 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR" OR ${TARGET} STREQUAL "WASM")
             ${CMAKE_CURRENT_LIST_DIR}/png_utils.c
             ${CMAKE_CURRENT_LIST_DIR}/vec3.c
             ${CMAKE_CURRENT_LIST_DIR}/quat.c
-            ${CMAKE_CURRENT_LIST_DIR}/accelerometer_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/analog_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/color_sensor_sim.c
             )
 
     cmake_policy(SET CMP0079 NEW)

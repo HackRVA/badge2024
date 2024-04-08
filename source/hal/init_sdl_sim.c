@@ -25,7 +25,6 @@
 #include "png_utils.h"
 #include "trig.h"
 #include "quat.h"
-#include "accelerometer.h"
 #include "uid.h"
 #include "audio.h"
 
@@ -548,7 +547,6 @@ static void draw_badge_orientation_indicator(SDL_Renderer *renderer, float x, fl
 	gravity_vector.v.z = -1.0f;
 	quat_inverse(&inverse_rotation, orientation);
 	quat_rot_vec_self(&gravity_vector, &inverse_rotation);
-	set_simulated_accelerometer_values(gravity_vector.v.x, gravity_vector.v.y, -gravity_vector.v.z);
 
 	/* Draw the orientation indicator */
 	SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xff);
