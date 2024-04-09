@@ -11,6 +11,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <hardware/adc.h>
 
@@ -51,6 +52,38 @@ uint32_t analog_get_chan_mV(enum analog_channel channel)
     count *= 3300;
     count /= 4096;
     return count;
+}
+
+float analog_calc_resistance_ohms(uint32_t mV)
+{
+    return analog_calc_rdiv_bottom(3.3f, 2.2e3f, mV);
+}
+
+int8_t analog_calc_mcu_temp_C(uint32_t mV)
+{
+    float raw = mV;
+    raw /= 1e3f;
+    return 27 - ((raw - 0.706f) / 0.001721f);
+}
+
+int8_t analog_calc_thermistor_temp_C(uint32_t mV)
+{
+    const float R0_inv = 1.0f / 100e3f;
+    const float B_inv = 1.0f / 4.2e3f;
+    const float T0_inv = 1.0f / 298.15f;
+
+    float R = analog_calc_rdiv_bottom(3.3f, 22e3f, mV);
+    float K = 1.0f / (B_inv * log(R * R0_inv) + T0_inv);
+    float C = K - 273.15f;
+    return C;
+}
+
+int32_t analog_calc_hall_effect_mT(uint32_t _mV)
+{
+    int32_t mV = _mV;
+    int32_t mT = 1000 - mV;
+    mT /= 11; /* DRV5053OA is -11mV / mT */
+    return mT;
 }
 
 enum analog_sensor_power analog_get_sensor_power(void)

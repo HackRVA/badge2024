@@ -30,24 +30,27 @@ void analog_init_gpio(void);
 
 uint32_t analog_get_chan_mV(enum analog_channel chan);
 
-static inline float analog_get_resistance_ohms(void)
+
+static inline float analog_calc_rdiv_bottom(float refV, float Rtop, uint32_t mV)
 {
-    float raw = analog_get_chan_mV(ANALOG_CHAN_CONDUCTIVITY);
-    raw /= 3.3e3f;
-    return 2.2e3f * raw / (1 - raw);
+    float V = mV;
+    V *= 1e-3f;
+    V /= refV;
+    return Rtop * V / (1 - V);
 }
 
-static inline uint16_t analog_get_batt_mV(void) 
+float analog_calc_resistance_ohms(uint32_t mV);
+
+static inline uint32_t analog_get_batt_mV(void) 
 {
     return analog_get_chan_mV(ANALOG_CHAN_BATT_V);
 }
 
-static inline int8_t analog_get_mcu_temp_C(void)
-{
-    float raw = analog_get_chan_mV(ANALOG_CHAN_MCU_TEMP);
-    raw /= 1e3f;
-    return 27 - ((raw - 0.706f) / 0.001721f);
-}
+int8_t analog_calc_mcu_temp_C(uint32_t mV);
+
+int8_t analog_calc_thermistor_temp_C(uint32_t mV);
+
+int32_t analog_calc_hall_effect_mT(uint32_t mV);
 
 enum analog_sensor_power {
     ANALOG_SENSOR_POWER_DISABLED = 0,
