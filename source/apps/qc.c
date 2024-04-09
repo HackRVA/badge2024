@@ -206,6 +206,10 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             break;
 
         case RUN:
+	    /* Reset every frame. */
+            FbTransparentIndex(0);
+            FbColor(GREEN);
+            FbClear();
             FbMove(16, 16);
 
             if (button_poll(BADGE_BUTTON_UP) && button_poll(BADGE_BUTTON_B)) {
@@ -215,13 +219,17 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             }
 
             if(button_hold_count > 20){
+		/* Exit */
                 analog_set_sensor_power(ANALOG_SENSOR_POWER_DISABLED);
                 //color_sensor_power_ctl(COLOR_SENSOR_POWER_CMD_DOWN);
                 ir_remove_callback(ir_callback, IR_APP0);
+		led_pwm_disable(BADGE_LED_RGB_RED);
+		led_pwm_disable(BADGE_LED_RGB_GREEN);
+		led_pwm_disable(BADGE_LED_RGB_BLUE);
                 QC_state = INIT;
                 FbWriteLine("EXITING");
                 FbSwapBuffers();
-                sleep_ms(1000);
+                sleep_ms(500);
                 returnToMenus();
                 return;
             }
