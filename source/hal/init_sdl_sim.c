@@ -248,7 +248,7 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 	/* where corners of badge image land on screen, by similar triangles */
 	float fx = (sx2 - sx1) / (lcdp.x2 - lcdp.x1);
 	float fy = (sy2 - sy1) / (lcdp.y2 - lcdp.y1);
-	fx = fy;
+	// fx = fy;
 	bx1 =   sx1 - fx * lcdp.x1;
 	by1 =   sy1 - fy * lcdp.y1;
 	if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE) {
@@ -273,7 +273,10 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 		cy1 = 0;
 	}
 	if (bx2 >= sx) {
-		cx2 = (sx - bx1) / fx;
+		if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
+			cx2 = landscape_badge_image_width - (bx1 - sx) / fx;
+		else
+			cx2 = badge_image_width - (bx1 - sx) / fx;
 		bx2 = sx - 1;
 	} else {
 		if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
@@ -282,7 +285,10 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 			cx2 = badge_image_width - 1;
 	}
 	if (by2 >= sy) {
-		cy2 = (sy - by1) / fy;
+		if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
+			cy2 = landscape_badge_image_height - (by2 - sy) / fy;
+		else
+			cy2 = badge_image_height - (by2 - sy) / fy;
 		by2 = sy - 1;
 	} else {
 		if (slp->orientation == SIM_LCD_ORIENTATION_LANDSCAPE)
