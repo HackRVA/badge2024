@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "button.h"
 #include "ir.h"
@@ -13,6 +14,7 @@
 #include "music.h"
 #include "analog.h"
 #include "color_sensor.h"
+#include "rtc.h"
 
 #include <utils.h>
 
@@ -301,6 +303,11 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 }
                 redraw = 1;
             }
+
+            // test the clock
+	    char buf[25];
+	    snprintf(buf, sizeof(buf), "%" PRIu64 "\n", rtc_get_ms_since_boot());
+	    FbWriteString(buf);
 
 	    FbMove(8, 128);
 	    FbWriteString("PRESS AND HOLD\nUP and B\nTO EXIT");
