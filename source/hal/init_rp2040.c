@@ -104,6 +104,12 @@ static void _init_gpios(void) {
 
 void hal_init(void) {
 
+    // reset core 1 in case halted by debugger
+    multicore_reset_core1();
+    // allow suspend from other core, if we have it run something that needs to do that
+    multicore_lockout_victim_init();
+    multicore_launch_core1(core1_procedure);
+
     stdio_init_all();
     _init_gpios();
 
@@ -115,10 +121,6 @@ void hal_init(void) {
     color_sensor_init();
 
     exception_set_exclusive_handler(HARDFAULT_EXCEPTION, hard_fault_handler);
-
-    // allow suspend from other core, if we have it run something that needs to do that
-    multicore_lockout_victim_init();
-    multicore_launch_core1(core1_procedure);
 
 }
 
