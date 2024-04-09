@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 #include "colors.h"
 #include "x11_colors.h"
@@ -1294,7 +1295,7 @@ static void draw_time(void)
 	uint64_t secs = sec % 60;
 	uint64_t minute = (sec - secs) / 60 /* sec/min */;
 
-	snprintf(time, sizeof(time), "%02lu:%02lu", minute, secs);
+	snprintf(time, sizeof(time), "%02" PRIu64 ":%02" PRIu64, minute, secs);
 	FbColor(WHITE);
 	FbMove(3, 3);
 	FbWriteString(time);
