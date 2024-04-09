@@ -36,6 +36,7 @@ static inline float analog_calc_rdiv_bottom(float refV, float Rtop, uint32_t mV)
     float V = mV;
     V *= 1e-3f;
     V /= refV;
+    if (V == 0.0f) V = 0.0000001f; /* Guard zero div. */
     return Rtop * V / (1 - V);
 }
 
