@@ -19,6 +19,7 @@
 #define LED_LVL 50
 
 unsigned char QC_IR;
+unsigned QC_IR_frames;
 
 enum {
     INIT,
@@ -26,10 +27,9 @@ enum {
 };
 
 void ir_callback(const IR_DATA * ir_data) {
+    QC_IR_frames = 5;
     QC_IR = ir_data->data[0];
 }
-
-static unsigned char screen_brightness = 255;
 
 #define SUPPRESS_BEEP ((uint16_t) -1)
 
@@ -163,11 +163,16 @@ bool qc_color_sensor(void) {
     }
     
     const char color[COLOR_SAMPLE_INDEX_COUNT] = {'r', 'g', 'b', 'w', 'i'};
+    const unsigned short text_color[COLOR_SAMPLE_INDEX_COUNT] = {
+	    RED, GREEN, BLUE, WHITE, PACKRGB(16,0,8)
+    };
     for (int i = 0; i < COLOR_SAMPLE_INDEX_COUNT; i++) {
+        FbColor(text_color[i]);
         snprintf(msg, sizeof(msg), "%c:%d\n", color[i],
                  sample.error_flags & (1U << i) ? -1 : sample.rgbwi[i]);
         FbWriteString(msg);
     }
+    FbColor(GREEN);
     
     return true;
 }
@@ -210,7 +215,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             FbTransparentIndex(0);
             FbColor(GREEN);
             FbClear();
-            FbMove(16, 16);
+            FbMove(8, 8);
 
             if (button_poll(BADGE_BUTTON_UP) && button_poll(BADGE_BUTTON_B)) {
                 button_hold_count ++;
@@ -271,11 +276,16 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             // Received a QC ping
             if(QC_IR == 1){
                 audio_out_beep(698 * 2, 400);
-                FbColor(GREEN);
+                FbColor(YELLOW);
                 FbWriteString("Pinged!\n");
-                QC_IR = 0;
-                data = 2;
-                ir_send_complete_message(&ir_packet);
+                FbColor(GREEN);
+                if (QC_IR_frames == 0) {
+                    QC_IR = 0;
+                    data = 2;
+                    ir_send_complete_message(&ir_packet);
+                } else {
+                    QC_IR_frames--;
+                }
                 redraw = 1;
             }
             // Received a QC ping response
@@ -284,19 +294,18 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 FbColor(YELLOW);
                 FbWriteString("Ping response!\n");
                 FbColor(GREEN);
-                QC_IR = 0;
+                if (QC_IR_frames == 0) {
+                    QC_IR = 0;
+                } else {
+                    QC_IR_frames--;
+                }
                 redraw = 1;
             }
 
-	    FbMove(10, 130);
+	    FbMove(8, 128);
 	    FbWriteString("PRESS AND HOLD\nUP and B\nTO EXIT");
 
             if (redraw)
                 FbSwapBuffers();
-
-	    if (screen_brightness < 255) {
-		screen_brightness++;
-		led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, screen_brightness);
-	    }
     }
 }
