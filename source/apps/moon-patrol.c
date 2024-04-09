@@ -1441,7 +1441,7 @@ static void moonpatrol_intermission(void)
 	uint64_t secs = sec % 60;
 	uint64_t minute = (sec - secs) / 60 /* sec/min */;
 
-	snprintf(time, sizeof(time), "%02lu:%02lu\n", minute, secs);
+	snprintf(time, sizeof(time), "%02" PRIu64 ":%02" PRIu64 "\n", minute, secs);
 	FbWriteString(time);
 
 	if (time_bonus > 0) {
