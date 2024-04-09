@@ -3,33 +3,33 @@
 
 /* "Landscape" and "Portrait" here refer to the LCD screen, not the badge as a whole */
 #define PORTRAITXY(x, y) { ((float) (x) / 1024.0f), ((float) (y) / 1527.0f) }
-#define LANDSCAPEXY(x, y) { ((float) (x) / 1527.0f), ((float) (y) / 1024.0f) }
+#define LANDSCAPEXY(x, y) { ((float) (x) / 1478.0f), ((float) (y) / 1024.0f) }
 static const struct button_coord_list portrait_button_coords = {
-	.a_button = PORTRAITXY(768, 1176),
-	.b_button = PORTRAITXY(948, 1130),
+	.a_button = PORTRAITXY(758, 1130),
+	.b_button = PORTRAITXY(923, 1089),
 #if BADGE_HAS_ROTARY_SWITCHES
 	.left_rotary = PORTRAITXY(112, 96),
 	.right_rotary = PORTRAITXY(960, 88),
 #endif
-	.dpad_up = PORTRAITXY(168, 1072),
-	.dpad_down = PORTRAITXY(168, 1294),
-	.dpad_left = PORTRAITXY(50, 1186),
-	.dpad_right = PORTRAITXY(280, 1186),
-	.led = PORTRAITXY(660, 193),
+	.dpad_up = PORTRAITXY(166, 1015),
+	.dpad_down = PORTRAITXY(166, 1235),
+	.dpad_left = PORTRAITXY(45, 1125),
+	.dpad_right = PORTRAITXY(295, 1125),
+	.led = PORTRAITXY(648, 202),
 };
 
 static const struct button_coord_list landscape_button_coords = {
-	.a_button = LANDSCAPEXY(1182, 253),
-	.b_button = LANDSCAPEXY(1128, 75),
+	.a_button = LANDSCAPEXY(1130, 262),
+	.b_button = LANDSCAPEXY(1086, 96),
 #if BADGE_HAS_ROTARY_SWITCHES
 	.left_rotary = LANDSCAPEXY(91, 912),
 	.right_rotary = LANDSCAPEXY(84, 64),
 #endif
-	.dpad_right = LANDSCAPEXY(1186, 741),
-	.dpad_left = LANDSCAPEXY(1186, 963),
-	.dpad_up = LANDSCAPEXY(1059, 856),
-	.dpad_down = LANDSCAPEXY(1318, 856),
-	.led = LANDSCAPEXY(190, 361),
+	.dpad_right = LANDSCAPEXY(1128, 734),
+	.dpad_left = LANDSCAPEXY(1128, 964),
+	.dpad_up = LANDSCAPEXY(1004, 856),
+	.dpad_down = LANDSCAPEXY(1244, 856),
+	.led = LANDSCAPEXY(198, 374),
 };
 
 static struct button_coord_list current_button_coords;
