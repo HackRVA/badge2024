@@ -128,23 +128,23 @@ bool qc_analog(void)
 {
     char msg[16];
 
-    float ohms = analog_get_resistance_ohms();
+    float ohms = analog_calc_resistance_ohms(analog_get_chan_mV(ANALOG_CHAN_CONDUCTIVITY));
     snprintf(msg, sizeof(msg), "R:%1.1e\n", ohms);
     FbWriteString(msg);
 
-    uint16_t therm_mV = analog_get_chan_mV(ANALOG_CHAN_THERMISTOR);
-    snprintf(msg, sizeof(msg), "ThermV:%1d.%02d\n", therm_mV / 1000, therm_mV % 1000 / 10);
+    int8_t therm_C = analog_calc_thermistor_temp_C(analog_get_chan_mV(ANALOG_CHAN_THERMISTOR));
+    snprintf(msg, sizeof(msg), "ThermC:%3d\n", therm_C);
     FbWriteString(msg);
     
-    uint16_t hall_effect_mV = analog_get_chan_mV(ANALOG_CHAN_HALL_EFFECT);
-    snprintf(msg, sizeof(msg), "HallV:%1d.%02d\n", hall_effect_mV / 1000, hall_effect_mV % 1000 / 10);
+    int32_t hall_effect_mT = analog_calc_hall_effect_mT(analog_get_chan_mV(ANALOG_CHAN_HALL_EFFECT));
+    snprintf(msg, sizeof(msg), "HallmT:%3d\n", hall_effect_mT);
     FbWriteString(msg);
 
-    uint16_t batt_mV = analog_get_batt_mV();
+    uint32_t batt_mV = analog_get_batt_mV();
     snprintf(msg, sizeof(msg), "BattV:%1d.%02d\n", batt_mV / 1000, batt_mV % 1000 / 10);
     FbWriteString(msg);
 
-    int8_t mcu_temp = analog_get_mcu_temp_C();
+    int8_t mcu_temp = analog_calc_mcu_temp_C(analog_get_chan_mV(ANALOG_CHAN_MCU_TEMP));
     snprintf(msg, sizeof(msg), "MCUTC:%d\n", mcu_temp);
     FbWriteString(msg);
 
