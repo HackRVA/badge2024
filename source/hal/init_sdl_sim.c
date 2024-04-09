@@ -203,11 +203,13 @@ static void draw_badge_image(struct sim_lcd_params *slp)
 		if (landscape_badge_image_pixels) {
 			landscape_badge_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
 					landscape_badge_image_width, landscape_badge_image_height);
+			SDL_SetTextureBlendMode(landscape_badge_image, SDL_BLENDMODE_BLEND);
 			SDL_UpdateTexture(landscape_badge_image, NULL, landscape_badge_image_pixels, landscape_badge_image_width * 4);
 		}
 		if (badge_image_pixels) {
 			badge_image = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ABGR8888, SDL_TEXTUREACCESS_STATIC,
 							badge_image_width, badge_image_height);
+			SDL_SetTextureBlendMode(badge_image, SDL_BLENDMODE_BLEND);
 			SDL_UpdateTexture(badge_image, NULL, badge_image_pixels, badge_image_width * 4);
 		}
 		if (badge_background_pixels) {
