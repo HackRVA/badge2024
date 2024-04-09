@@ -18,8 +18,8 @@
 
 #define LED_LVL 50
 
-unsigned char QC_IR;
-unsigned QC_IR_frames;
+static unsigned char QC_IR;
+static unsigned QC_IR_frames;
 
 enum {
     INIT,
