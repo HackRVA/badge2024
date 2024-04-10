@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
+#include "bline.h"
 
 /* Return world index (0 - 4095) from (x, y) coords */
 static inline int windex(int x, int y)
@@ -294,6 +296,43 @@ static void draw_cell(int x, int y, unsigned char c)
 	}
 }
 
+struct visibility_check_data {
+	int px, py, dx, dy, answer;
+};
+
+static int visibility_evaluator(int x, int y, void *cookie)
+{
+	struct visibility_check_data *d = cookie;
+
+	if (d->answer == 0) /* visibility already blocked by previous call */
+		return 1;
+	if (x == d->px && y == d->py)  /* exclude the player and dest from blocking view of dest */
+		return 0;
+	if (x == d->dx && y == d->dy)
+		return 0;
+	if (x > 63)
+		x -= 64;
+	if (x < 0)
+		x += 64;
+	if (y > 63)
+		y -= 64;
+	if (y < 0)
+		y += 64;
+	char c = player.world->wm[windex(x, y)];
+	if (c == 'm' || c == 'f') {/* mountains and forest block visibility */
+		d->answer = 0;
+		return 1;
+	}
+	return 0;
+}
+
+static int visibility_check(int px, int py, int x, int y)
+{
+	struct visibility_check_data d = { px, py, x, y, 1 };
+	(void) bline(px, py, x, y, visibility_evaluator, &d);
+	return d.answer;
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
@@ -301,12 +340,14 @@ static void draw_screen(void)
 	FbClear();
 	FbColor(WHITE);
 
-	int x, y, sx, sy;
+	int x, y, sx, sy, rx, ry;
 
 	x = player.x - 3;
+	rx = x;
 	if (x < 0)
 		x += 64;
 	y = player.y - 4;
+	ry = y;
 	if (y < 0)
 		y += 64;
 	sx = 0;
@@ -314,8 +355,10 @@ static void draw_screen(void)
 	int count = 0;
 	do {
 		unsigned char c = (unsigned char) player.world->wm[windex(x, y)];
-		draw_cell(sx, sy, c);
+		if (player.world == &space || visibility_check(player.x, player.y, rx, ry))
+			draw_cell(sx, sy, c);
 		x++;
+		rx++;
 		count++;
 		if (x > 63)
 			x -= 64;
@@ -324,10 +367,12 @@ static void draw_screen(void)
 			if (count == 7 * 9)
 				break;
 			x = player.x - 3;
+			rx = player.x - 3;
 			if (x < 0)
 				x += 64;
 			sx = 0;
 			y++;
+			ry++;
 			sy += 16;
 			if (y > 63) {
 				y = y - 64;
