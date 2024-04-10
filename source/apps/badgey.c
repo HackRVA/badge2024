@@ -1,11 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
 #include "bline.h"
+#include "dynmenu.h"
+#include "utils.h"
+
+struct dynmenu planet_menu;
+struct dynmenu_item planet_menu_item[5];
 
 /* Return world index (0 - 4095) from (x, y) coords */
 static inline int windex(int x, int y)
@@ -13,8 +19,11 @@ static inline int windex(int x, int y)
 	return (y * 64) + x;
 }
 
+enum badgey_world_type { WORLD_TYPE_SPACE, WORLD_TYPE_PLANET, WORLD_TYPE_TOWN, WORLD_TYPE_CAVE };
+
 struct badgey_world {
 	char *name;
+	enum badgey_world_type type;
 	char const *wm; /* world map */
 	struct badgey_world const *subworld[10];
 	int landingx, landingy;
@@ -155,35 +164,43 @@ static const char ossaria_place[4096] = {
 };
 
 static const struct badgey_world ossaria = {
-	"OSSARIA",
-	ossaria_place,
+	.name = "OSSARIA",
+	.type = WORLD_TYPE_PLANET,
+	.wm = ossaria_place,
 	.subworld = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-	32, 32,
+	.landingx = 32,
+	.landingy = 32,
 };
 
 static const struct badgey_world space = {
-	"SPACE",
-	space_place,
+	.name = "SPACE",
+	.type = WORLD_TYPE_SPACE,
+	.wm = space_place,
 	.subworld = { &ossaria, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-	32, 32,
+	.landingx = 32,
+	.landingy = 32,
 };
-
 
 static struct player {
 	struct badgey_world const *world; /* current world */
 	int x, y; /* coords in current world */
 	int world_level;
+	struct badgey_world const *old_world[5];
 	int wx[5], wy[5]; /* coords at each level */
 } player = {
 	.world = &space,
 	.x = 32,
 	.y = 32,
 	.world_level = 0,
+	.old_world = { 0 },
+	.wx = { 0 },
+	.wy = { 0 },
 };
 
 /* Program states.  Initial state is BADGEY_INIT */
 enum badgey_state_t {
 	BADGEY_INIT,
+	BADGEY_PLANET_MENU,
 	BADGEY_RUN,
 	BADGEY_EXIT,
 };
@@ -224,12 +241,13 @@ static void check_buttons(void)
 		if (newy > 63)
 			newy -= 64;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		badgey_state = BADGEY_EXIT;
+		if (player.world->type == WORLD_TYPE_PLANET)
+			badgey_state = BADGEY_PLANET_MENU;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		badgey_state = BADGEY_EXIT;
 	}
 	int c = player.world->wm[windex(newx, newy)];
-	if (player.world == &space) {
+	if (player.world->type == WORLD_TYPE_SPACE) {
 		/* Prevent player from driving into a star */
 		if (c == '*') {
 			return;
@@ -239,12 +257,14 @@ static void check_buttons(void)
 			struct badgey_world const *new_world = player.world->subworld[c];
 			if (new_world != NULL) {
 				player.world_level++;
-				player.x = new_world->landingx;
-				player.y = new_world->landingx;
 				player.wx[player.world_level] = player.x;
 				player.wy[player.world_level] = player.y;
+				player.old_world[player.world_level] = player.world;
+				player.x = new_world->landingx;
+				player.y = new_world->landingx;
 				player.world = new_world;
 				screen_changed = 1;
+				return;
 			}
 		}
 	} else {
@@ -278,7 +298,7 @@ static void draw_cell(int x, int y, unsigned char c)
 	case '7':
 	case '8':
 	case '9':
-		if (player.world == &space) { /* player is in space?  it's a planet */
+		if (player.world->type == WORLD_TYPE_SPACE) { /* player is in space?  it's a planet */
 			FbCharacter((unsigned char) 'O');
 		} else {
 			/* Not in space, so ... */
@@ -378,7 +398,7 @@ static void draw_screen(void)
 	int count = 0;
 	do {
 		unsigned char c = (unsigned char) player.world->wm[windex(x, y)];
-		if (player.world == &space || visibility_check(player.x, player.y, rx, ry))
+		if (player.world->type == WORLD_TYPE_SPACE || visibility_check(player.x, player.y, rx, ry))
 			draw_cell(sx, sy, c);
 		x++;
 		rx++;
@@ -414,6 +434,58 @@ static void draw_screen(void)
 	FbPushBuffer();
 }
 
+static void badgey_planet_menu(void)
+{
+	static int local_screen_changed = 1;
+	static int menu_setup = 0;
+
+	if (!menu_setup) {
+		dynmenu_clear(&planet_menu);
+		dynmenu_init(&planet_menu, planet_menu_item, ARRAY_SIZE(planet_menu_item));
+		strcpy(planet_menu.title, "");
+		dynmenu_add_item(&planet_menu, "BLAST_OFF", BADGEY_RUN, 0);
+		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT, 1);
+		menu_setup = 1;
+	}
+
+	if (local_screen_changed)
+		dynmenu_draw(&planet_menu);
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+		dynmenu_change_current_selection(&planet_menu, -1);
+		local_screen_changed = 1;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+		dynmenu_change_current_selection(&planet_menu, 1);
+		local_screen_changed = 1;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		switch (planet_menu.current_item) {
+		case 0: /* blast off */
+			if (player.world->type == WORLD_TYPE_PLANET && player.world_level > 0) {
+				struct badgey_world const *old_world = player.old_world[player.world_level];
+				if (old_world) {
+					player.world = old_world;
+					player.world_level--;
+					player.x = player.wx[player.world_level];
+					player.y = player.wy[player.world_level];
+					badgey_state = BADGEY_RUN;
+					/* global */ screen_changed = 1;
+					local_screen_changed = 1;
+				}
+			}
+			break;
+		case 1: /* quit */
+			local_screen_changed = 1;
+			/* global */ screen_changed = 1;
+			badgey_state = BADGEY_EXIT;
+			break;
+			
+		}
+	}
+	if (local_screen_changed)
+		FbSwapBuffers();
+}
+
 static void badgey_run(void)
 {
 	check_buttons();
@@ -432,6 +504,9 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 	switch (badgey_state) {
 	case BADGEY_INIT:
 		badgey_init();
+		break;
+	case BADGEY_PLANET_MENU:
+		badgey_planet_menu();
 		break;
 	case BADGEY_RUN:
 		badgey_run();
