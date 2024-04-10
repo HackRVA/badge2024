@@ -23,6 +23,7 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/slot_machine.c
         ${CMAKE_CURRENT_LIST_DIR}/test-screensavers.c
         ${CMAKE_CURRENT_LIST_DIR}/moon-patrol.c
+        ${CMAKE_CURRENT_LIST_DIR}/badgey.c
         ${CMAKE_CURRENT_LIST_DIR}/badge-app-template.c
         )
 add_subdirectory(clue_assets)
