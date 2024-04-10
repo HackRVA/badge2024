@@ -58,6 +58,8 @@ your images are added to the build! you can `#include "myapp_assets.h"` and star
 
 ### `images.yaml`
 
+(See feed-asset-converter, below)
+
 Your `images.yaml` should have the following structure:
 
 ```yaml
@@ -82,3 +84,15 @@ The `name` at the top of the file will be name of the generated header (.h) file
     respectively. If your images have more than the maximum number of colors in them, the library used to the script 
     will figure out a good set of colors to use automatically.
   * 16-bit images are pure color images. (it stores the image in a raw, display-native format.)
+
+### feed-asset-converter
+
+The above YAML file is a pain in the ass to create.  feed-asset-converter can help you
+create it from a directory of .png files.
+
+```
+    ./feed-asset-converter mypngdir myapp_assets [bits-per-pixel] > myfile.yaml
+```
+
+bits-per-pixel is by default, 8.
+
