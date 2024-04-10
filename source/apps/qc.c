@@ -14,6 +14,7 @@
 #include "music.h"
 #include "analog.h"
 #include "color_sensor.h"
+#include "mic_pdm.h"
 #include "rtc.h"
 
 #include <utils.h>
@@ -179,6 +180,19 @@ bool qc_color_sensor(void) {
     return true;
 }
 
+bool qc_mic(void)
+{
+    // Usless single sample to prove mic is working
+    // Should be updated to have to display value with meaning such as volume
+    char msg[16];
+
+    int16_t mic_value = mic_get_qc_value();
+    snprintf(msg, sizeof(msg), "Mic:%4d\n", mic_value);
+    FbWriteString(msg);
+
+    return true;
+}
+
 void QC_cb(__attribute__((unused)) struct menu_t *menu)
 {
     //static unsigned char call_count = 0;
@@ -198,6 +212,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             analog_set_sensor_power(ANALOG_SENSOR_POWER_ENABLED);
             //color_sensor_power_ctl(COLOR_SENSOR_POWER_CMD_UP);
             ir_add_callback(ir_callback, IR_APP0);
+            mic_start();
             FbTransparentIndex(0);
             FbColor(GREEN);
             FbClear();
@@ -230,6 +245,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 analog_set_sensor_power(ANALOG_SENSOR_POWER_DISABLED);
                 //color_sensor_power_ctl(COLOR_SENSOR_POWER_CMD_DOWN);
                 ir_remove_callback(ir_callback, IR_APP0);
+                mic_stop();
 		led_pwm_disable(BADGE_LED_RGB_RED);
 		led_pwm_disable(BADGE_LED_RGB_GREEN);
 		led_pwm_disable(BADGE_LED_RGB_BLUE);
@@ -247,6 +263,10 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             }
 
             if (qc_color_sensor()) {
+                redraw = 1;
+            }
+
+            if (qc_mic()) {
                 redraw = 1;
             }
 

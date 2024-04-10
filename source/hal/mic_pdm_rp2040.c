@@ -49,5 +49,16 @@ void on_pdm_samples_ready()
 void mic_init(void){
     pdm_microphone_init(&config);
     pdm_microphone_set_samples_ready_handler(on_pdm_samples_ready);
+};
+
+void mic_start(void){
     pdm_microphone_start();
+};
+
+void mic_stop(void){
+    pdm_microphone_stop();
+};
+
+int16_t mic_get_qc_value(void){
+    return sample_buffer[0];
 };
