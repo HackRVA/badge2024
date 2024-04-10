@@ -16,7 +16,8 @@ static inline int windex(int x, int y)
 struct badgey_world {
 	char *name;
 	char const *wm; /* world map */
-	struct badgey_world *subworld[10];
+	struct badgey_world const *subworld[10];
+	int landingx, landingy;
 };
 
 static const char space_place[4096] = {
@@ -153,25 +154,31 @@ static const char ossaria_place[4096] = {
 	"wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww......"
 };
 
-static const struct badgey_world space = {
-	"SPACE",
-	space_place,
-	.subworld = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-};
-
 static const struct badgey_world ossaria = {
 	"OSSARIA",
 	ossaria_place,
 	.subworld = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+	32, 32,
 };
+
+static const struct badgey_world space = {
+	"SPACE",
+	space_place,
+	.subworld = { &ossaria, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
+	32, 32,
+};
+
 
 static struct player {
 	struct badgey_world const *world; /* current world */
 	int x, y; /* coords in current world */
+	int world_level;
+	int wx[5], wy[5]; /* coords at each level */
 } player = {
-	.world = &ossaria,
+	.world = &space,
 	.x = 32,
 	.y = 32,
+	.world_level = 0,
 };
 
 /* Program states.  Initial state is BADGEY_INIT */
@@ -221,10 +228,24 @@ static void check_buttons(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		badgey_state = BADGEY_EXIT;
 	}
+	int c = player.world->wm[windex(newx, newy)];
 	if (player.world == &space) {
 		/* Prevent player from driving into a star */
-		if (player.world->wm[windex(newx, newy)] == '*') {
+		if (c == '*') {
 			return;
+		}
+		if (c >= '0' && c <= '9') { /* it's a planet */
+			c = c - '0';
+			struct badgey_world const *new_world = player.world->subworld[c];
+			if (new_world != NULL) {
+				player.world_level++;
+				player.x = new_world->landingx;
+				player.y = new_world->landingx;
+				player.wx[player.world_level] = player.x;
+				player.wy[player.world_level] = player.y;
+				player.world = new_world;
+				screen_changed = 1;
+			}
 		}
 	} else {
 		/* Prevent player from traversing water or mountains */
@@ -236,6 +257,8 @@ static void check_buttons(void)
 	if (newx != player.x || newy != player.y) {
 		player.x = newx;
 		player.y = newy;
+		player.wx[player.world_level] = newx;
+		player.wy[player.world_level] = newy;
 		screen_changed = 1;
 	}
 }
