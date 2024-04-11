@@ -13,12 +13,16 @@
 #ifndef BADGE_C_AUDIO_H
 #define BADGE_C_AUDIO_H
 
+#include <stdint.h>
+#include <stddef.h>
+
 /*! @defgroup   BADGE_AUDIO Audio Driver
  *  @{
  */
 
-#define AUDIO_DEPTH_BITS        (8U)                            //!< Audio driver bit depth
-#define AUDIO_SAMPLE_MAX        ((1 << AUDIO_DEPTH_BITS) - 1)   //!< Audio driver maximum sample value
+typedef int16_t audio_sample_t;
+#define AUDIO_SAMPLE_MAX        (INT16_MAX)     //!< Audio driver maximum sample value
+#define AUDIO_SAMPLE_MIN        (INT16_MIN)     //!< Audio driver maximum sample value
 
 #define AUDIO_BEEP_FREQ_HZ_MIN  (120)
 #define AUDIO_BEEP_FREQ_HZ_MAX  (10000)
@@ -67,6 +71,35 @@ void audio_stby_ctl(bool enable);
  * @brief Tell us Signal if the audio is on or not.
  */
 bool audio_is_playing(void);
+
+/** Get the RMS level.
+ *
+ *  @param  samples Pointer to buffer of samples.
+ *  @param  len     Length of buffer of samples.
+ *
+ *  @return RMS level of samples.
+ */
+audio_sample_t audio_rms(audio_sample_t *samples, size_t len);
+
+/** Get ratio in dB.
+ *
+ *  @param  ref Reference level.
+ *  @param  raw Raw level to compare.
+ *
+ *  @return Ratio in dB (20 log).
+ */
+int8_t audio_dB(audio_sample_t ref, audio_sample_t raw);
+
+/** Get dBFS.
+ *
+ *  @param  raw Raw level to compare.
+ *
+ *  @return dBFS (20 log).
+ */
+static inline int8_t audio_dBFS(audio_sample_t raw)
+{
+    return audio_dB(AUDIO_SAMPLE_MAX, raw);
+}
 
 /*! @} */ // BADGE_AUDIO
 
