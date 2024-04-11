@@ -182,12 +182,10 @@ bool qc_color_sensor(void) {
 
 bool qc_mic(void)
 {
-    // Usless single sample to prove mic is working
-    // Should be updated to have to display value with meaning such as volume
     char msg[16];
 
     int16_t mic_value = mic_get_qc_value();
-    snprintf(msg, sizeof(msg), "Mic:%4d\n", mic_value);
+    snprintf(msg, sizeof(msg), "Mic:%5d\n", mic_value);
     FbWriteString(msg);
 
     return true;
@@ -245,7 +243,8 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 analog_set_sensor_power(ANALOG_SENSOR_POWER_DISABLED);
                 //color_sensor_power_ctl(COLOR_SENSOR_POWER_CMD_DOWN);
                 ir_remove_callback(ir_callback, IR_APP0);
-                mic_stop();
+                // Stopping the mic causes the badge to hang
+                // mic_stop();
 		led_pwm_disable(BADGE_LED_RGB_RED);
 		led_pwm_disable(BADGE_LED_RGB_GREEN);
 		led_pwm_disable(BADGE_LED_RGB_BLUE);

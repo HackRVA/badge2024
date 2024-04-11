@@ -5,6 +5,13 @@
 #ifndef BADGE_C_MIC_PDM_H
 #define BADGE_C_MIC_PDM_H
 
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+
 void mic_init(void);
 void mic_start(void);
 void mic_stop(void);
