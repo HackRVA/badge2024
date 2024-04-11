@@ -182,10 +182,16 @@ bool qc_color_sensor(void) {
 
 bool qc_mic(void)
 {
+    static uint8_t long_average_idx = 0;
+    static audio_sample_t long_average[16] = {0};
     char msg[16];
 
-    int16_t mic_value = mic_get_qc_value();
-    snprintf(msg, sizeof(msg), "Mic:%5d\n", mic_value);
+    long_average[long_average_idx] = mic_get_qc_value();
+    long_average_idx++;
+    long_average_idx %= ARRAY_SIZE(long_average);
+
+    int8_t dB = audio_dBFS(audio_rms(long_average, ARRAY_SIZE(long_average)));
+    snprintf(msg, sizeof(msg), "Mic:%d\n", dB);
     FbWriteString(msg);
 
     return true;
