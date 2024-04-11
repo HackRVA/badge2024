@@ -41,6 +41,7 @@ if (${TARGET} STREQUAL "SIMULATOR")
             ${CMAKE_CURRENT_LIST_DIR}/uid_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/analog_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/color_sensor_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/mic_pdm_sim.c
             )
 
     cmake_policy(SET CMP0079 NEW)
@@ -76,6 +77,7 @@ if (${TARGET} STREQUAL "SDL_SIMULATOR" OR ${TARGET} STREQUAL "WASM")
             ${CMAKE_CURRENT_LIST_DIR}/quat.c
             ${CMAKE_CURRENT_LIST_DIR}/analog_sim.c
             ${CMAKE_CURRENT_LIST_DIR}/color_sensor_sim.c
+            ${CMAKE_CURRENT_LIST_DIR}/mic_pdm_sim.c
             )
 
     cmake_policy(SET CMP0079 NEW)

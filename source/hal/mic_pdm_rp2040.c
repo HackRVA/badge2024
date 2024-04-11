@@ -1,15 +1,14 @@
-/*
- * Copyright (c) 2021 Arm Limited and Contributors. All rights reserved.
- *
- * SPDX-License-Identifier: Apache-2.0
- *
- * This examples captures data from a PDM microphone using a sample
- * rate of 8 kHz and prints the sample values over the USB serial
- * connection.
- */
+//
+// Created by Sean DeArras on 4/09/24.
+//
 
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
 
 #include "pico/stdlib.h"
 #include "pico/pdm_microphone.h"
@@ -60,5 +59,15 @@ void mic_stop(void){
 };
 
 int16_t mic_get_qc_value(void){
-    return sample_buffer[0];
+    // returns max value of current sample buffer as a rough volume indicator
+
+    int n = sizeof(sample_buffer) / sizeof(sample_buffer[0]);
+
+    int16_t res = sample_buffer[0];
+
+    for (int i = 1; i < n; i++) { 
+        int16_t x = abs(sample_buffer[i]);
+        res = res < x ? x : res;
+    } 
+    return res;
 };
