@@ -20,5 +20,13 @@
  */
 int32_t fxp_sqrt(int32_t x);
 
+/** Get integer square root for any u32.
+ *
+ *  @param  x   Square.
+ *  
+ *  @return Square root.
+ */
+uint32_t sqrtu32(uint32_t r);
+
 #endif
 
