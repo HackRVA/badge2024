@@ -11,6 +11,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <fxp_sqrt.h>
 
@@ -218,6 +219,10 @@ static uint32_t log2u32(uint32_t x)
 
 audio_sample_t audio_rms(audio_sample_t *samples, size_t len)
 {
+    if (len == 0) {
+        return 0;
+    }
+
     uint32_t accum = 0;
     for (size_t i = 0; i < len; i++) {
         int32_t sample = samples[i];
@@ -226,6 +231,20 @@ audio_sample_t audio_rms(audio_sample_t *samples, size_t len)
         accum += contribution;
     }
     return sqrtu32(accum);
+}
+
+audio_sample_t audio_peak(audio_sample_t *samples, size_t len)
+{
+    if (len == 0) {
+        return 0;
+    }
+
+    audio_sample_t peak = 0;
+    for (size_t i = 0; i < len; i++) { 
+        audio_sample_t sample = abs(samples[i]);
+        peak = peak < sample ? sample : peak;
+    } 
+    return peak;
 }
 
 int8_t audio_dB(audio_sample_t _ref, audio_sample_t _raw)
