@@ -106,7 +106,7 @@
 #define CLS_REG_PROD_ID_H   (0xBD)
 #define CLS_PRODUCT_ID      (0x0712)
 
-#define CLS_TRX_TIMEOUT_US      (1000) /* 1 ms */
+#define CLS_TRX_TIMEOUT_US      (5000) /* 1 ms */
 #define CLS_SAMPLE_TIMEOUT_US   (10000) /* 10 ms */
 
 /*- Private Variables --------------------------------------------------------*/
