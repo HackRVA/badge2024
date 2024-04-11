@@ -25,7 +25,7 @@ SYSTEM_DATA G_sysData = {
 	.sekrits={ 0 }, 
 	.achievements={ 0 },
 	.ledBrightness=255,
-	.backlight=255,
+	.backlight=192,
 	.mute=0
 };
 
