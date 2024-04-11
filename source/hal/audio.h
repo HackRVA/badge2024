@@ -81,6 +81,15 @@ bool audio_is_playing(void);
  */
 audio_sample_t audio_rms(audio_sample_t *samples, size_t len);
 
+/** Get the peak level.
+ *
+ *  @param  samples Pointer to buffer of samples.
+ *  @param  len     Length of buffer of samples.
+ *
+ *  @return Peak level of samples.
+ */
+audio_sample_t audio_peak(audio_sample_t *samples, size_t len);
+
 /** Get ratio in dB.
  *
  *  @param  ref Reference level.
