@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "audio.h"
 
 #include "pico/stdlib.h"
 #include "pico/pdm_microphone.h"
@@ -37,12 +38,14 @@ const struct pdm_microphone_config config = {
 // variables
 int16_t sample_buffer[256];
 volatile int samples_read = 0;
+int16_t raw_RMS = 0;
 
 void on_pdm_samples_ready()
 {
     // callback from library when all the samples in the library
     // internal sample buffer are ready for reading
     samples_read = pdm_microphone_read(sample_buffer, 256);
+    raw_RMS = audio_rms(sample_buffer, sizeof(sample_buffer) / sizeof(sample_buffer[0]));
 }
 
 void mic_init(void){
@@ -59,15 +62,5 @@ void mic_stop(void){
 };
 
 int16_t mic_get_qc_value(void){
-    // returns max value of current sample buffer as a rough volume indicator
-
-    int n = sizeof(sample_buffer) / sizeof(sample_buffer[0]);
-
-    int16_t res = sample_buffer[0];
-
-    for (int i = 1; i < n; i++) { 
-        int16_t x = abs(sample_buffer[i]);
-        res = res < x ? x : res;
-    } 
-    return res;
+    return raw_RMS;
 };
