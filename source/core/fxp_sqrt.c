@@ -39,3 +39,24 @@ int32_t fxp_sqrt(int32_t x)
 	}
 	return q;
 }
+
+/*  This is the same algorithm as above, for u32, and all the way down. I 
+ *  validated the output for all inputs from 0 to UINT32_MAX inclusive. The
+ *  result always truncates the root as expected. 0 returns 0. -PMW
+ */
+uint32_t sqrtu32(uint32_t r)
+{
+	uint32_t t, q = 0, b = 1 << 30;
+
+	while (b > 0) {
+		t = q + b;
+		q >>= 1;
+		if (r >= t) {
+			r -= t;
+			q += b;
+		}
+		b >>= 2;
+	}
+	return q;
+}
+
