@@ -48,6 +48,7 @@
 #include "moon-patrol.h"
 #include "badgey.h"
 #include "badge-app-template.h"
+#include "image-test.h"
 
 #define MAIN_MENU_BKG_COLOR GREY2
 
@@ -86,6 +87,7 @@ static const struct menu_t games_m[] = {
 	{"Moon Patrol", VERT_ITEM, FUNCTION, { .func = moonpatrol_cb }, &moonpatrol_icon, },
 	{"Badgey", VERT_ITEM, FUNCTION, { .func = badgey_cb }, NULL },
 	{"Legacy Games",       VERT_ITEM, MENU, { .menu = legacy_games_m }, &legacy_games_icon, },
+	{"Image Test", VERT_ITEM, FUNCTION, { .func = image_test_cb }, NULL },
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 
