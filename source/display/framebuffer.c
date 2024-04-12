@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdint.h>
 
 #include "framebuffer.h"
 #include "display.h"
@@ -143,6 +144,32 @@ void FbImage(const struct asset* asset, unsigned char seqNum)
     }
 }
 
+void FbImage2(const struct asset2 *asset, unsigned char seqNum)
+{
+    // 1 bit images use the current color and bgcolor to draw.
+    // 2, 4, and 8 bit images use the color map in the asset (using transparent index as appropriate).
+    // 16 bit images just use the raw values.
+    switch (asset->type) {
+        case PICTURE1BIT:
+            FbImage1bit2(asset, seqNum);
+            break;
+        case PICTURE2BIT:
+            FbImage2bit2(asset, seqNum);
+            break;
+        case PICTURE4BIT:
+            FbImage4bit2(asset, seqNum);
+            break;
+        case PICTURE8BIT:
+            FbImage8bit2(asset, seqNum);
+            break;
+        case PICTURE16BIT:
+            FbImage16bit2(asset, seqNum);
+            break;
+        default:
+            break;
+    }
+}
+
 void FbImage16bit(const struct asset* asset, unsigned char seqNum) {
 
     unsigned char y, yEnd, x;
@@ -159,6 +186,31 @@ void FbImage16bit(const struct asset* asset, unsigned char seqNum) {
         for (x = 0; x < asset->x; x++) {
             if ((x + G_Fb.pos.x) >= LCD_XSIZE) break; /* clip x */
             pixel = *pixdata; /* 1 pixel per byte */
+            fb_mark_row_changed(x + G_Fb.pos.x, y);
+            BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            pixdata++;
+        }
+    }
+    G_Fb.changed = 1;
+
+}
+
+void FbImage16bit2(const struct asset2 *asset, unsigned char seqNum) {
+
+    unsigned char y, yEnd, x;
+    unsigned short *pixdata;
+    unsigned short pixel;
+
+    /* clip to end of LCD buffer */
+    yEnd = G_Fb.pos.y + asset->y;
+    if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
+
+    for (y = G_Fb.pos.y; y < yEnd; y++) {
+        pixdata = (unsigned short*) &(asset->pixel16[ (y - G_Fb.pos.y) * asset->x + seqNum * asset->x * asset->y]);
+
+        for (x = 0; x < asset->x; x++) {
+            if ((x + G_Fb.pos.x) >= LCD_XSIZE) break; /* clip x */
+            pixel = *pixdata; /* 1 pixel per 2 bytes */
             fb_mark_row_changed(x + G_Fb.pos.x, y);
             BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
             pixdata++;
@@ -233,6 +285,43 @@ void FbImage8bit(const struct asset* asset, unsigned char seqNum)
     G_Fb.changed = 1;
 }
 
+void FbImage8bit2(const struct asset2 *asset, unsigned char seqNum)
+{
+    unsigned char y, yEnd, x;
+    unsigned char pixbyte, ci;
+    unsigned short pixel;
+
+    /* clip to end of LCD buffer */
+    yEnd = G_Fb.pos.y + asset->y;
+    if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
+
+    for (y = G_Fb.pos.y; y < yEnd; y++) {
+        unsigned char const *pixdata = &asset->pixel[(y - G_Fb.pos.y) * asset->x +
+								seqNum * asset->x * asset->y];
+
+	// sleep_us(1000); // This is a hack. Without this sleep, colors get messed up for unknown reasons.
+
+        for (x = 0; x < asset->x; x++) {
+            if ((x + G_Fb.pos.x) >= LCD_XSIZE) break; /* clip x */
+
+            pixbyte = *pixdata; /* 1 pixel per byte */
+
+            ci = pixbyte;
+
+            if (ci != G_Fb.transIndex) { /* transparent? */
+                pixel = asset->colormap[ci];
+                fb_mark_row_changed(x + G_Fb.pos.x, y);
+                if (G_Fb.transMask > 0)
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = (BUFFER(x + G_Fb.pos.x) & (~G_Fb.transMask)) | (pixel & G_Fb.transMask);
+                else
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            }
+            pixdata++;
+        }
+    }
+    G_Fb.changed = 1;
+}
+
 void FbImage4bit(const struct asset* asset, unsigned char seqNum)
 {
     unsigned char y, yEnd, x;
@@ -292,6 +381,66 @@ void FbImage4bit(const struct asset* asset, unsigned char seqNum)
                 pixel = ((((r >> 3) & 0b11111) << 11 )
                          |  (((g >> 3) & 0b11111) <<  6 )
                          |  (((b >> 3) & 0b11111)       )) ;
+
+                /* G_Fb.pos.x == offset into scan buffer */
+                fb_mark_row_changed(x + G_Fb.pos.x, y);
+                if (G_Fb.transMask > 0)
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = (BUFFER(x + G_Fb.pos.x) & (~G_Fb.transMask)) | (pixel & G_Fb.transMask);
+                else
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            }
+            x++;
+            if (x >= asset->x) {
+                break;
+            }
+        }
+    }
+    G_Fb.changed = 1;
+}
+
+void FbImage4bit2(const struct asset2 *asset, unsigned char seqNum)
+{
+    unsigned char y, yEnd, x;
+    unsigned char pixbyte, ci;
+    unsigned short pixel;
+
+    /* clip to end of LCD buffer */
+    yEnd = G_Fb.pos.y + asset->y;
+    if (yEnd >= LCD_YSIZE) yEnd = LCD_YSIZE-1;
+
+    for (y = G_Fb.pos.y; y < yEnd; y++) {
+        int row_padding = asset->x % 2;
+        const uint8_t *pixdata = &asset->pixel[(y - G_Fb.pos.y) * ((asset->x >> 1) + row_padding) +
+                                          seqNum * ((asset->x >> 1) + row_padding) * asset->y];
+
+        for (x = 0; x < (asset->x); /* manual inc */ ) {
+            pixbyte = *pixdata++; /* 2 pixels per byte */
+
+            /* 1st pixel */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
+
+            ci = ((pixbyte >> 4) & 0xF);
+            if (ci != (G_Fb.transIndex & 0xf)) { /* transparent? */
+                pixel = asset->colormap[ci];
+
+                /* G_Fb.pos.x == offset into scan buffer */
+                fb_mark_row_changed(x + G_Fb.pos.x, y);
+                if (G_Fb.transMask > 0)
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = (BUFFER(x + G_Fb.pos.x) & (~G_Fb.transMask)) | (pixel & G_Fb.transMask);
+                else
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            }
+            x++;
+            if (x >= asset->x) {
+                break;
+            }
+
+            /* 2nd pixel */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
+
+            ci = pixbyte & 0xF;
+            if (ci != (G_Fb.transIndex & 0xf)) { /* transparent? */
+		pixel = asset->colormap[ci];
 
                 /* G_Fb.pos.x == offset into scan buffer */
                 fb_mark_row_changed(x + G_Fb.pos.x, y);
@@ -440,6 +589,101 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum)
     G_Fb.changed = 1;
 }
 
+void FbImage2bit2(const struct asset2 *asset, unsigned char seqNum)
+{
+    unsigned char y, yEnd, x;
+    unsigned char pixbyte, ci;
+    unsigned short pixel;
+
+    /* clip to end of LCD buffer */
+    yEnd = G_Fb.pos.y + asset->y;
+    if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
+
+    for (y = G_Fb.pos.y; y < yEnd; y++) {
+        int row_padding = asset->x % 4 ? 1 : 0;
+        const unsigned char * pixdata = &asset->pixel[(y - G_Fb.pos.y) * ((asset->x >> 2) + row_padding) +
+                                          seqNum * ((asset->x >> 2) + row_padding) * asset->y];
+
+        for (x = 0; x < (asset->x); /* manual inc */) {
+            pixbyte = *pixdata++; /* 4 pixels per byte */
+
+            /* ----------- 1st pixel ----------- */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1))
+                break; /* clip x */
+
+            ci = ((pixbyte >> 6) & 0x3);
+            if (ci != (G_Fb.transIndex & 0x03)) { /* transparent? */
+		pixel = asset->colormap[ci];
+                /* G_Fb.pos.x == offset into scan buffer */
+                fb_mark_row_changed(x + G_Fb.pos.x, y);
+                if (G_Fb.transMask > 0)
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = (BUFFER(x + G_Fb.pos.x) & (~G_Fb.transMask)) | (pixel & G_Fb.transMask);
+                else
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            }
+            x++;
+            if (x >= asset->x) {
+                break;
+            }
+
+            /* ----------- 2nd pixel ----------- */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
+
+            ci = ((pixbyte >> 4) & 0x3);
+            if (ci != (G_Fb.transIndex & 0x03)) { /* transparent? */
+		pixel = asset->colormap[ci];
+                /* G_Fb.pos.x == offset into scan buffer */
+                fb_mark_row_changed(x + G_Fb.pos.x, y);
+                if (G_Fb.transMask > 0)
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = (BUFFER(x + G_Fb.pos.x) & (~G_Fb.transMask)) | (pixel & G_Fb.transMask);
+                else
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            }
+            x++;
+            if (x >= asset->x) {
+                break;
+            }
+
+            /* ----------- 3rd pixel ----------- */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
+
+            ci = ((pixbyte >> 2) & 0x3);
+            if (ci != (G_Fb.transIndex & 0x03)) { /* transparent? */
+		pixel = asset->colormap[ci];
+                /* G_Fb.pos.x == offset into scan buffer */
+                fb_mark_row_changed(x + G_Fb.pos.x, y);
+                if (G_Fb.transMask > 0)
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = (BUFFER(x + G_Fb.pos.x) & (~G_Fb.transMask)) | (pixel & G_Fb.transMask);
+                else
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            }
+            x++;
+            if (x >= asset->x) {
+                break;
+            }
+
+            /* ----------- 4th pixel ----------- */
+            if ((x + G_Fb.pos.x) > (LCD_XSIZE-1)) break; /* clip x */
+
+            ci = ((pixbyte) & 0x3);
+            if (ci != (G_Fb.transIndex & 0x03)) { /* transparent? */
+		pixel = asset->colormap[ci];
+                /* G_Fb.pos.x == offset into scan buffer */
+                fb_mark_row_changed(x + G_Fb.pos.x, y);
+                if (G_Fb.transMask > 0)
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = (BUFFER(x + G_Fb.pos.x) & (~G_Fb.transMask)) | (pixel & G_Fb.transMask);
+                else
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            }
+            x++;
+            if (x >= asset->x) {
+                break;
+            }
+        }
+    }
+    G_Fb.changed = 1;
+}
+
 void FbImage1bit(const struct asset *asset, unsigned char seqNum)
 {
     unsigned char y, yEnd, x;
@@ -487,6 +731,42 @@ void FbImage1bit(const struct asset *asset, unsigned char seqNum)
     G_Fb.changed = 1;
 }
 
+void FbImage1bit2(const struct asset2 *asset, unsigned char seqNum)
+{
+    unsigned char y, yEnd, x;
+    unsigned char pixbyte, ci;
+
+    yEnd = G_Fb.pos.y + asset->y;
+    /* clip to end of LCD buffer */
+    if (yEnd >= LCD_YSIZE) yEnd = LCD_YSIZE-1;
+
+    for (y=G_Fb.pos.y; y < yEnd; y++) {
+        int row_padding = asset->x % 8 ? 1 : 0;
+        const unsigned char *pixdata = &asset->pixel[seqNum * ((asset->x >> 3) + row_padding) * asset->y +
+                                          (y - G_Fb.pos.y) * ((asset->x >> 3) + row_padding)];
+
+        for (x=0; x < (asset->x); x += 8) {
+            unsigned char bit;
+
+            pixbyte = *pixdata++;
+
+            for (bit=0; bit < 8; bit++) { /* 8 pixels per byte */
+                if ((x + bit + G_Fb.pos.x) > (LCD_XSIZE-1))
+			continue; /* clip x */
+                if (x + bit >= asset->x)
+                    break;
+
+                ci = ((pixbyte >> bit) & 0x1);
+                fb_mark_row_changed(x + G_Fb.pos.x + bit, y);
+                if (ci == 0)
+                        BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x + bit) = G_Fb.BGcolor;
+                else
+                        BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x + bit) = G_Fb.color;
+            }
+        }
+    }
+    G_Fb.changed = 1;
+}
 
 
 /*

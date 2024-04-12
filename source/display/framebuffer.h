@@ -97,6 +97,16 @@ void FbImage2bit(const struct asset* asset, unsigned char seqNum);
 /** @brief Render the provided 1-bit color asset, using the colors set by FbColor and FbBackgroundColor. */
 void FbImage1bit(const struct asset* asset, unsigned char seqNum);
 
+/* Same as above, but use struct asset2 instead of struct asset.  Struct asset2 pre-packs
+ * colors into 16 bit quantities as the display wants them.
+ */
+void FbImage2(const struct asset2 *asset, unsigned char seqNum);
+void FbImage16bit2(const struct asset2 *asset, unsigned char seqNum);
+void FbImage8bit2(const struct asset2 *asset, unsigned char seqNum);
+void FbImage4bit2(const struct asset2 *asset, unsigned char seqNum);
+void FbImage2bit2(const struct asset2 *asset, unsigned char seqNum);
+void FbImage1bit2(const struct asset2 *asset, unsigned char seqNum);
+
 /* FbDrawObject() draws an object at x, y.  The coordinates of drawing[] should be centered at
  * (0, 0).  The coordinates in drawing[] are multiplied by scale, then divided by 1024 (via a shift)
  * so for 1:1 size, use scale of 1024.  Smaller values will scale the object down. This is different
