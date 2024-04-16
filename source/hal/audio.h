@@ -79,7 +79,7 @@ bool audio_is_playing(void);
  *
  *  @return RMS level of samples.
  */
-audio_sample_t audio_rms(audio_sample_t *samples, size_t len);
+audio_sample_t audio_rms(const audio_sample_t *samples, size_t len);
 
 /** Get the peak level.
  *
@@ -88,7 +88,7 @@ audio_sample_t audio_rms(audio_sample_t *samples, size_t len);
  *
  *  @return Peak level of samples.
  */
-audio_sample_t audio_peak(audio_sample_t *samples, size_t len);
+audio_sample_t audio_peak(const audio_sample_t *samples, size_t len);
 
 /** Get ratio in dB.
  *
