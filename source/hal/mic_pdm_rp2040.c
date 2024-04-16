@@ -10,6 +10,7 @@
 #include <stdlib.h>
 
 #include "audio.h"
+#include "mic_pdm.h"
 
 #include "pico/stdlib.h"
 #include "pico/pdm_microphone.h"
@@ -36,16 +37,18 @@ const struct pdm_microphone_config config = {
 };
 
 // variables
-int16_t sample_buffer[256];
-volatile int samples_read = 0;
-int16_t raw_RMS = 0;
+static int16_t sample_buffer[256];
+static volatile int samples_read = 0;
+static mic_callback_t mic_cb_table[MIC_CALLBACK_TABLE_SIZE] = {0};
 
-void on_pdm_samples_ready()
+static void on_pdm_samples_ready()
 {
-    // callback from library when all the samples in the library
-    // internal sample buffer are ready for reading
     samples_read = pdm_microphone_read(sample_buffer, 256);
-    raw_RMS = audio_rms(sample_buffer, sizeof(sample_buffer) / sizeof(sample_buffer[0]));
+    for (size_t i = 0; i < (sizeof(mic_cb_table) / sizeof(mic_cb_table[0])); i++) {
+        if (NULL != mic_cb_table[i]) {
+            mic_cb_table[i](sample_buffer, samples_read);
+        }
+    }
 }
 
 void mic_init(void){
@@ -61,6 +64,46 @@ void mic_stop(void){
     pdm_microphone_stop();
 };
 
-int16_t mic_get_qc_value(void){
-    return raw_RMS;
-};
+int mic_add_cb(mic_callback_t cb)
+{
+    if (NULL == cb) {
+        return -1;
+    }
+
+    size_t available = SIZE_MAX;
+    for (size_t i = 0; i < (sizeof(mic_cb_table) / sizeof(mic_cb_table[0])); i++) {
+        if (mic_cb_table[i] == cb) {
+            /* This callback is already used as an entry. */
+            return -2;
+        } else if ((NULL == mic_cb_table[i]) && (available == SIZE_MAX)) {
+            available = i;
+        }
+    }
+
+    if (available == SIZE_MAX) {
+        /* There is no space in the table. */
+        return -3;
+    }
+
+    /* Assign the available entry. */
+    mic_cb_table[available] = cb;
+    return 0;
+}
+
+int mic_remove_cb(mic_callback_t cb)
+{
+    if (NULL == cb) {
+        return -1;
+    }
+
+    for (size_t i = 0; i < (sizeof(mic_cb_table) / sizeof(mic_cb_table[0])); i++) {
+        if (mic_cb_table[i] == cb) {
+            mic_cb_table[i] = NULL;
+            return 0;
+        }
+    }
+
+    /* Did not find callback in table. */
+    return -2;
+}
+

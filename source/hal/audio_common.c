@@ -217,7 +217,7 @@ static uint32_t log2u32(uint32_t x)
     return n;
 }
 
-audio_sample_t audio_rms(audio_sample_t *samples, size_t len)
+audio_sample_t audio_rms(const audio_sample_t *samples, size_t len)
 {
     if (len == 0) {
         return 0;
@@ -233,7 +233,7 @@ audio_sample_t audio_rms(audio_sample_t *samples, size_t len)
     return sqrtu32(accum);
 }
 
-audio_sample_t audio_peak(audio_sample_t *samples, size_t len)
+audio_sample_t audio_peak(const audio_sample_t *samples, size_t len)
 {
     if (len == 0) {
         return 0;

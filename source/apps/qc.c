@@ -190,19 +190,24 @@ bool qc_color_sensor(void) {
     return true;
 }
 
-bool qc_mic(void)
-{
-    static uint8_t long_average_idx = 0;
-    static audio_sample_t long_average[16] = {0};
-    int len;
-    char msg[16];
+static int8_t qc_dB;
+static uint8_t long_average_idx;
+static audio_sample_t long_average[16];
 
-    long_average[long_average_idx] = mic_get_qc_value();
+void qc_mic_cb(const audio_sample_t *samples, size_t len)
+{
+    long_average[long_average_idx] = audio_rms(samples, len);
     long_average_idx++;
     long_average_idx %= ARRAY_SIZE(long_average);
+    qc_dB = audio_dBFS(audio_rms(long_average, ARRAY_SIZE(long_average)));
+}
 
-    int8_t dB = audio_dBFS(audio_rms(long_average, ARRAY_SIZE(long_average)));
-    len = snprintf(msg, sizeof(msg), "Mic:%03d\n", dB);
+bool qc_mic(void)
+{
+    int len;
+    char msg[16];
+    snprintf(msg, sizeof(msg), "Mic:%d\n", qc_dB);
+    len = snprintf(msg, sizeof(msg), "Mic:%03d\n", qc_dB);
     FbWriteString(msg);
     printf("%.*s\t", len - 1, msg);
 
@@ -229,6 +234,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             //color_sensor_power_ctl(COLOR_SENSOR_POWER_CMD_UP);
             ir_add_callback(ir_callback, IR_APP0);
             mic_start();
+            mic_add_cb(qc_mic_cb);
             FbTransparentIndex(0);
             FbColor(GREEN);
             FbClear();
@@ -262,6 +268,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 analog_set_sensor_power(ANALOG_SENSOR_POWER_DISABLED);
                 //color_sensor_power_ctl(COLOR_SENSOR_POWER_CMD_DOWN);
                 ir_remove_callback(ir_callback, IR_APP0);
+                mic_remove_cb(qc_mic_cb);
                 mic_stop();
 		led_pwm_disable(BADGE_LED_RGB_RED);
 		led_pwm_disable(BADGE_LED_RGB_GREEN);
