@@ -158,13 +158,13 @@ int pdm_microphone_start() {
 }
 
 void pdm_microphone_stop() {
+    dma_channel_abort(pdm_mic.dma_channel);
+
     pio_sm_set_enabled(
         pdm_mic.config.pio,
         pdm_mic.config.pio_sm,
         false
     );
-
-    dma_channel_abort(pdm_mic.dma_channel);
 
     if (pdm_mic.dma_irq == DMA_IRQ_0) {
         dma_channel_set_irq0_enabled(pdm_mic.dma_channel, false);
