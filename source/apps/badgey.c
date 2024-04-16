@@ -18,6 +18,12 @@
 struct dynmenu planet_menu;
 struct dynmenu_item planet_menu_item[5];
 
+/* x and y offsets indexed by direction, 4 and 8 direction variants */
+static const int xo4[] = { 0, 1, 0, -1 };
+static const int yo4[] = { -1, 0, 1, 0 };
+static const int xo8[] = { 0, 1, 1, 1, 0, -1, -1, -1 };
+static const int yo8[] = { -1, -1, 0, 1, 1, 1, 0, -1 };
+
 /* Return world index (0 - 4095) from (x, y) coords */
 static inline int windex(int x, int y)
 {
@@ -108,7 +114,7 @@ static const char ossaria_map[4096] = {
 	"ww..........ffmmmmmf.....wwwwwwwwwwwwww....wwwwwwwwwww....wwwwww"
 	"wwwww.......ffm..fmff.......wwwwwwwwwwwwwwwwwwwwwwww..........ww"
 	"wwwwww....ffffmmffmmf.......wwwwwwwwwwwwwwwwwww..........wwwwwww"
-	"wwwwww.....ff..mmff.ff.....wwww...................wwwwwwwwwwwwww"
+	"wwwwww.....ff.5mmff.ff.....wwww...................wwwwwwwwwwwwww"
 	"wwwwww......f..fmm..ff.....w0..................wwwwwwwwwwwwwwwww"
 	"wwwww..........ff.................................wwwwwwwwwwwwww"
 	"wwwww...........f.............................wwwwwwwwwwwwwwwwww"
@@ -116,14 +122,14 @@ static const char ossaria_map[4096] = {
 	"wwwww...ww...................wwwwwwm..................wwwwwwwwww"
 	"wwwwwwwww.................f.wwwwwmmm................wwwwww.wwwww"
 	"wwwww..ww................fffwwwmmm................wwwwwww..wwwww"
-	"wwwwww..www.............ffffffmm.....................w.....wwwww"
+	"wwwwww..www.............ffffffm6.....................w.....wwwww"
 	"wwwww.....................ff1ffmmfff....................wwwwwwww"
 	"wwwww......................fffffmffffff................wwwwwwwww"
 	"www....fmf...................ffffffff..................wwwwwwwww"
 	"www.....mmf.............fff....fffff......................wwwwww"
 	"wwwww...fmmf....................fffff.................www.wwwwww"
 	"wwwww...ffmfff....................fffff...............wwwwwwwwww"
-	"wwwww...f...ffff........................................wwwwwwww"
+	"wwwww...f...f7ff........................................wwwwwwww"
 	"wwwww.w......f.ff.......................................wwwwwwww"
 	"wwwwwww........fff....................................w.wwww..ww"
 	"wwwwwwww.......ffff...................................wwwww...ww"
@@ -131,7 +137,7 @@ static const char ossaria_map[4096] = {
 	"wwwww..............ff......................f...........ww.....ww"
 	"wwwwww...........................mm..m....ff................wwww"
 	"wwwww...............f........m..mm...mm...ff................wwww"
-	"wwwww........................mmmm.....mmmff.............wwwwwwww"
+	"wwwww........................mmmm.....mm8ff.............wwwwwwww"
 	"wwwwww......................mmm........mmfffff........wwwwwwwwww"
 	"wwwwww......................m..........3mf..ff........wwwwwwwwww"
 	"wwwwwww.....................m..........mmf...f..........wwwwwwww"
@@ -153,11 +159,11 @@ static const char ossaria_map[4096] = {
 	"wwwwwwwww..www..........................................wwwwwwww"
 	"wwwwwwwwww.w..........................................wwwwwwwwww"
 	"wwwwww..wwwwwww.............................................wwww"
-	"wwwww......w................mmm........................w.....www"
-	"wwwwwww....w.............wwwwwmm..................w....www...www"
-	"wwwwwwww...ww.......ffff....wwwwww................w.w..wwwwwwwww"
-	"wwwwwwww..........ffff........wwwww.....m.......w.www...wwwwwwww"
-	"wwwww...........ffffffff........www.....mm......www......wwwwwww"
+	"wwwww......w................mmm..........f.............w.....www"
+	"wwwwwww....w.............wwwwwmm.........f.f......w....www...www"
+	"wwwwwwww...ww.......ffff....wwwwww......f.f.......w.w..wwwwwwwww"
+	"wwwwwwww..........ffff........wwwww.....m9f.....w.www...wwwwwwww"
+	"wwwww...........ffffffff........www.....mmf.....www......wwwwwww"
 	"wwwww.........fffffffffffffff..wwww......mmm......w......wwwwwww"
 	"wwwwww....w..fffff..........wwwwwwwwww.....m.....wwwwwwwwwwwwwww"
 	"wwwwwww..ww..........wwww...wwwwwwwwwwwwwwwww............wwwwwww"
@@ -186,7 +192,7 @@ static const char NW42_map[4096] = {
 	"wwwwwwww........f....w.........ff......ffff..wwwww....wwwwwwwwww"
 	"wwwwwww........................fff.....fff.....1......wwwwwwwwww"
 	"wwwww............f..............ffff....f.............wwwwwwwwww"
-	"www..............................ffff...f............wwwwwwwwwww"
+	"www..............................f5ff...f............wwwwwwwwwww"
 	"www..............................ffff.............wwwwwwwwwwwwww"
 	"www....ww.........................f.ff............wwwwwwwwwwwwww"
 	"www..wwwww..........................ffff...........wwwwwww...www"
@@ -194,11 +200,11 @@ static const char NW42_map[4096] = {
 	"wwwwwwww.............................................ww.......ww"
 	"wwwwww.....................................................ww.ww"
 	"wwwww...................................fffff.............wwwwww"
-	"wwwwww............mm...................fmfff............wwwwwwww"
+	"wwwwww............mm...................fm7ff............wwwwwwww"
 	"wwwwww.f...fffff...mm................fffmf.........ww..wwwwwwwww"
 	"wwwwww.ff....fffff..mm.................fmfff......wwwwwwwwwwwwww"
 	"wwwww..fff......fffffm................fmmff.......wwwwwwwwwwwwww"
-	"wwwww..fffff.....2ffmm..............fffmf..........wwwwwwwwwwwww"
+	"wwwww..fffff.....2ff6m..............fffmf..........wwwwwwwwwwwww"
 	"wwwww..ff.fff....ffmm................ffmff.........wwwwwwwwwwwww"
 	"wwwww...f..ffffffffmm...................ff.........w.wwwwww..www"
 	"wwwww........ff.fmmm....................ff.............wwww..www"
@@ -207,7 +213,7 @@ static const char NW42_map[4096] = {
 	"wwwwwwwwwww....w............ffffff............wwwww..........www"
 	"wwwwww.wwwwwwwww..........fffffffmfff.............w..ww.....wwww"
 	"wwwwww.......w.........ffffffffffmmmfff...........wwwwwwwwwwwwww"
-	"wwwwww.......w.............fffffffmmmmfffff.......wwwwwwwwwwwwww"
+	"wwwwww.......w.............fffffffm8mmfffff.......wwwwwwwwwwwwww"
 	"wwwwww.......................fffffffmmmffffff.....wwwww.wwwwwwww"
 	"wwwwww.............................ffffffffffffffffwww.....wwwww"
 	"wwwwww....fffff......................fffff...w.............wwwww"
@@ -220,7 +226,7 @@ static const char NW42_map[4096] = {
 	"wwwww........ww..................ff..ff..............wwww...wwww"
 	"wwwwww......ww............mmmmmmmmm...f...............www..wwwww"
 	"wwwwww......w...........mmm.......mmm.f...............wwwwwwwwww"
-	"wwwwww.....www........mmmfffff......mmmf................wwwwwwww"
+	"wwwwww.....www........mmmfffff.....9mmmf................wwwwwwww"
 	"wwwwww..wwwwww......mmm..............mmmff..............wwwwwwww"
 	"wwwwwww.wwwwwwf......ffff..............fff.................wwwww"
 	"wwwwwwwwwwwwwwff......fffff......4.wwfff..w................wwwww"
@@ -248,7 +254,7 @@ static const char borton_map[4096] = {
 	"wwwwwwwwwww.....ffffffffff...w..........mmmffff......www...wwwww"
 	"wwwwwwwww.........ffffffffff.ww............mffff...........wwwww"
 	"wwwwwwwww.............f.ff....w.............mmffff.........wwwww"
-	"www.....................ff....w..............mmmff........wwwwww"
+	"www.....................ff....w..............m5mff........wwwwww"
 	"ww...................f...f....www............wwmfff...wwwwwwwwww"
 	"www....w......................w............mmffmf.........wwwwww"
 	"wwwwwwwww....................0w..........mffff...........wwwwwww"
@@ -259,12 +265,12 @@ static const char borton_map[4096] = {
 	"wwwwwww..............................................wwwwwwwwwww"
 	"www.................................................wwwwwwwwwwww"
 	"wwwwwwwww...........................................wwwww...wwww"
-	"wwwwwwwwwww............fff....................mm.....wwwww....ww"
-	"wwww...wwww.............fff....................mm....ww.....wwww"
+	"wwwwwwwwwww............fff....................mmm....wwwww....ww"
+	"wwww...wwww.............fff....................6m....ww.....wwww"
 	"wwwww..www......fff.........................m...m..........wwwww"
 	"wwww..............fff.......fff............mmm...........wwwwwww"
-	"wwww...............ffff...fff...................w....wwwwwwwwwww"
-	"wwww................f.fff..fffff................w...wwwwwwwwwwww"
+	"wwww...............fffff..fff...................w....wwwwwwwwwww"
+	"wwww................f.f7f..fffff................w...wwwwwwwwwwww"
 	"wwwww...............f..fffff....................wwwwwwwwwwwwwwww"
 	"wwwwwwwww...........ff....fff..................ww...wwwwwwwwwwww"
 	"wwwwwwwwwww..........f......fff......................wwwwwwwwwww"
@@ -277,8 +283,8 @@ static const char borton_map[4096] = {
 	"wwww...www...............................fff.fff.....wwwwwwwwwww"
 	"wwwww...................mmmmmmmmmm........f....fff.......wwwwwww"
 	"wwwww...www......mmmmmmmmmmmww...mmmm............fff.....wwwwwww"
-	"wwww......ww.............mm.2.....m............r........wwwwwwww"
-	"www.....wwww..............mm......m....................wwwwwwwww"
+	"wwww......ww.......ffffm8mm.2.....m............r........wwwwwwww"
+	"www.....wwww.........fffffmm......m....................wwwwwwwww"
 	"wwww...wwwww...............mm.fff....................wwwwwwwwwww"
 	"wwwwwwwwwww.................fff......................wwwwwwwwwww"
 	"wwwwwwwww..........f.................................wwwwwwwwwww"
@@ -286,7 +292,7 @@ static const char borton_map[4096] = {
 	"wwwwwwwww..fff..fff.................www.............wwwww...wwww"
 	"wwwwwwww..........fff.fff.f.........www......mm.....3ww.....wwww"
 	"wwwwwwwwww......w...fff..............wwww.....mm..........wwwwww"
-	"wwwwwwwwwwww...www....fffffffff.........w......mm.......wwwwwwww"
+	"wwwwwwwwwwww...www....fffffffff.........w.....9mm.......wwwwwwww"
 	"wwwwwwwwwwww.4.ww.......fff.............wwww.........wwwwwwwwwww"
 	"wwwwwwwwwww...ff..........fff....fff......ww...ff....wwwwwwwwwww"
 	"wwwwww.........ffffff......fff.fff.........w....ff...wwwwwwwwwww"
@@ -313,7 +319,7 @@ static const char skang_map[4096] = {
 	"wwwwwwwwwww.............................w0...........wwwwwwwwwww"
 	"wwwwwwwwwwwww..........................................wwwwwwwww"
 	"wwwwwwwwww.......fffff.........mmmff.....................wwwwwww"
-	"wwwww....ww..m......fffff..fffmmmwfffff..............wwwwwwwwwww"
+	"wwwww....ww..m......fffff..fffm5mwfffff..............wwwwwwwwwww"
 	"wwwwwwww..w.mm..........fffffm........fffff......wwwwwwwwwwwwwww"
 	"wwwwwww......m..f........ffffffffff...............w..wwwwww.wwww"
 	"wwwwwwww........ff..ffff....fffffffff............ww..wwww...wwww"
@@ -324,7 +330,7 @@ static const char skang_map[4096] = {
 	"wwwww................................f...................wwwwwww"
 	"wwwwwwww...ww................fffm.fffff..................wwwwwww"
 	"wwwwwwwwwwww................mmmfffff.................w..wwwwwwww"
-	"wwwwwwwww...............fffmfffffwfffff..............w.wwwwwwwww"
+	"wwwwwwwww...............fffm6ffffwfffff..............w.wwwwwwwww"
 	"wwwwww.................fffffff.....fffff......www....wwwwwwwwwww"
 	"wwwwww...mm.....fff..fffffww2.........f.........wwwwwwwwwwwwwwww"
 	"wwwwwww..m.......ffffff.fffff..fffff...........ww...wwwwwwwwwwww"
@@ -334,7 +340,7 @@ static const char skang_map[4096] = {
 	"wwwwwwwwww............................................w...wwwwww"
 	"wwwwwwww.............................................wwwwwwwwwww"
 	"wwwwwwww...................mmmm......................wwwwwwwwwww"
-	"wwwwwww.................mmmmff.......................wwwwwwwwwww"
+	"wwwwwww.................mmmm7f.......................wwwwwwwwwww"
 	"wwwwww...............mmmmm.fff.........................wwwwwwwww"
 	"wwww...............................fffff...................wwwww"
 	"wwwwwww.....ww..................fffff..........m.............www"
@@ -344,7 +350,7 @@ static const char skang_map[4096] = {
 	"wwwwwwwwww...................................m.........wwwwwwwww"
 	"wwwwwwwwww..............mfffff...........................ww.wwww"
 	"wwwwww................mmm.fffff.............................wwww"
-	"wwww..................mfffff................................wwww"
+	"wwww..................m8ffff................................wwww"
 	"wwwwww...............mmfffff.f.......................w......wwww"
 	"wwww...............fffff...............m.............wwww.wwwwww"
 	"wwwwwwww............fffff..f.........m..........fff..wwwwwwwwwww"
@@ -357,7 +363,7 @@ static const char skang_map[4096] = {
 	"wwwwwwwwww...........ffffff......m.....fff.............wwwwwwwww"
 	"wwwwwwwww........ffffff..................fff.......m.......wwwww"
 	"wwwwwwww......ffffff....................ffff.....mm.........wwww"
-	"wwwwwwww..............................fff........m.m.....wwwwwww"
+	"wwwwwwww..............................fff........m9m.....wwwwwww"
 	"wwwwww..............................fff........mm.......wwwwwwww"
 	"wwwwwww..........w............ww.....................wwwwwwwwwww"
 	"wwwww....m......ww4....mm......w.............w.......wwwwwwwwwww"
@@ -382,7 +388,7 @@ static const char gnarg_map[4096] = {
 	"wwwwww...............ff...............w.......wwwww.....www..www"
 	"wwwwwwww..............f......ffff....ww......wwww..f.....ww..www"
 	"wwwwwwwww......................ff.....www...www....fff...1f..www"
-	"wwwwwwwww..........ff..................wwwwwwww......f...fffwwww"
+	"wwwwwwwww..........ff..................wwwwwwww.....5f...fffwwww"
 	"wwwwwwww............fffff...............wwwwww......ff...f...www"
 	"wwwwwwww.............fffff.......www..wwwwww........f....f....ww"
 	"www....w................fffff......wwwww.............f..ff.w..ww"
@@ -390,9 +396,9 @@ static const char gnarg_map[4096] = {
 	"wwwwwww...ff................fffff.......www................ww.ww"
 	"wwwwwwwww..ffmm...............fffff......wwwf.............wwwwww"
 	"wwwwwwwww..fffmm...............fffff......wfff...........wwwwwww"
-	"wwwwwwww....fffmmmmm..........fffff.......w.ff...........wwwwwww"
+	"wwwwwwww....fff6mmmm..........fffff.......w.ff...........wwwwwww"
 	"wwwwwwww....fffmm...m..........fffff.....ww.ffm...........wwwwww"
-	"wwwwwww......fffm..............fffff........ff.mm.........wwwwww"
+	"wwwwwww......fffm..............fffff........ff7mm.........wwwwww"
 	"wwwww........fffm.............fffff..........ff.mmww......wwwwww"
 	"ww....ww2.....ffm...............fffff.........f...www.....wwwwww"
 	"www....w......f................fffff...............www..wwwwwwww"
@@ -410,12 +416,12 @@ static const char gnarg_map[4096] = {
 	"wwww.........ffff............ffff.............f.ffff.....wwwwwww"
 	"wwwww.......ff..................ff...............ffff....wwwwwww"
 	"wwwwww...........................ff...............ffff...wwwwwww"
-	"wwwwwww..........................mff......................wwwwww"
+	"wwwwwww..........................m8f......................wwwwww"
 	"wwwwwwww.........................mmff........fff..........wwwwww"
 	"wwwwwwww.........................3m...........fff..........wwwww"
 	"wwwwwwww..........................mff.............m........wwwww"
 	"wwwwww............................mff..........fffmm.......wwwww"
-	"www................................mff..........fffmm......wwwww"
+	"www................................mff..........ff9mm......wwwww"
 	"ww.......ff.ff....................................fffm.....wwwww"
 	"wwww......ff.......................m.............fffm....wwwwwww"
 	"www........ffff...................mm...............fff...wwwwwww"
@@ -920,6 +926,43 @@ static const struct asset2 woodfloor = {
 };
 /* End of code generated by png-to-badge-asset from badgey_assets/woodfloor.png Sun Apr 14 10:32:36 2024 */
 
+/* Begin code generated by png-to-badge-asset from badgey_assets/cave.png Sun Apr 14 17:10:39 2024. */
+static const uint16_t cave_colormap[89] = {
+	0x3204, 0x3206, 0x2204, 0x4286, 0x74cc, 0x754c, 0x74ca, 0x754a, 0x4284, 0x4306, 0x5448, 0x64ca,
+	0x8d4c, 0x9e51, 0x5306, 0x638a, 0x9d4c, 0x5286, 0x5386, 0x644a, 0x8dcc, 0x744a, 0x5388, 0x4308,
+	0x5308, 0x6446, 0x6388, 0x6308, 0x738a, 0x8cca, 0x9dce, 0x8d4e, 0x6448, 0x8c4c, 0x738c, 0x7448,
+	0x9cce, 0x3184, 0x9ccc, 0x9c4e, 0x2102, 0x0000, 0x1000, 0x1082, 0x630a, 0xad51, 0xbdd1, 0xadce,
+	0x9dd1, 0x8cce, 0x4204, 0xad53, 0x2104, 0xadd1, 0xaed3, 0x9d4e, 0xbdd3, 0xae53, 0xbd55, 0x4206,
+	0x8b8c, 0xacce, 0x8ccc, 0x8c4e, 0x2082, 0x3186, 0x5288, 0xacd1, 0xbe51, 0xae4e, 0x9e4e, 0xbdd5,
+	0x4186, 0x5208, 0xce53, 0xbe4e, 0x628a, 0x730a, 0x730c, 0x744e, 0x9c51, 0x9cd1, 0xac4e, 0x9d51,
+	0xbd53, 0xacd3, 0xbd51, 0x8d51, 0xcd53,
+}; /* 89 values */
+
+static const uint8_t cave_data[256] = {
+	0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 10, 11, 12, 5, 13, 9, 3, 3, 14,
+	15, 6, 16, 12, 17, 18, 18, 18, 19, 20, 21, 22, 19, 23, 24, 25, 26, 27, 28, 29,
+	3, 14, 22, 25, 6, 30, 12, 31, 19, 22, 19, 32, 4, 33, 34, 27, 28, 33, 33, 26,
+	6, 35, 12, 30, 6, 22, 19, 26, 36, 34, 37, 17, 22, 24, 28, 33, 16, 38, 29, 21,
+	31, 19, 32, 21, 39, 40, 41, 42, 43, 43, 40, 44, 45, 46, 47, 48, 27, 32, 33, 49,
+	33, 41, 41, 41, 41, 43, 43, 50, 33, 45, 30, 4, 47, 4, 36, 51, 39, 41, 41, 41,
+	41, 43, 52, 17, 33, 45, 53, 30, 54, 55, 56, 51, 34, 41, 41, 41, 41, 43, 37, 27,
+	36, 45, 56, 16, 57, 31, 58, 51, 40, 43, 43, 43, 43, 43, 59, 60, 61, 56, 36, 55,
+	5, 62, 36, 63, 64, 40, 43, 52, 65, 59, 66, 33, 67, 56, 68, 69, 70, 48, 71, 34,
+	37, 37, 37, 72, 73, 44, 15, 63, 55, 74, 75, 68, 13, 55, 45, 28, 23, 66, 76, 76,
+	77, 78, 33, 36, 53, 53, 47, 55, 6, 62, 12, 49, 22, 79, 80, 81, 67, 82, 67, 83,
+	55, 53, 38, 30, 6, 62, 31, 81, 81, 67, 51, 84, 85, 84, 86, 45, 55, 55, 55, 45,
+	31, 87, 31, 36, 81, 67, 84, 84, 88, 86, 84, 86, 46, 86, 86, 46,
+}; /* 256 values */
+
+static const struct asset2 cave = {
+	.type = PICTURE8BIT,
+	.seqNum = 1,
+	.x = 16,
+	.y = 16,
+	.colormap = (const uint16_t *) cave_colormap,
+	.pixel = (const unsigned char *) cave_data,
+};
+/* End of code generated by png-to-badge-asset from badgey_assets/cave.png Sun Apr 14 17:10:39 2024 */
 
 static struct player {
 	struct badgey_world const *world; /* current world */
@@ -928,6 +971,8 @@ static struct player {
 	struct badgey_world const *old_world[5];
 	int wx[5], wy[5]; /* coords at each level */
 	int in_town;
+	int in_cave;
+	int dir;
 } player = {
 	.world = &space,
 	.x = 32,
@@ -937,12 +982,16 @@ static struct player {
 	.wx = { 0 },
 	.wy = { 0 },
 	.in_town = 0,
+	.in_cave = 0,
+	.dir = 0, /* 0 = N, 1 = E, 2 = S, 3 = W */
 };
 
 /* Program states.  Initial state is BADGEY_INIT */
 enum badgey_state_t {
 	BADGEY_INIT,
 	BADGEY_PLANET_MENU,
+	BADGEY_CAVE_MENU,
+	BADGEY_TOWN_MENU,
 	BADGEY_RUN,
 	BADGEY_ENTER_TOWN_OR_CAVE,
 	BADGEY_EXIT,
@@ -973,6 +1022,64 @@ static void badgey_init(void)
 	FbInit();
 	FbClear();
 	badgey_state = BADGEY_RUN;
+	screen_changed = 1;
+}
+
+static void cave_check_buttons(void)
+{
+	int newx, newy, newdir;
+
+	newx = player.x;
+	newy = player.y;
+	newdir = player.dir;
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+		newdir--;
+		if (newdir < 0)
+			newdir += 4;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
+		newdir++;
+		if (newdir > 3)
+			newdir -= 4;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+		newx += xo4[player.dir];
+		newy += yo4[player.dir];
+		if (newx < 0)
+			newx += 64;
+		if (newx > 63)
+			newx -= 64;
+		if (newy < 0)
+			newy += 64;
+		if (newy > 63)
+			newy -= 64;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+		int backdir = newdir + 2;
+		if (backdir > 3)
+			backdir -= 4;
+		newx += xo4[backdir];
+		newy += yo4[backdir];
+		if (newx < 0)
+			newx += 64;
+		if (newx > 63)
+			newx -= 64;
+		if (newy < 0)
+			newy += 64;
+		if (newy > 63)
+			newy -= 64;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		if (player.world->type == WORLD_TYPE_PLANET)
+			badgey_state = BADGEY_CAVE_MENU;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		badgey_state = BADGEY_EXIT;
+	}
+	if (dynmap[windex(newx, newy)] == '#')
+		return;
+	if (newx == player.x && newy == player.y && newdir == player.dir)
+		return;
+	player.x = newx;
+	player.y = newy;
+	player.dir = newdir;
 	screen_changed = 1;
 }
 
@@ -1082,7 +1189,7 @@ static void draw_cell(int x, int y, unsigned char c)
 			if ((c - '0') < 5)
 				FbImage2(&town, 0);
 			else
-				FbCharacter((unsigned char) 'C'); /* ... or it's a cave. */
+				FbImage2(&cave, 0);
 		}
 		break;
 	case '*':
@@ -1160,12 +1267,180 @@ static int visibility_check(int px, int py, int x, int y)
 	return d.answer;
 }
 
+static void draw_left_passage(int start, int start_inc)
+{
+	int x1, y1, x2, y2;	
+	x1 = start / 256;
+	y1 = (start + start_inc) / 256;
+	x2 = (start + start_inc) / 256;
+	y2 = LCD_YSIZE - (start + start_inc) / 256;
+
+	FbLine(x1, y1, x2, y1);
+	FbLine(x2, y1, x2, y2);
+	FbLine(x1, y2, x2, y2);
+}
+
+static void draw_left_wall(int start, int start_inc)
+{
+	int x1, y1, x2, y2, x3, y3, x4, y4;	
+	x1 = start / 256; 
+	y1 = start / 256;
+	x2 = (start + start_inc) / 256;
+	y2 = (start + start_inc) / 256;
+	x3 = x2;
+	y3 = LCD_YSIZE - (start + start_inc) / 256;
+	x4 = x1;
+	y4 = LCD_YSIZE - start / 256;
+
+	FbLine(x1, y1, x2, y2);
+	FbLine(x2, y2, x3, y3);
+	FbLine(x3, y3, x4, y4);
+}
+
+static void draw_right_passage(int start, int start_inc)
+{
+	int x1, y1, x2, y2;
+
+	x1 = LCD_XSIZE - start / 256;
+	y1 = (start + start_inc) / 256;
+	x2 = x1 - start_inc / 256;
+	y2 = LCD_YSIZE - (start + start_inc) / 256;
+
+	FbLine(x1, y1, x2, y1);
+	FbLine(x2, y1, x2, y2);
+	FbLine(x2, y2, x1, y2);
+}
+
+static void draw_right_wall(int start, int start_inc)
+{
+	int x1, y1, x2, y2, x3, y3, x4, y4;
+
+	x1 = LCD_XSIZE - start / 256;
+	y1 = start / 256;
+	x2 = x1 - start_inc / 256;
+	y2 = y1 + start_inc / 256;
+	x3 = x2;
+	y3 = LCD_YSIZE - (start + start_inc) / 256;
+	x4 = x1;
+	y4 = LCD_YSIZE - start / 256;
+
+	FbLine(x1, y1, x2, y2);
+	FbLine(x2, y2, x3, y3);
+	FbLine(x3, y3, x4, y4);
+}
+
+static void draw_back_wall(int start, int start_inc)
+{
+	int x1, y1, x2, y2;
+
+	x1 = (start + start_inc) / 256;
+	y1 = (start + start_inc) / 256;
+	x2 = LCD_XSIZE - (start + start_inc) / 256;
+	y2 = LCD_YSIZE - (start + start_inc) / 256;
+
+	FbLine(x1, y1, x2, y1);
+	FbLine(x1, y2, x2, y2);
+}
+
+static void draw_left_cave(int x, int y, int start, int start_inc)
+{
+	int left = player.dir - 1;
+	if (left < 0)
+		left += 4;
+	int lx = x + xo4[left];
+	int ly = y + yo4[left];
+	if (lx < 0)
+		lx += 64;
+	if (lx > 63)
+		lx -= 64;
+	if (ly < 0)
+		ly += 64;
+	if (ly > 63)
+		ly -= 64;
+	if (dynmap[windex(lx, ly)] == '#')
+		draw_left_wall(start, start_inc);
+	else
+		draw_left_passage(start, start_inc);
+}
+
+static void draw_right_cave(int x, int y, int start, int start_inc)
+{
+	int right = player.dir + 1;
+	if (right > 3)
+		right -= 4;
+	int rx = x + xo4[right];
+	int ry = y + yo4[right];
+	if (rx < 0)
+		rx += 64;
+	if (rx > 63)
+		rx -= 64;
+	if (ry < 0)
+		ry += 64;
+	if (ry > 63)
+		ry -= 64;
+	if (dynmap[windex(rx, ry)] == '#')
+		draw_right_wall(start, start_inc);
+	else
+		draw_right_passage(start, start_inc);
+}
+
+static int draw_back_cave(int x, int y, int start, int start_inc)
+{
+	int bx = x + xo4[player.dir];
+	int by = y + yo4[player.dir];
+	if (bx < 0)
+		bx += 64;
+	if (bx > 63)
+		bx -= 64;
+	if (by < 0)
+		by += 64;
+	if (by > 63)
+		by -= 64;
+	if (dynmap[windex(bx, by)] == '#') {
+		draw_back_wall(start, start_inc);
+		return 1;
+	}
+	return 0;
+}
+
+static void draw_cave_screen(void)
+{
+
+
+	int x = player.x;
+	int y = player.y;
+	int start = 0;
+	int start_inc = 20 * 256;
+	int hit_back_wall = 0;
+
+	FbColor(WHITE);
+	for (int i = 0; i < 4; i++) {
+		draw_left_cave(x, y, start, start_inc);
+		draw_right_cave(x, y, start, start_inc);
+		hit_back_wall = draw_back_cave(x, y, start, start_inc);
+		start += start_inc;
+		start_inc = (start_inc * 205) / 256; /* means: * 0.8 */
+		if (hit_back_wall)
+			break;
+		x = x + xo4[player.dir];
+		y = y + yo4[player.dir];
+		if (x < 0 || x > 63 || y < 0 || y > 63)
+			break;
+	}
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
 		return;
 	FbClear();
 	FbColor(WHITE);
+
+	if (player.in_cave) {
+		draw_cave_screen();
+		screen_changed = 0;
+		return;
+	}
 
 	int x, y, sx, sy, rx, ry;
 
@@ -1216,6 +1491,16 @@ static void draw_screen(void)
 
 	screen_changed = 0;
 	FbPushBuffer();
+}
+
+static void badgey_cave_menu(void)
+{
+	badgey_state = BADGEY_RUN;
+}
+
+static void badgey_town_menu(void)
+{
+	badgey_state = BADGEY_RUN;
 }
 
 static void badgey_planet_menu(void)
@@ -1294,7 +1579,10 @@ static void badgey_run(void)
 {
 	draw_screen();
 	FbPushBuffer();
-	check_buttons();
+	if (player.in_cave)
+		cave_check_buttons();
+	else
+		check_buttons();
 }
 
 enum townfeature {
@@ -1614,15 +1902,13 @@ static int distance_to_road(int x, int y, int xo, int yo, char roadchar)
 static int connect_building_to_road(int x, int y, int w, int h, int roadchar)
 {
 	int rc = 0;
-	static const signed char xo[] = { 0, 1, 0, -1 };
-	static const signed char yo[] = { -1, 0, 1, 0 };
 	int d[4];
 	int min, ans;
 	int sx[4] = { x + w / 2, x + w, x + w / 2, x - 1 };
 	int sy[4] = { y - 1, y + h / 2, y + h, y + h / 2 };
 
 	for (int i = 0; i < 4; i++)
-		d[i] = distance_to_road(sx[i], sy[i], xo[i], yo[i], roadchar);
+		d[i] = distance_to_road(sx[i], sy[i], xo4[i], yo4[i], roadchar);
 
 	min = 1000;
 	ans = -1;
@@ -1638,7 +1924,7 @@ static int connect_building_to_road(int x, int y, int w, int h, int roadchar)
 		rc = 1; /* left door */
 	} else {
 		for (int i = -1; i < d[ans]; i++) /* -1 to start at the wall of the building to put in a door */
-			dynmap[windex(sx[ans] + i * xo[ans], sy[ans] + i * yo[ans])] =
+			dynmap[windex(sx[ans] + i * xo4[ans], sy[ans] + i * yo4[ans])] =
 				i == -1 ? '=' : roadchar;
 		rc = ans;
 	}
@@ -1884,36 +2170,107 @@ static void generate_town(int town_number)
 	
 }
 
-static void enter_dynmap(void)
+static void enter_dynmap(int x, int y)
 {
 	player.world_level++;
 	player.wx[player.world_level] = player.x;
 	player.wy[player.world_level] = player.y;
 	player.old_world[player.world_level] = player.world;
-	player.x = 6;
-	player.y = 32;
+	player.x = x;
+	player.y = y;
 	player.world = &dynworld;
 }
 
 static void enter_town(int town_number)
 {
 	generate_town(town_number);
-	enter_dynmap();
+	dynworld.type = WORLD_TYPE_TOWN;
+	enter_dynmap(6, 32);
 	player.in_town = 1;
+}
+
+static void dig_cave(char *map, int x, int y, int dir, unsigned int *seed) 
+{
+	/* check we're not too close to the edge of the map */ 
+	if (x < 1 || x > 62 || y < 1 || y > 62)
+		return; /* quit digging */
+
+	/* Check we're not about to connect to another existing tunnel */
+	for (int i = -2; i < 3; i++) {
+		int td = dir + i;
+		if (td < 0)
+			td += 8;
+		if (td > 7)
+			td -= 8;
+		if (map[windex(x + xo8[td], y + yo8[td])] == ' ') /* would connect to existing tunnel? */
+			return; /* quit digging */
+	}
+
+	map[windex(x, y)] = ' '; /* safe to dig out x,y */
+
+	/* Maybe branch left or right */
+	if ((xorshift(seed) % 100) < 30) {
+		int newdir;
+		if ((xorshift(seed) % 100) < 50) {
+			newdir = dir + 2;
+			if (newdir > 7)
+				newdir -= 8;
+		} else {
+			newdir = dir - 2;
+			if (newdir < 0)
+				newdir += 8;
+		}
+		dig_cave(map, x + xo8[newdir], y + yo8[newdir], newdir, seed);
+	}
+	if ((xorshift(seed) % 100) < 5) /* 5% chance to quit digging */
+		return;
+	dig_cave(map, x + xo8[dir], y + yo8[dir], dir, seed);
+}
+
+static void print_cave(char *map)
+{
+	for (int i = 0; i < 64; i++) {
+		for (int j = 0; j < 64; j++) {
+			if (j == 32 && i == 62)
+				printf("X");
+			else
+				printf("%c", map[windex(j, i)]);
+		}
+		printf("\n");
+	}
 }
 
 static void generate_cave(int cave_number)
 {
-}
+	int world_no = -1;
+	for (size_t i = 0; i < ARRAY_SIZE(space.subworld); i++)
+		if (player.world == space.subworld[i]) {
+			world_no = i;
+			break;
+		}
+#ifdef __linux
+	if (world_no == -1) {
+		printf("BUG detected at %s:%d, planet %s not in space.subworld\n",
+				__FILE__, __LINE__, player.world->name);
+		raise(SIGTRAP); /* trigger gdb, in case we're running under gdb. */
+	}
+#endif
+	int caveno = cave_number + (world_no * 5) + 5;
+	unsigned int seed = (player.x + 64 * player.y * (caveno + 1)) ^ 0x5a5a5a5a;
 
-static void enter_dungeon(int cave_number)
-{
+	memset(dynmap, '#', sizeof(dynmap)); /* Fill the map with walls. */
+	dig_cave(dynmap, 32, 62, 0, &seed);
+	print_cave(dynmap);
 }
 
 static void enter_cave(int cave_number)
 {
 	generate_cave(cave_number);
-	enter_dungeon(cave_number);
+	dynworld.type = WORLD_TYPE_CAVE;
+	enter_dynmap(32, 62);
+	player.dir = 0;
+	player.in_cave = 1;
+	screen_changed = 1;
 }
 
 static void badgey_enter_town_or_cave(void)
@@ -1942,6 +2299,12 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_PLANET_MENU:
 		badgey_planet_menu();
+		break;
+	case BADGEY_CAVE_MENU:
+		badgey_cave_menu();
+		break;
+	case BADGEY_TOWN_MENU:
+		badgey_town_menu();
 		break;
 	case BADGEY_RUN:
 		badgey_run();
