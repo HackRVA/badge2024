@@ -27,7 +27,8 @@ void dynmenu_clear(struct dynmenu *dm)
 	dm->nitems = 0;
 	dm->current_item = 0;
 	dm->menu_active = 0;
-	dm->chosen_cookie = 0;
+	dm->chosen_cookie = -1;
+	printf("setting chosen cookit to %d\n", dm->chosen_cookie);
 }
 
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
@@ -50,6 +51,7 @@ void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned c
     dm->item[i].next_state = next_state;
     dm->item[i].cookie = cookie;
     dm->nitems++;
+    dm->chosen_cookie = dm->item[dm->current_item].cookie;
 }
 
 void dynmenu_draw(struct dynmenu *dm)
@@ -111,5 +113,7 @@ void dynmenu_change_current_selection(struct dynmenu *dm, int direction)
 	else if (new >= dm->nitems)
 		new = 0;
 	dm->current_item = new;
+	dm->chosen_cookie = dm->item[dm->current_item].cookie;
+	printf("setting chosen cookit to %d\n", dm->chosen_cookie);
 }
 
