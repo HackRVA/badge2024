@@ -48,7 +48,11 @@
 #include "moon-patrol.h"
 #include "badgey.h"
 #include "badge-app-template.h"
+
+/* BUILD_IMAGE_TEST_PROGRAM is defined (or not) in top level CMakelists.txt */
+#ifdef BUILD_IMAGE_TEST_PROGRAM
 #include "image-test.h"
+#endif
 
 #define MAIN_MENU_BKG_COLOR GREY2
 
@@ -87,7 +91,9 @@ static const struct menu_t games_m[] = {
 	{"Moon Patrol", VERT_ITEM, FUNCTION, { .func = moonpatrol_cb }, &moonpatrol_icon, },
 	{"Badgey", VERT_ITEM, FUNCTION, { .func = badgey_cb }, &bba_icon },
 	{"Legacy Games",       VERT_ITEM, MENU, { .menu = legacy_games_m }, &legacy_games_icon, },
+#ifdef BUILD_IMAGE_TEST_PROGRAM
 	{"Image Test", VERT_ITEM, FUNCTION, { .func = image_test_cb }, NULL },
+#endif
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 

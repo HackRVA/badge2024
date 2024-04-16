@@ -7,6 +7,7 @@ set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the futu
 set(PRODUCT "badge2024_c")
 set(SIMULATOR_AUDIO "no") # change to "no" to avoid compiling audio code in simulator
 set(BADGE_HAS_ROTARY_SWITCHES "no")
+set(BUILD_IMAGE_TEST_PROGRAM "no") # change to "yes" to build image test app
 
 if (${TARGET} STREQUAL "PICO")
     # Pull in SDK (must be before project).
@@ -22,6 +23,10 @@ enable_testing()
 
 if (${TARGET} STREQUAL "WASM")
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+endif()
+
+if (${BUILD_IMAGE_TEST_PROGRAM} STREQUAL "yes")
+   add_compile_definitions(BUILD_IMAGE_TEST_PROGRAM)
 endif()
 
 # Initialize the SDK

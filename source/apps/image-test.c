@@ -1,3 +1,6 @@
+/* BUILD_IMAGE_TEST_PROGRAM is controlled by top level CMakelists.txt */
+#ifdef BUILD_IMAGE_TEST_PROGRAM
+
 #include <stdio.h>
 #include "colors.h"
 #include "menu.h"
@@ -925,3 +928,4 @@ void image_test_cb(__attribute__((unused)) struct menu_t *m)
 	}
 }
 
+#endif
