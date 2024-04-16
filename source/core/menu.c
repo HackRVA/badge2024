@@ -85,7 +85,7 @@ static const struct menu_t games_m[] = {
 	{"Sample App", VERT_ITEM, FUNCTION, { .func = myprogram_cb }, NULL },
 	{"Clue", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = clue_cb }, &clue_icon },
 	{"Moon Patrol", VERT_ITEM, FUNCTION, { .func = moonpatrol_cb }, &moonpatrol_icon, },
-	{"Badgey", VERT_ITEM, FUNCTION, { .func = badgey_cb }, NULL },
+	{"Badgey", VERT_ITEM, FUNCTION, { .func = badgey_cb }, &bba_icon },
 	{"Legacy Games",       VERT_ITEM, MENU, { .menu = legacy_games_m }, &legacy_games_icon, },
 	{"Image Test", VERT_ITEM, FUNCTION, { .func = image_test_cb }, NULL },
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
