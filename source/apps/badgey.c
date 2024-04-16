@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __linux__
+#include <signal.h> /* so we can raise(SIGTRAP) if we detect a bug. */
+#endif
 
 #include "colors.h"
 #include "menu.h"
@@ -10,6 +13,7 @@
 #include "dynmenu.h"
 #include "utils.h"
 #include "assetList.h"
+#include "xorshift.h"
 
 struct dynmenu planet_menu;
 struct dynmenu_item planet_menu_item[5];
@@ -105,7 +109,7 @@ static const char ossaria_map[4096] = {
 	"wwwww.......ffm..fmff.......wwwwwwwwwwwwwwwwwwwwwwww..........ww"
 	"wwwwww....ffffmmffmmf.......wwwwwwwwwwwwwwwwwww..........wwwwwww"
 	"wwwwww.....ff..mmff.ff.....wwww...................wwwwwwwwwwwwww"
-	"wwwwww......f..fmm..ff.....w...................wwwwwwwwwwwwwwwww"
+	"wwwwww......f..fmm..ff.....w0..................wwwwwwwwwwwwwwwww"
 	"wwwww..........ff.................................wwwwwwwwwwwwww"
 	"wwwww...........f.............................wwwwwwwwwwwwwwwwww"
 	"wwwwww..w................................wwwwwwwwwwwwwwwwwwwwwww"
@@ -113,7 +117,7 @@ static const char ossaria_map[4096] = {
 	"wwwwwwwww.................f.wwwwwmmm................wwwwww.wwwww"
 	"wwwww..ww................fffwwwmmm................wwwwwww..wwwww"
 	"wwwwww..www.............ffffffmm.....................w.....wwwww"
-	"wwwww.....................fffffmmfff....................wwwwwwww"
+	"wwwww.....................ff1ffmmfff....................wwwwwwww"
 	"wwwww......................fffffmffffff................wwwwwwwww"
 	"www....fmf...................ffffffff..................wwwwwwwww"
 	"www.....mmf.............fff....fffff......................wwwwww"
@@ -123,13 +127,13 @@ static const char ossaria_map[4096] = {
 	"wwwww.w......f.ff.......................................wwwwwwww"
 	"wwwwwww........fff....................................w.wwww..ww"
 	"wwwwwwww.......ffff...................................wwwww...ww"
-	"wwwwww...........f..f.................................wwww....ww"
+	"wwwwww...........f..f................................2wwww....ww"
 	"wwwww..............ff......................f...........ww.....ww"
 	"wwwwww...........................mm..m....ff................wwww"
 	"wwwww...............f........m..mm...mm...ff................wwww"
 	"wwwww........................mmmm.....mmmff.............wwwwwwww"
 	"wwwwww......................mmm........mmfffff........wwwwwwwwww"
-	"wwwwww......................m...........mf..ff........wwwwwwwwww"
+	"wwwwww......................m..........3mf..ff........wwwwwwwwww"
 	"wwwwwww.....................m..........mmf...f..........wwwwwwww"
 	"wwwwwwwwww..................m................ff.......wwwwwwwwww"
 	"wwwwwwwww...........................mmmmmm....f.......wwwwwwwwww"
@@ -157,7 +161,7 @@ static const char ossaria_map[4096] = {
 	"wwwww.........fffffffffffffff..wwww......mmm......w......wwwwwww"
 	"wwwwww....w..fffff..........wwwwwwwwww.....m.....wwwwwwwwwwwwwww"
 	"wwwwwww..ww..........wwww...wwwwwwwwwwwwwwwww............wwwwwww"
-	"wwwwwww.wwww.....wwwwwwwwww.wwwwwwwwwwwwwwwwwwwww.........wwwwww"
+	"wwwwwww.wwww..4..wwwwwwwwww.wwwwwwwwwwwwwwwwwwwww.........wwwwww"
 	"wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.........www"
 	"wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.....wwwwwwwwwwwwww......www"
 	"wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.....w"
@@ -172,7 +176,7 @@ static const char NW42_map[4096] = {
 	"wwwwww..mmm.......wwwwwwwwwwww..w.wwwwwwwwwww..wwwwwwwwwwwwwwwww"
 	"wwwwww..m.........wwwwwww..w.......wwwwwwwwwwwwwwwwwwwwwwww..www"
 	"wwwwww............wwwww...............wwwwwwwwwwwwwwwww......www"
-	"wwwwwww..........wwwwww.................wwwwwwwwwwwwwww......www"
+	"wwwwwww.0........wwwwww.................wwwwwwwwwwwwwww......www"
 	"wwwwwww........ffwwwwwww................wwww...wwwwwww......wwww"
 	"wwwwww........ff.wwwwwww...............www.....wwwwww.....w.wwww"
 	"wwwww..mmm....ff....wwww..............www......wwwww..ww..wwwwww"
@@ -180,7 +184,7 @@ static const char NW42_map[4096] = {
 	"wwwwwwwww.....fff....www.......f.........ff...wwwwwwwwwwwwwwwwww"
 	"wwwwwwwww.....f..f...w.w......fff.......fff...wwwwww.wwwwwwwwwww"
 	"wwwwwwww........f....w.........ff......ffff..wwwww....wwwwwwwwww"
-	"wwwwwww........................fff.....fff............wwwwwwwwww"
+	"wwwwwww........................fff.....fff.....1......wwwwwwwwww"
 	"wwwww............f..............ffff....f.............wwwwwwwwww"
 	"www..............................ffff...f............wwwwwwwwwww"
 	"www..............................ffff.............wwwwwwwwwwwwww"
@@ -194,12 +198,12 @@ static const char NW42_map[4096] = {
 	"wwwwww.f...fffff...mm................fffmf.........ww..wwwwwwwww"
 	"wwwwww.ff....fffff..mm.................fmfff......wwwwwwwwwwwwww"
 	"wwwww..fff......fffffm................fmmff.......wwwwwwwwwwwwww"
-	"wwwww..fffff......ffmm..............fffmf..........wwwwwwwwwwwww"
+	"wwwww..fffff.....2ffmm..............fffmf..........wwwwwwwwwwwww"
 	"wwwww..ff.fff....ffmm................ffmff.........wwwwwwwwwwwww"
 	"wwwww...f..ffffffffmm...................ff.........w.wwwwww..www"
 	"wwwww........ff.fmmm....................ff.............wwww..www"
 	"wwwwwwww..m..............................f......w........www..ww"
-	"wwwwwwwww.mmm.................................w.w.........w...ww"
+	"wwwwwwwww.mmm.................................w.w.......3.w...ww"
 	"wwwwwwwwwww....w............ffffff............wwwww..........www"
 	"wwwwww.wwwwwwwww..........fffffffmfff.............w..ww.....wwww"
 	"wwwwww.......w.........ffffffffffmmmfff...........wwwwwwwwwwwwww"
@@ -219,7 +223,7 @@ static const char NW42_map[4096] = {
 	"wwwwww.....www........mmmfffff......mmmf................wwwwwwww"
 	"wwwwww..wwwwww......mmm..............mmmff..............wwwwwwww"
 	"wwwwwww.wwwwwwf......ffff..............fff.................wwwww"
-	"wwwwwwwwwwwwwwff......fffff........wwfff..w................wwwww"
+	"wwwwwwwwwwwwwwff......fffff......4.wwfff..w................wwwww"
 	"wwwwwwwwwwwwwwff.........mmm....mmmmw..wwww..............wwwwwww"
 	"wwww..wwwwwwwfff...........mmmmmm...w.ww................wwwwwwww"
 	"wwww.ffwwwfffff.....................www................wwwwwwwww"
@@ -247,8 +251,8 @@ static const char borton_map[4096] = {
 	"www.....................ff....w..............mmmff........wwwwww"
 	"ww...................f...f....www............wwmfff...wwwwwwwwww"
 	"www....w......................w............mmffmf.........wwwwww"
-	"wwwwwwwww.....................w..........mffff...........wwwwwww"
-	"wwwwwwwwww..............................ffff..f............wwwww"
+	"wwwwwwwww....................0w..........mffff...........wwwwwww"
+	"wwwwwwwwww..............................ffff1.f............wwwww"
 	"wwwwwwwwww.......ff........................ff.f............wwwww"
 	"wwwwwwwwwww.....fff........................ff............wwwwwww"
 	"wwwwwwwwwww......f..........................f..........wwwwwwwww"
@@ -273,17 +277,17 @@ static const char borton_map[4096] = {
 	"wwww...www...............................fff.fff.....wwwwwwwwwww"
 	"wwwww...................mmmmmmmmmm........f....fff.......wwwwwww"
 	"wwwww...www......mmmmmmmmmmmww...mmmm............fff.....wwwwwww"
-	"wwww......ww.............mm.......m............r........wwwwwwww"
+	"wwww......ww.............mm.2.....m............r........wwwwwwww"
 	"www.....wwww..............mm......m....................wwwwwwwww"
 	"wwww...wwwww...............mm.fff....................wwwwwwwwwww"
 	"wwwwwwwwwww.................fff......................wwwwwwwwwww"
 	"wwwwwwwww..........f.................................wwwwwwwwwww"
 	"wwwwww......fff....................................wwwwwwwwwwwww"
 	"wwwwwwwww..fff..fff.................www.............wwwww...wwww"
-	"wwwwwwww..........fff.fff.f.........www......mm......ww.....wwww"
+	"wwwwwwww..........fff.fff.f.........www......mm.....3ww.....wwww"
 	"wwwwwwwwww......w...fff..............wwww.....mm..........wwwwww"
 	"wwwwwwwwwwww...www....fffffffff.........w......mm.......wwwwwwww"
-	"wwwwwwwwwwww...ww.......fff.............wwww.........wwwwwwwwwww"
+	"wwwwwwwwwwww.4.ww.......fff.............wwww.........wwwwwwwwwww"
 	"wwwwwwwwwww...ff..........fff....fff......ww...ff....wwwwwwwwwww"
 	"wwwwww.........ffffff......fff.fff.........w....ff...wwwwwwwwwww"
 	"www.............ffffff.......fff...........w....ff...wwwwwwwwwww"
@@ -306,7 +310,7 @@ static const char skang_map[4096] = {
 	"wwwwww..........w.........ww.............ww..............wwwwwww"
 	"wwwwwwwww...............................www...............wwwwww"
 	"wwwwwwwwww..............................w............wwwwwwwwwww"
-	"wwwwwwwwwww.............................w............wwwwwwwwwww"
+	"wwwwwwwwwww.............................w0...........wwwwwwwwwww"
 	"wwwwwwwwwwwww..........................................wwwwwwwww"
 	"wwwwwwwwww.......fffff.........mmmff.....................wwwwwww"
 	"wwwww....ww..m......fffff..fffmmmwfffff..............wwwwwwwwwww"
@@ -314,7 +318,7 @@ static const char skang_map[4096] = {
 	"wwwwwww......m..f........ffffffffff...............w..wwwwww.wwww"
 	"wwwwwwww........ff..ffff....fffffffff............ww..wwww...wwww"
 	"wwwwwwwwwww......fffff.........fffffffffffffffff.....ww.w...wwww"
-	"wwwwwwwwwww...fffff..f..............fffffffff..............wwwww"
+	"wwwwwwwwwww...fffff..f..............fffff1fff..............wwwww"
 	"wwwwwwwww..fffff....f..................fffff..............wwwwww"
 	"www.......................................................wwwwww"
 	"wwwww................................f...................wwwwwww"
@@ -322,7 +326,7 @@ static const char skang_map[4096] = {
 	"wwwwwwwwwwww................mmmfffff.................w..wwwwwwww"
 	"wwwwwwwww...............fffmfffffwfffff..............w.wwwwwwwww"
 	"wwwwww.................fffffff.....fffff......www....wwwwwwwwwww"
-	"wwwwww...mm.....fff..fffffww..........f.........wwwwwwwwwwwwwwww"
+	"wwwwww...mm.....fff..fffffww2.........f.........wwwwwwwwwwwwwwww"
 	"wwwwwww..m.......ffffff.fffff..fffff...........ww...wwwwwwwwwwww"
 	"wwwwwww........fffff.......fffff...fffff......ww.....wwwwwwwwwww"
 	"wwwwwwwww...fffff................f.ff................ww.wwwwwwww"
@@ -347,7 +351,7 @@ static const char skang_map[4096] = {
 	"wwwwww...........fffff..............mm...........fff.wwwwwwwwwww"
 	"wwwwww..................f..........mm..........fff...wwwwwwwwwww"
 	"wwwwwww.............f..............mm...........fff...wwwwwwwwww"
-	"wwwwwww...........................mm.........fff......wwwwwwwwww"
+	"wwwwwww...........................mm3........fff......wwwwwwwwww"
 	"wwwwwwwwww........................m...........fff......wwwwwwwww"
 	"wwwwwwwww........ffffff..........mm........ffff.........wwwwwwww"
 	"wwwwwwwwww...........ffffff......m.....fff.............wwwwwwwww"
@@ -356,7 +360,7 @@ static const char skang_map[4096] = {
 	"wwwwwwww..............................fff........m.m.....wwwwwww"
 	"wwwwww..............................fff........mm.......wwwwwwww"
 	"wwwwwww..........w............ww.....................wwwwwwwwwww"
-	"wwwww....m......ww.....mm......w.............w.......wwwwwwwwwww"
+	"wwwww....m......ww4....mm......w.............w.......wwwwwwwwwww"
 	"wwwww.....mm....w.....mm.......w.............ww.........wwwwwwww"
 	"wwwwwww....mm..ww.....m.......ww...........wwww........wwwwwwwww"
 	"wwwwwwwwww....wwwww...........wwwww...wwwwwwwww.......wwwwwwwwww"
@@ -371,13 +375,13 @@ static const char gnarg_map[4096] = {
 	"wwwwwwwwww.......wwwwww.......wwwwwwwwwww..mwww......wwwwwwwwwww"
 	"wwwwww...........www......ff......wwww.....m.........ww..wwwwwww"
 	"wwww...w..........w...mm..fff.......ww.....mm............wwwwwww"
-	"wwwwwwww..........w....mm.ff.........w.......mm..........wwwwwww"
+	"wwwwwwww..........w....mm0ff.........w.......mm..........wwwwwww"
 	"wwwwwwwwwww.............mmf...................m.........wwwwwwww"
 	"wwww.....www........ff...mm........................wwwwwwwwwwwww"
 	"wwwww......w.........f................ww........wwwwwwwwwwww.www"
 	"wwwwww...............ff...............w.......wwwww.....www..www"
 	"wwwwwwww..............f......ffff....ww......wwww..f.....ww..www"
-	"wwwwwwwww......................ff.....www...www....fff....f..www"
+	"wwwwwwwww......................ff.....www...www....fff...1f..www"
 	"wwwwwwwww..........ff..................wwwwwwww......f...fffwwww"
 	"wwwwwwww............fffff...............wwwwww......ff...f...www"
 	"wwwwwwww.............fffff.......www..wwwwww........f....f....ww"
@@ -390,7 +394,7 @@ static const char gnarg_map[4096] = {
 	"wwwwwwww....fffmm...m..........fffff.....ww.ffm...........wwwwww"
 	"wwwwwww......fffm..............fffff........ff.mm.........wwwwww"
 	"wwwww........fffm.............fffff..........ff.mmww......wwwwww"
-	"ww....ww......ffm...............fffff.........f...www.....wwwwww"
+	"ww....ww2.....ffm...............fffff.........f...www.....wwwwww"
 	"www....w......f................fffff...............www..wwwwwwww"
 	"wwwwwwww.........................fffff..............wwwwwwwwwwww"
 	"wwwwwwwww..........................ff.................w..wwwwwww"
@@ -408,7 +412,7 @@ static const char gnarg_map[4096] = {
 	"wwwwww...........................ff...............ffff...wwwwwww"
 	"wwwwwww..........................mff......................wwwwww"
 	"wwwwwwww.........................mmff........fff..........wwwwww"
-	"wwwwwwww..........................m...........fff..........wwwww"
+	"wwwwwwww.........................3m...........fff..........wwwww"
 	"wwwwwwww..........................mff.............m........wwwww"
 	"wwwwww............................mff..........fffmm.......wwwww"
 	"www................................mff..........fffmm......wwwww"
@@ -424,7 +428,7 @@ static const char gnarg_map[4096] = {
 	"wwwww..............ffff.................ww........w......wwwwwww"
 	"wwwww......mfff..........................w........ww.....wwwwwww"
 	"ww....ww....mmfff.......ww...............w..fff....ww....wwwwwww"
-	"www....w......mmfff......w..............ww...fff....ww...wwwwwww"
+	"www....w......mmfff.....4w..............ww...fff....ww...wwwwwww"
 	"wwwwwwww........mm.......w............www......fff..www.wwwwwwww"
 	"wwwwwwwww...............ww...........www...........wwww.wwwwwwww"
 	"wwwwwwwwwwwwwwwww......wwwww.....w.wwwwwwwwww...wwwwwwwwwwwwwwww"
@@ -471,7 +475,7 @@ static const struct badgey_world skang = {
 
 
 static const struct badgey_world gnarg = {
-	.name = "BORTON",
+	.name = "GNARG",
 	.type = WORLD_TYPE_PLANET,
 	.wm = gnarg_map,
 	.subworld = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
@@ -486,6 +490,18 @@ static const struct badgey_world space = {
 	.subworld = { &ossaria, &NW42, &borton, &skang, &gnarg, NULL, NULL, NULL, NULL, NULL },
 	.landingx = 32,
 	.landingy = 32,
+};
+
+static char dynmap[4096]; /* for dynamically generated locations like towns and caves */
+static char dynworld_name[255];
+
+struct badgey_world dynworld = {
+	.name = dynworld_name,
+	.type = WORLD_TYPE_TOWN, /* for now */
+	.wm = dynmap,
+	.subworld = { NULL, NULL, NULL,  NULL, NULL, NULL, NULL, NULL, NULL, NULL, },
+	.landingx = 0,
+	.landingy = 0,
 };
 
 /* Begin code generated by png-to-badge-asset from badgey_assets/planet.png Fri Apr 12 15:33:50 2024. */
@@ -718,7 +734,6 @@ static const uint16_t mountain_colormap[144] = {
 	0x7413, 0xa597, 0xb5d9, 0xa558, 0x6b90, 0x9515, 0xbe1a, 0xadd8, 0x8c94, 0xa557, 0x9517, 0x4a8d,
 	0x5b0e, 0x6c12, 0xad97, 0xd6dc, 0xbe19, 0xa598, 0x6bd3, 0x8454, 0x84d5, 0x5b50, 0x634f, 0x4acd,
 	0x6c13, 0x63d2, 0x7414, 0x5b4f, 0x9516, 0xadd9, 0x8495, 0x4311, 0x7455, 0x7c94, 0x4b11, 0x4b51,
-	
 }; /* 144 values */
 
 static const uint8_t mountain_data[256] = {
@@ -747,12 +762,172 @@ static const struct asset2 mountain = {
 };
 /* End of code generated by png-to-badge-asset from badgey_assets/mountain.png Fri Apr 12 15:44:50 2024 */
 
+/* Begin code generated by png-to-badge-asset from badgey_assets/town.png Sat Apr 13 10:39:45 2024. */
+static const uint16_t town_colormap[34] = {
+	0xffdf, 0xd69a, 0x5482, 0x3440, 0x2cc0, 0x3d00, 0x2440, 0x2c40, 0x0b40, 0x1300, 0x2380, 0x1b00,
+	0x3b00, 0x1c40, 0x0b80, 0x5404, 0x2480, 0x1bc0, 0x1c00, 0x4440, 0x9cd3, 0x4501, 0x23c0, 0x6b4d,
+	0x0380, 0x2400, 0x2bc0, 0x13c0, 0x3c41, 0x2b40, 0x1380, 0x22c0, 0x2340, 0x4c41,
+}; /* 34 values */
+
+static const uint8_t town_data[256] = {
+	0, 1, 2, 3, 4, 4, 5, 6, 7, 8, 9, 10, 11, 12, 0, 1, 0, 1, 13, 14,
+	15, 15, 15, 16, 15, 15, 17, 18, 15, 15, 0, 1, 0, 1, 19, 15, 0, 20, 21, 7,
+	0, 20, 18, 22, 0, 20, 0, 1, 0, 1, 15, 15, 0, 20, 15, 15, 0, 20, 15, 15,
+	0, 20, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+	0, 1, 0, 1, 23, 0, 0, 0, 0, 0, 0, 0, 1, 23, 0, 1, 0, 1, 0, 1,
+	23, 0, 0, 0, 0, 0, 0, 0, 1, 23, 0, 1, 0, 1, 0, 1, 23, 0, 0, 23,
+	23, 23, 0, 0, 1, 23, 0, 1, 0, 1, 0, 0, 0, 0, 23, 23, 23, 23, 23, 0,
+	0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 23, 23, 23, 23, 23, 0, 0, 0, 0, 1,
+	0, 1, 0, 0, 0, 0, 23, 23, 23, 23, 23, 0, 0, 0, 0, 1, 0, 1, 0, 0,
+	0, 0, 23, 23, 23, 23, 23, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 23, 23,
+	23, 23, 23, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 23, 23, 23, 23, 23, 0,
+	0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 23, 23, 23, 23, 23, 0, 0, 0, 0, 1,
+	24, 22, 25, 4, 22, 26, 27, 28, 29, 30, 18, 31, 32, 33, 15, 26,
+}; /* 256 values */
+
+static const struct asset2 town = {
+	.type = PICTURE8BIT,
+	.seqNum = 1,
+	.x = 16,
+	.y = 16,
+	.colormap = (const uint16_t *) town_colormap,
+	.pixel = (const unsigned char *) town_data,
+};
+/* End of code generated by png-to-badge-asset from badgey_assets/town.png Sat Apr 13 10:39:45 2024 */
+
+/* Begin code generated by png-to-badge-asset from badgey_assets/wall.png Sat Apr 13 11:08:48 2024. */
+static const uint16_t wall_colormap[9] = {
+	0xac8f, 0x7b8d, 0x83cd, 0xa44f, 0xa48f, 0x940e, 0x83ce, 0x9c4f, 0x8bce,
+}; /* 9 values */
+
+static const uint8_t wall_data[256] = {
+	0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+	2, 0, 0, 0, 0, 0, 0, 0, 3, 0, 1, 0, 0, 4, 3, 0, 0, 0, 5, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 6, 7, 5,
+	0, 0, 0, 4, 0, 2, 7, 0, 5, 7, 0, 0, 0, 0, 0, 0, 5, 0, 8, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0,
+	0, 6, 2, 0, 0, 0, 0, 1, 0, 8, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 1, 0, 0, 0, 0, 3, 0, 1, 0, 1, 0, 0, 0, 2, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 3, 0, 0, 0, 5, 0, 0, 6, 7, 5,
+	0, 0, 0, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 8, 0,
+	0, 2, 7, 0, 5, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 1, 0, 8, 0, 0, 1, 0, 0, 0, 0, 6, 2, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 0, 0,
+}; /* 256 values */
+
+static const struct asset2 wall = {
+	.type = PICTURE8BIT,
+	.seqNum = 1,
+	.x = 16,
+	.y = 16,
+	.colormap = (const uint16_t *) wall_colormap,
+	.pixel = (const unsigned char *) wall_data,
+};
+/* End of code generated by png-to-badge-asset from badgey_assets/wall.png Sat Apr 13 11:08:48 2024 */
+
+/* Begin code generated by png-to-badge-asset from badgey_assets/bricks.png Sat Apr 13 11:09:27 2024. */
+static const uint16_t bricks_colormap[2] = {
+	0xb410, 0x8082,
+}; /* 2 values */
+
+static const uint8_t bricks_data[256] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+	0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+	1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
+	0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+	1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
+	0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
+	1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1,
+}; /* 256 values */
+
+static const struct asset2 bricks = {
+	.type = PICTURE8BIT,
+	.seqNum = 1,
+	.x = 16,
+	.y = 16,
+	.colormap = (const uint16_t *) bricks_colormap,
+	.pixel = (const unsigned char *) bricks_data,
+};
+/* End of code generated by png-to-badge-asset from badgey_assets/bricks.png Sat Apr 13 11:09:27 2024 */
+
+/* Begin code generated by png-to-badge-asset from ../source/apps/badgey_assets/desert.png Sat Apr 13 14:09:24 2024. */
+static const uint16_t desert_colormap[13] = {
+	0x9bcb, 0x938b, 0xa40d, 0x938a, 0x9349, 0x934a, 0x9bcc, 0x9c0d, 0xa44e, 0xa40e, 0xac4f, 0x9b8b,
+	0x9c0c,
+}; /* 13 values */
+
+static const uint8_t desert_data[256] = {
+	0, 1, 2, 2, 0, 3, 0, 2, 0, 3, 4, 5, 0, 0, 6, 6, 7, 2, 8, 2,
+	0, 3, 1, 1, 3, 1, 4, 4, 1, 3, 6, 2, 9, 2, 0, 1, 3, 5, 3, 3,
+	3, 3, 4, 4, 3, 5, 6, 10, 2, 1, 3, 3, 3, 3, 11, 0, 11, 3, 3, 3,
+	3, 3, 6, 8, 0, 4, 3, 11, 0, 6, 0, 6, 0, 3, 3, 0, 0, 11, 6, 2,
+	3, 4, 4, 6, 2, 6, 0, 6, 0, 3, 3, 1, 6, 6, 2, 7, 11, 1, 3, 12,
+	2, 6, 6, 12, 0, 3, 0, 0, 6, 6, 2, 7, 11, 11, 3, 11, 6, 6, 2, 6,
+	3, 3, 2, 6, 1, 1, 6, 2, 0, 3, 4, 5, 0, 0, 6, 6, 0, 1, 2, 2,
+	0, 3, 0, 2, 3, 1, 4, 4, 1, 3, 6, 2, 7, 2, 8, 2, 0, 3, 1, 1,
+	3, 3, 4, 4, 3, 5, 6, 10, 9, 2, 0, 1, 3, 5, 3, 3, 11, 3, 3, 3,
+	3, 3, 6, 8, 2, 1, 3, 3, 3, 3, 11, 0, 0, 3, 3, 0, 0, 11, 6, 2,
+	0, 4, 3, 11, 0, 6, 0, 6, 0, 3, 3, 1, 6, 6, 2, 7, 3, 4, 4, 6,
+	2, 6, 0, 6, 0, 3, 0, 0, 6, 6, 2, 7, 11, 1, 3, 12, 2, 6, 6, 12,
+	3, 3, 2, 6, 1, 1, 6, 2, 11, 11, 3, 11, 6, 6, 2, 6,
+}; /* 256 values */
+
+static const struct asset2 desert = {
+	.type = PICTURE8BIT,
+	.seqNum = 1,
+	.x = 16,
+	.y = 16,
+	.colormap = (const uint16_t *) desert_colormap,
+	.pixel = (const unsigned char *) desert_data,
+};
+/* End of code generated by png-to-badge-asset from ../source/apps/badgey_assets/desert.png Sat Apr 13 14:09:24 2024 */
+
+/* Begin code generated by png-to-badge-asset from badgey_assets/woodfloor.png Sun Apr 14 10:32:36 2024. */
+static const uint16_t woodfloor_colormap[2] = {
+	0x8205, 0xa2c7,
+}; /* 2 values */
+
+static const uint8_t woodfloor_data[256] = {
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+	1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+	1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1,
+	0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1,
+	1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+	1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+}; /* 256 values */
+
+static const struct asset2 woodfloor = {
+	.type = PICTURE8BIT,
+	.seqNum = 1,
+	.x = 16,
+	.y = 16,
+	.colormap = (const uint16_t *) woodfloor_colormap,
+	.pixel = (const unsigned char *) woodfloor_data,
+};
+/* End of code generated by png-to-badge-asset from badgey_assets/woodfloor.png Sun Apr 14 10:32:36 2024 */
+
+
 static struct player {
 	struct badgey_world const *world; /* current world */
 	int x, y; /* coords in current world */
 	int world_level;
 	struct badgey_world const *old_world[5];
 	int wx[5], wy[5]; /* coords at each level */
+	int in_town;
 } player = {
 	.world = &space,
 	.x = 32,
@@ -761,6 +936,7 @@ static struct player {
 	.old_world = { 0 },
 	.wx = { 0 },
 	.wy = { 0 },
+	.in_town = 0,
 };
 
 /* Program states.  Initial state is BADGEY_INIT */
@@ -768,8 +944,26 @@ enum badgey_state_t {
 	BADGEY_INIT,
 	BADGEY_PLANET_MENU,
 	BADGEY_RUN,
+	BADGEY_ENTER_TOWN_OR_CAVE,
 	BADGEY_EXIT,
 };
+
+static int wrap(int v)
+{
+	if (v < 0)
+		v += 64;
+	if (v > 63)
+		v -= 64;
+	return v;
+}
+
+/* What character is on the map at (x + dx, y + dy), making the arithmetic wrap */
+static char whats_there(const char *map, int x, int y, int dx, int dy)
+{
+	x = wrap(x + dx);
+	y = wrap(y + dy);
+	return map[y * 64 + x];
+}
 
 static enum badgey_state_t badgey_state = BADGEY_INIT;
 static int screen_changed = 0;
@@ -834,11 +1028,10 @@ static void check_buttons(void)
 			}
 		}
 	} else {
-		/* Prevent player from traversing water or mountains */
-		if (player.world->wm[windex(newx, newy)] == 'w' ||
-			player.world->wm[windex(newx, newy)] == 'm') {
+		char x = player.world->wm[windex(newx, newy)];
+		/* Prevent player from traversing water or mountains or signage or walls */
+		if (x == 'w' || x == 'm' || x == '_' || (x >= 'A' && x <= 'Z') || x == '#')
 			return;
-		}
 	}
 	if (newx != player.x || newy != player.y) {
 		player.x = newx;
@@ -846,6 +1039,23 @@ static void check_buttons(void)
 		player.wx[player.world_level] = newx;
 		player.wy[player.world_level] = newy;
 		screen_changed = 1;
+
+		if (player.in_town) {
+			/* Is player leaving town? */
+			if (player.x < 3 || player.x > 60 || player.y < 3 || player.y > 60) {
+				/* leave town */
+				struct badgey_world const *old_world = player.old_world[player.world_level];
+				if (old_world) {
+					player.world = old_world;
+					player.world_level--;
+					player.x = player.wx[player.world_level];
+					player.y = player.wy[player.world_level];
+					badgey_state = BADGEY_RUN;
+					/* global */ screen_changed = 1;
+					player.in_town = 0;
+				}
+			}
+		}
 	}
 }
 
@@ -854,22 +1064,23 @@ static void draw_cell(int x, int y, unsigned char c)
 {
 	FbMove(x, y);
 	switch (c) {
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':
+	case '_':
+	case 'A' ... 'Z':
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
+		FbHorizontalLine(x, y, x + 16, y);
+		FbHorizontalLine(x, y + 15, x + 16, y + 15);
+		FbMove(x + 4, y + 4);
+		if (c != '_')
+			FbCharacter(c);
+		break;
+	case '0' ... '9':
 		if (player.world->type == WORLD_TYPE_SPACE) { /* player is in space?  it's a planet */
 			FbImage2(&planet, 0);
 		} else {
 			/* Not in space, so ... */
-			if ((c - '0') % 2 == 0)
-				FbCharacter((unsigned char) 'T'); /* ... it's a town ... */
+			if ((c - '0') < 5)
+				FbImage2(&town, 0);
 			else
 				FbCharacter((unsigned char) 'C'); /* ... or it's a cave. */
 		}
@@ -885,14 +1096,26 @@ static void draw_cell(int x, int y, unsigned char c)
 	case 'w':
 		FbImage2(&water, 0);
 		break;
+	case 'd':
+		FbImage2(&desert, 0);
+		break;
 	case 'f':
 		FbImage2(&tree, 0);
 		break;
 	case 'm':
 		FbImage2(&mountain, 0);
 		break;
-	case 'B':
+	case '#':
+		FbImage2(&wall, 0);
+		break;
+	case 'b':
+		FbImage2(&bricks, 0);
+		break;
+	case '@':
 		FbImage2(&badgey, 0);
+		break;
+	case '=':
+		FbImage2(&woodfloor, 0);
 		break;
 	default:
 		FbCharacter((unsigned char) '?'); /* unknown */
@@ -923,11 +1146,11 @@ static int visibility_evaluator(int x, int y, void *cookie)
 	if (y < 0)
 		y += 64;
 	char c = player.world->wm[windex(x, y)];
-	if (c == 'm' || c == 'f') {/* mountains and forest block visibility */
+	if (c == 'm' || c == 'f' || c == '#' || (c >= '0' && c <= '9')) { /* mountains, forest, towns/caves block visibility */
 		d->answer = 0;
-		return 1;
+		return 1; /* stop bline algorithm */
 	}
-	return 0;
+	return 0; /* continue bline algorithm */
 }
 
 static int visibility_check(int px, int py, int x, int y)
@@ -984,7 +1207,7 @@ static void draw_screen(void)
 		}
 	} while (1);
 
-	draw_cell(16 * 3, 16 * 4, 'B');
+	draw_cell(16 * 3, 16 * 4, '@');
 
 	char buf[20];
 	snprintf(buf, sizeof(buf), "(%d, %d)", player.x, player.y);
@@ -998,14 +1221,20 @@ static void draw_screen(void)
 static void badgey_planet_menu(void)
 {
 	static int local_screen_changed = 1;
+	int underchar = player.world->wm[windex(player.x, player.y)];
 	static int menu_setup = 0;
 
 	if (!menu_setup) {
 		dynmenu_clear(&planet_menu);
 		dynmenu_init(&planet_menu, planet_menu_item, ARRAY_SIZE(planet_menu_item));
 		strcpy(planet_menu.title, "");
-		dynmenu_add_item(&planet_menu, "BLAST_OFF", BADGEY_RUN, 0);
-		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT, 1);
+		dynmenu_add_item(&planet_menu, "BLAST OFF", BADGEY_RUN, 0);
+		if (underchar >= '0' && underchar <= '4')
+			dynmenu_add_item(&planet_menu, "ENTER TOWN", BADGEY_RUN, 1);
+		if (underchar >= '5' && underchar <= '9')
+			dynmenu_add_item(&planet_menu, "ENTER CAVE", BADGEY_RUN, 1);
+		dynmenu_add_item(&planet_menu, "NEVERMIND", BADGEY_RUN, 2);
+		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT, 3);
 		menu_setup = 1;
 	}
 
@@ -1033,14 +1262,28 @@ static void badgey_planet_menu(void)
 					/* global */ screen_changed = 1;
 					local_screen_changed = 1;
 				}
+				menu_setup = 0;
 			}
 			break;
-		case 1: /* quit */
+		case 1: /* Enter town or cave */
+			menu_setup = 0;
+			if (underchar >= '0' && underchar <= '9')
+				badgey_state = BADGEY_ENTER_TOWN_OR_CAVE;
+			else
+				badgey_state = BADGEY_RUN;
+			break;
+		case 2: /* nevermind */
+			menu_setup = 0;
+			badgey_state = BADGEY_RUN;
+			local_screen_changed = 1;
+			/* global */ screen_changed = 1;
+			break;
+		case 3: /* quit */
 			local_screen_changed = 1;
 			/* global */ screen_changed = 1;
 			badgey_state = BADGEY_EXIT;
+			menu_setup = 0;
 			break;
-			
 		}
 	}
 	if (local_screen_changed)
@@ -1049,8 +1292,639 @@ static void badgey_planet_menu(void)
 
 static void badgey_run(void)
 {
-	check_buttons();
 	draw_screen();
+	FbPushBuffer();
+	check_buttons();
+}
+
+enum townfeature {
+	town_ponds = 1 << 1,
+	town_creek = 1 << 2,
+	town_armoury = 1 << 4,
+	town_weapons = 1 << 5,
+	town_hackerspace = 1 << 6,
+	town_temple = 1 << 7,
+	town_inn = 1 << 9, /* for saving game progress to flash? */
+};
+
+static const struct town_info {
+	const char *name;
+	uint32_t feature;
+} towninfo[] = {
+	/* on planet 0 "OSSARIA" */
+	{ "ZONNU",
+		town_ponds | town_armoury | town_temple | town_inn,
+	},
+	{ "QUAZON",
+		town_creek | town_armoury | town_weapons,
+	},
+	{ "DORVO",
+		town_armoury | town_temple | town_weapons,
+	},
+	{ "BALF",
+		town_ponds | town_armoury | town_weapons | town_hackerspace,
+	},
+	{ "ONVAL",
+		town_creek | town_weapons | town_armoury | town_temple,
+	},
+
+	/* on planet 1 "NW42" */
+	{ "SURSEE",
+		town_armoury | town_temple | town_weapons,
+	},
+	{ "CALEV",
+		town_creek | town_weapons | town_armoury | town_temple,
+	},
+	{ "NORJIG",
+		town_ponds | town_armoury | town_weapons | town_hackerspace,
+	},
+	{ "KALFO",
+		town_creek | town_armoury | town_weapons,
+	},
+	{ "BURNIP",
+		town_ponds | town_armoury | town_temple | town_inn,
+	},
+
+	/* on planet 2 "BORTON" */
+	{ "WASSU",
+		town_creek | town_weapons | town_armoury | town_temple,
+	},
+	{ "JARLS",
+		town_ponds | town_armoury | town_temple | town_inn,
+	},
+	{ "KORVIN",
+		town_armoury | town_temple | town_weapons,
+	},
+	{ "LAKNIV",
+		town_ponds | town_armoury | town_weapons | town_hackerspace,
+	},
+	{ "NEPHEST",
+		town_creek | town_armoury | town_weapons,
+	},
+
+	/* on planet 3 "SKANG" */
+	{ "HOJAX",
+		town_ponds | town_armoury | town_weapons | town_hackerspace,
+	},
+	{ "SPEVO",
+		town_armoury | town_temple | town_weapons,
+	},
+	{ "TORXUN",
+		town_creek | town_armoury | town_weapons,
+	},
+	{ "TALSU",
+		town_ponds | town_armoury | town_temple | town_inn,
+	},
+	{ "MERODOX",
+		town_creek | town_weapons | town_armoury | town_temple,
+	},
+
+	/* on planet 3 "GNARG" */
+	{ "JALTA",
+		town_creek | town_armoury | town_weapons,
+	},
+	{ "SPINU",
+		town_ponds | town_armoury | town_weapons | town_hackerspace,
+	},
+	{ "ILATI",
+		town_armoury | town_temple | town_weapons,
+	},
+	{ "FRUNTZ",
+		town_creek | town_weapons | town_armoury | town_temple,
+	},
+	{ "YARNOW",
+		town_ponds | town_armoury | town_temple | town_inn,
+	},
+};
+
+const char *hackerspacename[] = {
+	"SEGVAULT",
+	"BODGERY",
+	"HACKALOT",
+	"HACKHAUS",
+	"COREDUMP",
+
+	"CHAOSCLUB",
+	"NOIZBRIDGE",
+	"HACKDEN",
+	"KLUDGERY",
+	"GROKHAUS",
+
+	"KAOSDORF",
+	"HACKRVA",
+	"SIGTRAP",
+	"PAGEFAULT",
+	"CPU_THREEPIO",
+
+	"TXRXLABS",
+	"FORKBOMB",
+	"STACKTRACE",
+	"DEADBEEF",
+	"NULLPTR",
+
+	"VOIDSTAR",
+	"REZISTOR",
+	"NERDCLUB",
+	"SIGSEGV",
+	"OHMS_LAW",
+};
+
+const char *weapons_store_name[] = {
+	"WEAPONS",
+	"ARMAMENTS",
+	"ARMS_INC",
+	"BLASTERS",
+	"GUNS_N_STUF",
+};
+
+const char *armoury_name[] = {
+	"ARMOR",
+	"ARMOR_INC",
+	"SHIELDS",
+	"HELMSHIELD",
+	"BLASTPROOF",
+};
+
+const char *pubname[] = {
+	"BABELFISH",
+	"SPACE_BAR",
+	"TRADER_VI",
+	"PLANETFALL",
+	"BAR_ZERO",
+
+	"CANTINA_X",
+	"SCOOTERS",
+	"RED_DWARF",
+	"SCOTTYS",
+	"GOLDEN_HART",
+
+	"KRYTENS",
+	"TECH_NOIR",
+	"ALS_ALES",
+	"MILLIWAYS",
+	"QUARKS",
+
+	"TRIBBLES",
+	"EMOHAWK_PUB",
+	"NOSTROMO_BAR",
+	"MAGRATHEA",
+	"SOLOS_SUDS",
+
+	"DAGOBAH",
+	"SERENITY",
+	"PAN_GALACTIC",
+	"TEN_FOUR",
+	"MOES_BAR",
+};
+
+static int paint_town(int x, int y, void *cookie)
+{
+	char *c = cookie;
+	dynmap[windex(x, y)] = *c;
+	return 0;
+}
+
+static void paint_hline(int x1, int y, int x2, char c)
+{
+	int t;
+	if (x1 > x2) {
+		t = x1;
+		x1 = x2;
+		x2 = t;
+	}
+	for (int i = x1; i <= x2; i++)
+		dynmap[windex(i, y)] = c;
+}
+
+static void paint_vline(int x, int y1, int y2, char c)
+{
+	int t;
+	if (y1 > y2) {
+		t = y1;
+		y1 = y2;
+		y2 = t;
+	}
+	for (int i = y1; i <= y2; i++)
+		dynmap[windex(x, i)] = c;
+}
+
+/* Paint a line using char c of width w from x1 to y1
+ * This is used to create roads, streams, walls, and so on in towns.
+ */
+static void paint_wide_line(int x1, int y1, int x2, int y2, int w, char c)
+{
+	int dx, dy;
+	int xa, ya, xb, yb;
+
+	dx = abs(x2 - x1);
+	dy = abs(y2 - y1);
+	if (dy > dx) { /* a mostly vertical line */
+		xa = x1 - w / 2;
+		xb = x2 - w / 2;
+		for (int i = 0; i < w; i++) {
+			bline(xa, y1, xb, y2, paint_town, &c);
+			xa++;
+			xb++;
+		}
+	} else { /* a mostly horizontal line */
+		ya = y1 - w / 2;
+		yb = y2 - w / 2;
+		for (int i = 0; i < w; i++) {
+			bline(x1, ya, x2, yb, paint_town, &c);
+			ya++;
+			yb++;
+		}
+	}
+}
+
+/* Return true if we find a char that blocks a building from being constructed*/
+static int building_blocking_char(char c, char roadchar)
+{
+	if (c == roadchar) /* don't build on top of roads */
+		return 1;
+	if (c >= 'A' && c <= 'Z') /* don't build on top of signage */
+		return 1;
+	if (c == '_') /* don't build on top of signage */
+		return 1;
+	if (c == '#') /* don't build on top of walls */
+		return 1;
+	if (c == '=') /* don't build on top of other building's floors */
+		return 1;
+	return 0; /* must be ok to build here. */
+}
+
+/* Check that a building location is not blocked by something important */
+static int building_location_ok(int x, int y, int w, int h, char roadchar)
+{
+	/* First check the four corners to more quickly reject bad locations */
+	if (building_blocking_char(dynmap[windex(x, y)], roadchar))
+		return 0;
+	if (building_blocking_char(dynmap[windex(x + w - 1, y)], roadchar))
+		return 0;
+	if (building_blocking_char(dynmap[windex(x, y + h - 1)], roadchar))
+		return 0;
+	if (building_blocking_char(dynmap[windex(x + w - 1, y + h - 1)], roadchar))
+		return 0;
+
+	/* Since roads are contiguous, we only have to check the borders of the building */
+
+	/* Check top edge */
+	for (int i = x; i < x + w - 2; i++)
+		if (building_blocking_char(dynmap[windex(i, y)], roadchar))
+			return 0;
+	/* check bottom edge */
+	for (int i = x; i < x + w - 2; i++)
+		if (building_blocking_char(dynmap[windex(i, y + h - 1)], roadchar))
+			return 0;
+	/* check left edge */
+	for (int i = y + 1; i < y + h - 2; i++)
+		if (building_blocking_char(dynmap[windex(x, i)], roadchar))
+			return 0;
+	/* check right edge */
+	for (int i = y + 1; i < y + h - 2; i++)
+		if (building_blocking_char(dynmap[windex(x + w - 1, i)], roadchar))
+			return 0;
+	return 1; /* nothing blocking, ok to build here */
+}
+
+static int distance_to_road(int x, int y, int xo, int yo, char roadchar)
+{
+	int i = 1;
+
+	do {
+		int tx = x + i * xo;
+		int ty = y + i * yo;
+		if (tx <= 6 || tx >= 58 || ty <= 6 || ty >= 58)
+			return 1000000; /* infinite distance */
+		char ch = dynmap[windex(tx, ty)];
+		if (ch == roadchar)
+			return i;
+		if (ch == '#')
+			return 1000000; /* can't go through walls */
+		if ((ch >= 'A' && ch <= 'Z') || ch == '_')
+			return 1000000; /* can't go through signage */
+		i++;
+	} while (i < 64);
+	return 100000;
+}
+
+/* Creates a door in a new building and connects that door to the nearest existing
+ * road with more road.  Returns 0-3 if the door was added on the top, right, bottom
+ * or left, respectively. */
+static int connect_building_to_road(int x, int y, int w, int h, int roadchar)
+{
+	int rc = 0;
+	static const signed char xo[] = { 0, 1, 0, -1 };
+	static const signed char yo[] = { -1, 0, 1, 0 };
+	int d[4];
+	int min, ans;
+	int sx[4] = { x + w / 2, x + w, x + w / 2, x - 1 };
+	int sy[4] = { y - 1, y + h / 2, y + h, y + h / 2 };
+
+	for (int i = 0; i < 4; i++)
+		d[i] = distance_to_road(sx[i], sy[i], xo[i], yo[i], roadchar);
+
+	min = 1000;
+	ans = -1;
+	for (int i = 0; i < 4; i++) {
+		if (min > d[i]) {
+			min = d[i];
+			ans = i;
+		}
+	}
+	if (ans == -1) { /* Ok, fine.  Just put in a doors on the sides and forget the road */
+		dynmap[windex(x, y + h / 2)] = '=';
+		dynmap[windex(x + w - 1, y + h / 2)] = '=';
+		rc = 1; /* left door */
+	} else {
+		for (int i = -1; i < d[ans]; i++) /* -1 to start at the wall of the building to put in a door */
+			dynmap[windex(sx[ans] + i * xo[ans], sy[ans] + i * yo[ans])] =
+				i == -1 ? '=' : roadchar;
+		rc = ans;
+	}
+	return rc;
+}
+
+static int generate_building(const char *name, char roadchar, unsigned int *seed)
+{
+
+	int x, y, h, w, i;
+
+	h = 6;
+	w = strlen(name) + 2;
+	/* choose building location */
+	i = 0;
+	do {
+		x = xorshift(seed) % 42 + 8;
+		y = xorshift(seed) % 42 + 8;
+		i++;
+	} while (!building_location_ok(x, y, w, h, roadchar) && i < 100);
+	if (i >= 100) {
+#ifdef TARGET_SIMULATOR
+		printf("Failed to find building location for %s\n", name);
+#endif
+		return -1;
+	}
+#ifdef TARGET_SIMULATOR
+	printf("building location took %d iterations\n", i);
+#endif
+	paint_hline(x, y, x + w - 1, '#'); /* top wall */
+	paint_hline(x, y + h - 1, x + w - 1, '#'); /* bottom wall */
+	paint_vline(x, y + 1, y + h - 2, '#'); /* left wall */
+	paint_vline(x + w - 1, y + 1, y + h - 2, '#'); /* right wall */
+	for (i = 1; i <= h - 2; i++) /* do the floor */
+			paint_hline(x + 1, y + i, x + w - 2, '=');
+	int rc = connect_building_to_road(x, y, w, h, roadchar);
+	/* rc is 0, 1, 2 or 3 depending if door was top, right, bottom or left, respectively. */
+	if (rc == 0) {/* door in top wall */
+		/* put name at bottom part of building */
+		memcpy(&dynmap[windex(x + 1, y + h - 3)], name, strlen(name));
+	} else { /* door not in top wall */
+		/* put name at top part of building */
+		memcpy(&dynmap[windex(x + 1, y + 2)], name, strlen(name));
+	}
+	
+	return 0;
+}
+
+static void fractal_road(int x1, int y1, int x2, int y2, int width, char roadchar, unsigned int *seed)
+{
+	int mx, my;
+	int dx, dy, d2;
+	int rx, ry;
+
+	dx = abs(x1 - x2);
+	dy = abs(y1 - y2);
+	d2 = dx * dx + dy * dy;
+
+	if (d2 < (2 * width) * (2 * width)) {
+		paint_wide_line(x1, y1, x2, y2, width, roadchar);
+		return;
+	}
+
+	if (x1 < x2)
+		mx = x1 + (x2 - x1) / 2;
+	else
+		mx = x2 + (x1 - x2) / 2;
+	if (y1 < y2)
+		my = y1 + (y2 - y1) / 2;
+	else
+		my = y2 + (y1 - y2) / 2;
+
+	rx = dx / 3;
+	ry = dy / 3;
+	if (rx > 0)
+		rx = xorshift(seed) % rx;
+	if (ry > 0)
+		ry = xorshift(seed) % ry;
+	mx = mx + rx;
+	my = my + ry;
+
+	fractal_road(x1, y1, mx, my, width, roadchar, seed);
+	fractal_road(mx, my, x2, y2, width, roadchar, seed);
+}
+
+static void generate_road_system(unsigned int *seed, int roadwidth, int roadchar)
+{
+	int x0, y0, x1, y1, x2, y2, x3, y3;
+
+	x0 = 20; y0 = 32;
+	x1 = 20; y1 = 8;
+	x2 = 58; y2 = 20;
+	x3 = 20; y3 = 56;
+
+	x1 += (xorshift(seed) % 24);
+	x3 += (xorshift(seed) % 24);
+	y2 += (xorshift(seed) % 24);
+
+	fractal_road(x0, y0, x1, y1, roadwidth, roadchar, seed);
+	fractal_road(x1, y1, x2, y2, roadwidth, roadchar, seed);
+	fractal_road(x2, y2, x3, y3, roadwidth, roadchar, seed);
+	fractal_road(x3, y3, x0, y0, roadwidth, roadchar, seed);
+	if (xorshift(seed) % 2)
+		fractal_road(x1, y1, x3, y3, roadwidth, roadchar, seed);
+	if (xorshift(seed) % 2)
+		fractal_road(x0, y0, x2, y2, roadwidth, roadchar, seed);
+}
+
+static void add_creek_to_town(unsigned int *seed)
+{
+	int x1, y1, x2, y2;
+
+	if (xorshift(seed) & 0x01) {
+		x1 = 0;
+		x2 = 63;
+		y1 = xorshift(seed) % 54 + 5;
+		y2 = xorshift(seed) % 54 + 5;
+		paint_wide_line(x1, y1, x2, y2, 5, 'w');
+	} else {
+		x1 = xorshift(seed) % 54 + 5;
+		x2 = xorshift(seed) % 54 + 5;
+		y1 = 0;
+		y2 = 63;
+		paint_wide_line(x1, y1, x2, y2, 5, 'w');
+	}
+}
+
+static void generate_town(int town_number)
+{
+	int x, y;
+	unsigned int seed;
+	int treecount = 0;
+
+	x = player.x;
+	y = player.y;
+
+	char left = whats_there(player.world->wm, x, y, -1, 0);
+	char right = whats_there(player.world->wm, x, y, 1, 0);
+	char up = whats_there(player.world->wm, x, y, 0, -1);
+	char down = whats_there(player.world->wm, x, y, 0, -1);
+
+	treecount = ((up == 'f') + (right == 'f') + (left == 'f') + (down == 'f'));
+	switch (treecount) {
+	case 0:
+		treecount = 100;
+		break;
+	case 1:
+		treecount = 200;
+		break;
+	case 2:
+		treecount = 400;
+		break;
+	case 3:
+		treecount = 800;
+		break;
+	case 4:
+		treecount = 1600;
+		break;
+	}
+	memset(dynmap, '.', sizeof(dynmap)); /* cover the map with grass */
+	memset(dynmap, '.', sizeof(dynmap)); /* cover the map with grass */
+
+	/* cover topmost 5 rows of map with what's up */
+	paint_wide_line(0, 2, 63, 2, 5, up);
+	/* cover bottommost 5 rows of map with what's down */
+	paint_wide_line(0, 60, 63, 60, 5, down);
+	/* cover leftmost 5 cols of map with what's left */
+	paint_wide_line(2, 0, 2, 63, 5, left);
+	/* cover rightmost 5 cols of map with what's right */
+	paint_wide_line(61, 0, 61, 63, 5, right);
+
+	seed = (player.x + 64 * player.y * (town_number + 1)) ^ 0x5a5a5a5a;
+
+	/* Sprinkle some trees around randomly */
+	for (int i = 0; i < treecount; i++) {
+		int tx = (xorshift(&seed) % 54) + 5;
+		int ty = (xorshift(&seed) % 54) + 5;
+		dynmap[windex(tx, ty)] = 'f';
+	}
+
+	/* Put a sign at the town entrance */
+	/* Figure which world we are on. */
+	int world_no = -1;
+	for (size_t i = 0; i < ARRAY_SIZE(space.subworld); i++)
+		if (player.world == space.subworld[i]) {
+			world_no = i;
+			break;
+		}
+#ifdef __linux
+	if (world_no == -1) {
+		printf("BUG detected at %s:%d, planet %s not in space.subworld\n",
+				__FILE__, __LINE__, player.world->name);
+		raise(SIGTRAP); /* trigger gdb, in case we're running under gdb. */
+	}
+#endif
+	int town = town_number + (world_no * 5);
+
+
+	int has_moat = ((xorshift(&seed) % 100) < 25);
+	int has_wall = ((xorshift(&seed) % 100) < 25);
+
+	if (has_moat) { /* paint moat surrounding town */
+		paint_wide_line(2, 0, 2, 63, 3, 'w');
+		paint_wide_line(62, 0, 62, 63, 3, 'w');
+		paint_wide_line(0, 2, 63, 2, 3, 'w');
+		paint_wide_line(0, 62, 63, 62, 3, 'w');
+	}
+
+	if (has_wall) { /* paint wall surrounding town */
+		paint_wide_line(4, 0, 4, 63, 3, '#');
+		paint_wide_line(60, 0, 60, 63, 3, '#');
+		paint_wide_line(0, 4, 63, 4, 3, '#');
+		paint_wide_line(0, 60, 63, 60, 3, '#');
+	}
+
+	if (towninfo[town].feature & town_creek)
+		add_creek_to_town(&seed);
+
+	char roadchar = (xorshift(&seed) % 2) ? 'd' : 'b';
+	int roadwidth = (xorshift(&seed) % 3) + 3;
+	paint_wide_line(0, 32, 20, 32, roadwidth, roadchar); /* build road into town, piercing moat & wall, if any. */
+	generate_road_system(&seed, roadwidth, roadchar);
+
+	/* Write the "welcome to such-and-such town" sign */
+	char *l = &dynmap[windex(8, 28)];
+	memcpy(l, "WELCOME", 7);
+	l = &dynmap[windex(8, 29)];
+	memcpy(l, "TO_", 3);
+	l += 3;
+	memcpy(l, towninfo[town].name, strlen(towninfo[town].name));
+
+	/* Generate buildings */
+	generate_building(pubname[town], roadchar, &seed);
+	generate_building("INN", roadchar, &seed);
+	if (towninfo[town].feature & town_hackerspace)
+		generate_building(hackerspacename[town], roadchar, &seed);
+	if (towninfo[town].feature & town_weapons)
+		generate_building(weapons_store_name[town % 5], roadchar, &seed);
+	if (towninfo[town].feature & town_armoury)
+		generate_building(armoury_name[town % 5], roadchar, &seed);
+	if (towninfo[town].feature & town_temple)
+		generate_building("TEMPLE", roadchar, &seed);
+	
+}
+
+static void enter_dynmap(void)
+{
+	player.world_level++;
+	player.wx[player.world_level] = player.x;
+	player.wy[player.world_level] = player.y;
+	player.old_world[player.world_level] = player.world;
+	player.x = 6;
+	player.y = 32;
+	player.world = &dynworld;
+}
+
+static void enter_town(int town_number)
+{
+	generate_town(town_number);
+	enter_dynmap();
+	player.in_town = 1;
+}
+
+static void generate_cave(int cave_number)
+{
+}
+
+static void enter_dungeon(int cave_number)
+{
+}
+
+static void enter_cave(int cave_number)
+{
+	generate_cave(cave_number);
+	enter_dungeon(cave_number);
+}
+
+static void badgey_enter_town_or_cave(void)
+{
+	int underchar = player.world->wm[windex(player.x, player.y)];
+	if (underchar >= '0' && underchar <= '4') {
+		enter_town(underchar - '0');
+	} else if (underchar >= '5' && underchar <= '9') {
+		enter_cave(underchar - '0');
+	}
+	badgey_state = BADGEY_RUN;
 }
 
 static void badgey_exit(void)
@@ -1074,6 +1948,9 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_EXIT:
 		badgey_exit();
+		break;
+	case BADGEY_ENTER_TOWN_OR_CAVE:
+		badgey_enter_town_or_cave();
 		break;
 	default:
 		break;
