@@ -103,6 +103,8 @@ int pdm_microphone_init(const struct pdm_microphone_config* config) {
     pdm_mic.filter.Gain = 16;
 
     pdm_mic.filter_volume = pdm_mic.filter.MaxVolume;
+
+    return 0;
 }
 
 void pdm_microphone_deinit() {
@@ -155,6 +157,8 @@ int pdm_microphone_start() {
         pdm_mic.config.pio_sm,
         true
     );
+
+    return 0;
 }
 
 void pdm_microphone_stop() {
@@ -234,9 +238,9 @@ int pdm_microphone_read(int16_t* buffer, size_t samples) {
 
     pdm_mic.raw_buffer_read_index++;
 
-    for (int i = 0; i < samples; i += filter_stride) {
+    for (size_t i = 0; i < samples; i += filter_stride) {
 #if PDM_DECIMATION == 64
-        Open_PDM_Filter_64(in, out, pdm_mic.filter_volume, &pdm_mic.filter);
+        Open_PDM_Filter_64(in, (uint16_t *) out, pdm_mic.filter_volume, &pdm_mic.filter);
 #elif PDM_DECIMATION == 128
         Open_PDM_Filter_128(in, out, pdm_mic.filter_volume, &pdm_mic.filter);
 #else
