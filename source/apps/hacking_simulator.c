@@ -79,7 +79,6 @@ enum hacking_simulator_state_t
 	HACKINGSIMULATOR_WIN_SCREEN,
 	HACKINGSIMULATOR_FAIL_SCREEN,
 	HACKINGSIM_QUIT_CONFIRM,
-	HACKINGSIM_QUIT_INPUT,
 	HACKINGSIMULATOR_EXIT,
 };
 
@@ -1068,40 +1067,24 @@ static struct dynmenu_item quitmenu_item[2];
 
 static void hackingsimulator_quit_confirm(void)
 {
-	dynmenu_init(&quitmenu, quitmenu_item, ARRAYSIZE(quitmenu_item));
-	dynmenu_clear(&quitmenu);
-	strcpy(quitmenu.title, "HACKING SIM");
-	strcpy(quitmenu.title2, "REALLY QUIT?");
-	dynmenu_add_item(&quitmenu, "NO", HACKINGSIMULATOR_RUN, 0);
-	dynmenu_add_item(&quitmenu, "YES", HACKINGSIMULATOR_EXIT, 0);
-	quitmenu.menu_active = 1;
-	dynmenu_draw(&quitmenu);
-	FbSwapBuffers();
-	hacking_simulator_state = HACKINGSIM_QUIT_INPUT;
-}
+	static int menu_setup = 0;
 
-static void hackingsimulator_quit_input(void)
-{
-	int down_latches = button_down_latches();
-	int r0 = button_get_rotation(0);
-
-	if (
-#if BADGE_HAS_ROTARY_SWITCHES
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-#endif
-		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)
-	) {
-		hacking_simulator_state =
-			(enum hacking_simulator_state_t) quitmenu.item[quitmenu.current_item].next_state;
+	if (!menu_setup) {
+		dynmenu_init(&quitmenu, quitmenu_item, ARRAYSIZE(quitmenu_item));
+		dynmenu_clear(&quitmenu);
+		dynmenu_set_title(&quitmenu, "HACKING SIM", "REALLY QUIT?", "");
+		dynmenu_add_item(&quitmenu, "NO", HACKINGSIMULATOR_RUN, 0);
+		dynmenu_add_item(&quitmenu, "YES", HACKINGSIMULATOR_EXIT, 1);
+		menu_setup = 1;
+	}
+	if (!dynmenu_let_user_choose(&quitmenu))
 		return;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || r0 < 0) {
-		dynmenu_change_current_selection(&quitmenu, -1);
-		dynmenu_draw(&quitmenu);
-		FbSwapBuffers();
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || r0 > 0) {
-		dynmenu_change_current_selection(&quitmenu, 1);
-		dynmenu_draw(&quitmenu);
-		FbSwapBuffers();
+	switch (dynmenu_get_user_choice(&quitmenu)) {
+	case 1: hacking_simulator_state = HACKINGSIMULATOR_EXIT;
+		break;
+	case 0:
+	default: hacking_simulator_state = HACKINGSIMULATOR_RUN;
+		break;
 	}
 }
 
@@ -1129,9 +1112,6 @@ void hacking_simulator_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case HACKINGSIM_QUIT_CONFIRM:
 		hackingsimulator_quit_confirm();
-		break;
-	case HACKINGSIM_QUIT_INPUT:
-		hackingsimulator_quit_input();
 		break;
 	default:
 		break;
