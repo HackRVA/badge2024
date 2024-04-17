@@ -2771,13 +2771,12 @@ static void draw_screen(void)
 
 static void badgey_cave_menu(void)
 {
-	static int local_screen_changed = 1;
 	static int menu_setup = 0;
 
 	if (!menu_setup) {
 		dynmenu_clear(&cave_menu);
 		dynmenu_init(&cave_menu, cave_menu_item, ARRAY_SIZE(cave_menu_item));
-		strcpy(cave_menu.title, "");
+		dynmenu_set_title(&cave_menu, "", "", "");
 		if (player.x == 32 && player.y == 62)
 			dynmenu_add_item(&cave_menu, "CLIMB UP", BADGEY_RUN, 0);
 		dynmenu_add_item(&cave_menu, "NEVERMIND", BADGEY_RUN, 1);
@@ -2785,51 +2784,37 @@ static void badgey_cave_menu(void)
 		menu_setup = 1;
 	}
 
-	if (local_screen_changed)
-		dynmenu_draw(&cave_menu);
+	if (!dynmenu_let_user_choose(&cave_menu))
+		return;
 
-	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
-		dynmenu_change_current_selection(&cave_menu, -1);
-		local_screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-		dynmenu_change_current_selection(&cave_menu, 1);
-		local_screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		printf("chosen cookie = %d\n", cave_menu.chosen_cookie);
-		switch (cave_menu.chosen_cookie) {
-		case 0: /* climb up */
-			if (player.world->type == WORLD_TYPE_CAVE && player.world_level > 0) {
-				struct badgey_world const *old_world = player.old_world[player.world_level];
-				if (old_world) {
-					player.world = old_world;
-					player.world_level--;
-					player.x = player.wx[player.world_level];
-					player.y = player.wy[player.world_level];
-					badgey_state = BADGEY_RUN;
-					/* global */ screen_changed = 1;
-					local_screen_changed = 1;
-					player.in_cave = 0;
-				}
-				menu_setup = 0;
+	switch (dynmenu_get_user_choice(&cave_menu)) {
+	case 0: /* climb up */
+		if (player.world->type == WORLD_TYPE_CAVE && player.world_level > 0) {
+			struct badgey_world const *old_world = player.old_world[player.world_level];
+			if (old_world) {
+				player.world = old_world;
+				player.world_level--;
+				player.x = player.wx[player.world_level];
+				player.y = player.wy[player.world_level];
+				badgey_state = BADGEY_RUN;
+				screen_changed = 1;
+				player.in_cave = 0;
 			}
-			break;
-		case 1: /* nevermind */
 			menu_setup = 0;
-			badgey_state = BADGEY_RUN;
-			local_screen_changed = 1;
-			/* global */ screen_changed = 1;
-			break;
-		case 2: /* quit */
-			local_screen_changed = 1;
-			/* global */ screen_changed = 1;
-			badgey_state = BADGEY_EXIT;
-			menu_setup = 0;
-			break;
 		}
+		break;
+	case DYNMENU_SELECTION_ABORTED:
+	case 1: /* nevermind */
+		menu_setup = 0;
+		badgey_state = BADGEY_RUN;
+		screen_changed = 1;
+		break;
+	case 2: /* quit */
+		screen_changed = 1;
+		badgey_state = BADGEY_EXIT;
+		menu_setup = 0;
+		break;
 	}
-	if (local_screen_changed)
-		FbSwapBuffers();
 }
 
 static void badgey_town_menu(void)
@@ -2839,7 +2824,6 @@ static void badgey_town_menu(void)
 
 static void badgey_planet_menu(void)
 {
-	static int local_screen_changed = 1;
 	int underchar = player.world->wm[windex(player.x, player.y)];
 	static int menu_setup = 0;
 
@@ -2857,58 +2841,45 @@ static void badgey_planet_menu(void)
 		menu_setup = 1;
 	}
 
-	if (local_screen_changed)
-		dynmenu_draw(&planet_menu);
+	if (!dynmenu_let_user_choose(&planet_menu))
+		return;
 
-	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
-		dynmenu_change_current_selection(&planet_menu, -1);
-		local_screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-		dynmenu_change_current_selection(&planet_menu, 1);
-		local_screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		switch (planet_menu.current_item) {
-		case 0: /* blast off */
-			if (player.world->type == WORLD_TYPE_PLANET && player.world_level > 0) {
-				struct badgey_world const *old_world = player.old_world[player.world_level];
-				if (old_world) {
-					player.world = old_world;
-					player.world_level--;
-					player.x = player.wx[player.world_level];
-					player.y = player.wy[player.world_level];
-					badgey_state = BADGEY_RUN;
-					/* global */ screen_changed = 1;
-					local_screen_changed = 1;
-					creature = &space_creature[0];
-					ncreatures = &nspace_creatures;
-				}
-				menu_setup = 0;
-			}
-			break;
-		case 1: /* Enter town or cave */
-			menu_setup = 0;
-			if (underchar >= '0' && underchar <= '9')
-				badgey_state = BADGEY_ENTER_TOWN_OR_CAVE;
-			else
+	switch (dynmenu_get_user_choice(&planet_menu)) {
+	case 0: /* blast off */
+		if (player.world->type == WORLD_TYPE_PLANET && player.world_level > 0) {
+			struct badgey_world const *old_world = player.old_world[player.world_level];
+			if (old_world) {
+				player.world = old_world;
+				player.world_level--;
+				player.x = player.wx[player.world_level];
+				player.y = player.wy[player.world_level];
 				badgey_state = BADGEY_RUN;
-			break;
-		case 2: /* nevermind */
-			menu_setup = 0;
-			badgey_state = BADGEY_RUN;
-			local_screen_changed = 1;
-			/* global */ screen_changed = 1;
-			break;
-		case 3: /* quit */
-			local_screen_changed = 1;
-			/* global */ screen_changed = 1;
-			badgey_state = BADGEY_EXIT;
-			menu_setup = 0;
-			break;
+				screen_changed = 1;
+				creature = &space_creature[0];
+				ncreatures = &nspace_creatures;
+			}
+				menu_setup = 0;
 		}
+		break;
+	case 1: /* Enter town or cave */
+		menu_setup = 0;
+		if (underchar >= '0' && underchar <= '9')
+			badgey_state = BADGEY_ENTER_TOWN_OR_CAVE;
+		else
+			badgey_state = BADGEY_RUN;
+		break;
+	case DYNMENU_SELECTION_ABORTED:
+	case 2: /* nevermind */
+		menu_setup = 0;
+		badgey_state = BADGEY_RUN;
+		screen_changed = 1;
+		break;
+	case 3: /* quit */
+		screen_changed = 1;
+		badgey_state = BADGEY_EXIT;
+		menu_setup = 0;
+		break;
 	}
-	if (local_screen_changed)
-		FbSwapBuffers();
 }
 
 static void badgey_run(void)
