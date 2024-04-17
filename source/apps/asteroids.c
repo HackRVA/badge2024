@@ -596,16 +596,14 @@ static void asteroids_run(void)
 
 static void asteroids_maybe_exit(void)
 {
-	dynmenu_draw(&quitmenu);
-	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
-		dynmenu_change_current_selection(&quitmenu, 1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
-		dynmenu_change_current_selection(&quitmenu, -1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+	if (!dynmenu_let_user_choose(&quitmenu))
+		return;
+
+	int choice = dynmenu_get_user_choice(&quitmenu);
+	if (choice == DYNMENU_SELECTION_ABORTED)
+		asteroids_state = ASTEROIDS_RUN;
+	else
 		asteroids_state = quitmenu.item[quitmenu.current_item].next_state;
-	}
-	FbSwapBuffers();
 }
 
 static void asteroids_exit(void)
