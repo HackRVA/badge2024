@@ -423,24 +423,21 @@ static void smashout_game_maybe_exit(void)
 	if (!menu_setup) {
 		dynmenu_init(&exit_menu, exit_item, 2);
 		dynmenu_clear(&exit_menu);
-		strcpy(exit_menu.title, "SMASHOUT");
+		dynmenu_set_title(&exit_menu, "SMASHOUT", "", "");
 		dynmenu_add_item(&exit_menu, "PLAY GAME", SMASHOUT_GAME_PLAY, 0);
 		dynmenu_add_item(&exit_menu, "QUIT", SMASHOUT_GAME_EXIT, 1);
 		menu_setup = 1;
 	}
 
-	dynmenu_draw(&exit_menu);
-	FbSwapBuffers();
+	if (!dynmenu_let_user_choose(&exit_menu))
+		return;
 
-	int down_latches = button_down_latches();
-
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
-		dynmenu_change_current_selection(&exit_menu, 1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
-		dynmenu_change_current_selection(&exit_menu, -1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		smashout_program_state = exit_menu.item[exit_menu.current_item].next_state;
+	switch (dynmenu_get_user_choice(&exit_menu)) {
+	case 1: smashout_program_state = SMASHOUT_GAME_EXIT;
+		break;
+	case 0:
+	default: smashout_program_state = SMASHOUT_GAME_PLAY;
+		break;
 	}
 }
 
