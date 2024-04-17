@@ -886,47 +886,40 @@ static void moonpatrol_setup(void)
                 dynmenu_add_item(&setup_menu, "QUIT", MOONPATROL_SETUP, 5);
                 menu_ready = 1;
         }
-	dynmenu_draw(&setup_menu);
-	FbSwapBuffers();
 
-	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
-		dynmenu_change_current_selection(&setup_menu, 1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
-		dynmenu_change_current_selection(&setup_menu, -1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+	if (!dynmenu_let_user_choose(&setup_menu))
+		return;
 
-		int c = setup_menu.current_item;
-		switch(c) {
-		case 0:
-			score = 0;
-			moonpatrol_state = MOONPATROL_RUN;
-			if (music_on)
-				play_theme((void *) 0);
-			break;
-		case 1:
-		case 2:
-		case 3:
-			difficulty_level = c - 1;
-			for (int i = 1; i < 4; i++)
-				strcpy(setup_menu.item[i].text, level[i - 1]);
-			strcat(setup_menu.item[c].text, " <==");
-			break;
-		case 4:
-			if (music_on) {
-				music_on = 0;
-				strcpy(setup_menu.item[4].text, "MUSIC: OFF");
-				(void) flash_kv_store_int("MOONPATROL_MUSIC_PREF", music_on);
-			} else {
-				music_on = 1;
-				strcpy(setup_menu.item[4].text, "MUSIC: ON");
-				(void) flash_kv_store_int("MOONPATROL_MUSIC_PREF", music_on);
-			}
-			break;
-		case 5:
-			moonpatrol_state = MOONPATROL_EXIT;
-			break;
+	int c = dynmenu_get_user_choice(&setup_menu);
+	switch(c) {
+	case 4:
+		score = 0;
+		moonpatrol_state = MOONPATROL_RUN;
+		if (music_on)
+			play_theme((void *) 0);
+		break;
+	case 0:
+	case 1:
+	case 2:
+		difficulty_level = c;
+		for (int i = 1; i < 4; i++)
+			strcpy(setup_menu.item[i].text, level[i - 1]);
+		strcat(setup_menu.item[c + 1].text, " <==");
+		break;
+	case 3:
+		if (music_on) {
+			music_on = 0;
+			strcpy(setup_menu.item[4].text, "MUSIC: OFF");
+			(void) flash_kv_store_int("MOONPATROL_MUSIC_PREF", music_on);
+		} else {
+			music_on = 1;
+			strcpy(setup_menu.item[4].text, "MUSIC: ON");
+			(void) flash_kv_store_int("MOONPATROL_MUSIC_PREF", music_on);
 		}
+		break;
+	case 5:
+		moonpatrol_state = MOONPATROL_EXIT;
+		break;
 	}
 }
 
