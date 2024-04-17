@@ -4,6 +4,50 @@
  * where the menu items can be updated at run time.
  */
 
+/*
+
+Simple example of how to use this dynmenu thing:
+
+static void my_cool_menu(void)
+{
+	static int menu_setup = 0;
+	static struct dynmenu menu;
+	static struct dynmenu_item menu_item[5];
+
+	if (!menu_setup) {
+		dynmenu_init(&menu, menu_item, 5);
+		dynmenu_clear(&menu);
+		dynmenu_set_title(&menu, "MY COOL MENU", "", "");
+		dynmenu_add_item(&menu, "COOL CHOICE 1", 0, 1);
+		dynmenu_add_item(&menu, "COOL CHOICE 2", 0, 2);
+		dynmenu_add_item(&menu, "COOL CHOICE 3", 0, 3);
+		menu_setup = 1;
+	}
+
+	if (!dynmenu_let_user_choose(&menu))
+		return; // let dynmenu take over as runningApp for a bit
+
+	// dynmenu is done, the user has made their choice.
+	switch (dynmenu_get_user_choice(&menu)) { // get choice and reset for next time.
+	case 1:
+		do_cool_thing_1();
+		break;
+	case 2:
+		do_cool_thing_2();
+		break;
+	case 3:
+		do_cool_thing_3();
+		break;
+	case DYNMENU_SELECTION_ABORTED:
+		alright_nevermind_then();
+		break;
+	}
+}
+
+*/
+
+#include <menu.h>
+
 // defines maximum length of a menu item
 // 14 chars * 8px per char + 13 * 1px spacing + 1px start + 1px end = 127
 // +1 for trailing \0
@@ -28,6 +72,10 @@ struct dynmenu {
 	unsigned char menu_active;	/* Is this menu active? currently on screen? */
 	unsigned char chosen_cookie;	/* Contains the cookie of the most recently selected item. */
 	int color, selected_color;	/* Color of menu text and color of currently selected item. */
+#define DYNMENU_SELECTION_VOID (-1)
+#define DYNMENU_SELECTION_ABORTED (-2)
+	int selection_made;		/* For use by dynmenu_let_user_choose(). */
+	void (*original_app)(struct menu_t *menu); /* used by dynmenu_let_user_choose(). */
 };
 
 /* dynmenu_init(): Initialize a dynamic menu, dm.
@@ -49,6 +97,11 @@ void dynmenu_set_colors(struct dynmenu *dm, int color, int selected_color);
 /* Clears the menu titles and sets ->nitems = 0; */
 void dynmenu_clear(struct dynmenu *dm);
 
+/* Set the title(s) of the menu.  If title1, title2, or title3 are NULL, those
+ * titles are unchanged.  Use "" to clear a title.
+ */
+void dynmenu_set_title(struct dynmenu *dm, const char *title1, const char *title2, const char *title3);
+
 /* Adds a new item to the end of the menu. */
 void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned char cookie);
 
@@ -59,6 +112,33 @@ void dynmenu_draw(struct dynmenu *dm);
  * Typically, direction is either 1 or -1, and connected to the D-pad buttons.
  */
 void dynmenu_change_current_selection(struct dynmenu *dm, int direction);
+
+/* Temporarily take over the runningApp to get a user selection.
+ * This is meant to be called only from badge apps.
+ * When the user has made a selection, or exited the menu without
+ * selecting anything, the badge app will become the running app
+ * again, and dm->selection_made will contain one of:
+ *
+ * 1. DYNMENU_SELECTION_ABORTED - the user didn't make any selection
+ * 2. the cookie of the selected item.
+ *
+ * The badge app should usually use dynmenu_get_user_choice() to
+ * read the value of dm->selection_made, as this will automatically
+ * reset it to DYNMENU_SELECTION_VOID, to set up for the next time
+ * dynmenu_let_user_choose() will be called.
+ *
+ * Initially, (after dynmenu_init), and after dynmenu_get_user_choice()
+ * returns, dm->selection_made will contain DYNMENU_SELECTION_VOID,
+ * indicating the user hasn't even been asked to make a selection yet.
+ *
+ * Note dynmenu_let_user_choose() does NOT return what the user has
+ * chosen.  It returns 0 prior to the user having made a choice, and
+ * 1 once the user has made a choice.
+ */
+int dynmenu_let_user_choose(struct dynmenu *dm);
+
+/* Return whatever the user has chosen once dynmenu_let_user_choose has finished */
+int dynmenu_get_user_choice(struct dynmenu *dm);
 
 /* NOTES:
 

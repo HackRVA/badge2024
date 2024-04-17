@@ -7,10 +7,16 @@
 #include <string.h>
 #include <stdio.h>
 
+extern void (*runningApp)(struct menu_t *menu);
+
+static struct dynmenu *current_menu = NULL;
+
 void dynmenu_init(struct dynmenu *dm, struct dynmenu_item *item, unsigned char max_items)
 {
 	dm->item = item;
 	dm->max_items = max_items;
+	dm->selection_made = DYNMENU_SELECTION_VOID;
+	dm->original_app = runningApp; /* save current badge app */
 }
 
 void dynmenu_set_colors(struct dynmenu *dm, int color, int selected_color)
@@ -28,9 +34,21 @@ void dynmenu_clear(struct dynmenu *dm)
 	dm->current_item = 0;
 	dm->menu_active = 0;
 	dm->chosen_cookie = -1;
+	dm->selection_made = DYNMENU_SELECTION_VOID;
 }
 
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
+
+void dynmenu_set_title(struct dynmenu *dm, const char *title1,
+			const char *title2, const char *title3)
+{
+	if (title1)
+		snprintf(dm->title, DYNMENU_MAX_TITLE, "%s", title1);
+	if (title2)
+		snprintf(dm->title2, DYNMENU_MAX_TITLE, "%s", title2);
+	if (title3)
+		snprintf(dm->title3, DYNMENU_MAX_TITLE, "%s", title3);
+}
 
 void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned char cookie)
 {
@@ -110,5 +128,62 @@ void dynmenu_change_current_selection(struct dynmenu *dm, int direction)
 		new = 0;
 	dm->current_item = new;
 	dm->chosen_cookie = dm->item[dm->current_item].cookie;
+}
+
+/* This is not meant to be called by badge apps.  It is meant to be called by menu.c
+ * through the runningApp function pointer after dynmenu_let_user_choose temporarily
+ * takes over the running app to get a user selection.
+ */
+static void dynmenu_cb(__attribute__((unused)) struct menu_t *m)
+{
+	static int local_screen_changed = 1;
+
+	if (local_screen_changed) {
+		dynmenu_draw(current_menu);
+		FbSwapBuffers();
+		local_screen_changed = 0;
+	}
+        int down_latches = button_down_latches();
+        if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
+                dynmenu_change_current_selection(current_menu, -1);
+                local_screen_changed = 1;
+        } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+                dynmenu_change_current_selection(current_menu, 1);
+                local_screen_changed = 1;
+        } else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		current_menu->selection_made = current_menu->chosen_cookie;
+		runningApp = current_menu->original_app; /* switch back to badge app */
+		local_screen_changed = 1;
+	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		current_menu->selection_made = DYNMENU_SELECTION_ABORTED;
+		runningApp = current_menu->original_app; /* switch back to badge app */
+		local_screen_changed = 1;
+	}
+	/* I thought about calling current_menu->original_app() here to allow
+	 * badge apps to still do things while we're showing the menu, but it's too
+	 * fraught with problems, pitfalls and complexity. Don't do it.
+	 */
+}
+
+/* dynmenu_let_user_choose is a bit unusual.  It should only be called from within a
+ * badge app. It temporarily makes dynmenu_cb() the runningApp, allowing the user to make
+ * a selection from the menu without the badge app having to code the mechanics of drawing
+ * the menu or monitoring button presses and changing the current menu selection, etc.
+ */
+int dynmenu_let_user_choose(struct dynmenu *dm)
+{
+	if (dm->selection_made != DYNMENU_SELECTION_VOID)
+		return 1;
+	current_menu = dm;
+	current_menu->original_app = runningApp; /* just in case they didn't call dynmenu_init */
+	runningApp = dynmenu_cb; /* make menu.c call dynmenu code instead of badge app */
+	return 0;
+}
+
+int dynmenu_get_user_choice(struct dynmenu *dm)
+{
+	int rc = dm->selection_made;
+	dm->selection_made = DYNMENU_SELECTION_VOID;
+	return rc;
 }
 
