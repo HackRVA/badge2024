@@ -412,7 +412,7 @@ static void lunarlander_setup(void)
 	if (!menu_ready) {
 		dynmenu_init(&setup_menu, setup_item, 5);
 		dynmenu_clear(&setup_menu);
-		strcpy(setup_menu.title, "LUNAR RESCUE");
+		dynmenu_set_title(&setup_menu, "LUNAR RESCUE", "", "");
 		dynmenu_add_item(&setup_menu, "EASY <==", LUNARLANDER_SETUP, 0);
 		dynmenu_add_item(&setup_menu, "MEDIUM", LUNARLANDER_SETUP, 1);
 		dynmenu_add_item(&setup_menu, "HARD", LUNARLANDER_SETUP, 2);
@@ -420,32 +420,26 @@ static void lunarlander_setup(void)
 		dynmenu_add_item(&setup_menu, "QUIT", LUNARLANDER_SETUP, 4);
 		menu_ready = 1;
 	}
-	dynmenu_draw(&setup_menu);
-	FbSwapBuffers();
 
-	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
-		dynmenu_change_current_selection(&setup_menu, 1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
-		dynmenu_change_current_selection(&setup_menu, -1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		int c = setup_menu.current_item;
-		switch(c) {
-			case 0:
-			case 1:
-			case 2:
-				difficulty_level = c;
-				for (int i = 0; i < 3; i++)
-					strcpy(setup_menu.item[i].text, level[i]);
-				strcat(setup_menu.item[c].text, " <==");
-				break;
-			case 3:
-				lunarlander_state = LUNARLANDER_RUN;
-				break;
-			case 4:
-				lunarlander_state = LUNARLANDER_EXIT;
-				break;
-		}
+	if (!dynmenu_let_user_choose(&setup_menu))
+		return;
+	int c = dynmenu_get_user_choice(&setup_menu);
+	switch(c) {
+	case 0:
+	case 1:
+	case 2:
+		difficulty_level = c;
+		for (int i = 0; i < 3; i++)
+			strcpy(setup_menu.item[i].text, level[i]);
+		strcat(setup_menu.item[c].text, " <==");
+		break;
+	case 3:
+		lunarlander_state = LUNARLANDER_RUN;
+		break;
+	case 4:
+	default:
+		lunarlander_state = LUNARLANDER_EXIT;
+		break;
 	}
 }
 
