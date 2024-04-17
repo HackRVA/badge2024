@@ -335,25 +335,28 @@ struct game_state {
 
 
 static struct game_state state = {
-    false,
-    0,
-    1, // user starts w/one
-    APP_INIT,
-    false,
-    0, // set later from badge id
-    {
-        "Badge Monsters",
-        "",
-        "",
-        NULL,
-        0,
-        8,
-        0,
-        0,
-        0,
-        0xFFFFFF,
-        0x0
-    }, {}, GAME_MENU_LEVEL
+    .screen_changed = false,
+    .current_monster = 0,
+    .nmonsters = 1, // user starts w/one
+    .app_state = APP_INIT,
+    .trading_monsters_enabled = false,
+    .initial_mon = 0, // set later from badge id
+    .menu = {
+        .title = "Badge Monsters",
+        .title2 = "",
+        .title3 = "",
+        .item = NULL,
+        .nitems = 0,
+        .max_items = 8,
+        .current_item = 0,
+        .menu_active = 0,
+        .chosen_cookie = 0,
+        .color = 0xFFFFFF,
+        .selected_color = 0x0,
+	.selection_made = DYNMENU_SELECTION_VOID,
+    },
+    .menu_item = {},
+    .menu_level = GAME_MENU_LEVEL
 };
 
 static state_to_function_map_fn_type state_to_function_map[] = {
