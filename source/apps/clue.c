@@ -263,7 +263,7 @@ static void clue_init_main_menu(void)
 {
 	dynmenu_init(&main_menu, menu_item, ARRAYSIZE(menu_item));
 	dynmenu_clear(&main_menu);
-	strcpy(main_menu.title, "CLUE");
+	dynmenu_set_title(&main_menu, "CLUE", "", "");
 	if (game_in_progress)
 		dynmenu_add_item(&main_menu, "RESUME GAME", CLUE_RUN, 0);
 	dynmenu_add_item(&main_menu, "START NEW GAME", CLUE_NEW_GAME, 1);
@@ -274,9 +274,7 @@ static void clue_init_main_menu(void)
 
 	dynmenu_init(&game_menu, game_menu_item, ARRAYSIZE(game_menu_item));
 	dynmenu_clear(&game_menu);
-	strcpy(game_menu.title, "CLUE");
-	strcpy(game_menu.title2, "MY NAME IS:");
-	strcpy(game_menu.title3, card[playing_as_character].name);
+	dynmenu_set_title(&game_menu, "CLUE", "MY NAME IS:", card[playing_as_character].name);
 	dynmenu_add_item(&game_menu, "NOTEBOOK", CLUE_NOTEBOOK, 0);
 	dynmenu_add_item(&game_menu, "EVIDENCE", CLUE_EVIDENCE, 1);
 	dynmenu_add_item(&game_menu, "QSTN SUSPECT", CLUE_INTERVIEW, 2);
@@ -337,30 +335,15 @@ static void update_screen(void)
 
 static void clue_main_menu(void)
 {
-	dynmenu_draw(&main_menu);
-	update_screen();
+	if (!dynmenu_let_user_choose(&main_menu))
+		return;
 
-	int down_latches = button_down_latches();
-	int rotary_switch = button_get_rotation(0);
+	int choice = dynmenu_get_user_choice(&main_menu);
 
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) || rotary_switch > 0) {
-		dynmenu_change_current_selection(&main_menu, 1);
-		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) || rotary_switch < 0) {
-		dynmenu_change_current_selection(&main_menu, -1);
-		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)
-#if BADGE_HAS_ROTARY_SWITCHES
-		|| BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches)
-#endif
-		) {
-		change_clue_state(main_menu.item[main_menu.current_item].next_state);
-	}
-#if BADGE_HAS_ROTARY_SWITCHES
-	 else if (BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches)) {
+	if (choice == DYNMENU_SELECTION_ABORTED)
 		change_clue_state(CLUE_EXIT);
-	}
-#endif
+	else
+		change_clue_state(main_menu.item[main_menu.current_item].next_state);
 }
 
 static void suppress_screensaver(void)
@@ -392,6 +375,10 @@ static void clue_run(void)
 		draw_question_count();
 	}
 	update_screen();
+
+	/* We can't use the dynmenu_let_user_choose/dynmenu_get_user_choice API
+	 * here because we want to update the clock while the menu is on screen.
+	 */
 
 	int down_latches = button_down_latches();
 	int rotary_switch = button_get_rotation(0);
