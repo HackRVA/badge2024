@@ -637,30 +637,23 @@ static void battlezone_setup(void)
 	if (!menu_setup) {
 		dynmenu_init(&setup_menu, setup_item, 5);
 		dynmenu_clear(&setup_menu);
-		strcpy(setup_menu.title, "BATTLEZONE");
+		dynmenu_set_title(&setup_menu, "BATTLEZONE", "", "");
 		dynmenu_add_item(&setup_menu, "PLAY GAME", BATTLEZONE_RUN, 0);
 		dynmenu_add_item(&setup_menu, "QUIT", BATTLEZONE_EXIT, 1);
 		menu_setup = 1;
 	}
 
-	dynmenu_draw(&setup_menu);
-	FbSwapBuffers();
+	if (!dynmenu_let_user_choose(&setup_menu))
+		return;
 
-	int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches))
-		dynmenu_change_current_selection(&setup_menu, 1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches))
-		dynmenu_change_current_selection(&setup_menu, -1);
-	else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		switch (setup_menu.current_item) {
-		case 0: /* play game */
-			battlezone_state = BATTLEZONE_RUN;
-			break;
-		case 1: /* quit */
-		default:
-			battlezone_state = BATTLEZONE_EXIT;
-			break;
-		}
+	switch (dynmenu_get_user_choice(&setup_menu)) {
+	case 0: /* play game */
+		battlezone_state = BATTLEZONE_RUN;
+		break;
+	case 1: /* quit */
+	default:
+		battlezone_state = BATTLEZONE_EXIT;
+		break;
 	}
 }
 
