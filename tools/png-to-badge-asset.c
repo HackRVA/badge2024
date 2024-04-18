@@ -370,6 +370,7 @@ static int process_image(char *filename, char *prefix)
 	width = 0;
 	height = 0;
 	hasalpha = 0;
+	ncolors = 0;
 	image = png_utils_read_png_image(filename, 0, 0, 0,
 				&width, &height, &hasalpha, whynot, sizeof(whynot));
 
