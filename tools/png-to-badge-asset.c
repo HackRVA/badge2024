@@ -16,7 +16,7 @@ static int errors = 0;
 static int warnings = 0;
 static uint16_t colormap[256] = { 0 };
 static int ncolors = 0;
-#define MAX_OVERFLOW_COLORS 0xffff;
+#define MAX_OVERFLOW_COLORS (0x0ffff)
 static uint16_t overflow_colormap[MAX_OVERFLOW_COLORS];
 static int noverflow_colors;
 static int maxcolors = 256;
@@ -78,9 +78,10 @@ static int add_to_colormap(unsigned char *pixel)
 	for (int i = 0; i < noverflow_colors; i++) {
 		if (overflow_colormap[i] == color)
 			return -1;
+	}
 
 	if (noverflow_colors < MAX_OVERFLOW_COLORS) {
-		overflow_color[noverflow_colors] = color;
+		overflow_colormap[noverflow_colors] = color;
 		noverflow_colors++;
 		color_count++; 
 	}
@@ -102,6 +103,16 @@ static int calculate_bytes_per_row(int width, int hasalpha)
 	while (answer & 0x03)
 		answer++;
 	return answer;
+}
+
+static void free_pixdata(void)
+{
+	if (pixdata)
+		free(pixdata);
+	if (pixdata16)
+		free(pixdata16);
+	pixdata = NULL;
+	pixdata16 = NULL;
 }
 
 /* Generate the color map (list of RGB colors used in the image, packed into 16 bit quantities)
@@ -430,12 +441,12 @@ static int process_image(char *filename, char *prefix)
 	}
 	generate_c_code(filename, prefix, width, height);
 
-	if (pixdata)
-		free(pixdata);
+	free_pixdata();	
 	free(image);
 	return 0;
 
 error_out:
+	free_pixdata();	
 	free(image);
 	return 1;
 }
@@ -488,6 +499,6 @@ int main(int argc, char *argv[])
 
 	fprintf(stderr, "Processed %d file(s) with %d error(s) and %d warning(s).\n",
 			argc - 2, errors, warnings);
-
+	free_pixdata();
 	return 0;
 }
