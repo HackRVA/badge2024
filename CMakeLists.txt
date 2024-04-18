@@ -5,7 +5,7 @@ set(PICO_SDK_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK from Git. Default o
 set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git. Default on.")
 set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
 set(PRODUCT "badge2024_c")
-set(SIMULATOR_AUDIO "no") # change to "no" to avoid compiling audio code in simulator
+set(SIMULATOR_AUDIO "yes") # change to "no" to avoid compiling audio code in simulator
 set(BADGE_HAS_ROTARY_SWITCHES "no")
 set(BUILD_IMAGE_TEST_PROGRAM "no") # change to "yes" to build image test app
 
