@@ -86,7 +86,7 @@ struct card {
 	char *name;
 	char *short_name;
 	enum card_type type;
-	const struct asset *pic;
+	const struct asset2 *pic;
 };
 
 struct notebook {
@@ -109,29 +109,29 @@ static struct question {
 #define NWEAPONS 6
 
 static const struct card card[] = {
-	{ "Miss Scarlett", "Scarlett", CARD_TYPE_SUSPECT, &clue_assets_miss_scarlett, },
-	{ "Colonel Mustard", "Mustard", CARD_TYPE_SUSPECT, &clue_assets_col_mustard, },
-	{ "Mrs. White", "White", CARD_TYPE_SUSPECT, &clue_assets_ms_white, },
-	{ "Mr. Green", "Green", CARD_TYPE_SUSPECT, &clue_assets_mr_green, },
-	{ "Mrs. Peacock", "Peacock", CARD_TYPE_SUSPECT, &clue_assets_mrs_peacock, },
-	{ "Professor Plum", "Plum", CARD_TYPE_SUSPECT, &clue_assets_prof_plum, },
+	{ "Miss Scarlett", "Scarlett", CARD_TYPE_SUSPECT, &miss_scarlett, },
+	{ "Colonel Mustard", "Mustard", CARD_TYPE_SUSPECT, &col_mustard, },
+	{ "Mrs. White", "White", CARD_TYPE_SUSPECT, &ms_white, },
+	{ "Mr. Green", "Green", CARD_TYPE_SUSPECT, &mr_green, },
+	{ "Mrs. Peacock", "Peacock", CARD_TYPE_SUSPECT, &mrs_peacock, },
+	{ "Professor Plum", "Plum", CARD_TYPE_SUSPECT, &prof_plum, },
 
-	{ "Kitchen", "Kitch", CARD_TYPE_ROOM, &clue_assets_kitchen, },
-	{ "Ballroom", "Ballrm", CARD_TYPE_ROOM, &clue_assets_ballroom, },
-	{ "Conservatory", "Consv", CARD_TYPE_ROOM, &clue_assets_conservatory, },
-	{ "Billiard Room", "Billrd", CARD_TYPE_ROOM, &clue_assets_billiards_room, },
-	{ "Library", "Library", CARD_TYPE_ROOM, &clue_assets_library, },
-	{ "Study", "Study", CARD_TYPE_ROOM, &clue_assets_study, },
-	{ "Hall", "Hall", CARD_TYPE_ROOM, &clue_assets_hall, },
-	{ "Lounge", "Lounge", CARD_TYPE_ROOM, &clue_assets_lounge, },
-	{ "Dining Room", "Dining", CARD_TYPE_ROOM, &clue_assets_dining_room, },
+	{ "Kitchen", "Kitch", CARD_TYPE_ROOM, &kitchen, },
+	{ "Ballroom", "Ballrm", CARD_TYPE_ROOM, &ballroom, },
+	{ "Conservatory", "Consv", CARD_TYPE_ROOM, &conservatory, },
+	{ "Billiard Room", "Billrd", CARD_TYPE_ROOM, &billiards_room, },
+	{ "Library", "Library", CARD_TYPE_ROOM, &library, },
+	{ "Study", "Study", CARD_TYPE_ROOM, &study, },
+	{ "Hall", "Hall", CARD_TYPE_ROOM, &hall, },
+	{ "Lounge", "Lounge", CARD_TYPE_ROOM, &lounge, },
+	{ "Dining Room", "Dining", CARD_TYPE_ROOM, &dining_room, },
 
-	{ "Rope", "Rope", CARD_TYPE_WEAPON, &clue_assets_rope, },
-	{ "Knife", "Knife", CARD_TYPE_WEAPON, &clue_assets_knife, },
-	{ "Wrench", "Wrench", CARD_TYPE_WEAPON, &clue_assets_wrench, },
-	{ "Revolver", "Rvlvr", CARD_TYPE_WEAPON, &clue_assets_revolver, },
-	{ "Candlestick", "Cndlstk", CARD_TYPE_WEAPON, &clue_assets_candlestick, },
-	{ "Lead Pipe", "Pipe", CARD_TYPE_WEAPON, &clue_assets_lead_pipe, },
+	{ "Rope", "Rope", CARD_TYPE_WEAPON, &rope, },
+	{ "Knife", "Knife", CARD_TYPE_WEAPON, &knife, },
+	{ "Wrench", "Wrench", CARD_TYPE_WEAPON, &wrench, },
+	{ "Revolver", "Rvlvr", CARD_TYPE_WEAPON, &revolver, },
+	{ "Candlestick", "Cndlstk", CARD_TYPE_WEAPON, &candlestick, },
+	{ "Lead Pipe", "Pipe", CARD_TYPE_WEAPON, &lead_pipe, },
 };
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -364,7 +364,7 @@ static void clue_run(void)
 		FbWriteString("MY NAME IS:\n");
 		FbWriteString(card[playing_as_character].name);
 		FbMove(14, 30);
-		FbImage(card[playing_as_character].pic, 0);
+		FbImage2(card[playing_as_character].pic, 0);
 		suppress_screensaver();
 	} else {
 		if (idle)
@@ -653,7 +653,7 @@ static void clue_evidence(void)
 		if (evidence.from_who[ni] != 255) {
 			snprintf(msg, sizeof(msg), "ITEM %d of %d\n\n", n + 1, count);
 			FbMove(14, 23);
-			FbImage(card[ni].pic, 0);
+			FbImage2(card[ni].pic, 0);
 			FbMove(1, 0);
 			FbWriteString(msg);
 			FbWriteString("ELIMINATED:\n");

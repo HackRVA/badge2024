@@ -4,27 +4,28 @@
 
 target_sources(badge2024_c PUBLIC
 
-${CMAKE_CURRENT_LIST_DIR}/ballroom.c
-${CMAKE_CURRENT_LIST_DIR}/billiards_room.c
-${CMAKE_CURRENT_LIST_DIR}/candlestick.c
-${CMAKE_CURRENT_LIST_DIR}/col_mustard.c
-${CMAKE_CURRENT_LIST_DIR}/conservatory.c
-${CMAKE_CURRENT_LIST_DIR}/dining_room.c
-${CMAKE_CURRENT_LIST_DIR}/hall.c
-${CMAKE_CURRENT_LIST_DIR}/kitchen.c
-${CMAKE_CURRENT_LIST_DIR}/knife.c
-${CMAKE_CURRENT_LIST_DIR}/lead_pipe.c
-${CMAKE_CURRENT_LIST_DIR}/library.c
-${CMAKE_CURRENT_LIST_DIR}/lounge.c
-${CMAKE_CURRENT_LIST_DIR}/miss_scarlett.c
-${CMAKE_CURRENT_LIST_DIR}/mr_green.c
-${CMAKE_CURRENT_LIST_DIR}/mrs_peacock.c
-${CMAKE_CURRENT_LIST_DIR}/ms_white.c
-${CMAKE_CURRENT_LIST_DIR}/prof_plum.c
-${CMAKE_CURRENT_LIST_DIR}/revolver.c
-${CMAKE_CURRENT_LIST_DIR}/rope.c
-${CMAKE_CURRENT_LIST_DIR}/study.c
-${CMAKE_CURRENT_LIST_DIR}/wrench.c
+${CMAKE_CURRENT_LIST_DIR}/ballroom.h
+${CMAKE_CURRENT_LIST_DIR}/billiards_room.h
+${CMAKE_CURRENT_LIST_DIR}/candlestick.h
+${CMAKE_CURRENT_LIST_DIR}/col_mustard.h
+${CMAKE_CURRENT_LIST_DIR}/conservatory.h
+${CMAKE_CURRENT_LIST_DIR}/dining_room.h
+${CMAKE_CURRENT_LIST_DIR}/hall.h
+${CMAKE_CURRENT_LIST_DIR}/kitchen.h
+${CMAKE_CURRENT_LIST_DIR}/knife.h
+${CMAKE_CURRENT_LIST_DIR}/lead_pipe.h
+${CMAKE_CURRENT_LIST_DIR}/library.h
+${CMAKE_CURRENT_LIST_DIR}/lounge.h
+${CMAKE_CURRENT_LIST_DIR}/miss_scarlett.h
+${CMAKE_CURRENT_LIST_DIR}/mr_green.h
+${CMAKE_CURRENT_LIST_DIR}/mrs_peacock.h
+${CMAKE_CURRENT_LIST_DIR}/ms_white.h
+${CMAKE_CURRENT_LIST_DIR}/prof_plum.h
+${CMAKE_CURRENT_LIST_DIR}/revolver.h
+${CMAKE_CURRENT_LIST_DIR}/rope.h
+${CMAKE_CURRENT_LIST_DIR}/study.h
+${CMAKE_CURRENT_LIST_DIR}/wrench.h
+${CMAKE_CURRENT_LIST_DIR}/clue_assets.h
 
 )
 
