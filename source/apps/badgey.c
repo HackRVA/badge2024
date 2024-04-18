@@ -1826,6 +1826,7 @@ static struct player {
 	int in_town;
 	int in_cave;
 	int dir;
+	int moving;
 } player = {
 	.world = &space,
 	.x = 32,
@@ -1837,6 +1838,7 @@ static struct player {
 	.in_town = 0,
 	.in_cave = 0,
 	.dir = 0, /* 0 = N, 1 = E, 2 = S, 3 = W */
+	.moving = 0,
 };
 
 /* Program states.  Initial state is BADGEY_INIT */
@@ -2131,40 +2133,65 @@ static void spawn_initial_monsters(void)
 	}
 }
 
-static void check_buttons(void)
+static void check_buttons(int tick)
 {
-	int newx, newy;
+	int newx, newy, newdir, newmoving;
 
 	newx = player.x;
 	newy = player.y;
+	newdir = player.dir;
+	newmoving = player.moving;
 
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
-		newx--;
-		if (newx < 0)
-			newx += 64;
+		if (player.moving && player.dir == 1) {
+			newmoving = 0;
+		} else {
+			newmoving = 1;
+			newdir = 3;
+		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
-		newx++;
-		if (newx > 63)
-			newx -= 64;
+		if (player.moving && player.dir == 3) {
+			newmoving = 0;
+		} else {
+			newmoving = 1;
+			newdir = 1;
+		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
-		newy--;
-		if (newy < 0)
-			newy += 64;
+		if (player.moving && player.dir == 2) {
+			newmoving = 0;
+		} else {
+			newmoving = 1;
+			newdir = 0;
+		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-		newy++;
-		if (newy > 63)
-			newy -= 64;
+		if (player.moving && player.dir == 0) {
+			newmoving = 0;
+		} else {
+			newmoving = 1;
+			newdir = 2;
+		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		if (player.world->type == WORLD_TYPE_PLANET)
+		if (player.world->type == WORLD_TYPE_PLANET) 
 			badgey_state = BADGEY_PLANET_MENU;
+		newmoving = 0;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		badgey_state = BADGEY_EXIT;
+		newmoving = 0;
 	}
+
+	player.dir = newdir;
+	player.moving = newmoving;
+	if (player.moving && tick) {
+		newx = wrap(player.x + xo4[newdir]);
+		newy = wrap(player.y + yo4[newdir]);
+	}
+
 	int c = player.world->wm[windex(newx, newy)];
 	if (player.world->type == WORLD_TYPE_SPACE) {
 		/* Prevent player from driving into a star */
 		if (c == '*') {
+			player.moving = 0;
 			return;
 		}
 		if (c >= '0' && c <= '9') { /* it's a planet */
@@ -2180,14 +2207,17 @@ static void check_buttons(void)
 				player.world = new_world;
 				screen_changed = 1;
 				spawn_initial_monsters();
+				player.moving = 0;
 				return;
 			}
 		}
 	} else {
 		char x = player.world->wm[windex(newx, newy)];
 		/* Prevent player from traversing water or mountains or signage or walls */
-		if (x == 'w' || x == 'm' || x == '_' || (x >= 'A' && x <= 'Z') || x == '#')
+		if (x == 'w' || x == 'm' || x == '_' || (x >= 'A' && x <= 'Z') || x == '#') {
+			player.moving = 0;
 			return;
+		}
 	}
 	if (newx != player.x || newy != player.y) {
 		player.x = newx;
@@ -2211,6 +2241,7 @@ static void check_buttons(void)
 					player.in_town = 0;
 					creature = &planet_creature[0];
 					ncreatures = &nplanet_creatures;
+					player.moving = 0;
 				}
 			}
 		}
@@ -2886,11 +2917,13 @@ static void badgey_run(void)
 {
 	static uint64_t last_ms = 0;
 	uint64_t now = rtc_get_ms_since_boot();
+	int tick = 0;
 
 	if (now - last_ms > 500) {
 		screen_changed = 1;
 		move_creatures();
 		last_ms = now;
+		tick = 1;
 	}
 
 	draw_screen();
@@ -2898,7 +2931,7 @@ static void badgey_run(void)
 	if (player.in_cave)
 		cave_check_buttons();
 	else
-		check_buttons();
+		check_buttons(tick);
 }
 
 enum townfeature {
