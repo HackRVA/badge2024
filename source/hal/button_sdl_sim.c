@@ -21,6 +21,7 @@ static int rotary_angle[2] = { 0 };
 static uint64_t last_change = 0;
 static user_gpio_callback callback = NULL;
 static int control_key_pressed = 0;
+extern int buttonfuzzer_on;
 
 static struct sim_button_status sim_button_status = { 0 };
 #define BUTTON_DISPLAY_DURATION 15 /* frames */
@@ -340,6 +341,10 @@ int key_press_cb(SDL_Keysym *keysym)
 	break;
 	case SDLK_F11:
 		toggle_fullscreen_mode();
+		break;
+	case SDLK_f:
+		buttonfuzzer_on = !buttonfuzzer_on;
+		printf("Button fuzzer %sactivated.\n", buttonfuzzer_on ? "" : "de");
 		break;
         default:
             break;

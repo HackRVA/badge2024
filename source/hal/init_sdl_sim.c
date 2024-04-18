@@ -27,6 +27,7 @@
 #include "quat.h"
 #include "uid.h"
 #include "audio.h"
+#include "xorshift.h"
 
 #define UNUSED __attribute__((unused))
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -809,6 +810,68 @@ static void setup_window_and_renderer(SDL_Window **window, SDL_Renderer **render
     SDL_RenderPresent(*renderer);
 }
 
+int buttonfuzzer_on = 0;
+
+static int buttonfuzzer(SDL_Event *event)
+{
+	static unsigned int seed = 0xa5a5a5a5;
+
+	if (!buttonfuzzer_on)
+		return 0; 
+
+	if ((xorshift(&seed) % 100) < 75)
+		return 0;
+
+	static const SDL_Event keypress_template = { 
+		.key = {
+			.type = SDL_KEYDOWN,
+			.timestamp = 0,
+			.windowID = 0,
+			.state = SDL_PRESSED,
+			.repeat = 0,
+		}
+	};
+
+	static const SDL_Event keyrelease_template = {
+		.key = {
+			.type = SDL_KEYUP,
+			.timestamp = 0,
+			.windowID = 0,
+			.state = SDL_RELEASED,
+			.repeat = 0,
+		}
+	};
+
+	int n = (xorshift(&seed) % 12); /* six buttons, press or release = 12 combos */
+
+	if (n < 6)
+		*event = keyrelease_template;
+	else
+		*event = keypress_template;
+
+	switch (n % 6) {
+	case 0:
+		event->key.keysym.sym = SDLK_SPACE; /* A button */
+		break;
+	case 1:
+		event->key.keysym.sym = SDLK_b; /* B button */ 
+		break;
+	case 2:
+		event->key.keysym.sym = SDLK_UP; /* up d-pad */
+		break;
+	case 3:
+		event->key.keysym.sym = SDLK_LEFT; /* left d-pad */
+		break;
+	case 4:
+		event->key.keysym.sym = SDLK_RIGHT; /* right d-pad */
+		break;
+	case 5:
+		event->key.keysym.sym = SDLK_DOWN; /* down d-pad */
+		break;
+	}
+	return 1;
+}
+
 static void process_events(SDL_Window *window)
 {
     SDL_Event event;
@@ -816,7 +879,7 @@ static void process_events(SDL_Window *window)
     struct sim_lcd_params slp;
     int w, h;
 
-    while (SDL_PollEvent(&event)) {
+    while (SDL_PollEvent(&event) || buttonfuzzer(&event)) {
         switch (event.type) {
         case SDL_KEYDOWN:
             key_press_cb(&event.key.keysym);
