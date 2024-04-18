@@ -129,6 +129,7 @@ static const struct menu_t main_m[] = {
    {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, &schedule_icon, },
    {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = games_m }, &games_icon, },
    {"Settings",    VERT_ITEM, MENU, { .menu = settings_m }, &settings_icon, },
+   {"Test SS",	VERT_ITEM, FUNCTION, { .func = test_screensavers_cb }, NULL, },
    {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, { .func = about_badge_cb }, &about_icon, },
 };
 
