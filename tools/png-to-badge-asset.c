@@ -325,15 +325,17 @@ static int generate_c_code(char *filename, char *prefix, int width, int height)
 		}
 		printf("\n}; /* %d values */\n", ncolors);
 		printf("\n");
-		printf("static const uint8_t %s%s_data[%d] = {\n", prefix, image_name, pixel_count);
-		printf("\t");
 		int datacount = pixel_count;
 		switch (bits_per_pixel) {
 		case 8: datacount = pixel_count;
 			break;
 		case 4: datacount = pixel_count / 2;
+			if ((datacount * 2) < pixel_count)
+				datacount++;
 			break;
 		case 2: datacount = pixel_count / 4;
+			if ((datacount * 4) < pixel_count)
+				datacount++;
 			break;
 		default: /* should not be reachable */
 			fprintf(stderr, "BUG at %s:%d -- hit unreachable code\n",
@@ -341,6 +343,8 @@ static int generate_c_code(char *filename, char *prefix, int width, int height)
 			exit(1);
 			break;
 		}
+		printf("static const uint8_t %s%s_data[%d] = {\n", prefix, image_name, datacount);
+		printf("\t");
 		for (int i = 0; i < datacount; i++) {
 			if ((i % 20) == 19)
 				printf("%hhu,\n\t", pixdata[i]);
