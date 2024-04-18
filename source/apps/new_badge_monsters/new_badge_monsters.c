@@ -3,7 +3,9 @@
 #include <stdio.h>
 
 #include "new_badge_monsters.h"
+#define DEFINE_IMAGE_ASSET_DATA
 #include "new_badge_monsters_assets.h"
+#undef DEFINE_IMAGE_ASSET_DATA
 #include "new_badge_monsters_ir.h"
 #include "audio.h"
 #include "badge.h"
@@ -41,7 +43,7 @@ struct new_monster
     int owned;
     int color;
     char blurb[128];
-    const struct asset *asset;
+    const struct asset2 *asset;
 };
 
 enum menu_level_t {
@@ -104,210 +106,210 @@ struct new_monster new_monsters[] = {
         true,
         RED,
         "This one\nonly roars\nin\ncrypto-\ncurrency",
-        &new_badge_monsters_assets_Crypto_Raptor
+        &CryptoRaptor
     }
   , {
         "2FactorTiger",
         false,
         RED,
         "Double the\nsecurity,\ndouble\nthe fun",
-        &new_badge_monsters_assets_Two_Factor_Tiger
+        &TwoFactorTiger
     }
   , {
         "firewallFlyer",
         false,
         RED,
         "Can't touch\nthis, unless\nyou're an\nallowed IP",
-        &new_badge_monsters_assets_Firewall_Flyer
+        &FirewallFlyer
     }
   , {
         "trojanTurtle",
         false,
         RED,
         "Slow and\nsneaky, never\nunderestimate\nit",
-        &new_badge_monsters_assets_Trojan_Turtle
+        &TrojanTurtle
     }
   , {
         "phishinPhoenix",
         false,
         RED,
         "Spams your\ninbox, then\nrises from \nits ashes",
-        &new_badge_monsters_assets_Phishing_Phoenix
+        &PhishingPhoenix
     }
   , {
         "hackerHawk",
         false,
         RED,
         "Always\nwatching\nfrom above,\nwaiting to\nswoop in",
-        &new_badge_monsters_assets_Hacker_Hawk
+        &HackerHawk
     }
   , {
         "malwareMantis",
         false,
         RED,
         "Prays on\nyour\nsystem's\nvulner-\nabilities",
-        &new_badge_monsters_assets_Malware_Mantis
+        &MalwareMantis
     }
   , {
         "ddosDragon",
         false,
         RED,
         "Breathes a\nfire of\ntraffic at\nyour servers",
-        &new_badge_monsters_assets_DDOS_Dragon
+        &DDoS_Dragon
     }
   , {
         "keylogKoala",
         false,
         RED,
         "It's not\neucalyptus\nleaves it's\nafter",
-        &new_badge_monsters_assets_Keylogger_Koala
+        &KeyloggerKoala
     }
   , {
         "wormWombat",
         false,
         RED,
         "Burrows\ndeep into\nyour system",
-        &new_badge_monsters_assets_Worm_Wombat
+        &WormWombat
     }
   , {
         "adwareAnteater",
         false,
         RED,
         "Feeds on\nyour browsing\nhabits",
-        &new_badge_monsters_assets_Adware_Anteater
+        &AdwareAnteater
     }
   , {
         "rootkitRhino",
         false,
         RED,
         "Charges at\nyour system's\ncore",
-        &new_badge_monsters_assets_Rootkit_Rhino
+        &RootkitRhino
     }
   , {
         "botnetBat",
         false,
         RED,
         "Flies in\nthe\ndarkness\nof the web",
-        &new_badge_monsters_assets_Botnet_Bat
+        &BotnetBat
     }
   , {
         "dnsDolphin",
         false,
         RED,
         "Loves to\nplay\nredirect\ngames",
-        &new_badge_monsters_assets_DNS_Dolphin
+        &DNS_Dolphin
     }
   , {
         "sslShark",
         false,
         RED,
         "Swims in a\nsea of\nencrypted\ndata",
-        &new_badge_monsters_assets_SSL_Shark
+        &SSL_Shark
     }
   , {
         "spamSpider",
         false,
         RED,
         "Weaves a\nweb of\nunwanted\nemails",
-        &new_badge_monsters_assets_Spam_Spider
+        &SpamSpider
     }
   , {
         "ransomRabbit",
         false,
         RED,
         "Hops into\nyour files,\nthen locks\nthem up",
-        &new_badge_monsters_assets_Ransomware_Rabbit
+        &RansomwareRabbit
     }
   , {
         "snifferSnail",
         false,
         RED,
         "Slow but\ncan smell\nyour data\nfrom miles\naway",
-        &new_badge_monsters_assets_Sniffer_Snail
+        &SnifferSnail
     }
   , {
         "backdoorBee",
         false,
         RED,
         "Buzzes into\nyour system\nthrough the\nback",
-        &new_badge_monsters_assets_Backdoor_Bee
+        &BackdoorBee
     }
   , {
         "exploitEagle",
         false,
         RED,
         "Soars high\nto find\nunpatched\nvulner-\nabilities",
-        &new_badge_monsters_assets_Exploit_Eagle
+        &ExploitEagle
     }
   , {
         "bruFrcBaboon",
         false,
         RED,
         "Not subtle,\nbut\nsometimes\nit works",
-        &new_badge_monsters_assets_Brute_Force_Baboon
+        &BruteForceBaboon
     }
   , {
         "socNgnrSqrl",
         false,
         RED,
         "Collects\nyour info\nlike acorns",
-        &new_badge_monsters_assets_Social_Engineer_Squirrel
+        &SocialEngineerSquirrel
     }
   , {
         "packSnifPuma",
         false,
         RED,
         "Stealthily\nstalks your\nnetwork\ntraffic",
-        &new_badge_monsters_assets_Packet_Sniffer_Puma
+        &PacketSnifferPuma
     }
   , {
         "proxyPorcupn",
         false,
         RED,
         "Its spikes\nare like\nmultiple IP\naddresses",
-        &new_badge_monsters_assets_Proxy_Porcupine
+        &ProxyPorcupine
     }
   , {
         "intDetIguana",
         false,
         RED,
         "Keeps a\ncold-blooded\nwatch on\nyour network",
-        &new_badge_monsters_assets_Intrusion_Detection_Iguana
+        &IntrusionDetectionIguana
     }
   , {
         "penTestPengo",
         false,
         RED,
         "Slides into\nyour defenses\nwith ease",
-        &new_badge_monsters_assets_PenTest_Penguin
+        &PenTestPenguin
     }
   , {
         "axsCtrlGator",
         false,
         RED,
         "Keeps\nunauthorized\nusers at bay,\nsnappily",
-        &new_badge_monsters_assets_Access_Control_Alligator
+        &AccessControlAlligator
     }
   , {
         "idsImpalas",
         false,
         RED,
         "Fast and\nefficient\nat detecting\nintrusions",
-        &new_badge_monsters_assets_IDS_Impalas
+        &IDS_Impalas
     }
   , {
         "siemSloth",
         false,
         RED,
         "Slow but\nsteady wins\nthe security\nrace",
-        &new_badge_monsters_assets_SIEM_Sloth
+        &SIEM_Sloth
     }
   , {
         "vpnVulture",
         false,
         RED,
         "Flies over\ngeo-\nrestrictions\nwith ease",
-        &new_badge_monsters_assets_VPN_Vulture
+        &VPN_Vulture
     }
 };
 
@@ -500,7 +502,7 @@ static void show_monster(void)
         LOG("render_monster: %s\n", monster->name);
         FbClear();
         FbMove(0, 10);
-        FbImage4bit(monster->asset, 0);
+        FbImage4bit2(monster->asset, 0);
         if(state.current_monster == state.initial_mon)
         {
             FbMove(0,10);
@@ -925,6 +927,6 @@ void render_screen_save_monsters(void) {
 
     FbClear();
     FbColor(BLACK);
-    FbImage4bit(new_monsters[current_index].asset, 0);
+    FbImage4bit2(new_monsters[current_index].asset, 0);
 }
 

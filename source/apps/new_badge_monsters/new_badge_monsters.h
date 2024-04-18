@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "new_badge_monsters_assets.h"
 #include "menu.h"
 #include "dynmenu.h"
 
