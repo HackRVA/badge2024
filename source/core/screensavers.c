@@ -13,6 +13,10 @@
 #include "new_badge_monsters/new_badge_monsters.h"
 #include <string.h>
 
+#define DEFINE_IMAGE_ASSET_DATA
+#include "holly.h"
+#undef DEFINE_IMAGE_ASSET_DATA
+
 extern unsigned short popup_time;
 
 static unsigned short animation_count = 0;
@@ -175,13 +179,13 @@ void holly_screensaver(void)
 		n = 2;
 	switch (n) {
 		case 1:
-			FbImage(&assetList[HOLLY01], 0);
+			FbImage2(&holly01_small, 0);
 			break;
 		case 2:
-			FbImage(&assetList[HOLLY02], 0);
+			FbImage2(&holly02_small, 0);
 			break;
 		case 3:
-			FbImage(&assetList[HOLLY03], 0);
+			FbImage2(&holly03_small, 0);
 			break;
 	}
 	FbSwapBuffers();
