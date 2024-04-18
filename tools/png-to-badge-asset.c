@@ -16,6 +16,9 @@ static int errors = 0;
 static int warnings = 0;
 static uint16_t colormap[256] = { 0 };
 static int ncolors = 0;
+#define MAX_OVERFLOW_COLORS 0xffff;
+static uint16_t overflow_colormap[MAX_OVERFLOW_COLORS];
+static int noverflow_colors;
 static int maxcolors = 256;
 static uint8_t *pixdata = NULL;
 static uint16_t *pixdata16 = NULL;
@@ -24,6 +27,7 @@ static int pixels_per_byte = 1;
 static int pixel_count = 0;
 static int bits_per_pixel = 8;
 static int bits_per_pixel_mask = 0xff;
+static int color_count = 0;
 
 static void __attribute__((noreturn)) usage(char *program_name)
 {
@@ -62,10 +66,25 @@ static int add_to_colormap(unsigned char *pixel)
 	if (ncolors < maxcolors) {
 		colormap[ncolors] = color;
 		ncolors++;
+		color_count++;
 		return (ncolors - 1);
 	}
 
-	/* No room left in colormap */
+	/* No room left in colormap, add to overflow_colormap.
+	 * This just so we can accurately count and report the actual
+	 * number of colors in the image data.  We don't actually do
+	 * anything with the overflow colors.
+	 */
+	for (int i = 0; i < noverflow_colors; i++) {
+		if (overflow_colormap[i] == color)
+			return -1;
+
+	if (noverflow_colors < MAX_OVERFLOW_COLORS) {
+		overflow_color[noverflow_colors] = color;
+		noverflow_colors++;
+		color_count++; 
+	}
+	
 	return -1;
 }
 
@@ -96,6 +115,8 @@ static int generate_colormap_and_pixdata(char *image, int width, int height, int
 	unsigned char alpha;
 	int bytes_per_pixel = hasalpha ? 4 : 3;
 	int bytes_per_row = calculate_bytes_per_row(width, hasalpha);
+
+	color_count = 0;
 	pixdata_size = (width * height) / pixels_per_byte;
 	pixdata = malloc(pixdata_size);
 	if (!pixdata) {
@@ -119,17 +140,19 @@ static int generate_colormap_and_pixdata(char *image, int width, int height, int
 			} else {
 				index = add_to_colormap(pixel);
 			}
-			if (index < 0) {
-				fprintf(stderr, "  Error: Too many colors (>%d) in image\n",
-					maxcolors);
-				fprintf(stderr, "  You should posterize the image to reduce colors.\n");
-				return -1;
-			}
+			if (index < 0)
+				continue;
 			int byte = pixel_count / pixels_per_byte;
 			int shift = pixels_per_byte - (pixel_count % pixels_per_byte) - 1;
 			pixdata[byte] |= (index << (shift * bits_per_pixel));
 			pixel_count++;
 		}
+	}
+	if (color_count > maxcolors) {
+		fprintf(stderr, "  Error: Too many colors (%d) in image (max = %d)\n",
+			color_count, maxcolors);
+		fprintf(stderr, "  You should posterize the image to reduce colors.\n");
+		return -1;
 	}
 	return 0;
 }
