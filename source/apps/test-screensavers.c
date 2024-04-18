@@ -109,13 +109,12 @@ static void draw_instructions(void)
 	FbMove(2, 2);
 	FbWriteString(
 		"\n"
-		"USE ROTARY KNOBS\n"
+		"   USE D-PAD\n"
 		"  TO SELECT A\n"
 		" STATIC SCREEN\n"
 		"    SAVER.\n"
 		"\n"
-		"  PRESS LEFT\n"
-		" ROTARY SWITCH\n"
+		"  PRESS A/B\n"
 		"   TO EXIT\n");
 	FbPushBuffer();
 }
