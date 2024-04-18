@@ -69,6 +69,9 @@ python and fails in mysterious ways when you accidentally use the wrong version 
 python.  Furthermore png-to-badge-asset compacts the data a bit better for use with
 the newer "2" variants of the FbImage() functions.
 
+By default the variables of type "struct asset2" in the code png-to-badge-asset
+produces have static scope.  This may be suppressed with the '-s' or
+'--nostatic' option.
 
 # Old Asset Generator / Image Converter
 
