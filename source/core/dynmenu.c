@@ -50,7 +50,7 @@ void dynmenu_set_title(struct dynmenu *dm, const char *title1,
 		snprintf(dm->title3, DYNMENU_MAX_TITLE, "%s", title3);
 }
 
-void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned char cookie)
+void dynmenu_add_item(struct dynmenu *dm, const char *text, int next_state, unsigned char cookie)
 {
     if (dm->nitems >= dm->max_items) {
 #ifdef __linux__

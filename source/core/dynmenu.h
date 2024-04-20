@@ -103,7 +103,7 @@ void dynmenu_clear(struct dynmenu *dm);
 void dynmenu_set_title(struct dynmenu *dm, const char *title1, const char *title2, const char *title3);
 
 /* Adds a new item to the end of the menu. */
-void dynmenu_add_item(struct dynmenu *dm, char *text, int next_state, unsigned char cookie);
+void dynmenu_add_item(struct dynmenu *dm, const char *text, int next_state, unsigned char cookie);
 
 /* Draws the menu. */
 void dynmenu_draw(struct dynmenu *dm);
