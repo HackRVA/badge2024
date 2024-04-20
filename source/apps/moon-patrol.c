@@ -1480,6 +1480,7 @@ static void moonpatrol_new_level(void)
 
 static void moonpatrol_exit(void)
 {
+	stop_tune();
 	moonpatrol_state = MOONPATROL_INIT; /* So that when we start again, we do not immediately exit */
 	returnToMenus();
 }
