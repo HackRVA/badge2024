@@ -2125,8 +2125,10 @@ static void spawn_monster(unsigned int *seed)
 	(*ncreatures)++;
 }
 
-static void spawn_initial_monsters(void)
+static void spawn_planet_initial_monsters(void)
 {
+	ncreatures = &nplanet_creatures;
+	*ncreatures = 0;
 	unsigned int seed = player.world->initial_seed;
 	for (int i = 0; i < NUM_MONSTERS; i++) {
 		spawn_monster(&seed);
@@ -2206,7 +2208,7 @@ static void check_buttons(int tick)
 				player.y = new_world->landingx;
 				player.world = new_world;
 				screen_changed = 1;
-				spawn_initial_monsters();
+				spawn_planet_initial_monsters();
 				player.moving = 0;
 				return;
 			}
