@@ -1803,6 +1803,7 @@ struct creature_specific_data {
 struct creature {
 	uint8_t type; /* indexes into creature_generic_data[] */
 	uint8_t homex, homey, x, y;
+	uint8_t onscreen_and_visible;
 	struct creature_specific_data csd;
 };
 
@@ -2547,6 +2548,7 @@ static void draw_creature(int i)
 	int cx, cy;
 	int icon;
 
+	creature[i].onscreen_and_visible = 0;
 	if (!is_onscreen(creature[i].x, creature[i].y))
 		return;
 
@@ -2574,6 +2576,7 @@ static void draw_creature(int i)
 	cx *= 16;
 	cy *= 16;
 
+	creature[i].onscreen_and_visible = 1;
 	int t = creature[i].type;
 	switch (t) {
 	case CREATURE_TYPE_CITIZEN:
@@ -2689,20 +2692,26 @@ static void citizen_move(struct creature *self)
 		generic_move(self);
 		return;
 	}
-	static unsigned int seed = 0x5a5a5a5a;
 
 	int nx, ny, d;
 	unsigned char ch;
 
-	d = (xorshift(&seed) % 4);
+	/* Move left or right towards player */
+	if (player.x > self->x)
+		d = 1;
+	else if (player.x < self->x)
+		d = 3;
+	else
+		return; /* Already in line with player */
+
 	nx = self->x + xo4[d];
 	if (nx < 0 || nx > 63)
 		return;
 	ny = self->y + yo4[d];
 	if (ny < 0 || ny > 63)
 		return;
-	ch = dynmap[windex(nx, ny)];
 
+	ch = dynmap[windex(nx, ny)];
 	if (ch != '=') /* stay on shop floor */
 		return;
 
