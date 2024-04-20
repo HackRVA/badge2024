@@ -2930,7 +2930,7 @@ static void badgey_run(void)
 	uint64_t now = rtc_get_ms_since_boot();
 	int tick = 0;
 
-	if (now - last_ms > 500) {
+	if (now - last_ms > 300) {
 		screen_changed = 1;
 		move_creatures();
 		last_ms = now;
