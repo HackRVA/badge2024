@@ -20,6 +20,8 @@ struct dynmenu planet_menu;
 struct dynmenu_item planet_menu_item[5];
 struct dynmenu cave_menu;
 struct dynmenu_item cave_menu_item[5];
+struct dynmenu town_menu;
+struct dynmenu_item town_menu_item[10];
 
 /* x and y offsets indexed by direction, 4 and 8 direction variants */
 static const int xo4[] = { 0, 1, 0, -1 };
@@ -1618,13 +1620,81 @@ static const struct asset2 *creature_icon[] = {
 #define LAST_MONSTER CREATURE_TYPE_ZUNARO
 
 /* Shop types */
-#define SHOP_NONE 0
-#define SHOP_INN 1
-#define SHOP_PUB 2
-#define SHOP_ARMOURY 3
-#define SHOP_WEAPONS 4
-#define SHOP_HACKERSPACE 5
-#define SHOP_TEMPLE 6
+#define SHOP_NONE 255
+#define SHOP_INN 0
+#define SHOP_PUB 1
+#define SHOP_ARMOURY 2
+#define SHOP_WEAPONS 3
+#define SHOP_HACKERSPACE 4
+#define SHOP_TEMPLE 5
+#define SHOP_SPECIALTY 6 /* not a real shop type, used for specialty items */
+#define NUMSHOPS 6
+
+#define ITEM_TYPE_INTANGIBLE 0
+#define ITEM_TYPE_SUSTENANCE 1
+#define ITEM_TYPE_ARMOR 2
+#define ITEM_TYPE_RANGED_WEAPON 3
+#define ITEM_TYPE_MELEE_WEAPON 4
+#define ITME_TYPE_SOFTWARE 5
+#define ITEM_TYPE_USELESS 6
+
+const struct shop_item {
+	char *name;
+	int price;
+	unsigned char item_type;
+	unsigned char shop_type;
+} shop_item[] = {
+	/* INN */
+	{ "SAVE GAME", 0, ITEM_TYPE_INTANGIBLE, SHOP_INN },
+	{ "RESTORE GAME", 0, ITEM_TYPE_INTANGIBLE, SHOP_INN },
+
+	/* PUB */
+	{ "FOOD", 10, ITEM_TYPE_SUSTENANCE, SHOP_PUB },
+	{ "DRINK", 5, ITEM_TYPE_SUSTENANCE, SHOP_PUB },
+
+	/* ARMOURY */
+	{ "LIGHT ARMOR", 40, ITEM_TYPE_ARMOR, SHOP_ARMOURY },
+	{ "HEAVY ARMOR", 80, ITEM_TYPE_ARMOR, SHOP_ARMOURY },
+
+	/* WEAPONS */
+	{ "LASER CUTLASS", 10, ITEM_TYPE_MELEE_WEAPON, SHOP_WEAPONS, },
+	{ "BLASTER", 20, ITEM_TYPE_RANGED_WEAPON, SHOP_WEAPONS, },
+
+	/* HACKERSPACE */
+	{ "PLA DOODAD", 1, ITEM_TYPE_USELESS, SHOP_HACKERSPACE, },
+	{ "T-SHIRT", 25, ITEM_TYPE_USELESS, SHOP_HACKERSPACE, },
+
+	/* TEMPLE */
+	{ "SACRAMENT", 100, ITEM_TYPE_USELESS, SHOP_TEMPLE, },
+	{ "BLESSING", 200, ITEM_TYPE_USELESS, SHOP_TEMPLE, },
+
+	/* specialty items */
+	{ "blah blah", 0, ITEM_TYPE_RANGED_WEAPON, SHOP_SPECIALTY },
+};
+
+#define MAX_ITEMS_PER_SHOP 8
+struct shop {
+	int item[MAX_ITEMS_PER_SHOP];
+	int nitems;
+} shop[NUMSHOPS];
+
+const char *proprietor[] = { /* indexed by shop type */
+	"  INNKEEP",
+	"  BARKEEP",
+	"  ARMOURER",
+	"  ENGINEER",
+	"  HACKER",
+	"  GOOROO",
+};
+
+const char *shopname[] = { /* indexed by shop type */
+	"INN",
+	"PUB",
+	"ARMOURER",
+	"WEAPONS",
+	"HACKERSPACE",
+	"TEMPLE",
+};
 
 static const char *creature_info[] = {
 	"GRUNTS", /* 0 - default monster "info" */
@@ -1781,7 +1851,7 @@ struct creature_specific_data {
 	 */
 	union {
 		struct citizen_data {
-			uint8_t shopkeep; /* 255 not shopkeeper, otherwise index into which shop */
+			uint8_t shopkeep; /* SHOP_NONE or index into which shop */
 			uint8_t icon;
 			uint8_t info; /* index to creature_info */
 		} citizen;
@@ -1828,6 +1898,9 @@ static struct player {
 	int in_cave;
 	int dir;
 	int moving;
+	unsigned char in_shop;
+	int money;
+	unsigned char carrying[ARRAY_SIZE(shop_item)];
 } player = {
 	.world = &space,
 	.x = 32,
@@ -1840,6 +1913,9 @@ static struct player {
 	.in_cave = 0,
 	.dir = 0, /* 0 = N, 1 = E, 2 = S, 3 = W */
 	.moving = 0,
+	.in_shop = SHOP_NONE,
+	.money = 500,
+	.carrying = { 0 },
 };
 
 /* Program states.  Initial state is BADGEY_INIT */
@@ -1850,8 +1926,50 @@ enum badgey_state_t {
 	BADGEY_TOWN_MENU,
 	BADGEY_RUN,
 	BADGEY_ENTER_TOWN_OR_CAVE,
+	BADGEY_TALK_TO_SHOPKEEPER,
+	BADGEY_STATUS_MESSAGE,
 	BADGEY_EXIT,
 };
+
+static enum badgey_state_t badgey_state = BADGEY_INIT;
+
+static char message_to_display[255];
+static char message_displayed = 0;
+static int screen_changed = 0;
+static enum badgey_state_t previous_badgey_state = BADGEY_RUN;
+
+static void badgey_status_message(void)
+{
+	if (!message_displayed) {
+		FbMove(0, 0);
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
+		FbWriteString(message_to_display);
+		FbSwapBuffers();
+		message_displayed = 1;
+	}
+
+	int down_latches = button_down_latches();
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		message_displayed = 0;
+		screen_changed = 1;
+		badgey_state = previous_badgey_state;
+	}
+}
+
+static void status_message(char *message)
+{
+	strcpy(message_to_display, message);
+	message_displayed = 0;
+	previous_badgey_state = badgey_state;
+	badgey_state = BADGEY_STATUS_MESSAGE; 
+}
 
 static void add_shopkeeper(int x, int y, unsigned char shoptype, unsigned int *seed)
 {
@@ -2021,9 +2139,6 @@ static char whats_there(const char *map, int x, int y, int dx, int dy)
 	return map[y * 64 + x];
 }
 
-static enum badgey_state_t badgey_state = BADGEY_INIT;
-static int screen_changed = 0;
-
 static void badgey_init(void)
 {
 	FbInit();
@@ -2177,6 +2292,8 @@ static void check_buttons(int tick)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (player.world->type == WORLD_TYPE_PLANET) 
 			badgey_state = BADGEY_PLANET_MENU;
+		else if (player.world->type == WORLD_TYPE_TOWN)
+			badgey_state = BADGEY_TOWN_MENU;
 		newmoving = 0;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		badgey_state = BADGEY_EXIT;
@@ -2581,6 +2698,7 @@ static void draw_creature(int i)
 	switch (t) {
 	case CREATURE_TYPE_CITIZEN:
 		icon = creature[i].csd.citizen.icon;
+		player.in_shop = creature[i].csd.citizen.shopkeep;
 		break;
 	case CREATURE_TYPE_GUARD:
 		icon = creature_generic_data[t].guard.icon;
@@ -2626,6 +2744,7 @@ static void draw_creature(int i)
 
 static void draw_creatures(void)
 {
+	player.in_shop = SHOP_NONE;
 	for (int i = 0; i < *ncreatures; i++) {
 		draw_creature(i);
 	}
@@ -2859,9 +2978,126 @@ static void badgey_cave_menu(void)
 	}
 }
 
+static void badgey_talk_to_shopkeeper(void)
+{
+	static int menu_setup = 0;
+	int st, n;
+
+	st = player.in_shop;
+	if (st < 0 || st >= (int) ARRAY_SIZE(proprietor)) {
+#if TARGET_SIMULATOR
+		printf("Bad value in st: %d %s:%d\n", st, __FILE__, __LINE__);
+#endif
+		badgey_state = BADGEY_RUN;
+		return;
+	}
+
+	if (!menu_setup) {
+		dynmenu_clear(&town_menu);
+		dynmenu_init(&town_menu, town_menu_item, ARRAY_SIZE(town_menu_item));
+		dynmenu_set_title(&town_menu, shopname[st], "", "");
+		dynmenu_add_item(&town_menu, "NEVERMIND", BADGEY_RUN, 254);
+		n = 1;
+		for (size_t i = 0; i < ARRAY_SIZE(shop_item); i++) {
+			if (shop_item[i].shop_type == st) {
+				char menu_item[15];
+				snprintf(menu_item, 15, "%2d %s",
+					shop_item[i].price, shop_item[i].name);
+				dynmenu_add_item(&town_menu, menu_item, BADGEY_RUN, i);
+				n++;
+			}
+		}
+		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT, 255);
+		menu_setup = 1;
+	}
+
+	if (!dynmenu_let_user_choose(&town_menu))
+		return;
+
+	int choice = dynmenu_get_user_choice(&town_menu);
+
+	if (choice == 254) { /* Nevermind */
+		screen_changed = 1;
+		menu_setup = 0;
+		badgey_state = BADGEY_TOWN_MENU;
+		return;
+	}
+	if (choice == 255) { /* exit */
+		screen_changed = 1;
+		badgey_state = BADGEY_EXIT;
+		menu_setup = 0;
+		return;
+	}
+	if (choice > 0 && choice < (int) ARRAY_SIZE(shop_item)) { /* Buy something */
+		char message[255];
+		if (player.money < shop_item[choice].price) {
+			snprintf(message, sizeof(message), "\n\n"
+					" SORRY YOU DO\n NOT HAVE\n ENOUGH MONEY\n"
+					" MONEY FOR\n THAT\n");
+		} else {
+			snprintf(message, sizeof(message), "\n\nYOU PAID %2d\nFOR\n%s\n",
+					shop_item[choice].price,
+					shop_item[choice].name);
+			player.money -= shop_item[choice].price;
+			player.carrying[choice]++;
+		}
+		status_message(message);
+		screen_changed = 1;
+		menu_setup = 0;
+		return;
+	}
+}
+
 static void badgey_town_menu(void)
 {
-	badgey_state = BADGEY_RUN;
+	static int menu_setup = 0;
+	int st;
+
+	if (!menu_setup) {
+		dynmenu_clear(&town_menu);
+		dynmenu_init(&town_menu, town_menu_item, ARRAY_SIZE(town_menu_item));
+		dynmenu_set_title(&town_menu, "", "", "");
+		st = player.in_shop;
+		dynmenu_add_item(&town_menu, "NEVERMIND", BADGEY_RUN, 0);
+		if (st >= 0 && st < (int) ARRAY_SIZE(proprietor)) {
+			dynmenu_add_item(&town_menu, "TALK TO", BADGEY_RUN, 1);
+			dynmenu_add_item(&town_menu, proprietor[st], BADGEY_RUN, 1);
+		} else {
+#if TARGET_SIMULATOR
+			if (st != SHOP_NONE) {
+				printf("Bad value in st: %d\n", st);
+			}
+#endif
+		}
+		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT, 2);
+		menu_setup = 1;
+	}
+
+	if (!dynmenu_let_user_choose(&town_menu))
+		return;
+
+	switch (dynmenu_get_user_choice(&town_menu)) {
+	case 0: /* Nevermind */
+		screen_changed = 1;
+		menu_setup = 0;
+		badgey_state = BADGEY_RUN;
+		break;
+	case 1: /* talk to shop keeper */
+		badgey_state = BADGEY_TALK_TO_SHOPKEEPER;
+		screen_changed = 1;
+		menu_setup = 0;
+		break;
+	case 2: /* exit */
+		screen_changed = 1;
+		badgey_state = BADGEY_EXIT;
+		menu_setup = 0;
+		break;
+	default:
+		screen_changed = 1;
+		menu_setup = 0;
+		badgey_state = BADGEY_RUN;
+		break;
+	}
 }
 
 static void badgey_planet_menu(void)
@@ -3414,6 +3650,32 @@ static void add_creek_to_town(unsigned int *seed)
 	}
 }
 
+static void add_shop_item(int shoptype, int item)
+{
+	if (shop[shoptype].nitems >= MAX_ITEMS_PER_SHOP) {
+#if TARGET_SIMULATOR
+		printf("Too many items in shop %d\n", shoptype);
+#endif
+		return;
+	}
+	shop[shoptype].item[shop[shoptype].nitems] = item;
+	shop[shoptype].nitems++;
+}
+
+static void arrange_shop_contents(__attribute__((unused)) int town)
+{
+	for (int i = 0; i < NUMSHOPS; i++)
+		shop[i].nitems = 0;
+
+	for (size_t i = 0; i < ARRAY_SIZE(shop_item); i++) {
+		int st = shop_item[i].shop_type;
+		if (st < NUMSHOPS)
+			add_shop_item(st, i);
+	}
+
+	/* Here is where we will add specialty items to shops based on town */
+}
+
 static void generate_town(int town_number)
 {
 	int x, y;
@@ -3529,6 +3791,8 @@ static void generate_town(int town_number)
 		generate_building(armoury_name[town % 5], SHOP_ARMOURY, roadchar, &seed);
 	if (towninfo[town].feature & town_temple)
 		generate_building("TEMPLE", SHOP_TEMPLE, roadchar, &seed);
+
+	arrange_shop_contents(town);
 
 	for (int i = 0; i < 8; i++)
 		add_guard(roadchar, &seed);
@@ -3690,6 +3954,12 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_ENTER_TOWN_OR_CAVE:
 		badgey_enter_town_or_cave();
+		break;
+	case BADGEY_TALK_TO_SHOPKEEPER:
+		badgey_talk_to_shopkeeper();
+		break;
+	case BADGEY_STATUS_MESSAGE:
+		badgey_status_message();
 		break;
 	default:
 		break;
