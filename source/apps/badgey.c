@@ -453,7 +453,7 @@ static const struct badgey_world ossaria = {
 	.type = WORLD_TYPE_PLANET,
 	.wm = ossaria_map,
 	.subworld = { NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL },
-	.landingx = 32,
+	.landingx = 37,
 	.landingy = 32,
 	.initial_seed = 0x5a5aa5a5,
 };
@@ -1921,6 +1921,7 @@ static struct player {
 /* Program states.  Initial state is BADGEY_INIT */
 enum badgey_state_t {
 	BADGEY_INIT,
+	BADGEY_CONTINUE,
 	BADGEY_PLANET_MENU,
 	BADGEY_CAVE_MENU,
 	BADGEY_TOWN_MENU,
@@ -2158,6 +2159,29 @@ static char whats_there(const char *map, int x, int y, int dx, int dy)
 }
 
 static void badgey_init(void)
+{
+	FbInit();
+	FbClear();
+	player.x = 37;
+	player.y = 32;
+	player.world = &ossaria;
+	player.world_level = 1;
+	player.old_world[1] = &space;
+	player.old_world[0] = NULL;
+	player.wx[0] = 55;
+	player.wy[0] = 4;
+	player.in_town = 0;
+	player.in_cave = 0;
+	player.dir = 0;
+	player.moving = 0;
+	player.in_shop = 0;
+	player.money = 500;
+	memset(player.carrying, 0, sizeof(player.carrying));
+	set_badgey_state(BADGEY_CONTINUE);
+	screen_changed = 1;
+}
+
+static void badgey_continue(void)
 {
 	FbInit();
 	FbClear();
@@ -3154,7 +3178,7 @@ static void badgey_planet_menu(void)
 				creature = &space_creature[0];
 				ncreatures = &nspace_creatures;
 			}
-				menu_setup = 0;
+			menu_setup = 0;
 		}
 		break;
 	case 1: /* Enter town or cave */
@@ -3973,7 +3997,7 @@ static void badgey_exit_confirm(void)
 
 static void badgey_exit(void)
 {
-	set_badgey_state(BADGEY_INIT); /* So that when we start again, we do not immediately exit */
+	set_badgey_state(BADGEY_CONTINUE); /* So that when we start again, we do not immediately exit */
 	returnToMenus();
 }
 
@@ -3983,6 +4007,9 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 	switch (badgey_state) {
 	case BADGEY_INIT:
 		badgey_init();
+		break;
+	case BADGEY_CONTINUE:
+		badgey_continue();
 		break;
 	case BADGEY_PLANET_MENU:
 		badgey_planet_menu();
