@@ -2735,6 +2735,9 @@ static void draw_creature(int i)
 	cx *= 16;
 	cy *= 16;
 
+	cx += 8;
+	cy += 8;
+
 	creature[i].onscreen_and_visible = 1;
 	int t = creature[i].type;
 	switch (t) {
@@ -2925,8 +2928,8 @@ static void draw_screen(void)
 	ry = y;
 	if (y < 0)
 		y += 64;
-	sx = 0;
-	sy = 0;
+	sx = 8;
+	sy = 8;
 	int count = 0;
 	memset(visibility_cache, 0, sizeof(visibility_cache));
 	do {
@@ -2949,7 +2952,7 @@ static void draw_screen(void)
 			rx = player.x - 3;
 			if (x < 0)
 				x += 64;
-			sx = 0;
+			sx = 8;
 			y++;
 			ry++;
 			sy += 16;
@@ -2959,7 +2962,7 @@ static void draw_screen(void)
 		}
 	} while (1);
 
-	draw_cell(16 * 3, 16 * 4, '@');
+	draw_cell(8 + 16 * 3, 8 + 16 * 4, '@');
 
 	draw_creatures();
 
