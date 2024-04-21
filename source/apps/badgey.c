@@ -2341,7 +2341,7 @@ static void check_buttons(int tick)
 				player.wy[player.world_level] = player.y;
 				player.old_world[player.world_level] = player.world;
 				player.x = new_world->landingx;
-				player.y = new_world->landingx;
+				player.y = new_world->landingy;
 				player.world = new_world;
 				screen_changed = 1;
 				spawn_planet_initial_monsters();
