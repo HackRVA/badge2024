@@ -1853,20 +1853,7 @@ struct creature_specific_data {
 		struct citizen_data {
 			uint8_t shopkeep; /* SHOP_NONE or index into which shop */
 			uint8_t icon;
-			uint8_t info; /* index to creature_info */
 		} citizen;
-		struct guard_data {
-			uint8_t info; /* index to creature info */
-		} guard;
-		struct robot1_data {
-			uint8_t info; /* index to creature_info */
-		} robot1;
-		struct robot2_data {
-			uint8_t info; /* index to creature info */
-		} robot2;
-		struct robot3_data {
-			uint8_t info; /* index to creature info */
-		} robot3;
 	};
 };
 
@@ -1874,6 +1861,8 @@ struct creature {
 	uint8_t type; /* indexes into creature_generic_data[] */
 	uint8_t homex, homey, x, y;
 	uint8_t onscreen_and_visible;
+	uint8_t info;
+	char name[8];
 	struct creature_specific_data csd;
 };
 
@@ -1930,6 +1919,7 @@ enum badgey_state_t {
 	BADGEY_RUN,
 	BADGEY_ENTER_TOWN_OR_CAVE,
 	BADGEY_TALK_TO_SHOPKEEPER,
+	BADGEY_TALK_TO_CITIZEN,
 	BADGEY_STATUS_MESSAGE,
 	BADGEY_STATS,
 	BADGEY_EXIT_CONFIRM,
@@ -1993,6 +1983,11 @@ static void status_message(char *message)
 	set_badgey_state(BADGEY_STATUS_MESSAGE); 
 }
 
+static void set_creature_name(char *name)
+{
+	strcpy(name, "JACK"); /* TODO: something better */
+}
+
 static void add_shopkeeper(int x, int y, unsigned char shoptype, unsigned int *seed)
 {
 	int n;
@@ -2013,7 +2008,8 @@ static void add_shopkeeper(int x, int y, unsigned char shoptype, unsigned int *s
 	int minicon = creature_generic_data[CREATURE_TYPE_CITIZEN].citizen.min_icon;
 	int maxicon = creature_generic_data[CREATURE_TYPE_CITIZEN].citizen.max_icon;
 	creature[n].csd.citizen.icon = minicon + (xorshift(seed) % (maxicon - minicon));
-	creature[n].csd.citizen.info = 0;
+	creature[n].info = 0;
+	set_creature_name(creature[n].name);
 	(*ncreatures)++;
 }
 
@@ -2044,7 +2040,8 @@ static void add_robot1(unsigned char roadchar, unsigned int *seed)
 	creature[n].homey = y;
 	creature[n].x = x;
 	creature[n].y = y;
-	creature[n].csd.robot1.info = 0;
+	creature[n].info = 0;
+	set_creature_name(creature[n].name);
 	(*ncreatures)++;
 }
 
@@ -2075,7 +2072,7 @@ static void add_robot3(unsigned char roadchar, unsigned int *seed)
 	creature[n].homey = y;
 	creature[n].x = x;
 	creature[n].y = y;
-	creature[n].csd.robot3.info = 0;
+	creature[n].info = 0;
 	(*ncreatures)++;
 }
 
@@ -2106,7 +2103,8 @@ static void add_guard(unsigned char roadchar, unsigned int *seed)
 	creature[n].homey = y;
 	creature[n].x = x;
 	creature[n].y = y;
-	creature[n].csd.guard.info = 0;
+	creature[n].info = 0;
+	set_creature_name(creature[n].name);
 	(*ncreatures)++;
 }
 
@@ -2140,7 +2138,8 @@ static void add_citizen(int roadchar, unsigned int *seed)
 	creature[n].y = y;
 	creature[n].csd.citizen.shopkeep = SHOP_NONE;
 	creature[n].csd.citizen.icon = ICON_CITIZEN1 + (xorshift(seed) % 6);
-	creature[n].csd.citizen.info = 0;
+	creature[n].info = 0;
+	set_creature_name(creature[n].name);
 	(*ncreatures)++;
 }
 
@@ -2283,6 +2282,7 @@ static void spawn_monster(unsigned int *seed)
 	creature[n].homey = y;
 	creature[n].x = x;
 	creature[n].y = y;
+	set_creature_name(creature[n].name);
 	(*ncreatures)++;
 }
 
@@ -3104,6 +3104,72 @@ static void badgey_talk_to_shopkeeper(void)
 	}
 }
 
+static int citizen_near_player(void)
+{
+	for (int i = 0; i < *ncreatures; i++) {
+		switch (creature[i].type) {
+		case CREATURE_TYPE_CITIZEN:
+		case CREATURE_TYPE_GUARD:
+		case CREATURE_TYPE_ROBOT1:
+		case CREATURE_TYPE_ROBOT2:
+		case CREATURE_TYPE_ROBOT3:
+			break;
+		default:
+			continue;
+		}
+
+		/* don't count shopkeepers */
+		if (creature[i].type == CREATURE_TYPE_CITIZEN &&
+			creature[i].csd.citizen.shopkeep != SHOP_NONE)
+			continue;
+
+		int dx = abs(player.x - creature[i].x);
+		if (dx > 1 && dx < 63)
+			continue;
+		int dy = abs(player.y - creature[i].y);
+		if (dy > 1 && dy < 63)
+			continue;
+		return i;
+	}
+	return -1;
+}
+
+static void badgey_talk_to_citizen(void)
+{
+	int c = citizen_near_player();
+	char buf[255];
+	int i;
+
+	if (c < 0) {
+		set_badgey_state(previous_badgey_state);
+		return;
+	}
+
+	if (screen_changed) {
+		i = creature[c].info;
+		FbClear();
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
+		snprintf(buf, sizeof(buf), "\n %s:\n %s\n", creature[c].name, creature_info[i]);
+		FbMove(0, 0);
+		FbWriteString(buf);
+		FbSwapBuffers();
+		screen_changed = 0;
+	}
+
+	int down_latches = button_down_latches();
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		screen_changed = 1;
+		set_badgey_state(previous_badgey_state);
+	}
+}
+
 static void badgey_town_menu(void)
 {
 	static int menu_setup = 0;
@@ -3125,8 +3191,14 @@ static void badgey_town_menu(void)
 			}
 #endif
 		}
-		dynmenu_add_item(&town_menu, "STATS", BADGEY_STATS, 2);
-		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 3);
+
+		if (citizen_near_player() >= 0) {
+			dynmenu_add_item(&town_menu, "TALK TO", BADGEY_RUN, 2);
+			dynmenu_add_item(&town_menu, "  CITIZEN", BADGEY_RUN, 2);
+		}
+
+		dynmenu_add_item(&town_menu, "STATS", BADGEY_STATS, 3);
+		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 4);
 		menu_setup = 1;
 	}
 
@@ -3135,31 +3207,27 @@ static void badgey_town_menu(void)
 
 	switch (dynmenu_get_user_choice(&town_menu)) {
 	case 0: /* Nevermind */
-		screen_changed = 1;
-		menu_setup = 0;
 		set_badgey_state(BADGEY_RUN);
 		break;
 	case 1: /* talk to shop keeper */
 		set_badgey_state(BADGEY_TALK_TO_SHOPKEEPER);
-		screen_changed = 1;
-		menu_setup = 0;
 		break;
-	case 2: /* stats */
+	case 2: previous_badgey_state = badgey_state; 
+		set_badgey_state(BADGEY_TALK_TO_CITIZEN);
+		break;
+	case 3: /* stats */
 		previous_badgey_state = badgey_state;
-		screen_changed = 1;
 		set_badgey_state(BADGEY_STATS);
 		break;
-	case 3: /* exit */
-		screen_changed = 1;
+	case 4: /* exit */
 		confirm_exit();
-		menu_setup = 0;
 		break;
 	default:
-		screen_changed = 1;
-		menu_setup = 0;
 		set_badgey_state(BADGEY_RUN);
 		break;
 	}
+	screen_changed = 1;
+	menu_setup = 0;
 }
 
 static void badgey_planet_menu(void)
@@ -4087,6 +4155,9 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_TALK_TO_SHOPKEEPER:
 		badgey_talk_to_shopkeeper();
+		break;
+	case BADGEY_TALK_TO_CITIZEN:
+		badgey_talk_to_citizen();
 		break;
 	case BADGEY_STATUS_MESSAGE:
 		badgey_status_message();
