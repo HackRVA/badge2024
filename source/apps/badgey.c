@@ -1935,6 +1935,11 @@ enum badgey_state_t {
 static enum badgey_state_t badgey_state = BADGEY_INIT;
 static enum badgey_state_t badgey_unconfirm_state = BADGEY_RUN;
 
+static void set_badgey_state(enum badgey_state_t new_state)
+{
+	badgey_state = new_state;
+}
+
 static char message_to_display[255];
 static char message_displayed = 0;
 static int screen_changed = 0;
@@ -1943,12 +1948,12 @@ static enum badgey_state_t previous_badgey_state = BADGEY_RUN;
 static void confirm_exit(void)
 {
 	badgey_unconfirm_state = badgey_state;
-	badgey_state = BADGEY_EXIT_CONFIRM;
+	set_badgey_state(BADGEY_EXIT_CONFIRM);
 }
 
 static void unconfirm_exit(void)
 {
-	badgey_state = badgey_unconfirm_state;
+	set_badgey_state(badgey_unconfirm_state);
 }
 
 static void badgey_status_message(void)
@@ -1972,7 +1977,7 @@ static void badgey_status_message(void)
 		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		message_displayed = 0;
 		screen_changed = 1;
-		badgey_state = previous_badgey_state;
+		set_badgey_state(previous_badgey_state);
 	}
 }
 
@@ -1981,7 +1986,7 @@ static void status_message(char *message)
 	strcpy(message_to_display, message);
 	message_displayed = 0;
 	previous_badgey_state = badgey_state;
-	badgey_state = BADGEY_STATUS_MESSAGE; 
+	set_badgey_state(BADGEY_STATUS_MESSAGE); 
 }
 
 static void add_shopkeeper(int x, int y, unsigned char shoptype, unsigned int *seed)
@@ -2156,7 +2161,7 @@ static void badgey_init(void)
 {
 	FbInit();
 	FbClear();
-	badgey_state = BADGEY_RUN;
+	set_badgey_state(BADGEY_RUN);
 	screen_changed = 1;
 }
 
@@ -2204,7 +2209,7 @@ static void cave_check_buttons(void)
 			newy -= 64;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (player.world->type == WORLD_TYPE_CAVE)
-			badgey_state = BADGEY_CAVE_MENU;
+			set_badgey_state(BADGEY_CAVE_MENU);
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		confirm_exit();
 	}
@@ -2304,9 +2309,9 @@ static void check_buttons(int tick)
 		}
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		if (player.world->type == WORLD_TYPE_PLANET) 
-			badgey_state = BADGEY_PLANET_MENU;
+			set_badgey_state(BADGEY_PLANET_MENU);
 		else if (player.world->type == WORLD_TYPE_TOWN)
-			badgey_state = BADGEY_TOWN_MENU;
+			set_badgey_state(BADGEY_TOWN_MENU);
 		newmoving = 0;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		confirm_exit();
@@ -2369,7 +2374,7 @@ static void check_buttons(int tick)
 					player.world_level--;
 					player.x = player.wx[player.world_level];
 					player.y = player.wy[player.world_level];
-					badgey_state = BADGEY_RUN;
+					set_badgey_state(BADGEY_RUN);
 					/* global */ screen_changed = 1;
 					player.in_town = 0;
 					creature = &planet_creature[0];
@@ -2970,7 +2975,7 @@ static void badgey_cave_menu(void)
 				player.world_level--;
 				player.x = player.wx[player.world_level];
 				player.y = player.wy[player.world_level];
-				badgey_state = BADGEY_RUN;
+				set_badgey_state(BADGEY_RUN);
 				screen_changed = 1;
 				player.in_cave = 0;
 			}
@@ -2980,7 +2985,7 @@ static void badgey_cave_menu(void)
 	case DYNMENU_SELECTION_ABORTED:
 	case 1: /* nevermind */
 		menu_setup = 0;
-		badgey_state = BADGEY_RUN;
+		set_badgey_state(BADGEY_RUN);
 		screen_changed = 1;
 		break;
 	case 2: /* quit */
@@ -3001,7 +3006,7 @@ static void badgey_talk_to_shopkeeper(void)
 #if TARGET_SIMULATOR
 		printf("Bad value in st: %d %s:%d\n", st, __FILE__, __LINE__);
 #endif
-		badgey_state = BADGEY_RUN;
+		set_badgey_state(BADGEY_RUN);
 		return;
 	}
 
@@ -3032,7 +3037,7 @@ static void badgey_talk_to_shopkeeper(void)
 	if (choice == 254) { /* Nevermind */
 		screen_changed = 1;
 		menu_setup = 0;
-		badgey_state = BADGEY_TOWN_MENU;
+		set_badgey_state(BADGEY_TOWN_MENU);
 		return;
 	}
 	if (choice == 255) { /* exit */
@@ -3093,10 +3098,10 @@ static void badgey_town_menu(void)
 	case 0: /* Nevermind */
 		screen_changed = 1;
 		menu_setup = 0;
-		badgey_state = BADGEY_RUN;
+		set_badgey_state(BADGEY_RUN);
 		break;
 	case 1: /* talk to shop keeper */
-		badgey_state = BADGEY_TALK_TO_SHOPKEEPER;
+		set_badgey_state(BADGEY_TALK_TO_SHOPKEEPER);
 		screen_changed = 1;
 		menu_setup = 0;
 		break;
@@ -3108,7 +3113,7 @@ static void badgey_town_menu(void)
 	default:
 		screen_changed = 1;
 		menu_setup = 0;
-		badgey_state = BADGEY_RUN;
+		set_badgey_state(BADGEY_RUN);
 		break;
 	}
 }
@@ -3144,7 +3149,7 @@ static void badgey_planet_menu(void)
 				player.world_level--;
 				player.x = player.wx[player.world_level];
 				player.y = player.wy[player.world_level];
-				badgey_state = BADGEY_RUN;
+				set_badgey_state(BADGEY_RUN);
 				screen_changed = 1;
 				creature = &space_creature[0];
 				ncreatures = &nspace_creatures;
@@ -3155,14 +3160,14 @@ static void badgey_planet_menu(void)
 	case 1: /* Enter town or cave */
 		menu_setup = 0;
 		if (underchar >= '0' && underchar <= '9')
-			badgey_state = BADGEY_ENTER_TOWN_OR_CAVE;
+			set_badgey_state(BADGEY_ENTER_TOWN_OR_CAVE);
 		else
-			badgey_state = BADGEY_RUN;
+			set_badgey_state(BADGEY_RUN);
 		break;
 	case DYNMENU_SELECTION_ABORTED:
 	case 2: /* nevermind */
 		menu_setup = 0;
-		badgey_state = BADGEY_RUN;
+		set_badgey_state(BADGEY_RUN);
 		screen_changed = 1;
 		break;
 	case 3: /* quit */
@@ -3934,7 +3939,7 @@ static void badgey_enter_town_or_cave(void)
 	} else if (underchar >= '5' && underchar <= '9') {
 		enter_cave(underchar - '0');
 	}
-	badgey_state = BADGEY_RUN;
+	set_badgey_state(BADGEY_RUN);
 }
 
 static void badgey_exit_confirm(void)
@@ -3957,7 +3962,7 @@ static void badgey_exit_confirm(void)
 
 	switch (dynmenu_get_user_choice(&ecm)) {
 	case 2:
-		badgey_state = BADGEY_EXIT;
+		set_badgey_state(BADGEY_EXIT);
 		break;
 	case 1:
 	default:
@@ -3968,7 +3973,7 @@ static void badgey_exit_confirm(void)
 
 static void badgey_exit(void)
 {
-	badgey_state = BADGEY_INIT; /* So that when we start again, we do not immediately exit */
+	set_badgey_state(BADGEY_INIT); /* So that when we start again, we do not immediately exit */
 	returnToMenus();
 }
 
