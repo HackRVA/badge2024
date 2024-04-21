@@ -1928,15 +1928,28 @@ enum badgey_state_t {
 	BADGEY_ENTER_TOWN_OR_CAVE,
 	BADGEY_TALK_TO_SHOPKEEPER,
 	BADGEY_STATUS_MESSAGE,
+	BADGEY_EXIT_CONFIRM,
 	BADGEY_EXIT,
 };
 
 static enum badgey_state_t badgey_state = BADGEY_INIT;
+static enum badgey_state_t badgey_unconfirm_state = BADGEY_RUN;
 
 static char message_to_display[255];
 static char message_displayed = 0;
 static int screen_changed = 0;
 static enum badgey_state_t previous_badgey_state = BADGEY_RUN;
+
+static void confirm_exit(void)
+{
+	badgey_unconfirm_state = badgey_state;
+	badgey_state = BADGEY_EXIT_CONFIRM;
+}
+
+static void unconfirm_exit(void)
+{
+	badgey_state = badgey_unconfirm_state;
+}
 
 static void badgey_status_message(void)
 {
@@ -2193,7 +2206,7 @@ static void cave_check_buttons(void)
 		if (player.world->type == WORLD_TYPE_CAVE)
 			badgey_state = BADGEY_CAVE_MENU;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		badgey_state = BADGEY_EXIT;
+		confirm_exit();
 	}
 	if (dynmap[windex(newx, newy)] == '#')
 		return;
@@ -2296,7 +2309,7 @@ static void check_buttons(int tick)
 			badgey_state = BADGEY_TOWN_MENU;
 		newmoving = 0;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
-		badgey_state = BADGEY_EXIT;
+		confirm_exit();
 		newmoving = 0;
 	}
 
@@ -2941,7 +2954,7 @@ static void badgey_cave_menu(void)
 		if (player.x == 32 && player.y == 62)
 			dynmenu_add_item(&cave_menu, "CLIMB UP", BADGEY_RUN, 0);
 		dynmenu_add_item(&cave_menu, "NEVERMIND", BADGEY_RUN, 1);
-		dynmenu_add_item(&cave_menu, "QUIT", BADGEY_EXIT, 2);
+		dynmenu_add_item(&cave_menu, "QUIT", BADGEY_EXIT_CONFIRM, 2);
 		menu_setup = 1;
 	}
 
@@ -2972,7 +2985,7 @@ static void badgey_cave_menu(void)
 		break;
 	case 2: /* quit */
 		screen_changed = 1;
-		badgey_state = BADGEY_EXIT;
+		confirm_exit();
 		menu_setup = 0;
 		break;
 	}
@@ -3007,7 +3020,7 @@ static void badgey_talk_to_shopkeeper(void)
 				n++;
 			}
 		}
-		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT, 255);
+		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 255);
 		menu_setup = 1;
 	}
 
@@ -3024,7 +3037,7 @@ static void badgey_talk_to_shopkeeper(void)
 	}
 	if (choice == 255) { /* exit */
 		screen_changed = 1;
-		badgey_state = BADGEY_EXIT;
+		confirm_exit();
 		menu_setup = 0;
 		return;
 	}
@@ -3069,7 +3082,7 @@ static void badgey_town_menu(void)
 			}
 #endif
 		}
-		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT, 2);
+		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 2);
 		menu_setup = 1;
 	}
 
@@ -3089,7 +3102,7 @@ static void badgey_town_menu(void)
 		break;
 	case 2: /* exit */
 		screen_changed = 1;
-		badgey_state = BADGEY_EXIT;
+		confirm_exit();
 		menu_setup = 0;
 		break;
 	default:
@@ -3115,7 +3128,7 @@ static void badgey_planet_menu(void)
 		if (underchar >= '5' && underchar <= '9')
 			dynmenu_add_item(&planet_menu, "ENTER CAVE", BADGEY_RUN, 1);
 		dynmenu_add_item(&planet_menu, "NEVERMIND", BADGEY_RUN, 2);
-		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT, 3);
+		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT_CONFIRM, 3);
 		menu_setup = 1;
 	}
 
@@ -3154,7 +3167,7 @@ static void badgey_planet_menu(void)
 		break;
 	case 3: /* quit */
 		screen_changed = 1;
-		badgey_state = BADGEY_EXIT;
+		confirm_exit();
 		menu_setup = 0;
 		break;
 	}
@@ -3924,6 +3937,35 @@ static void badgey_enter_town_or_cave(void)
 	badgey_state = BADGEY_RUN;
 }
 
+static void badgey_exit_confirm(void)
+{
+	static int menu_ready = 0;
+	static struct dynmenu ecm;
+	static struct dynmenu_item ecm_item[2];
+
+	if (!menu_ready) {
+		dynmenu_clear(&ecm);
+		dynmenu_init(&ecm, ecm_item, ARRAY_SIZE(ecm_item));
+		dynmenu_set_title(&ecm, "REALLY QUIT?", "", "");
+		dynmenu_add_item(&ecm, "NO, DON'T QUIT", BADGEY_RUN, 1);
+		dynmenu_add_item(&ecm, "YES, QUIT", BADGEY_EXIT_CONFIRM, 2);
+		menu_ready = 1;
+	}
+
+	if (!dynmenu_let_user_choose(&ecm))
+		return;
+
+	switch (dynmenu_get_user_choice(&ecm)) {
+	case 2:
+		badgey_state = BADGEY_EXIT;
+		break;
+	case 1:
+	default:
+		unconfirm_exit();
+		break;
+	}
+}
+
 static void badgey_exit(void)
 {
 	badgey_state = BADGEY_INIT; /* So that when we start again, we do not immediately exit */
@@ -3948,6 +3990,9 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_RUN:
 		badgey_run();
+		break;
+	case BADGEY_EXIT_CONFIRM:
+		badgey_exit_confirm();
 		break;
 	case BADGEY_EXIT:
 		badgey_exit();
