@@ -1900,6 +1900,7 @@ static struct player {
 	int moving;
 	unsigned char in_shop;
 	int money;
+	int hp;
 	unsigned char carrying[ARRAY_SIZE(shop_item)];
 } player = {
 	.world = &space,
@@ -1916,6 +1917,7 @@ static struct player {
 	.in_shop = SHOP_NONE,
 	.money = 500,
 	.carrying = { 0 },
+	.hp = 100,
 };
 
 /* Program states.  Initial state is BADGEY_INIT */
@@ -1929,6 +1931,7 @@ enum badgey_state_t {
 	BADGEY_ENTER_TOWN_OR_CAVE,
 	BADGEY_TALK_TO_SHOPKEEPER,
 	BADGEY_STATUS_MESSAGE,
+	BADGEY_STATS,
 	BADGEY_EXIT_CONFIRM,
 	BADGEY_EXIT,
 };
@@ -3027,6 +3030,7 @@ static void badgey_talk_to_shopkeeper(void)
 {
 	static int menu_setup = 0;
 	int st, n;
+	int stats = 0;
 
 	st = player.in_shop;
 	if (st < 0 || st >= (int) ARRAY_SIZE(proprietor)) {
@@ -3052,6 +3056,8 @@ static void badgey_talk_to_shopkeeper(void)
 				n++;
 			}
 		}
+		stats = n; n++;
+		dynmenu_add_item(&town_menu, "STATS", BADGEY_STATS, stats); 
 		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 255);
 		menu_setup = 1;
 	}
@@ -3091,6 +3097,11 @@ static void badgey_talk_to_shopkeeper(void)
 		menu_setup = 0;
 		return;
 	}
+	if (choice == stats) {
+		previous_badgey_state = badgey_state;
+		screen_changed = 1;
+		set_badgey_state(BADGEY_STATS);
+	}
 }
 
 static void badgey_town_menu(void)
@@ -3114,7 +3125,8 @@ static void badgey_town_menu(void)
 			}
 #endif
 		}
-		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 2);
+		dynmenu_add_item(&town_menu, "STATS", BADGEY_STATS, 2);
+		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 3);
 		menu_setup = 1;
 	}
 
@@ -3132,7 +3144,12 @@ static void badgey_town_menu(void)
 		screen_changed = 1;
 		menu_setup = 0;
 		break;
-	case 2: /* exit */
+	case 2: /* stats */
+		previous_badgey_state = badgey_state;
+		screen_changed = 1;
+		set_badgey_state(BADGEY_STATS);
+		break;
+	case 3: /* exit */
 		screen_changed = 1;
 		confirm_exit();
 		menu_setup = 0;
@@ -3159,8 +3176,9 @@ static void badgey_planet_menu(void)
 			dynmenu_add_item(&planet_menu, "ENTER TOWN", BADGEY_RUN, 1);
 		if (underchar >= '5' && underchar <= '9')
 			dynmenu_add_item(&planet_menu, "ENTER CAVE", BADGEY_RUN, 1);
-		dynmenu_add_item(&planet_menu, "NEVERMIND", BADGEY_RUN, 2);
-		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT_CONFIRM, 3);
+		dynmenu_add_item(&planet_menu, "STATS", BADGEY_STATS, 2);
+		dynmenu_add_item(&planet_menu, "NEVERMIND", BADGEY_RUN, 3);
+		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT_CONFIRM, 4);
 		menu_setup = 1;
 	}
 
@@ -3191,13 +3209,18 @@ static void badgey_planet_menu(void)
 		else
 			set_badgey_state(BADGEY_RUN);
 		break;
+	case 2:
+		previous_badgey_state = badgey_state;
+		screen_changed = 1;
+		set_badgey_state(BADGEY_STATS);
+		break;
 	case DYNMENU_SELECTION_ABORTED:
-	case 2: /* nevermind */
+	case 3: /* nevermind */
 		menu_setup = 0;
 		set_badgey_state(BADGEY_RUN);
 		screen_changed = 1;
 		break;
-	case 3: /* quit */
+	case 4: /* quit */
 		screen_changed = 1;
 		confirm_exit();
 		menu_setup = 0;
@@ -3969,6 +3992,33 @@ static void badgey_enter_town_or_cave(void)
 	set_badgey_state(BADGEY_RUN);
 }
 
+static void badgey_stats(void)
+{
+	char buf[20];
+
+	if (screen_changed) {
+		FbMove(0, 0);
+		snprintf(buf, sizeof(buf), "HP: %d\n", player.hp);
+		FbWriteString(buf);
+		snprintf(buf, sizeof(buf), "GP: %d\n", player.money);
+		FbWriteString(buf);
+		FbSwapBuffers();
+		screen_changed = 0;
+	}
+
+	int down_latches = button_down_latches();
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		screen_changed = 1;
+		set_badgey_state(previous_badgey_state);
+	}
+}
+
 static void badgey_exit_confirm(void)
 {
 	static int menu_ready = 0;
@@ -4040,6 +4090,9 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_STATUS_MESSAGE:
 		badgey_status_message();
+		break;
+	case BADGEY_STATS:
+		badgey_stats();
 		break;
 	default:
 		break;
