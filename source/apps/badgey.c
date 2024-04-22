@@ -1927,17 +1927,18 @@ enum badgey_state_t {
 };
 
 static enum badgey_state_t badgey_state = BADGEY_INIT;
+static enum badgey_state_t previous_badgey_state = BADGEY_RUN;
 static enum badgey_state_t badgey_unconfirm_state = BADGEY_RUN;
 
 static void set_badgey_state(enum badgey_state_t new_state)
 {
+	previous_badgey_state = badgey_state;
 	badgey_state = new_state;
 }
 
 static char message_to_display[255];
 static char message_displayed = 0;
 static int screen_changed = 0;
-static enum badgey_state_t previous_badgey_state = BADGEY_RUN;
 
 static void confirm_exit(void)
 {
@@ -1979,7 +1980,6 @@ static void status_message(char *message)
 {
 	strcpy(message_to_display, message);
 	message_displayed = 0;
-	previous_badgey_state = badgey_state;
 	set_badgey_state(BADGEY_STATUS_MESSAGE); 
 }
 
@@ -3098,7 +3098,6 @@ static void badgey_talk_to_shopkeeper(void)
 		return;
 	}
 	if (choice == stats) {
-		previous_badgey_state = badgey_state;
 		screen_changed = 1;
 		set_badgey_state(BADGEY_STATS);
 	}
@@ -3212,11 +3211,9 @@ static void badgey_town_menu(void)
 	case 1: /* talk to shop keeper */
 		set_badgey_state(BADGEY_TALK_TO_SHOPKEEPER);
 		break;
-	case 2: previous_badgey_state = badgey_state; 
-		set_badgey_state(BADGEY_TALK_TO_CITIZEN);
+	case 2: set_badgey_state(BADGEY_TALK_TO_CITIZEN);
 		break;
 	case 3: /* stats */
-		previous_badgey_state = badgey_state;
 		set_badgey_state(BADGEY_STATS);
 		break;
 	case 4: /* exit */
@@ -3278,7 +3275,6 @@ static void badgey_planet_menu(void)
 			set_badgey_state(BADGEY_RUN);
 		break;
 	case 2:
-		previous_badgey_state = badgey_state;
 		screen_changed = 1;
 		set_badgey_state(BADGEY_STATS);
 		break;
