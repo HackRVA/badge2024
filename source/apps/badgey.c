@@ -1635,7 +1635,7 @@ static const struct asset2 *creature_icon[] = {
 #define ITEM_TYPE_ARMOR 2
 #define ITEM_TYPE_RANGED_WEAPON 3
 #define ITEM_TYPE_MELEE_WEAPON 4
-#define ITME_TYPE_SOFTWARE 5
+#define ITEM_TYPE_SOFTWARE 5
 #define ITEM_TYPE_USELESS 6
 
 const struct shop_item {
@@ -1891,6 +1891,8 @@ static struct player {
 	int money;
 	int hp;
 	unsigned char carrying[ARRAY_SIZE(shop_item)];
+	unsigned char equipped_weapon, equipped_armor;
+#define EQUIPPED_NONE 255
 } player = {
 	.world = &space,
 	.x = 32,
@@ -1907,6 +1909,8 @@ static struct player {
 	.money = 500,
 	.carrying = { 0 },
 	.hp = 100,
+	.equipped_weapon = EQUIPPED_NONE,
+	.equipped_armor = EQUIPPED_NONE,
 };
 
 /* Program states.  Initial state is BADGEY_INIT */
@@ -1922,6 +1926,8 @@ enum badgey_state_t {
 	BADGEY_TALK_TO_CITIZEN,
 	BADGEY_STATUS_MESSAGE,
 	BADGEY_STATS,
+	BADGEY_EQUIP_WEAPON,
+	BADGEY_EQUIP_ARMOR,
 	BADGEY_EXIT_CONFIRM,
 	BADGEY_EXIT,
 };
@@ -3196,6 +3202,8 @@ static void badgey_town_menu(void)
 			dynmenu_add_item(&town_menu, "  CITIZEN", BADGEY_RUN, 2);
 		}
 
+		dynmenu_add_item(&town_menu, "EQUIP WEAPON", BADGEY_STATS, 5);
+		dynmenu_add_item(&town_menu, "EQUIP ARMOR", BADGEY_STATS, 6);
 		dynmenu_add_item(&town_menu, "STATS", BADGEY_STATS, 3);
 		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 4);
 		menu_setup = 1;
@@ -3219,6 +3227,12 @@ static void badgey_town_menu(void)
 	case 4: /* exit */
 		confirm_exit();
 		break;
+	case 5: /* equip weapon */
+		set_badgey_state(BADGEY_EQUIP_WEAPON);
+		break;
+	case 6: /* equip armor */
+		set_badgey_state(BADGEY_EQUIP_ARMOR);
+		break;
 	default:
 		set_badgey_state(BADGEY_RUN);
 		break;
@@ -3241,6 +3255,8 @@ static void badgey_planet_menu(void)
 			dynmenu_add_item(&planet_menu, "ENTER TOWN", BADGEY_RUN, 1);
 		if (underchar >= '5' && underchar <= '9')
 			dynmenu_add_item(&planet_menu, "ENTER CAVE", BADGEY_RUN, 1);
+		dynmenu_add_item(&planet_menu, "EQUIP WEAPON", BADGEY_STATS, 5);
+		dynmenu_add_item(&planet_menu, "EQUIP ARMOR", BADGEY_STATS, 6);
 		dynmenu_add_item(&planet_menu, "STATS", BADGEY_STATS, 2);
 		dynmenu_add_item(&planet_menu, "NEVERMIND", BADGEY_RUN, 3);
 		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT_CONFIRM, 4);
@@ -3288,6 +3304,16 @@ static void badgey_planet_menu(void)
 		screen_changed = 1;
 		confirm_exit();
 		menu_setup = 0;
+		break;
+	case 5: /* equip weapon */
+		screen_changed = 1;
+		menu_setup = 0;
+		set_badgey_state(BADGEY_EQUIP_WEAPON);
+		break;
+	case 6: /* equip armor */
+		screen_changed = 1;
+		menu_setup = 0;
+		set_badgey_state(BADGEY_EQUIP_ARMOR);
 		break;
 	}
 }
@@ -4058,7 +4084,8 @@ static void badgey_enter_town_or_cave(void)
 
 static void badgey_stats(void)
 {
-	char buf[20];
+	char buf[100];
+	int eq;
 
 	if (screen_changed) {
 		FbMove(0, 0);
@@ -4066,6 +4093,17 @@ static void badgey_stats(void)
 		FbWriteString(buf);
 		snprintf(buf, sizeof(buf), "GP: %d\n", player.money);
 		FbWriteString(buf);
+
+		eq = player.equipped_armor;
+		snprintf(buf, sizeof(buf), "WEARING:\n  %s\n",
+			eq == EQUIPPED_NONE ? "NO ARMOR" : shop_item[eq].name);
+		FbWriteString(buf);
+
+		eq = player.equipped_weapon;
+		snprintf(buf, sizeof(buf), "WIELDING:\n  %s\n",
+			eq == EQUIPPED_NONE ? "NO WEAPON" : shop_item[eq].name);
+		FbWriteString(buf);
+	
 		FbSwapBuffers();
 		screen_changed = 0;
 	}
@@ -4081,6 +4119,59 @@ static void badgey_stats(void)
 		screen_changed = 1;
 		set_badgey_state(previous_badgey_state);
 	}
+}
+
+static void badgey_equip(void)
+{
+	static int menu_setup = 0;
+	int count = 0;
+	unsigned char t1, t2;
+	static struct dynmenu item_menu;
+	static struct dynmenu_item item_menu_item[15];
+	char *title;
+
+	if (badgey_state == BADGEY_EQUIP_ARMOR) {
+		t1 = ITEM_TYPE_ARMOR;
+		t2 = t1;
+		title = "EQUIP ARMOR";
+	} else if (badgey_state == BADGEY_EQUIP_WEAPON) {
+		t1 = ITEM_TYPE_RANGED_WEAPON;
+		t2 = ITEM_TYPE_MELEE_WEAPON;
+		title = "EQUIP WEAPON";
+	}
+
+	if (!menu_setup) {
+		dynmenu_clear(&item_menu);
+		dynmenu_init(&item_menu, item_menu_item, ARRAY_SIZE(item_menu_item));
+		dynmenu_set_title(&item_menu, title, "", "");
+		for (int i = 0; i < (int) ARRAY_SIZE(shop_item); i++) {
+			if (player.carrying[i] == 0)
+				continue;
+			if (shop_item[i].item_type == t1 ||
+				shop_item[i].item_type == t2) {
+				dynmenu_add_item(&item_menu, shop_item[i].name, badgey_state, i);
+				count++;
+				if (count >= (int) ARRAY_SIZE(item_menu_item) - 1)
+					break;
+			}
+		}
+		dynmenu_add_item(&item_menu, "NEVERMIND", BADGEY_RUN, DYNMENU_SELECTION_ABORTED);
+		menu_setup = 1;
+	}
+
+	if (!dynmenu_let_user_choose(&item_menu))
+		return;
+
+	int choice = dynmenu_get_user_choice(&item_menu);
+	if (choice != DYNMENU_SELECTION_ABORTED &&
+		choice != (unsigned char) DYNMENU_SELECTION_ABORTED) {
+		if (badgey_state == BADGEY_EQUIP_ARMOR)
+			player.equipped_armor = choice;
+		else if (badgey_state == BADGEY_EQUIP_WEAPON)
+			player.equipped_weapon = choice;
+	}
+	menu_setup = 0;
+	set_badgey_state(BADGEY_RUN);
 }
 
 static void badgey_exit_confirm(void)
@@ -4160,6 +4251,10 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_STATS:
 		badgey_stats();
+		break;
+	case BADGEY_EQUIP_WEAPON:
+	case BADGEY_EQUIP_ARMOR:
+		badgey_equip();
 		break;
 	default:
 		break;
