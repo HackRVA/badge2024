@@ -3,7 +3,7 @@
 #include "music.h"
 #include "audio.h"
 
-static struct tune *current_tune;
+static const struct tune *current_tune;
 static int current_note = 0;
 static void (*finish_callback)(void *) = NULL;
 static int stop_the_music = 0;
@@ -30,7 +30,7 @@ static void next_note(void)
 	}
 }
 
-void play_tune(struct tune *tune, void (*finished_callback)(void *kookie), void *kookie)
+void play_tune(const struct tune *tune, void (*finished_callback)(void *kookie), void *kookie)
 {
 	stop_the_music = 0;
 	current_note = 0;

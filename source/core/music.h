@@ -106,10 +106,10 @@ struct note {
 
 struct tune {
 	int num_notes;
-	struct note *note;
+	const struct note *note;
 };
 
-void play_tune(struct tune *tune, void (*finished_callback)(void *cookie), void *cookie);
+void play_tune(const struct tune *tune, void (*finished_callback)(void *cookie), void *cookie);
 
 void stop_tune(void);
 
