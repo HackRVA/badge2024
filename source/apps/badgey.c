@@ -2823,10 +2823,58 @@ static int is_onscreen(int x, int y)
 	return 1;
 }
 
+static void draw_creature_at_xy(int x, int y, int creature_type, int instance)
+{
+	int icon;
+
+	switch (creature_type) {
+	case CREATURE_TYPE_CITIZEN:
+		icon = creature[instance].csd.citizen.icon;
+		break;
+	case CREATURE_TYPE_GUARD:
+		icon = creature_generic_data[creature_type].guard.icon;
+		break;
+	case CREATURE_TYPE_ROBOT1:
+		icon = creature_generic_data[creature_type].robot1.icon;
+		break;
+	case CREATURE_TYPE_ROBOT2:
+		icon = creature_generic_data[creature_type].robot2.icon;
+		break;
+	case CREATURE_TYPE_ROBOT3:
+		icon = creature_generic_data[creature_type].robot2.icon;
+		break;
+	case CREATURE_TYPE_BYRSTRAN:
+		icon = creature_generic_data[creature_type].byrstran.icon;
+		break;
+	case CREATURE_TYPE_HARGON:
+		icon = creature_generic_data[creature_type].hargon.icon;
+		break;
+	case CREATURE_TYPE_ROVDAN:
+		icon = creature_generic_data[creature_type].rovdan.icon;
+		break;
+	case CREATURE_TYPE_SKAVO:
+		icon = creature_generic_data[creature_type].skavo.icon;
+		break;
+	case CREATURE_TYPE_TARCON:
+		icon = creature_generic_data[creature_type].tarcon.icon;
+		break;
+	case CREATURE_TYPE_ZUNARO:
+		icon = creature_generic_data[creature_type].zunaro.icon;
+		break;
+	default:
+#if TARGET_SIMULATOR
+		printf("No icon for creature type %hhu\n", creature[instance].type);
+#endif
+		icon = 0;
+		break;
+	}
+	FbMove(x, y);
+	FbImage2(creature_icon[icon], 0);
+}
+
 static void draw_creature(int i)
 {
 	int cx, cy;
-	int icon;
 
 	creature[i].onscreen_and_visible = 0;
 	if (!is_onscreen(creature[i].x, creature[i].y))
@@ -2860,52 +2908,9 @@ static void draw_creature(int i)
 	cy += 8;
 
 	creature[i].onscreen_and_visible = 1;
-	int t = creature[i].type;
-	switch (t) {
-	case CREATURE_TYPE_CITIZEN:
-		icon = creature[i].csd.citizen.icon;
+	if (creature[i].type == CREATURE_TYPE_CITIZEN)
 		player.in_shop = creature[i].csd.citizen.shopkeep;
-		break;
-	case CREATURE_TYPE_GUARD:
-		icon = creature_generic_data[t].guard.icon;
-		break;
-	case CREATURE_TYPE_ROBOT1:
-		icon = creature_generic_data[t].robot1.icon;
-		break;
-	case CREATURE_TYPE_ROBOT2:
-		icon = creature_generic_data[t].robot2.icon;
-		break;
-	case CREATURE_TYPE_ROBOT3:
-		icon = creature_generic_data[t].robot2.icon;
-		break;
-	case CREATURE_TYPE_BYRSTRAN:
-		icon = creature_generic_data[t].byrstran.icon;
-		break;
-	case CREATURE_TYPE_HARGON:
-		icon = creature_generic_data[t].hargon.icon;
-		break;
-	case CREATURE_TYPE_ROVDAN:
-		icon = creature_generic_data[t].rovdan.icon;
-		break;
-	case CREATURE_TYPE_SKAVO:
-		icon = creature_generic_data[t].skavo.icon;
-		break;
-	case CREATURE_TYPE_TARCON:
-		icon = creature_generic_data[t].tarcon.icon;
-		break;
-	case CREATURE_TYPE_ZUNARO:
-		icon = creature_generic_data[t].zunaro.icon;
-		break;
-	default:
-#if TARGET_SIMULATOR
-		printf("No icon for creature type %hhu\n", creature[i].type);
-#endif
-		icon = 0;
-		break;
-	}
-
-	FbMove(cx, cy);
-	FbImage2(creature_icon[icon], 0);
+	draw_creature_at_xy(cx, cy, creature[i].type, i);
 }
 
 static void draw_creatures(void)
