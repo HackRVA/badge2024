@@ -2245,6 +2245,8 @@ static char whats_there(const char *map, int x, int y, int dx, int dy)
 	return map[y * 64 + x];
 }
 
+static void spawn_planet_initial_monsters(void);
+
 static void badgey_init(void)
 {
 	FbInit();
@@ -2264,6 +2266,7 @@ static void badgey_init(void)
 	player.in_shop = 0;
 	player.money = 500;
 	memset(player.carrying, 0, sizeof(player.carrying));
+	spawn_planet_initial_monsters();
 	set_badgey_state(BADGEY_CONTINUE);
 	screen_changed = 1;
 }
@@ -2519,6 +2522,8 @@ static void check_buttons(int tick)
 					player.in_town = 0;
 					creature = &planet_creature[0];
 					ncreatures = &nplanet_creatures;
+					spawn_planet_initial_monsters();
+					spawn_planet_initial_ships();
 					player.moving = 0;
 				}
 			}
@@ -3206,6 +3211,8 @@ static void badgey_cave_menu(void)
 				set_badgey_state(BADGEY_RUN);
 				screen_changed = 1;
 				player.in_cave = 0;
+				spawn_planet_initial_monsters();
+				spawn_planet_initial_ships();
 			}
 			menu_setup = 0;
 		}
