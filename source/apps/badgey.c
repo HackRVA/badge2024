@@ -1981,6 +1981,7 @@ static void set_badgey_state(enum badgey_state_t new_state)
 static char message_to_display[255];
 static char message_displayed = 0;
 static int screen_changed = 0;
+static int water_scroll = 0;
 
 static void confirm_exit(void)
 {
@@ -1991,6 +1992,48 @@ static void confirm_exit(void)
 static void unconfirm_exit(void)
 {
 	set_badgey_state(badgey_unconfirm_state);
+}
+
+/* hack used for scrolling textures in badgey RPG game */
+#define BUFFER( ADDR ) G_Fb.buffer[(ADDR)]
+static void FbImage8bit2scrolling(const struct asset2 *asset, unsigned char seqNum, int scroll)
+{
+    unsigned char y, yEnd, x;
+    unsigned char pixbyte, ci;
+    unsigned short pixel;
+    unsigned char yi;
+
+    scroll = abs(scroll % asset->y);
+
+    /* clip to end of LCD buffer */
+    yEnd = G_Fb.pos.y + asset->y;
+    if (yEnd > LCD_YSIZE) yEnd = LCD_YSIZE-1;
+
+    for (y = G_Fb.pos.y; y < yEnd; y++) {
+	yi = y - G_Fb.pos.y + scroll;
+		if (yi >= asset->y)
+			yi -= asset->y;
+        unsigned char const *pixdata = &asset->pixel[yi * asset->x +
+								seqNum * asset->x * asset->y];
+
+        for (x = 0; x < asset->x; x++) {
+            if ((x + G_Fb.pos.x) >= LCD_XSIZE) break; /* clip x */
+
+            pixbyte = *pixdata; /* 1 pixel per byte */
+
+            ci = pixbyte;
+
+            if (ci != G_Fb.transIndex) { /* transparent? */
+                pixel = asset->colormap[ci];
+                if (G_Fb.transMask > 0)
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = (BUFFER(x + G_Fb.pos.x) & (~G_Fb.transMask)) | (pixel & G_Fb.transMask);
+                else
+                    BUFFER(y * LCD_XSIZE + x + G_Fb.pos.x) = pixel;
+            }
+            pixdata++;
+        }
+    }
+    G_Fb.changed = 1;
 }
 
 static void badgey_status_message(void)
@@ -2518,7 +2561,7 @@ static void draw_cell(int x, int y, unsigned char c)
 		FbImage2(&grass, 0);
 		break;
 	case 'w':
-		FbImage2(&water, 0);
+		FbImage8bit2scrolling(&water, 0, water_scroll);
 		break;
 	case 'd':
 		FbImage2(&desert, 0);
@@ -3479,6 +3522,9 @@ static void badgey_run(void)
 		move_ships();
 		last_ms = now;
 		tick = 1;
+		water_scroll++;
+		if (water_scroll > 15)
+			water_scroll = 0;
 	}
 
 	draw_screen();
