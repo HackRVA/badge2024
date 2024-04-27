@@ -2500,7 +2500,7 @@ static void respawn_monster(int cr, unsigned int *seed)
 	/* respawn the overworld creature far away so we don't immediately jump back into combat */
 	do {
 		int x = xorshift(seed) % 64;
-		int y = xorshift(seed) % 65;
+		int y = xorshift(seed) % 64;
 		unsigned char ch = player.world->wm[windex(x, y)];
 		if (ch != '.' && ch != 'f' && ch != 'd') /* not a good place? */
 			continue;
