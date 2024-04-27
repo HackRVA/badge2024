@@ -5,6 +5,26 @@
 #include <signal.h> /* so we can raise(SIGTRAP) if we detect a bug. */
 #endif
 
+/*
+ *
+ *	Partial list of things remaining to do
+ *
+ * Add cooldown to player shooting/moving in combat
+ * Add player melee weapon in combat
+ * Allow player to switch weapons in combat
+ * Allow armor to have effect in combat for player and for monsters
+ * Allow weapon to have varying damage in combat for player
+ * Make monsters distinct from one another
+ * Make monsters fight back
+ * Add treasures to dungeons
+ * Add "weapons" to hackerspaces
+ * In order to "blast off", player should acquire necessary items first
+ * Add puzzles/clues to the game
+ * Add "win state" to the game
+ * Allow players to dig up buried stuff
+ *
+ */
+
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
