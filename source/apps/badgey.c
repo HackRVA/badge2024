@@ -1618,6 +1618,592 @@ static const struct point upladder[] = {
 	{ 40, -41 },
 };
 
+static const struct point rovdan_points[] = {
+	{ -13, 24 },
+	{ -20, 46 },
+	{ -23, 67 },
+	{ -28, 78 },
+	{ -32, 114 },
+	{ -40, 123 },
+	{ -31, 126 },
+	{ -26, 113 },
+	{ -15, 75 },
+	{ -10, 70 },
+	{ 2, 37 },
+	{ 14, 76 },
+	{ 19, 82 },
+	{ 33, 121 },
+	{ 30, 125 },
+	{ 43, 125 },
+	{ 38, 113 },
+	{ 33, 83 },
+	{ 27, 79 },
+	{ 20, 32 },
+	{ 14, 22 },
+	{ 17, 2 },
+	{ 25, -13 },
+	{ 32, -4 },
+	{ 39, 8 },
+	{ 29, 25 },
+	{ 23, 30 },
+	{ 28, 39 },
+	{ 36, 39 },
+	{ 37, 31 },
+	{ 50, 10 },
+	{ 31, -26 },
+	{ 20, -31 },
+	{ 10, -27 },
+	{ -2, -26 },
+	{ -15, -35 },
+	{ -34, -18 },
+	{ -39, -6 },
+	{ -34, 21 },
+	{ -35, 29 },
+	{ -29, 34 },
+	{ -21, 28 },
+	{ -27, 21 },
+	{ -30, -1 },
+	{ -18, -16 },
+	{ -14, -2 },
+	{ -11, 15 },
+	{ -13, 23 },
+	{ -128, -128 },
+	{ 0, -30 },
+	{ -5, -37 },
+	{ -5, -51 },
+	{ -2, -56 },
+	{ -7, -69 },
+	{ 0, -56 },
+	{ 7, -56 },
+	{ 14, -67 },
+	{ 11, -55 },
+	{ 12, -46 },
+	{ 10, -36 },
+	{ 1, -30 },
+	{ -128, -128 },
+	{ 0, -37 },
+	{ 4, -38 },
+	{ -128, -128 },
+	{ -2, -46 },
+	{ 0, -46 },
+	{ -128, -128 },
+	{ 4, -45 },
+	{ 5, -46 },
+	{ -128, -128 },
+	{ -15, -35 },
+	{ -40, -51 },
+	{ -49, -77 },
+	{ -41, -113 },
+	{ -45, -120 },
+	{ -95, -91 },
+	{ -120, -49 },
+	{ -120, 10 },
+	{ -104, 94 },
+	{ -128, -128 },
+	{ -49, -111 },
+	{ -81, -79 },
+	{ -98, -42 },
+	{ -98, -7 },
+	{ -86, 74 },
+	{ -128, -128 },
+	{ -52, -103 },
+	{ -68, -67 },
+	{ -76, -39 },
+	{ -76, -5 },
+	{ -66, 45 },
+	{ -128, -128 },
+	{ -50, -91 },
+	{ -56, -65 },
+	{ -54, -20 },
+	{ -47, 23 },
+	{ -44, -10 },
+	{ -36, -26 },
+	{ -25, -25 },
+	{ -128, -128 },
+	{ -47, 23 },
+	{ -56, 17 },
+	{ -63, 21 },
+	{ -65, 43 },
+	{ -74, 38 },
+	{ -84, 38 },
+	{ -85, 74 },
+	{ -96, 55 },
+	{ -104, 61 },
+	{ -104, 94 },
+	{ -128, -128 },
+	{ 16, -31 },
+	{ 49, -54 },
+	{ 57, -88 },
+	{ 53, -114 },
+	{ 61, -122 },
+	{ 106, -79 },
+	{ 120, -30 },
+	{ 121, 37 },
+	{ 112, 96 },
+	{ -128, -128 },
+	{ 60, -113 },
+	{ 85, -72 },
+	{ 96, -17 },
+	{ 95, 40 },
+	{ 93, 76 },
+	{ -128, -128 },
+	{ 58, -110 },
+	{ 67, -71 },
+	{ 70, -25 },
+	{ 73, 39 },
+	{ 71, 59 },
+	{ -128, -128 },
+	{ 60, -83 },
+	{ 58, -38 },
+	{ 53, 24 },
+	{ -128, -128 },
+	{ 49, 14 },
+	{ 52, 25 },
+	{ 57, 20 },
+	{ 64, 18 },
+	{ 71, 57 },
+	{ 77, 45 },
+	{ 84, 43 },
+	{ 94, 75 },
+	{ 102, 62 },
+	{ 110, 65 },
+	{ 112, 98 },
+};
+
+static const struct line_drawing {
+	const struct point *points;
+	int npoints;
+} rovdan_drawing = {
+	&rovdan_points[0],
+	ARRAY_SIZE(rovdan_points),
+};
+
+static const struct point skavo_points[] = {
+	{ -38, 5 },
+	{ -54, 104 },
+	{ -41, 109 },
+	{ -128, -128 },
+	{ -26, 24 },
+	{ -42, 116 },
+	{ -3, 120 },
+	{ -1, 55 },
+	{ 0, 114 },
+	{ 40, 113 },
+	{ 29, 44 },
+	{ -128, -128 },
+	{ 39, 108 },
+	{ 54, 104 },
+	{ 22, -6 },
+	{ -128, -128 },
+	{ -27, -67 },
+	{ -43, -61 },
+	{ -57, -16 },
+	{ -35, 8 },
+	{ -21, 30 },
+	{ -15, -13 },
+	{ -33, -22 },
+	{ -40, -19 },
+	{ -128, -128 },
+	{ -14, -11 },
+	{ -7, 5 },
+	{ -15, 14 },
+	{ -19, 11 },
+	{ -128, -128 },
+	{ -21, 32 },
+	{ -15, 16 },
+	{ -128, -128 },
+	{ -27, -69 },
+	{ -15, -100 },
+	{ -16, -112 },
+	{ 12, -99 },
+	{ 20, -65 },
+	{ 37, -41 },
+	{ 33, -31 },
+	{ 37, -39 },
+	{ 58, -35 },
+	{ 54, -9 },
+	{ 56, 2 },
+	{ 64, -14 },
+	{ 62, -25 },
+	{ 57, -25 },
+	{ -128, -128 },
+	{ 57, -35 },
+	{ 67, -33 },
+	{ 69, -26 },
+	{ 65, -22 },
+	{ 62, -25 },
+	{ -128, -128 },
+	{ 57, 2 },
+	{ 22, -12 },
+	{ 18, -35 },
+	{ -128, -128 },
+	{ -10, -86 },
+	{ -3, -95 },
+	{ 10, -95 },
+	{ 15, -76 },
+	{ 8, -61 },
+	{ -3, -56 },
+	{ -7, -69 },
+	{ -10, -85 },
+	{ -128, -128 },
+	{ -5, -84 },
+	{ -2, -82 },
+	{ -128, -128 },
+	{ 4, -81 },
+	{ 6, -81 },
+	{ -128, -128 },
+};
+
+static const struct line_drawing skavo_drawing = {
+	&skavo_points[0],
+	ARRAY_SIZE(skavo_points),
+};
+
+static const struct point hargon_points[] = {
+	{ -25, 23 },
+	{ -68, 62 },
+	{ -69, 73 },
+	{ -60, 87 },
+	{ -40, 107 },
+	{ -51, 119 },
+	{ -62, 124 },
+	{ -42, 123 },
+	{ -35, 117 },
+	{ -24, 108 },
+	{ -27, 101 },
+	{ -34, 99 },
+	{ -48, 72 },
+	{ -43, 72 },
+	{ -42, 60 },
+	{ -38, 79 },
+	{ -37, 58 },
+	{ -33, 68 },
+	{ -27, 57 },
+	{ -23, 77 },
+	{ -19, 59 },
+	{ -9, 53 },
+	{ -6, 48 },
+	{ -4, 61 },
+	{ 5, 51 },
+	{ 9, 61 },
+	{ 25, 46 },
+	{ 32, 63 },
+	{ 35, 54 },
+	{ 43, 75 },
+	{ 52, 57 },
+	{ 61, 69 },
+	{ 66, 80 },
+	{ 48, 102 },
+	{ 41, 109 },
+	{ 55, 120 },
+	{ 74, 120 },
+	{ 69, 112 },
+	{ 62, 110 },
+	{ 61, 101 },
+	{ 86, 78 },
+	{ 61, 31 },
+	{ 31, 16 },
+	{ 40, -6 },
+	{ 51, -17 },
+	{ 54, -1 },
+	{ 55, -18 },
+	{ 61, -23 },
+	{ 61, -8 },
+	{ 66, -17 },
+	{ 73, -5 },
+	{ 76, -14 },
+	{ 88, -5 },
+	{ 98, 25 },
+	{ 88, 39 },
+	{ 89, 49 },
+	{ 93, 41 },
+	{ 95, 59 },
+	{ 99, 39 },
+	{ 99, 61 },
+	{ 104, 38 },
+	{ 106, 54 },
+	{ 111, 37 },
+	{ 107, 17 },
+	{ 93, -19 },
+	{ 65, -45 },
+	{ 39, -55 },
+	{ 20, -43 },
+	{ -128, -128 },
+	{ -24, 21 },
+	{ -14, 14 },
+	{ -18, -7 },
+	{ -33, -21 },
+	{ -34, -8 },
+	{ -39, -18 },
+	{ -47, -6 },
+	{ -50, -15 },
+	{ -53, 16 },
+	{ -55, -11 },
+	{ -68, -6 },
+	{ -79, 1 },
+	{ -82, 14 },
+	{ -85, 37 },
+	{ -80, 50 },
+	{ -82, 58 },
+	{ -85, 48 },
+	{ -89, 64 },
+	{ -90, 53 },
+	{ -93, 71 },
+	{ -95, 56 },
+	{ -99, 64 },
+	{ -101, 53 },
+	{ -99, 34 },
+	{ -91, -11 },
+	{ -73, -28 },
+	{ -44, -43 },
+	{ -29, -48 },
+	{ -18, -39 },
+	{ -128, -128 },
+	{ -28, -51 },
+	{ -15, -71 },
+	{ 2, -77 },
+	{ 16, -73 },
+	{ 32, -63 },
+	{ 39, -54 },
+	{ -128, -128 },
+	{ -14, -56 },
+	{ -2, -52 },
+	{ -7, -48 },
+	{ -15, -55 },
+	{ -128, -128 },
+	{ 8, -53 },
+	{ 20, -56 },
+	{ 12, -49 },
+	{ 10, -54 },
+	{ -128, -128 },
+	{ -12, -39 },
+	{ -2, -42 },
+	{ 5, -43 },
+	{ 20, -37 },
+	{ 8, -23 },
+	{ -3, -24 },
+	{ -11, -38 },
+	{ -128, -128 },
+	{ -4, -41 },
+	{ -3, -35 },
+	{ 0, -42 },
+	{ -128, -128 },
+	{ 10, -41 },
+	{ 10, -33 },
+	{ 12, -40 },
+	{ -128, -128 },
+};
+
+static const struct line_drawing hargon_drawing = {
+	&hargon_points[0],
+	ARRAY_SIZE(hargon_points),
+};
+
+static const struct point tarcon_points[] = {
+	{ 8, 60 },
+	{ 32, 34 },
+	{ 35, 44 },
+	{ 9, 59 },
+	{ -128, -128 },
+	{ 31, 33 },
+	{ 30, 30 },
+	{ 47, 14 },
+	{ 60, 15 },
+	{ 66, 24 },
+	{ 67, 37 },
+	{ 54, 50 },
+	{ 25, 61 },
+	{ 9, 61 },
+	{ -128, -128 },
+	{ 53, 12 },
+	{ 60, 7 },
+	{ 73, 26 },
+	{ 69, 33 },
+	{ -128, -128 },
+	{ 51, 11 },
+	{ 48, 1 },
+	{ 62, -15 },
+	{ -128, -128 },
+	{ 71, 33 },
+	{ 79, 18 },
+	{ 81, 0 },
+	{ 65, -21 },
+	{ 45, -11 },
+	{ 34, -6 },
+	{ 25, 2 },
+	{ 48, 3 },
+	{ -128, -128 },
+	{ -35, 26 },
+	{ -35, 35 },
+	{ -31, 39 },
+	{ -21, 42 },
+	{ -14, 47 },
+	{ -8, 54 },
+	{ -10, 43 },
+	{ -17, 34 },
+	{ -28, 29 },
+	{ -35, 27 },
+	{ -128, -128 },
+	{ -11, 55 },
+	{ -34, 49 },
+	{ -44, 43 },
+	{ -128, -128 },
+	{ -13, 56 },
+	{ -24, 60 },
+	{ -34, 59 },
+	{ -47, 54 },
+	{ -65, 45 },
+	{ -71, 34 },
+	{ -72, 23 },
+	{ -68, 16 },
+	{ -62, 16 },
+	{ -55, 15 },
+	{ -42, 17 },
+	{ -34, 24 },
+	{ -37, 46 },
+	{ -128, -128 },
+	{ -75, 31 },
+	{ -78, 24 },
+	{ -70, 10 },
+	{ -59, 11 },
+	{ -57, 15 },
+	{ -128, -128 },
+	{ -80, 24 },
+	{ -84, 6 },
+	{ -78, -9 },
+	{ -70, -9 },
+	{ -61, -5 },
+	{ -55, 4 },
+	{ -59, 11 },
+	{ -128, -128 },
+	{ -76, -9 },
+	{ -68, -14 },
+	{ -63, -9 },
+	{ -128, -128 },
+	{ -66, -14 },
+	{ -48, -19 },
+	{ -40, -15 },
+	{ -34, -4 },
+	{ -21, -6 },
+	{ -13, -4 },
+	{ -16, 0 },
+	{ -26, 2 },
+	{ -43, 3 },
+	{ -57, -1 },
+	{ -128, -128 },
+	{ -14, -3 },
+	{ 26, -2 },
+	{ -128, -128 },
+	{ 19, -15 },
+	{ 22, -8 },
+	{ 32, -7 },
+	{ 44, -15 },
+	{ 51, -19 },
+	{ 59, -39 },
+	{ 22, -32 },
+	{ 15, -28 },
+	{ 15, -20 },
+	{ 18, -16 },
+	{ -128, -128 },
+	{ 5, -15 },
+	{ 10, -7 },
+	{ 18, -6 },
+	{ 16, -14 },
+	{ 11, -17 },
+	{ 4, -17 },
+	{ -128, -128 },
+	{ -9, -6 },
+	{ -6, -15 },
+	{ 2, -19 },
+	{ 2, -9 },
+	{ -10, -5 },
+	{ -128, -128 },
+	{ -51, -38 },
+	{ -16, -31 },
+	{ -7, -25 },
+	{ -14, -6 },
+	{ -31, -8 },
+	{ -43, -21 },
+	{ -51, -37 },
+	{ -128, -128 },
+	{ -53, -40 },
+	{ -31, -47 },
+	{ -32, -51 },
+	{ -30, -60 },
+	{ -23, -58 },
+	{ -26, -48 },
+	{ -9, -51 },
+	{ 9, -52 },
+	{ 30, -50 },
+	{ 30, -55 },
+	{ 32, -60 },
+	{ 35, -49 },
+	{ 36, -47 },
+	{ 63, -41 },
+	{ 59, -39 },
+	{ -128, -128 },
+	{ -51, -19 },
+	{ -83, -21 },
+	{ -83, -10 },
+	{ -128, -128 },
+	{ -84, -21 },
+	{ -92, -20 },
+	{ -95, -13 },
+	{ -100, 21 },
+	{ -91, 20 },
+	{ -84, 11 },
+	{ -83, -9 },
+	{ -128, -128 },
+	{ -99, 23 },
+	{ -92, 46 },
+	{ -85, 52 },
+	{ -86, 42 },
+	{ -90, 23 },
+	{ -128, -128 },
+	{ -113, 37 },
+	{ -114, 27 },
+	{ -96, -7 },
+	{ -128, -128 },
+	{ -114, 38 },
+	{ -121, 27 },
+	{ -91, -27 },
+	{ -49, -22 },
+	{ -128, -128 },
+	{ 55, -21 },
+	{ 81, -30 },
+	{ 94, -30 },
+	{ 119, -1 },
+	{ 117, 8 },
+	{ 126, 30 },
+	{ 113, 44 },
+	{ 117, 31 },
+	{ 113, 9 },
+	{ 103, -1 },
+	{ 84, -23 },
+	{ 65, -21 },
+	{ -128, -128 },
+	{ 79, -6 },
+	{ 82, -16 },
+	{ 82, -6 },
+	{ 94, 15 },
+	{ 95, 20 },
+	{ 92, 38 },
+	{ 77, 46 },
+	{ 98, 43 },
+	{ 107, 15 },
+	{ 99, -4 },
+	{ -128, -128 },
+	{ -5, -29 },
+	{ 3, -26 },
+	{ 13, -30 },
+	{ -128, -128 },
+};
+
+static const struct line_drawing tarcon_drawing = {
+	&tarcon_points[0],
+	ARRAY_SIZE(tarcon_points),
+};
+
 enum iconid {
 	ICON_CITIZEN1 = 0,
 	ICON_CITIZEN2,
@@ -1637,7 +2223,7 @@ enum iconid {
 	ICON_ZUNARO,
 };
 
-static const struct asset2 *creature_icon[] = {
+static const struct asset2 *creature_icon[] = { /* not indexed by creature types */
 	&citizen1,
 	&citizen2,
 	&citizen3,
@@ -1654,6 +2240,20 @@ static const struct asset2 *creature_icon[] = {
 	&skavo,
 	&tarcon,
 	&zunaro,
+};
+
+static const struct line_drawing *creature_drawing[] = { /* indexed by creatures types, below */ 
+	NULL, /* citizen 1 */
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL, /* byrstran */
+	&hargon_drawing,
+	&rovdan_drawing,
+	&skavo_drawing,
+	&tarcon_drawing,
+	NULL,
 };
 
 /* creature types */
@@ -1923,6 +2523,7 @@ struct creature {
 
 #define MAX_CREATURES 25
 #define NUM_MONSTERS 20
+#define NUM_CAVE_MONSTERS 20
 #define MAX_COMBAT_CREATURES 5
 static struct creature planet_creature[MAX_CREATURES];
 static struct creature town_creature[MAX_CREATURES];
@@ -2457,24 +3058,8 @@ static void cave_check_buttons(void)
 	screen_changed = 1;
 }
 
-static void spawn_monster(unsigned int *seed)
+static void spawn_monster_at(int x, int y, unsigned int *seed)
 {
-	int x, y;
-
-	/* Find a good place to spawn ... */
-	int count = 0;
-	do {
-		x = xorshift(seed) % 64;
-		y = xorshift(seed) % 64;
-		unsigned char ch = player.world->wm[windex(x, y)];
-		if (ch == '.' || ch == 'f' || ch == 'd')
-			break;
-		count++;
-	} while (count < 50);
-	if (count >= 50) /* didn't find a good place ... */
-		return;
-
-	/* spawn a monster */
 	int type = (xorshift(seed) % (LAST_MONSTER - FIRST_MONSTER + 1)) + FIRST_MONSTER;
 
 	int n = *ncreatures;
@@ -2495,6 +3080,25 @@ static void spawn_monster(unsigned int *seed)
 	(*ncreatures)++;
 }
 
+static void spawn_monster(unsigned int *seed)
+{
+	int x, y;
+
+	/* Find a good place to spawn ... */
+	int count = 0;
+	do {
+		x = xorshift(seed) % 64;
+		y = xorshift(seed) % 64;
+		unsigned char ch = player.world->wm[windex(x, y)];
+		if (ch == '.' || ch == 'f' || ch == 'd')
+			break;
+		count++;
+	} while (count < 50);
+	if (count >= 50) /* didn't find a good place ... */
+		return;
+	spawn_monster_at(x, y, seed);
+}
+
 static void respawn_monster(int cr, unsigned int *seed)
 {
 	/* respawn the overworld creature far away so we don't immediately jump back into combat */
@@ -2502,8 +3106,14 @@ static void respawn_monster(int cr, unsigned int *seed)
 		int x = xorshift(seed) % 64;
 		int y = xorshift(seed) % 64;
 		unsigned char ch = player.world->wm[windex(x, y)];
-		if (ch != '.' && ch != 'f' && ch != 'd') /* not a good place? */
-			continue;
+
+		if (player.world->type == WORLD_TYPE_PLANET) {
+			if (ch != '.' && ch != 'f' && ch != 'd') /* not a good place? */
+				continue;
+		} else {
+			if (ch != ' ') /* not a good place? */
+				continue;
+		}
 		int dist2 = (player.x - x) * (player.x - x) + (player.y - y) * (player.y - y);
 		if (dist2 > 32) {
 			creature[cr].x = x;
@@ -2936,6 +3546,23 @@ static void draw_up_ladder(int start, int start_inc, int scale)
 	FbDrawObject(upladder, ARRAY_SIZE(upladder), WHITE, x, y, scale);
 }
 
+static void draw_cave_creature(int x, int y, int start, int start_inc, int scale)
+{
+	for (int i = 0; i < *ncreatures; i++) {
+		if (x != creature[i].x || y != creature[i].y)
+			continue;
+		int t = creature[i].type;
+		int sx = LCD_XSIZE / 2;
+		int sy = LCD_YSIZE / 2 + start / 256;
+		if (creature_drawing[t] != NULL)  
+			FbDrawObject(creature_drawing[t]->points, creature_drawing[t]->npoints,
+				WHITE, sx, sy, scale / 2);
+		else
+			FbDrawObject(tarcon_drawing.points, tarcon_drawing.npoints,
+				WHITE, sx, sy, scale);
+	}
+}
+
 static void draw_cave_screen(void)
 {
 
@@ -2947,6 +3574,8 @@ static void draw_cave_screen(void)
 	int start_inc = 18 * 256;
 	int scale = 820;
 	int hit_back_wall = 0;
+	int drawing_start = 40 * 256;
+	int drawing_start_inc = 18 * 256;
 
 	FbColor(WHITE);
 	for (int i = 0; i < 4; i++) {
@@ -2959,6 +3588,9 @@ static void draw_cave_screen(void)
 		scale = (scale * 205) / 256;
 		if (x == 32 && y == 62)
 			draw_up_ladder(ladder_start, start_inc, scale);
+		draw_cave_creature(x, y, drawing_start, drawing_start_inc, scale);
+		drawing_start_inc = (drawing_start_inc * 205) / 256;
+		drawing_start -= drawing_start_inc;
 		if (hit_back_wall)
 			break;
 		x = x + xo4[player.dir];
@@ -4451,6 +5083,30 @@ static void print_cave(char *map)
 	}
 }
 
+static void spawn_cave_monster(unsigned int *seed)
+{
+	int x, y;
+
+	do {
+		x = xorshift(seed) % 64;
+		y = xorshift(seed) % 64;
+		if (dynmap[windex(x, y)] == ' ')
+			break;
+	} while (1);
+	spawn_monster_at(x, y, seed);
+}
+
+static void populate_cave(unsigned int *seed)
+{
+	/* We reuse town_creature[] for caves */
+	creature = &town_creature[0];
+	ncreatures = &ntown_creatures;
+	*ncreatures = 0;
+
+	for (int i = 0; i < NUM_CAVE_MONSTERS; i++)
+		spawn_cave_monster(seed);
+}
+
 static void generate_cave(int cave_number)
 {
 	int world_no = -1;
@@ -4471,6 +5127,7 @@ static void generate_cave(int cave_number)
 
 	memset(dynmap, '#', sizeof(dynmap)); /* Fill the map with walls. */
 	dig_cave(dynmap, 32, 62, 0, &seed);
+	populate_cave(&seed);
 	print_cave(dynmap);
 }
 
