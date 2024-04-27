@@ -2049,7 +2049,7 @@ static void missile_collision_detection(int m)
 {
 	for (int i = 0; i < ncombat_creatures; i++) {
 		int cx = 16 * combat_creature[i].x + 8 + 8;
-		int cy = 16 * combat_creature[i].x + 8 + 8;
+		int cy = 16 * combat_creature[i].y + 8 + 8;
 		int mx = 8 + missile[m].x / 256 - 4;
 		int my = 8 + missile[m].y / 256 - 4;
 		int dist2 = (cx - mx) * (cx - mx) + (cy - my) * (cy - my);
