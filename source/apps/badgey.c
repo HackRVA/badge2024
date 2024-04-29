@@ -2653,6 +2653,8 @@ const struct shop_item {
 	{ "BLESSING", 200, ITEM_TYPE_USELESS, SHOP_TEMPLE, },
 
 	/* specialty items */
+#define COMPASS_ITEM 12
+	{ "COMPASS", 0, ITEM_TYPE_USELESS, SHOP_HACKERSPACE },
 	{ "blah blah", 0, ITEM_TYPE_RANGED_WEAPON, SHOP_SPECIALTY },
 };
 
@@ -4084,6 +4086,14 @@ static void draw_cave_screen(void)
 		y = y + yo4[player.dir];
 		if (x < 0 || x > 63 || y < 0 || y > 63)
 			break;
+	}
+	if (player.carrying[COMPASS_ITEM] > 0) {
+		const char *dirname[] = {"NORTH", "EAST", "SOUTH", "WEST" };
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
+		FbMove(40, 0);
+		FbWriteString(dirname[player.dir]);
+		FbBackgroundColor(BLACK);
 	}
 }
 
