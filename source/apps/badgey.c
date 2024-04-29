@@ -6010,6 +6010,7 @@ static void badgey_combat(void)
 	}
 
 	if (ncombat_creatures == 0) { /* player killed everything? */
+		nmissiles = 0; /* kill all extant missiles */
 		set_badgey_state(BADGEY_RUN);
 		/* respawn the overworld creature far away so we don't immediately jump back into combat */
 		respawn_monster(overworld_combat_creature, &seed);
