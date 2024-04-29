@@ -2957,10 +2957,11 @@ static int screen_changed = 0;
 static struct missile {
 	int x, y, vx, vy; /* 24.8 fixed point */
 	int alive;
+	char from_player;
 } missile[MAX_MISSILES];
 static int nmissiles = 0;
 
-static void add_missile(int x, int y, int vx, int vy, int lifetime)
+static void add_missile(int x, int y, int vx, int vy, char from_player, int lifetime)
 {
 	if (nmissiles >= MAX_MISSILES)
 		return;
@@ -2969,6 +2970,7 @@ static void add_missile(int x, int y, int vx, int vy, int lifetime)
 	missile[nmissiles].vx = vx;
 	missile[nmissiles].vy = vy;
 	missile[nmissiles].alive = lifetime;
+	missile[nmissiles].from_player = from_player;
 	nmissiles++;
 }
 
@@ -2995,17 +2997,30 @@ static void move_missile(int i)
 
 static void missile_collision_detection(int m)
 {
+	int mx = 8 + missile[m].x / 256 - 4;
+	int my = 8 + missile[m].y / 256 - 4;
 	for (int i = 0; i < ncombat_creatures; i++) {
-		int cx = 16 * combat_creature[i].x + 8 + 8;
-		int cy = 16 * combat_creature[i].y + 8 + 8;
-		int mx = 8 + missile[m].x / 256 - 4;
-		int my = 8 + missile[m].y / 256 - 4;
-		int dist2 = (cx - mx) * (cx - mx) + (cy - my) * (cy - my);
-		if (dist2 < 8 * 8) {
-			/* TODO: more sophisticated damage */
-			combat_creature[i].hit_points = 0;
-			missile[m].alive = 0;
-			/* TODO: add explosion or something here */
+		if (missile[m].from_player) { /* missile is from player? */
+			int cx = 16 * combat_creature[i].x + 8 + 8;
+			int cy = 16 * combat_creature[i].y + 8 + 8;
+			int dist2 = (cx - mx) * (cx - mx) + (cy - my) * (cy - my);
+			if (dist2 < 8 * 8) {
+				/* TODO: more sophisticated damage */
+				combat_creature[i].hit_points = 0;
+				missile[m].alive = 0;
+				/* TODO: add explosion or something here */
+			}
+		} else { /* missile is from monster */
+			int cx = 16 * player.cbx + 8 + 8;
+			int cy = 16 * player.cby + 8 + 8;
+			int dist2 = (cx - mx) * (cx - mx) + (cy - my) * (cy - my);
+			if (dist2 < 8 * 8) {
+				/* TODO: inflict damage on player */
+				missile[m].alive = 0;
+#if TARGET_SIMULATOR
+				printf("Player hit by missile!\n");
+#endif
+			}
 		}
 	}
 }
@@ -5806,14 +5821,59 @@ static void remove_combat_creature(int i)
 	ncombat_creatures--;
 }
 
-static void move_combat_creature(__attribute__((unused)) int i)
+static int combat_space_clear(int n, int x, int y)
 {
+	for (int i = 0; i < ncombat_creatures; i++) {
+		if (i == n)
+			continue;
+		if (combat_creature[i].x == x && combat_creature[i].y == y)
+			return 0;
+	}
+	return 1;
 }
 
-static void move_combat_creatures(void)
+static void move_combat_creature(int i, unsigned int *seed)
+{
+	int vy = 0;
+	int vx = 0;
+	int mx, my;
+
+	int n = (xorshift(seed) % 100);
+	if (n > 60)
+		return;
+
+	if (player.cbx == combat_creature[i].x) {
+		if (player.cby > combat_creature[i].y)
+			vy = 1;
+		else
+			vy = -1;
+		mx = (16 * combat_creature[i].x + 8) * 256;
+		my = (16 * combat_creature[i].y + 8) * 256;
+		add_missile(mx, my, 0, 2048 * vy, 0, 100);
+		return;
+	} else if (player.cby == combat_creature[i].y) {
+		if (player.cbx > combat_creature[i].x)
+			vx = 1;
+		else
+			vx = -1;
+		mx = (16 * combat_creature[i].x + 8) * 256;
+		my = (16 * combat_creature[i].y + 8) * 256;
+		add_missile(mx, my, 2048 * vx, 0, 0, 100);
+		return;
+	}
+	int nx = combat_creature[i].x;
+	if (player.cbx < combat_creature[i].x && combat_creature[i].x > 0)
+		nx = combat_creature[i].x - 1;
+	if (player.cbx > combat_creature[i].x && combat_creature[i].x < 6)
+		nx = combat_creature[i].x + 1;
+	if (combat_space_clear(i, nx, combat_creature[i].y)) /* if no other monster already at the space, move there */
+		combat_creature[i].x = nx;
+}
+
+static void move_combat_creatures(unsigned int *seed)
 {
 	for (int i = 0; i < ncombat_creatures;) {
-		move_combat_creature(i);
+		move_combat_creature(i, seed);
 		if (combat_creature[i].hit_points <= 0)
 			remove_combat_creature(i);
 		else
@@ -5863,7 +5923,7 @@ static void draw_combat_screen(void)
 
 static void player_strike_with_weapon(__attribute__((unused)) int direction)
 {
-	add_missile((16 * player.cbx + 8) * 256, (16 * player.cby + 8) * 256, 2048 * xo4[direction], 2048 * yo4[direction], 100); 
+	add_missile((16 * player.cbx + 8) * 256, (16 * player.cby + 8) * 256, 2048 * xo4[direction], 2048 * yo4[direction], 1, 100);
 }
 
 static void badgey_combat(void)
@@ -5883,7 +5943,7 @@ static void badgey_combat(void)
 	
 	if (now - last_ms > 300) {
 		screen_changed = 1;
-		move_combat_creatures();
+		move_combat_creatures(&seed);
 		last_ms = now;
 	}
 
