@@ -2655,6 +2655,8 @@ const struct shop_item {
 	/* specialty items */
 #define COMPASS_ITEM 12
 	{ "COMPASS", 0, ITEM_TYPE_USELESS, SHOP_HACKERSPACE },
+#define POSITION_FINDER 13
+	{ "NEVERLOST", 0, ITEM_TYPE_USELESS, SHOP_SPECIALTY },
 	{ "blah blah", 0, ITEM_TYPE_RANGED_WEAPON, SHOP_SPECIALTY },
 };
 
@@ -4511,10 +4513,12 @@ static void draw_screen(void)
 	draw_creatures();
 	draw_ships();
 
-	char buf[20];
-	snprintf(buf, sizeof(buf), "(%d, %d)", player.x, player.y);
-	FbMove(0, 152);
-	FbWriteString(buf);
+	if (player.carrying[POSITION_FINDER] > 0) {
+		char buf[20];
+		snprintf(buf, sizeof(buf), "(%d, %d)", player.x, player.y);
+		FbMove(0, 152);
+		FbWriteString(buf);
+	}
 
 	screen_changed = 0;
 	FbPushBuffer();
