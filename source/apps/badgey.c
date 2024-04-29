@@ -2939,6 +2939,7 @@ enum badgey_state_t {
 	BADGEY_EXIT_CONFIRM,
 	BADGEY_COMBAT,
 	BADGEY_COLLECT_TREASURE,
+	BADGEY_DIG,
 	BADGEY_EXIT,
 };
 
@@ -3310,6 +3311,7 @@ static char whats_there(const char *map, int x, int y, int dx, int dy)
 
 static void spawn_planet_initial_monsters(void);
 static void spawn_planet_initial_ships(void);
+static void setup_planet_initial_treasures(void);
 
 static void badgey_init(void)
 {
@@ -3332,6 +3334,7 @@ static void badgey_init(void)
 	memset(player.carrying, 0, sizeof(player.carrying));
 	spawn_planet_initial_monsters();
 	spawn_planet_initial_ships();
+	setup_planet_initial_treasures();
 	set_badgey_state(BADGEY_CONTINUE);
 	screen_changed = 1;
 }
@@ -3378,6 +3381,50 @@ static void badgey_collect_treasure(int treasure)
 		return;
 	}
 	/* Not first time through, just consume a button press ... */
+	int down_latches = button_down_latches();
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		screen_changed = 1;
+		set_badgey_state(previous_badgey_state);
+	}
+}
+
+static void badgey_dig(void)
+{
+	static int screen_changed = 1;
+	static int got_treasure = 0;
+	static enum badgey_state_t prev;
+
+	for (int i = 0; i < nchests; i++) {
+		if (player.x == chest[i].x && player.y == chest[i].y && chest[i].buried) {
+			prev = previous_badgey_state; /* this is a little hacky... oh well. */
+			badgey_collect_treasure(i);
+			got_treasure = 1;
+			return;
+		}
+	}
+
+	if (got_treasure) {
+		set_badgey_state(prev);
+		got_treasure = 0;
+		return;
+	}
+
+	if (screen_changed) {
+		FbClear();
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
+		FbMove(8, 8);
+		FbWriteString("DIGGITY DIG\n\nYOU DID NOT\nFIND ANYTHING\n");
+		FbSwapBuffers();
+		screen_changed = 0;
+	}
+
 	int down_latches = button_down_latches();
 
 	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
@@ -3556,6 +3603,17 @@ static void spawn_planet_initial_monsters(void)
 	}
 }
 
+static void setup_planet_initial_treasures(void)
+{
+	/* Temporary test treasure */
+	nchests = 1;
+	chest[0].x = 32;
+	chest[0].y = 32;
+	chest[0].gp = 100;
+	chest[0].specialty_item = -1;
+	chest[0].buried = 1;
+}
+
 static void spawn_planet_initial_ships(void)
 {
 	unsigned int seed = player.world->initial_seed;
@@ -3646,6 +3704,7 @@ static void check_buttons(int tick)
 				screen_changed = 1;
 				spawn_planet_initial_monsters();
 				spawn_planet_initial_ships();
+				setup_planet_initial_treasures();
 				player.moving = 0;
 				return;
 			}
@@ -3699,6 +3758,7 @@ static void check_buttons(int tick)
 					ncreatures = &nplanet_creatures;
 					spawn_planet_initial_monsters();
 					spawn_planet_initial_ships();
+					setup_planet_initial_treasures();
 					player.moving = 0;
 				}
 			}
@@ -4479,6 +4539,7 @@ static void badgey_cave_menu(void)
 				player.in_cave = 0;
 				spawn_planet_initial_monsters();
 				spawn_planet_initial_ships();
+				setup_planet_initial_treasures();
 			}
 			menu_setup = 0;
 		}
@@ -4669,6 +4730,7 @@ static void badgey_town_menu(void)
 
 		dynmenu_add_item(&town_menu, "EQUIP WEAPON", BADGEY_STATS, 5);
 		dynmenu_add_item(&town_menu, "EQUIP ARMOR", BADGEY_STATS, 6);
+		dynmenu_add_item(&town_menu, "DIG", BADGEY_RUN, 7);
 		dynmenu_add_item(&town_menu, "STATS", BADGEY_STATS, 3);
 		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 4);
 		menu_setup = 1;
@@ -4698,6 +4760,9 @@ static void badgey_town_menu(void)
 	case 6: /* equip armor */
 		set_badgey_state(BADGEY_EQUIP_ARMOR);
 		break;
+	case 7: /* dig */
+		set_badgey_state(BADGEY_DIG);
+		break;
 	default:
 		set_badgey_state(BADGEY_RUN);
 		break;
@@ -4722,6 +4787,7 @@ static void badgey_planet_menu(void)
 			dynmenu_add_item(&planet_menu, "ENTER CAVE", BADGEY_RUN, 1);
 		dynmenu_add_item(&planet_menu, "EQUIP WEAPON", BADGEY_STATS, 5);
 		dynmenu_add_item(&planet_menu, "EQUIP ARMOR", BADGEY_STATS, 6);
+		dynmenu_add_item(&planet_menu, "DIG", BADGEY_RUN, 7);
 		dynmenu_add_item(&planet_menu, "STATS", BADGEY_STATS, 2);
 		dynmenu_add_item(&planet_menu, "NEVERMIND", BADGEY_RUN, 3);
 		dynmenu_add_item(&planet_menu, "QUIT", BADGEY_EXIT_CONFIRM, 4);
@@ -4779,6 +4845,11 @@ static void badgey_planet_menu(void)
 		screen_changed = 1;
 		menu_setup = 0;
 		set_badgey_state(BADGEY_EQUIP_ARMOR);
+		break;
+	case 7: /* dig */
+		screen_changed = 1;
+		menu_setup = 0;
+		set_badgey_state(BADGEY_DIG);
 		break;
 	}
 }
@@ -5303,6 +5374,17 @@ static void arrange_shop_contents(__attribute__((unused)) int town)
 	/* Here is where we will add specialty items to shops based on town */
 }
 
+static void setup_town_treasures(int town)
+{
+	/* temporary test treasure */
+	nchests = 1;
+	chest[0].x = 32;
+	chest[0].y = 32;
+	chest[0].gp = 100;
+	chest[0].specialty_item = -1;
+	chest[0].buried = 1;
+}
+
 static void generate_town(int town_number)
 {
 	int x, y;
@@ -5432,6 +5514,8 @@ static void generate_town(int town_number)
 
 	for (int i = 0; i < 2; i++)
 		add_robot3(roadchar, &seed);
+
+	setup_town_treasures(town);
 }
 
 static void enter_dynmap(int x, int y)
@@ -5942,6 +6026,9 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_COLLECT_TREASURE:
 		badgey_collect_treasure(-1);
+		break;
+	case BADGEY_DIG:
+		badgey_dig();
 		break;
 	default:
 		break;
