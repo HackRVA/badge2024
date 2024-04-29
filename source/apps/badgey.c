@@ -2987,6 +2987,7 @@ static char whats_there(const char *map, int x, int y, int dx, int dy)
 }
 
 static void spawn_planet_initial_monsters(void);
+static void spawn_planet_initial_ships(void);
 
 static void badgey_init(void)
 {
@@ -3008,6 +3009,7 @@ static void badgey_init(void)
 	player.money = 500;
 	memset(player.carrying, 0, sizeof(player.carrying));
 	spawn_planet_initial_monsters();
+	spawn_planet_initial_ships();
 	set_badgey_state(BADGEY_CONTINUE);
 	screen_changed = 1;
 }
