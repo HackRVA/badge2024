@@ -3568,7 +3568,7 @@ static void draw_up_ladder(int start, int start_inc, int scale)
 	FbDrawObject(upladder, ARRAY_SIZE(upladder), WHITE, x, y, scale);
 }
 
-static void draw_cave_creature(int x, int y, int start, int start_inc, int scale)
+static void draw_cave_creature(int x, int y, int start, int scale)
 {
 	for (int i = 0; i < *ncreatures; i++) {
 		if (x != creature[i].x || y != creature[i].y)
@@ -3610,7 +3610,7 @@ static void draw_cave_screen(void)
 		scale = (scale * 205) / 256;
 		if (x == 32 && y == 62)
 			draw_up_ladder(ladder_start, start_inc, scale);
-		draw_cave_creature(x, y, drawing_start, drawing_start_inc, scale);
+		draw_cave_creature(x, y, drawing_start, scale);
 		drawing_start_inc = (drawing_start_inc * 205) / 256;
 		drawing_start -= drawing_start_inc;
 		if (hit_back_wall)
