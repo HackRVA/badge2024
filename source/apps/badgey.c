@@ -2439,6 +2439,102 @@ static const struct line_drawing zunaro_drawing = {
 	ARRAY_SIZE(zunaro_points),
 };
 
+static const struct point treasure_chest_points[] = {
+	{ -94, 67 },
+	{ 91, 65 },
+	{ 106, -35 },
+	{ -109, -34 },
+	{ -93, 65 },
+	{ -128, -128 },
+	{ -108, -37 },
+	{ -105, -82 },
+	{ -101, -97 },
+	{ -94, -103 },
+	{ -80, -104 },
+	{ -79, -104 },
+	{ -54, -104 },
+	{ -56, -108 },
+	{ -35, -110 },
+	{ -35, -106 },
+	{ -10, -108 },
+	{ -10, -114 },
+	{ 3, -115 },
+	{ 4, -110 },
+	{ 32, -106 },
+	{ 32, -110 },
+	{ 51, -110 },
+	{ 52, -105 },
+	{ 76, -102 },
+	{ 76, -105 },
+	{ 90, -103 },
+	{ 99, -93 },
+	{ 104, -68 },
+	{ 105, -37 },
+	{ -128, -128 },
+	{ -106, -18 },
+	{ 103, -20 },
+	{ -128, -128 },
+	{ 55, -4 },
+	{ 85, -6 },
+	{ 77, 52 },
+	{ 49, 52 },
+	{ 52, -2 },
+	{ -128, -128 },
+	{ 29, 51 },
+	{ -32, 52 },
+	{ -38, -7 },
+	{ -14, -7 },
+	{ -12, 4 },
+	{ -2, 8 },
+	{ 11, 4 },
+	{ 12, -3 },
+	{ 36, -6 },
+	{ 29, 52 },
+	{ -128, -128 },
+	{ -80, 53 },
+	{ -50, 52 },
+	{ -55, -4 },
+	{ -92, -5 },
+	{ -79, 53 },
+	{ -128, -128 },
+	{ 0, -8 },
+	{ 0, -1 },
+	{ -128, -128 },
+	{ -92, -51 },
+	{ -59, -50 },
+	{ -57, -85 },
+	{ -56, -105 },
+	{ -128, -128 },
+	{ -81, -103 },
+	{ -84, -93 },
+	{ -88, -79 },
+	{ -91, -52 },
+	{ -128, -128 },
+	{ -34, -106 },
+	{ -37, -89 },
+	{ -39, -52 },
+	{ -12, -51 },
+	{ -11, -81 },
+	{ -10, -106 },
+	{ -128, -128 },
+	{ 7, -108 },
+	{ 10, -52 },
+	{ 36, -53 },
+	{ 31, -104 },
+	{ -128, -128 },
+	{ 52, -105 },
+	{ 55, -51 },
+	{ 86, -51 },
+	{ 84, -84 },
+	{ 82, -96 },
+	{ 76, -100 },
+};
+
+static const struct line_drawing treasure_chest_drawing = {
+	&treasure_chest_points[0],
+	ARRAY_SIZE(treasure_chest_points),
+};
+
 enum iconid {
 	ICON_CITIZEN1 = 0,
 	ICON_CITIZEN2,
@@ -2565,6 +2661,16 @@ struct shop {
 	int item[MAX_ITEMS_PER_SHOP];
 	int nitems;
 } shop[NUMSHOPS];
+
+#define MAX_CHESTS 20
+#define NUM_CHESTS_PER_CAVE 15
+static struct treasure_chest {
+	int x, y;
+	int gp;
+	int specialty_item; /* index into shop_item[], or -1 for none */
+	int buried;
+} chest[MAX_CHESTS];
+static int nchests = 0;
 
 const char *proprietor[] = { /* indexed by shop type */
 	"  INNKEEP",
@@ -2832,6 +2938,7 @@ enum badgey_state_t {
 	BADGEY_EQUIP_ARMOR,
 	BADGEY_EXIT_CONFIRM,
 	BADGEY_COMBAT,
+	BADGEY_COLLECT_TREASURE,
 	BADGEY_EXIT,
 };
 
@@ -3237,6 +3344,62 @@ static void badgey_continue(void)
 	screen_changed = 1;
 }
 
+static void badgey_collect_treasure(int treasure)
+{
+	static int gp = 0;
+	static int si = -1;
+	char buf[100];
+
+	if (treasure != -1) { /* First time through, draw the screen ... */
+		
+		gp = chest[treasure].gp;
+		si = chest[treasure].specialty_item;
+		set_badgey_state(BADGEY_COLLECT_TREASURE);
+
+		if (gp > 0)
+			player.money += gp;
+		if (si >= 0 && si < (int) ARRAY_SIZE(shop_item))
+			player.carrying[si]++;
+
+		if (treasure < nchests - 1)
+			chest[treasure] = chest[nchests - 1];
+		nchests--;
+
+		FbClear();
+		FbColor(WHITE);
+		FbBackgroundColor(BLACK);
+
+		snprintf(buf, sizeof(buf), "CHEST CONTAINS\n%d GOLD PIECES\n%s\n",
+			gp, si >= 0 ? shop_item[si].name : "");
+
+		FbMove(8, 8);
+		FbWriteString(buf);
+		FbSwapBuffers();
+		return;
+	}
+	/* Not first time through, just consume a button press ... */
+	int down_latches = button_down_latches();
+
+	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		screen_changed = 1;
+		set_badgey_state(previous_badgey_state);
+	}
+}
+
+static void check_for_treasure(void)
+{
+	for (int i = 0; i < nchests; i++)
+		if (player.x == chest[i].x && player.y == chest[i].y && !chest[i].buried) {
+			badgey_collect_treasure(i);
+			break;
+		}
+}
+
 static void cave_check_buttons(void)
 {
 	int newx, newy, newdir;
@@ -3292,6 +3455,7 @@ static void cave_check_buttons(void)
 	player.x = newx;
 	player.y = newy;
 	player.dir = newdir;
+	check_for_treasure();
 	screen_changed = 1;
 }
 
@@ -3407,6 +3571,7 @@ static void check_buttons(int tick)
 	int newx, newy, newdir, newmoving;
 	int time_for_combat = 0;
 	int combat_creature = -1;
+	int treasure = -1;
 
 	newx = player.x;
 	newy = player.y;
@@ -3508,6 +3673,14 @@ static void check_buttons(int tick)
 			}
 		}
 
+		if (!time_for_combat || player.in_town)
+			for (int i = 0; i < nchests; i++)
+				if (chest[i].x == player.x && chest[i].y == player.y && !chest[i].buried) {
+					treasure = i;
+					printf("treasure = %d\n", treasure);
+					break;
+				}
+
 		if (player.in_town) {
 			time_for_combat = 0; /* for now, can't fight in towns */
 			/* Is player leaving town? */
@@ -3534,6 +3707,8 @@ static void check_buttons(int tick)
 
 	if (time_for_combat)
 		enter_combat(combat_creature);
+	if (treasure != -1)
+		badgey_collect_treasure(treasure);
 }
 
 /* Draw a cell of the world at screen coords (x, y) */
@@ -3800,10 +3975,21 @@ static void draw_cave_creature(int x, int y, int start, int scale)
 	}
 }
 
+static void draw_treasure_chest(int x, int y, int start, int scale)
+{
+	for (int i = 0; i < nchests; i++) {
+		if (x != chest[i].x || y != chest[i].y)
+			continue;
+		int sx = LCD_XSIZE / 2;
+		int sy = LCD_YSIZE / 2 + start / 256;
+		FbDrawObject(treasure_chest_drawing.points, treasure_chest_drawing.npoints,
+				YELLOW, sx, sy, scale / 2);
+		break;
+	}
+}
+
 static void draw_cave_screen(void)
 {
-
-
 	int x = player.x;
 	int y = player.y;
 	int start = 0;
@@ -3826,6 +4012,7 @@ static void draw_cave_screen(void)
 		if (x == 32 && y == 62)
 			draw_up_ladder(ladder_start, start_inc, scale);
 		draw_cave_creature(x, y, drawing_start, scale);
+		draw_treasure_chest(x, y, drawing_start, scale);
 		drawing_start_inc = (drawing_start_inc * 205) / 256;
 		drawing_start -= drawing_start_inc;
 		if (hit_back_wall)
@@ -5333,15 +5520,43 @@ static void spawn_cave_monster(unsigned int *seed)
 	spawn_monster_at(x, y, seed);
 }
 
+static void spawn_treasure_chest_at(int x, int y, unsigned int *seed)
+{
+	if (nchests >= MAX_CHESTS)
+		return;
+	chest[nchests].x = x;
+	chest[nchests].y = y;
+	chest[nchests].gp = (xorshift(seed) % 50) + 20;
+	chest[nchests].specialty_item = -1;
+	chest[nchests].buried = 0;
+	nchests++;
+}
+
+static void spawn_treasure_chest(unsigned int *seed)
+{
+	int x, y;
+	do {
+		x = xorshift(seed) % 64;
+		y = xorshift(seed) % 64;
+		if (dynmap[windex(x, y)] == ' ')
+			break;
+	} while (1);
+	spawn_treasure_chest_at(x, y, seed);
+}
+
 static void populate_cave(unsigned int *seed)
 {
 	/* We reuse town_creature[] for caves */
 	creature = &town_creature[0];
 	ncreatures = &ntown_creatures;
 	*ncreatures = 0;
+	nchests = 0;
 
 	for (int i = 0; i < NUM_CAVE_MONSTERS; i++)
 		spawn_cave_monster(seed);
+
+	for (int i = 0; i < NUM_CHESTS_PER_CAVE; i++)
+		spawn_treasure_chest(seed);
 }
 
 static void generate_cave(int cave_number)
@@ -5724,6 +5939,9 @@ void badgey_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case BADGEY_COMBAT:
 		badgey_combat();
+		break;
+	case BADGEY_COLLECT_TREASURE:
+		badgey_collect_treasure(-1);
 		break;
 	default:
 		break;
