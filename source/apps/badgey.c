@@ -4018,14 +4018,17 @@ static void draw_up_ladder(int start, int start_inc, int scale)
 	FbDrawObject(upladder, ARRAY_SIZE(upladder), WHITE, x, y, scale);
 }
 
-static void draw_cave_creature(int x, int y, int start, int scale)
+/* y value to draw creatures and things in caves, indexed by depth */
+static const int cave_y[] = { LCD_YSIZE - 20, LCD_YSIZE - 40, LCD_YSIZE - 50, LCD_YSIZE - 55 };
+
+static void draw_cave_creature(int x, int y, int depth, int scale)
 {
 	for (int i = 0; i < *ncreatures; i++) {
 		if (x != creature[i].x || y != creature[i].y)
 			continue;
 		int t = creature[i].type;
 		int sx = LCD_XSIZE / 2;
-		int sy = LCD_YSIZE / 2 + start / 256;
+		int sy = cave_y[depth];
 		if (creature_drawing[t] != NULL)  
 			FbDrawObject(creature_drawing[t]->points, creature_drawing[t]->npoints,
 				WHITE, sx, sy, scale / 2);
@@ -4035,13 +4038,13 @@ static void draw_cave_creature(int x, int y, int start, int scale)
 	}
 }
 
-static void draw_treasure_chest(int x, int y, int start, int scale)
+static void draw_treasure_chest(int x, int y, int depth, int scale)
 {
 	for (int i = 0; i < nchests; i++) {
 		if (x != chest[i].x || y != chest[i].y)
 			continue;
 		int sx = LCD_XSIZE / 2;
-		int sy = LCD_YSIZE / 2 + start / 256;
+		int sy = cave_y[depth];
 		FbDrawObject(treasure_chest_drawing.points, treasure_chest_drawing.npoints,
 				YELLOW, sx, sy, scale / 2);
 		break;
@@ -4071,8 +4074,8 @@ static void draw_cave_screen(void)
 		scale = (scale * 205) / 256;
 		if (x == 32 && y == 62)
 			draw_up_ladder(ladder_start, start_inc, scale);
-		draw_cave_creature(x, y, drawing_start, scale);
-		draw_treasure_chest(x, y, drawing_start, scale);
+		draw_cave_creature(x, y, i, scale);
+		draw_treasure_chest(x, y, i, scale);
 		drawing_start_inc = (drawing_start_inc * 205) / 256;
 		drawing_start -= drawing_start_inc;
 		if (hit_back_wall)
