@@ -861,13 +861,59 @@ We have an RGB LED that apps can control.
 Sensors
 -------
 
-TODO: Document the sensors
+This year's badge has a few different analog sensors.  The APIs for these sensors
+are defined in [source/hal/analog.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/analog.h)
+and [source/hal/color_sensor.h](https://github.com/HackRVA/badge2024/blob/main/source/hal/color_sensor.h)
+
+The gist of the analog sensors is you call analog_get_chan_mv() on the appropriate channel
+to get a raw value in millivolts, and then use that value with another function to convert
+to the appropriate units.
 
 * Thermistor
+
+```
+	uint32_t mV = analog_get_chan_mv(ANALOG_CHAN_THERMISTOR);
+	int8_t tempC = analog_calc_thermistor_temp_C(mV);
+```
+
 * Hall Effect Sensor
+
+```
+	uint32_t mV = analog_get_chan_mv(ANALOG_CHAN_HALL_EFFECT);
+	int32_t mT = analog_calc_hall_effect_mT(mv);
+```
+
 * Conductivity
+
+```
+	uint32_t mV = analog_get_chan_mv(ANALOG_CHAN_CONDUCTIVITY);
+	float ohms = analog_calc_resistance_ohms(mV);
+```
+
 * I2C color sensor
+
+The color sensor returns 5 values for the sensed ambient light, one each for
+red, green, blue, white and infrared light.  The values are returned in the
+following struct:
+
+```
+    struct color_sample {
+        uint8_t error_flags;
+        uint16_t rgbwi[5];
+    };
+```
+
+To obtain a sample, call:
+
+```
+	struct color_sample s;
+
+	color_sensor_get_sample(&s);
+```
+
 * PDM microphone
+
+TODO: document microphone
 
 Flash Memory Access
 -------------------
