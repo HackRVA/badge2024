@@ -79,6 +79,14 @@ static void setup_color_sensor_ui(void)
 	color_sensor_ui_callback(0, 0); /* Set initial color sample to match sliders */
 }
 
+static void free_color_sensor_ui(void)
+{
+	for (int i = 0; i < (int) ARRAY_SIZE(color_sensor_ui.input); i++) {
+		free(color_sensor_ui.input[i]);
+		color_sensor_ui.input[i] = NULL;
+	}
+}
+
 static void draw_color_sensor_ui(SDL_Window *w, SDL_Renderer *r)
 {
 	for (int i = 0; i < (int) ARRAY_SIZE(color_sensor_ui.input); i++)
@@ -1063,7 +1071,7 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
 	process_events(window);
 	wait_until_next_frame();
     }
-
+    free_color_sensor_ui();
     SDL_DestroyWindow(window);
     SDL_QuitSubSystem(SDL_INIT_EVENTS);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
