@@ -61,6 +61,7 @@ static void color_sensor_ui_callback(__attribute__((unused)) struct sim_slider_i
 	for (int i = 0; i < (int) ARRAY_SIZE(sample.rgbwi); i++)
 		sample.rgbwi[i] = (uint16_t) (color_sensor_ui.color_value[i] * 255);
 	color_sensor_set_sample(sample);
+	button_reset_last_input_timestamp(); /* inhibit screensaver */
 }
 
 static void color_sensor_ui_mouse_input(SDL_Window *w, struct SDL_MouseButtonEvent *event)
@@ -112,6 +113,7 @@ static void analog_sensor_ui_callback(__attribute__((unused)) struct sim_slider_
 	/* not sure about this one... */
 	values.value[ANALOG_CHAN_MCU_TEMP] = (int) (706 * analog_sensor_ui.value[4]);
 	analog_sensors_set_values(values);
+	button_reset_last_input_timestamp(); /* inhibit screensaver */
 }
 
 static void analog_sensor_ui_mouse_input(SDL_Window *w, struct SDL_MouseButtonEvent *event)
