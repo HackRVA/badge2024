@@ -109,7 +109,7 @@ static void analog_sensor_ui_callback(__attribute__((unused)) struct sim_slider_
 	values.value[ANALOG_CHAN_CONDUCTIVITY] = (int) (3250 * analog_sensor_ui.value[0]);
 	values.value[ANALOG_CHAN_THERMISTOR] = (int) (3250 * analog_sensor_ui.value[1]);
 	values.value[ANALOG_CHAN_HALL_EFFECT] = (int) (2000 * analog_sensor_ui.value[2]);
-	values.value[ANALOG_CHAN_CONDUCTIVITY] = (int) (3250 * analog_sensor_ui.value[3]);
+	values.value[ANALOG_CHAN_BATT_V] = (int) (3250 * analog_sensor_ui.value[3]);
 	/* not sure about this one... */
 	values.value[ANALOG_CHAN_MCU_TEMP] = (int) (706 * analog_sensor_ui.value[4]);
 	analog_sensors_set_values(values);
