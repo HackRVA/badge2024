@@ -72,6 +72,15 @@ enum analog_sensor_power analog_get_sensor_power(void);
  */
 void analog_set_sensor_power(enum analog_sensor_power power);
 
+#if TARGET_SIMULATOR
+/* For use by simulator, not badge apps */
+struct analog_sim_values {
+	int value[5]; /* indexed by enum analog_channel */
+};
+
+void analog_sensors_set_values(struct analog_sim_values values);
+
+#endif
 /*! @} */ // BADGE_ANALOG
 
 #endif /* BADGE_C_ANALOG_H */

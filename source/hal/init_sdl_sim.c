@@ -31,6 +31,7 @@
 #include "sim_slider_input.h"
 #include "utils.h"
 #include "color_sensor.h"
+#include "analog.h"
 
 #define UNUSED __attribute__((unused))
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -43,6 +44,11 @@ static struct color_sensor_ui {
 	struct sim_slider_input *input[5];
 	float color_value[5];
 } color_sensor_ui = { 0 };
+
+static struct analog_sensor_ui {
+	struct sim_slider_input *input[5];
+	float value[5];
+} analog_sensor_ui = { 0 };
 
 static void color_sensor_ui_callback(__attribute__((unused)) struct sim_slider_input *s,
 				__attribute__((unused))  float v)
@@ -91,6 +97,76 @@ static void draw_color_sensor_ui(SDL_Window *w, SDL_Renderer *r)
 {
 	for (int i = 0; i < (int) ARRAY_SIZE(color_sensor_ui.input); i++)
 		slider_input_draw(w, r, color_sensor_ui.input[i]);
+}
+
+static void analog_sensor_ui_callback(__attribute__((unused)) struct sim_slider_input *s,
+				__attribute__((unused))  float v)
+{
+	struct analog_sim_values values;
+
+	/* 3250 mV = High-Z -- basically, the battery voltage, I think */
+	values.value[ANALOG_CHAN_CONDUCTIVITY] = (int) (3250 * analog_sensor_ui.value[0]);
+	values.value[ANALOG_CHAN_THERMISTOR] = (int) (3250 * analog_sensor_ui.value[1]);
+	values.value[ANALOG_CHAN_HALL_EFFECT] = (int) (2000 * analog_sensor_ui.value[2]);
+	values.value[ANALOG_CHAN_CONDUCTIVITY] = (int) (3250 * analog_sensor_ui.value[3]);
+	/* not sure about this one... */
+	values.value[ANALOG_CHAN_MCU_TEMP] = (int) (706 * analog_sensor_ui.value[4]);
+	analog_sensors_set_values(values);
+}
+
+static void analog_sensor_ui_mouse_input(SDL_Window *w, struct SDL_MouseButtonEvent *event)
+{
+	for (int i = 0; i < (int) ARRAY_SIZE(analog_sensor_ui.input); i++)
+		slider_input_button_press(w, analog_sensor_ui.input[i], (int) event->x, (int) event->y);
+}
+
+static void setup_analog_sensor_ui(void)
+{
+	for (int i = 0; i < (int) ARRAY_SIZE(analog_sensor_ui.input); i++) {
+		analog_sensor_ui.input[i] = slider_input_create(0.75, 0.05 + i * 0.05, 0.2, 0.02,
+						&analog_sensor_ui.value[i], 0);
+		slider_set_button_press_callback(analog_sensor_ui.input[i], analog_sensor_ui_callback);
+		analog_sensor_ui.value[i] = 0.5;
+	}
+	analog_sensor_ui_callback(0, 0);
+}
+
+static void free_analog_sensor_ui(void)
+{
+	for (int i = 0; i < (int) ARRAY_SIZE(analog_sensor_ui.input); i++) {
+		free(analog_sensor_ui.input[i]);
+		analog_sensor_ui.input[i] = NULL;
+	}
+}
+
+static void draw_analog_sensor_ui(SDL_Window *w, SDL_Renderer *r)
+{
+	for (int i = 0; i < (int) ARRAY_SIZE(analog_sensor_ui.input); i++)
+		slider_input_draw(w, r, analog_sensor_ui.input[i]);
+}
+
+static void draw_sensor_ui(SDL_Window *w, SDL_Renderer *r)
+{
+	draw_color_sensor_ui(w, r);
+	draw_analog_sensor_ui(w, r);
+}
+
+static void sensor_ui_mouse_input(SDL_Window *w, struct SDL_MouseButtonEvent *event)
+{
+	color_sensor_ui_mouse_input(w, event);
+	analog_sensor_ui_mouse_input(w, event);
+}
+
+static void setup_sensor_uis(void)
+{
+	setup_color_sensor_ui();
+	setup_analog_sensor_ui();
+}
+
+static void free_sensor_ui(void)
+{
+	free_color_sensor_ui();
+	free_analog_sensor_ui();
 }
 
 // Forward declaration
@@ -721,7 +797,7 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
     draw_badge_orientation_indicator(renderer, BADGE_ORIENTATION_X, BADGE_ORIENTATION_Y, 1.0f,
 		&orientation_indicator_position, &badge_orientation);
 
-    draw_color_sensor_ui(window, renderer);
+    draw_sensor_ui(window, renderer);
 
     maybe_draw_quit_confirmation();
 
@@ -964,7 +1040,7 @@ static void process_events(SDL_Window *window)
             }
             bcl = get_button_coords(&slp, w, h);
             mouse_button_down_cb(&event.button, &bcl);
-            color_sensor_ui_mouse_input(window, &event.button);
+            sensor_ui_mouse_input(window, &event.button);
             break;
         case SDL_MOUSEBUTTONUP:
             mouse_button_up_cb(&event.button);
@@ -1049,7 +1125,7 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
 
     init_sim_lcd_params();
 
-    setup_color_sensor_ui();
+    setup_sensor_uis();
 
     while (!time_to_quit) {
 	if (second_time) {
@@ -1071,7 +1147,7 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
 	process_events(window);
 	wait_until_next_frame();
     }
-    free_color_sensor_ui();
+    free_sensor_ui();
     SDL_DestroyWindow(window);
     SDL_QuitSubSystem(SDL_INIT_EVENTS);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);

@@ -18,6 +18,13 @@
 
 /*- Private Variables --------------------------------------------------------*/
 static enum analog_sensor_power m_analog_sensor_power_state = ANALOG_SENSOR_POWER_DISABLED;
+static struct analog_sim_values analog_values = { {
+	3250, /* High-Z */
+	2700, /* ~ 20 C */
+	200, /* +/- 0 T, decays to 200 when no sensor power */
+	2940, /* battery voltage, mV */
+	706,  /* ~ 27 C, MCU temp */
+} };
 
 /*- API ----------------------------------------------------------------------*/
 void analog_init(void)
@@ -36,19 +43,11 @@ uint32_t analog_get_chan_mV(enum analog_channel channel)
     switch (channel)
     {
         case ANALOG_CHAN_CONDUCTIVITY:
-            return 3250; /* High-Z */
         case ANALOG_CHAN_THERMISTOR:
-            return 2700; /* ~ 20 C */
         case ANALOG_CHAN_HALL_EFFECT:
-            if (m_analog_sensor_power_state == ANALOG_SENSOR_POWER_ENABLED) {
-                return 2000; /* +/- 0 T */
-            } else {
-                return 200; /* This seems to be what it decays to. -PMW */
-            }
         case ANALOG_CHAN_BATT_V:
-            return 2940;
         case ANALOG_CHAN_MCU_TEMP:
-            return 706; /* 27 C */
+		return analog_values.value[channel];
         default:
             return 0;
     }
@@ -93,6 +92,18 @@ enum analog_sensor_power analog_get_sensor_power(void)
 
 void analog_set_sensor_power(enum analog_sensor_power power)
 {
+    if (power == ANALOG_SENSOR_POWER_ENABLED)
+	analog_values.value[ANALOG_CHAN_HALL_EFFECT] = 1000; /* +/- 0 T */
+    else
+	analog_values.value[ANALOG_CHAN_HALL_EFFECT] = 200; /* what it seems to decay to when no power */
     m_analog_sensor_power_state = power;
 }
 
+void analog_sensors_set_values(struct analog_sim_values values)
+{
+	analog_values = values;
+
+	/* Hall effect sensor requires power */
+	if (m_analog_sensor_power_state != ANALOG_SENSOR_POWER_ENABLED)
+		analog_values.value[ANALOG_CHAN_HALL_EFFECT] = 200;
+}
