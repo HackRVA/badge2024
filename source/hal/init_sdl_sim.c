@@ -28,6 +28,9 @@
 #include "uid.h"
 #include "audio.h"
 #include "xorshift.h"
+#include "sim_slider_input.h"
+#include "utils.h"
+#include "color_sensor.h"
 
 #define UNUSED __attribute__((unused))
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
@@ -35,6 +38,52 @@
 static int sim_argc;
 static char** sim_argv;
 static int fullscreen = 0;
+
+static struct color_sensor_ui {
+	struct sim_slider_input *input[5];
+	float color_value[5];
+} color_sensor_ui = { 0 };
+
+static void color_sensor_ui_callback(__attribute__((unused)) struct sim_slider_input *s,
+				__attribute__((unused))  float v)
+{
+	struct color_sample sample;
+
+	sample.error_flags = 0;
+
+	/* Not quite sure about the range of these, we'll assume 0-255 */
+	for (int i = 0; i < (int) ARRAY_SIZE(sample.rgbwi); i++)
+		sample.rgbwi[i] = (uint16_t) (color_sensor_ui.color_value[i] * 255);
+	color_sensor_set_sample(sample);
+}
+
+static void color_sensor_ui_mouse_input(SDL_Window *w, struct SDL_MouseButtonEvent *event)
+{
+	for (int i = 0; i < (int) ARRAY_SIZE(color_sensor_ui.input); i++)
+		slider_input_button_press(w, color_sensor_ui.input[i], (int) event->x, (int) event->y);
+}
+
+static void setup_color_sensor_ui(void)
+{
+	for (int i = 0; i < (int) ARRAY_SIZE(color_sensor_ui.input); i++) {
+		color_sensor_ui.input[i] = slider_input_create(0.02, 0.05 + i * 0.05, 0.2, 0.02,
+						&color_sensor_ui.color_value[i], 0);
+		slider_set_button_press_callback(color_sensor_ui.input[i], color_sensor_ui_callback);
+		color_sensor_ui.color_value[i] = 0.5;
+	}
+	slider_input_set_color(color_sensor_ui.input[0], 255, 0, 0, 255); /* red */
+	slider_input_set_color(color_sensor_ui.input[1], 0, 255, 0, 255); /* green */
+	slider_input_set_color(color_sensor_ui.input[2], 0, 0, 255, 255); /* blue */
+	slider_input_set_color(color_sensor_ui.input[3], 255, 255, 255, 255); /* white */
+	slider_input_set_color(color_sensor_ui.input[4], 255, 0, 255, 255); /* magenta */
+	color_sensor_ui_callback(0, 0); /* Set initial color sample to match sliders */
+}
+
+static void draw_color_sensor_ui(SDL_Window *w, SDL_Renderer *r)
+{
+	for (int i = 0; i < (int) ARRAY_SIZE(color_sensor_ui.input); i++)
+		slider_input_draw(w, r, color_sensor_ui.input[i]);
+}
 
 // Forward declaration
 void hal_start_sdl(int *argc, char ***argv);
@@ -664,6 +713,8 @@ static int draw_window(SDL_Renderer *renderer, SDL_Texture *texture, SDL_Texture
     draw_badge_orientation_indicator(renderer, BADGE_ORIENTATION_X, BADGE_ORIENTATION_Y, 1.0f,
 		&orientation_indicator_position, &badge_orientation);
 
+    draw_color_sensor_ui(window, renderer);
+
     maybe_draw_quit_confirmation();
 
     SDL_RenderPresent(renderer);
@@ -905,6 +956,7 @@ static void process_events(SDL_Window *window)
             }
             bcl = get_button_coords(&slp, w, h);
             mouse_button_down_cb(&event.button, &bcl);
+            color_sensor_ui_mouse_input(window, &event.button);
             break;
         case SDL_MOUSEBUTTONUP:
             mouse_button_up_cb(&event.button);
@@ -988,6 +1040,8 @@ void hal_start_sdl(UNUSED int *argc, UNUSED char ***argv)
     flareled(0, 0, 0);
 
     init_sim_lcd_params();
+
+    setup_color_sensor_ui();
 
     while (!time_to_quit) {
 	if (second_time) {

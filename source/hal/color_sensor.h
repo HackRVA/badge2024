@@ -93,6 +93,11 @@ enum color_sensor_state color_sensor_power_ctl(enum color_sensor_power_cmd cmd);
 /** Get color sample from color sensor */
 int color_sensor_get_sample(struct color_sample *sample);
 
+#if TARGET_SIMULATOR
+/* For use by the simulator, not badge apps */
+void color_sensor_set_sample(struct color_sample sample);
+#endif
+
 /*! @} */ // BADGE_COLOR_SENSOR
 
 #endif /* BADGE_C_COLOR_SENSOR_H */

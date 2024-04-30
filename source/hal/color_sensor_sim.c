@@ -16,6 +16,10 @@
 
 /*- Private Variables --------------------------------------------------------*/
 static enum color_sensor_state m_color_sensor_state = COLOR_SENSOR_STATE_NO_INIT;
+static struct color_sample current_color_sample = {
+	.error_flags = 0,
+	.rgbwi = { 100, 100, 100, 100, 100 },
+};
 
 /*- Public API ---------------------------------------------------------------*/
 void color_sensor_init(void)
@@ -51,13 +55,12 @@ enum color_sensor_state color_sensor_power_ctl(enum color_sensor_power_cmd cmd)
 
 int color_sensor_get_sample(struct color_sample *sample)
 {
-    sample->error_flags = 0x00;
-    sample->rgbwi[COLOR_SAMPLE_INDEX_RED]   = 100;
-    sample->rgbwi[COLOR_SAMPLE_INDEX_GREEN] = 100;
-    sample->rgbwi[COLOR_SAMPLE_INDEX_BLUE]  = 100;
-    sample->rgbwi[COLOR_SAMPLE_INDEX_WHITE] = 100;
-    sample->rgbwi[COLOR_SAMPLE_INDEX_IR]    = 100;
-
+    *sample = current_color_sample;
     return 0;
+}
+
+void color_sensor_set_sample(struct color_sample sample)
+{
+	current_color_sample = sample;
 }
 
