@@ -4594,7 +4594,6 @@ static void badgey_talk_to_shopkeeper(void)
 {
 	static int menu_setup = 0;
 	int st, n;
-	int stats = 0;
 
 	st = player.in_shop;
 	if (st < 0 || st >= (int) ARRAY_SIZE(proprietor)) {
@@ -4620,8 +4619,7 @@ static void badgey_talk_to_shopkeeper(void)
 				n++;
 			}
 		}
-		stats = n; n++;
-		dynmenu_add_item(&town_menu, "STATS", BADGEY_STATS, stats); 
+		dynmenu_add_item(&town_menu, "STATS", BADGEY_STATS, 253); 
 		dynmenu_add_item(&town_menu, "QUIT", BADGEY_EXIT_CONFIRM, 255);
 		menu_setup = 1;
 	}
@@ -4636,14 +4634,15 @@ static void badgey_talk_to_shopkeeper(void)
 		menu_setup = 0;
 		set_badgey_state(BADGEY_TOWN_MENU);
 		return;
-	}
-	if (choice == 255) { /* exit */
+	} else if (choice == 255) { /* exit */
 		screen_changed = 1;
 		confirm_exit();
 		menu_setup = 0;
 		return;
-	}
-	if (choice > 0 && choice < (int) ARRAY_SIZE(shop_item)) { /* Buy something */
+	} else if (choice == 253) { /* stats */
+		screen_changed = 1;
+		set_badgey_state(BADGEY_STATS);
+	} else if (choice > 0 && choice < (int) ARRAY_SIZE(shop_item)) { /* Buy something */
 		char message[255];
 		if (player.money < shop_item[choice].price) {
 			snprintf(message, sizeof(message), "\n\n"
@@ -4660,10 +4659,6 @@ static void badgey_talk_to_shopkeeper(void)
 		screen_changed = 1;
 		menu_setup = 0;
 		return;
-	}
-	if (choice == stats) {
-		screen_changed = 1;
-		set_badgey_state(BADGEY_STATS);
 	}
 }
 
