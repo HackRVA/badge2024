@@ -54,8 +54,9 @@ static bool check_button(const struct qc_button *b)
     }
 
     char msg[16] = {0};
-    snprintf(msg, sizeof(msg), "%s\n", b->name);
+    int len = snprintf(msg, sizeof(msg), "%s\n", b->name);
     FbWriteString(msg);
+    printf("%.*s\t", len - 1, msg);
 
     if (b->freq != SUPPRESS_BEEP)
 	    audio_out_beep(b->freq, 100);
@@ -129,39 +130,47 @@ static const struct qc_button QC_BTN[] = {
 
 bool qc_analog(void)
 {
+    int len;
     char msg[16];
 
     float ohms = analog_calc_resistance_ohms(analog_get_chan_mV(ANALOG_CHAN_CONDUCTIVITY));
-    snprintf(msg, sizeof(msg), "R:%1.1e\n", ohms);
+    len = snprintf(msg, sizeof(msg), "R:%1.1e\n", ohms);
     FbWriteString(msg);
+    printf("%.*s\t", len - 1, msg);
 
     int8_t therm_C = analog_calc_thermistor_temp_C(analog_get_chan_mV(ANALOG_CHAN_THERMISTOR));
-    snprintf(msg, sizeof(msg), "ThermC:%3d\n", therm_C);
+    len = snprintf(msg, sizeof(msg), "ThermC:%3d\n", therm_C);
     FbWriteString(msg);
+    printf("%.*s\t", len - 1, msg);
     
     int32_t hall_effect_mT = analog_calc_hall_effect_mT(analog_get_chan_mV(ANALOG_CHAN_HALL_EFFECT));
-    snprintf(msg, sizeof(msg), "HallmT:%3d\n", hall_effect_mT);
+    len = snprintf(msg, sizeof(msg), "HallmT:%3d\n", hall_effect_mT);
     FbWriteString(msg);
+    printf("%.*s\t", len - 1, msg);
 
     uint32_t batt_mV = analog_get_batt_mV();
-    snprintf(msg, sizeof(msg), "BattV:%1d.%02d\n", batt_mV / 1000, batt_mV % 1000 / 10);
+    len = snprintf(msg, sizeof(msg), "BattV:%1d.%02d\n", batt_mV / 1000, batt_mV % 1000 / 10);
     FbWriteString(msg);
+    printf("%.*s\t", len - 1, msg);
 
     int8_t mcu_temp = analog_calc_mcu_temp_C(analog_get_chan_mV(ANALOG_CHAN_MCU_TEMP));
-    snprintf(msg, sizeof(msg), "MCUTC:%d\n", mcu_temp);
+    len = snprintf(msg, sizeof(msg), "MCUTC:%d\n", mcu_temp);
     FbWriteString(msg);
+    printf("%.*s\t", len - 1, msg);
 
     return true;
 }
 
 bool qc_color_sensor(void) {
+    int len;
     char msg[15];
     struct color_sample sample;
     int rc = color_sensor_get_sample(&sample);
     if (rc < 0) {
-        snprintf(msg, sizeof(msg), "cls err:%04x\n", 
+        len = snprintf(msg, sizeof(msg), "cls err:%04x\n", 
                  color_sensor_get_error_code());
         FbWriteString(msg);
+        printf("%.*s\t", len - 1, msg);
         return true;
     }
     
@@ -171,9 +180,10 @@ bool qc_color_sensor(void) {
     };
     for (int i = 0; i < COLOR_SAMPLE_INDEX_COUNT; i++) {
         FbColor(text_color[i]);
-        snprintf(msg, sizeof(msg), "%c:%d\n", color[i],
-                 sample.error_flags & (1U << i) ? -1 : sample.rgbwi[i]);
+        len = snprintf(msg, sizeof(msg), "%c:%d\n", color[i],
+                       sample.error_flags & (1U << i) ? -1 : sample.rgbwi[i]);
         FbWriteString(msg);
+        printf("%.*s\t", len - 1, msg);
     }
     FbColor(GREEN);
     
@@ -184,6 +194,7 @@ bool qc_mic(void)
 {
     static uint8_t long_average_idx = 0;
     static audio_sample_t long_average[16] = {0};
+    int len;
     char msg[16];
 
     long_average[long_average_idx] = mic_get_qc_value();
@@ -191,8 +202,9 @@ bool qc_mic(void)
     long_average_idx %= ARRAY_SIZE(long_average);
 
     int8_t dB = audio_dBFS(audio_rms(long_average, ARRAY_SIZE(long_average)));
-    snprintf(msg, sizeof(msg), "Mic:%d\n", dB);
+    len = snprintf(msg, sizeof(msg), "Mic:%03d\n", dB);
     FbWriteString(msg);
+    printf("%.*s\t", len - 1, msg);
 
     return true;
 }
@@ -237,6 +249,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             FbColor(GREEN);
             FbClear();
             FbMove(8, 8);
+	    printf("\r\nqc:\t");
 
             if (button_poll(BADGE_BUTTON_UP) && button_poll(BADGE_BUTTON_B)) {
                 button_hold_count ++;
@@ -304,6 +317,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 audio_out_beep(698 * 2, 400);
                 FbColor(YELLOW);
                 FbWriteString("Pinged!\n");
+                printf("Pinged!\t");
                 FbColor(GREEN);
                 if (QC_IR_frames == 0) {
                     QC_IR = 0;
@@ -319,6 +333,7 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 audio_out_beep(698 * 4, 200);
                 FbColor(YELLOW);
                 FbWriteString("Ping response!\n");
+                printf("Ping response!\t");
                 FbColor(GREEN);
                 if (QC_IR_frames == 0) {
                     QC_IR = 0;
