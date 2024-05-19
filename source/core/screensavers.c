@@ -403,7 +403,8 @@ void dotty(void)
     unsigned char i = 0;
     for(i = 0; i < 200; i++)
     {
-        FbColor(BLUE << (animation_count / 16));
+        FbColor(animation_count < (16 * 16) ? BLUE << (animation_count / 16)
+                                            : BLACK);
         //FbPoint(rnd%130, irbit2(~timestamp)%130);
         //FbPoint(irbit2(get_rand_char(0, 132) + timestamp + i),
         //        irbit2(get_rand_char(0, 132) + ~timestamp + i));
