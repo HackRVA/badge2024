@@ -180,8 +180,6 @@ void do_screen_save_popup(void)
 unsigned char is_dormant = 0;
 unsigned char screen_save_lockout = 0;
 
-unsigned char screensaver_inverted = 0;
-
 uint64_t ProcessIO(void)
 {
     // 30 fps
@@ -208,14 +206,6 @@ uint64_t ProcessIO(void)
         FbClear();
         FbColor(BLACK);
         FbSwapBuffers();
-        if(!screensaver_inverted) {
-            if(display_get_display_mode() == DISPLAY_MODE_NORMAL) {
-                display_set_display_mode_noninverted();
-            }
-            else {
-                display_set_display_mode_inverted();
-            }
-        }
     }
     
     if(is_dormant){
@@ -224,6 +214,7 @@ uint64_t ProcessIO(void)
             //|| (IRpacketInCurr != IRpacketInNext)){
             is_dormant = 0;
             ir_messages_seen(true);
+	    display_reset(); // Just to be safe, put back to known good state.
             brightScreen = 1;
             led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, G_sysData.backlight);
             popup_time = POPUP_LENGTH;
@@ -231,15 +222,6 @@ uint64_t ProcessIO(void)
             menu_redraw_main_menu = 1; //hack
             //reset timer
             button_reset_last_input_timestamp();
-            
-            if(!screensaver_inverted) {
-                if(display_get_display_mode() == DISPLAY_MODE_NORMAL) {
-                    display_set_display_mode_noninverted();
-                }
-                else {
-                    display_set_display_mode_inverted();
-                }
-            }
             
             return frame_interval_us_default;
         }
