@@ -596,7 +596,9 @@ static void animate_menu(struct menu_animation_state *animation)
 		drawing_x = startx + xoffset;
 		drawing_y = starty + yoffset;
 		drawing_scale = (1024 * (255 - animation->frame / 2)) / 255 / 2;
-		FbDrawObject(old_points, old_npoints, GREEN, drawing_x, drawing_y, drawing_scale);
+		if (xd != 0 ||
+			animation->frame + get_menu_animation_speed() < 255) /* don't draw last frame vertical neighbors */
+			FbDrawObject(old_points, old_npoints, GREEN, drawing_x, drawing_y, drawing_scale);
 	}
 
 	animation->frame += get_menu_animation_speed();
