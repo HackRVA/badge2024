@@ -13,6 +13,8 @@
 #include "new_badge_monsters/new_badge_monsters.h"
 #include <string.h>
 
+#define SCREEN_ORIENTATION_LANDSCAPE 0 /* 0 = portrait, 1 = landscape */
+
 #define DEFINE_IMAGE_ASSET_DATA
 #include "holly.h"
 #undef DEFINE_IMAGE_ASSET_DATA
@@ -168,19 +170,44 @@ void hyperspace_screen_saver(void)
 
 void nametag_screensaver(void)
 {
-	int len, y;
-	const char *name = badge_system_data()->name;
+	int len;
+	char name[11];
 
 	draw_hyperspace_screensaver();
 	FbColor(YELLOW);
 	FbBackgroundColor(BLACK);
+#if SCREEN_ORIENTATION_LANDSCAPE
+# define WRITEF FbRotWriteString
 	FbMove(LCD_XSIZE - 20, 10);
-	FbRotWriteLine("HELLO MY NAME IS\n");
+	WRITEF("HELLO MY NAME IS\n");
+#else
+# define WRITEF FbWriteString
+	FbMove(10, 20);
+	WRITEF("HELLO\nMY NAME IS\n");
+#endif
+	strncpy(name, badge_system_data()->name, 11);
+	name[10] = '\0';
 	len = strlen(name);
-	y = ((LCD_YSIZE / 2) - (len * 9) / 2);
+
+	/* Cut off trailing spaces */
+	for (int i = len - 2; i >= 0; i--) {
+		if (name[i] == ' ')
+			name[i] = '\0';
+		else
+			break;
+	}
+	len = strlen(name);
+
+#if SCREEN_ORIENTATION_LANDSCAPE
+	int y = ((LCD_YSIZE / 2) - (len * 9) / 2);
 	FbMove(64, y);
-	FbRotWriteLine(name);
+#else
+	int x = ((LCD_XSIZE / 2) - (len * 9) / 2);
+	FbMove(x, 80);
+#endif
+	WRITEF(name);
 	FbSwapBuffers();
+#undef WRITEF
 }
 
 void disp_asset_saver(void)
@@ -307,7 +334,6 @@ void just_the_badge_tips(void)
 
     FbBackgroundColor(BLACK);
     FbColor(GREEN);
-#define SCREEN_ORIENTATION_LANDSCAPE 0 /* 0 = portrait, 1 = landscape */
 #if SCREEN_ORIENTATION_LANDSCAPE
     /* landscape orientation */
 #   define WRITE_TIP FbRotWriteString
@@ -324,7 +350,6 @@ void just_the_badge_tips(void)
 #else
     FbMove(4, 20);
 #endif
-#undef SCREEN_ORIENTATION_LANDSCAPE
     switch(tipnum){
         case 0:
             WRITE_TIP("Dont lick the\nbadge");
@@ -497,3 +522,4 @@ void qix(void)
 	move_qix(&the_qix);
 }
 
+#undef SCREEN_ORIENTATION_LANDSCAPE
