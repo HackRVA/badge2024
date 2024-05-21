@@ -951,7 +951,7 @@ static int user_backed_out(struct menu_t *menu, int down_latches)
 
 void menus()
 {
-    if (menu_animation_in_progress) {
+    if (runningApp == NULL && menu_animation_in_progress) {
 	animate_menu(&menu_animation);
 	return;
     }
@@ -970,7 +970,8 @@ void menus()
         G_selectedMenu = NULL;
         if (menu_redraw_main_menu) /* screensaver exiting? */
             SUPPRESS_ANIMATION(1, "screensaver exit");
-        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
+	if (runningApp != NULL) /* if an app is running, don't draw the menu */
+		G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
         menu_redraw_main_menu = 0;
     }
 

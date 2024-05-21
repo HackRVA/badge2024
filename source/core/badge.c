@@ -214,7 +214,8 @@ uint64_t ProcessIO(void)
             led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, G_sysData.backlight);
             popup_time = POPUP_LENGTH;
             screen_save_popup_cnt = SCREEN_SAVE_POPUP_DELAY;
-            menu_redraw_main_menu = 1; //hack
+	    if (runningApp == NULL)
+		    menu_redraw_main_menu = 1; //hack
             //reset timer
             button_reset_last_input_timestamp();
             
