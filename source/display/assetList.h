@@ -12,7 +12,6 @@
 enum {
     DRBOB=0,
     HACKRVA4,
-    RVASEC_LOGO,
     FONT,
     ROTATED_FONT,
 

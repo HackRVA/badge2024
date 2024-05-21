@@ -50,6 +50,7 @@ static void brand_preproduction_firmware(int blink)
 #define SPLASH_SHIFT_DOWN 85
 void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
 {
+    extern const struct asset2 RVAsec_13;
     static unsigned short wait = 0;
     static unsigned char loading_txt_idx = 0,
     load_bar = 0;
@@ -67,8 +68,8 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         FbSwapBuffers();
         //PowerSaveIdle();
     } else if(wait < 80){
-        FbMove(0, 2);
-        FbImage2bit(&assetList[RVASEC_LOGO], 0);
+        FbMove(0, 0);
+        FbImage2(&RVAsec_13, 0);
         FbMove(10,SPLASH_SHIFT_DOWN);
 
         FbColor(WHITE);
@@ -92,8 +93,8 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         FbSwapBuffers();
 
     } else if(wait <160){
-        FbMove(0, 2);
-        FbImage2bit(&assetList[RVASEC_LOGO], 0);
+        FbMove(0, 0);
+        FbImage2(&RVAsec_13, 0);
         FbMove(10,SPLASH_SHIFT_DOWN);
         FbColor(GREEN);
         FbLine(0,60,132,60);

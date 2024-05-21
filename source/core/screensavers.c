@@ -185,6 +185,8 @@ void nametag_screensaver(void)
 
 void disp_asset_saver(void)
 {
+    extern const struct asset2 RVAsec_13;
+
     static unsigned char imgnum = 0;
     if(!animation_count){
         uint8_t random;
@@ -195,19 +197,15 @@ void disp_asset_saver(void)
     }
 
     switch(imgnum){
-        case 0:
-            FbMove(0,0);
-            FbImage(&assetList[RVASEC_LOGO], 0);
-            break;
-
         case 1:
             FbMove(0,0);
             FbImage(&assetList[HACKRVA4], 0);
             break;
 
+	case 0:
         case 2:
-            FbMove(0,20);
-            FbImage(&assetList[RVASEC_LOGO], 0);
+            FbMove(0,0);
+            FbImage2(&RVAsec_13, 0);
             break;
 
         case 3:

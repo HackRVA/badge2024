@@ -15,6 +15,7 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/trig.c
         ${CMAKE_CURRENT_LIST_DIR}/xorshift.c
 	${CMAKE_CURRENT_LIST_DIR}/stacktrace.c
+	${CMAKE_CURRENT_LIST_DIR}/RVAsec-13.c
         )
 
 
