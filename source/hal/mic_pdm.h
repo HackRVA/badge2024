@@ -15,8 +15,21 @@
 
 #define MIC_CALLBACK_TABLE_SIZE (4) /*!< Number of microphone input callbacks simultaneously active. */
 
+enum mic_rc {
+    MIC_RC_OK = 0,              /*!< Completed successfully. */
+    MIC_RC_EPARAM_NULL,         /*!< Parameter is NULL. */
+    MIC_RC_EALREADY_EXISTS,     /*!< Callback is already in table. May be ignored if expected. */
+    MIC_RC_ENO_SPACE,           /*!< No space left in table. */
+    MIC_RC_ENOT_THERE,          /*!< Callback is not in table. May be ignored if expected. */
+};
+
+/*! Initialize the microphone. */
 void mic_init(void);
+
+/*! Manually start the microphone. */
 void mic_start(void);
+
+/*! Manually stop the microphone. */
 void mic_stop(void);
 
 /*! Microphone input callback.
@@ -30,10 +43,10 @@ typedef void (*mic_callback_t)(const audio_sample_t *samples, size_t len);
  *
  *  @param  cb  Callback to add.
  *
- *  @retval 0   Successfully added callback.
- *  @retval -1  Callback is NULL.
- *  @retval -2  Callback already in table.
- *  @retval -3  No more space in callback table.
+ *  @retval MIC_RC_OK               Successfully added callback.
+ *  @retval MIC_RC_EPARAM_NULL      Callback is NULL.
+ *  @retval MIC_RC_EALREADY_EXISTS  Callback already in table.
+ *  @retval MIC_RC_ENO_SPACE        No more space in callback table.
  */
 int mic_add_cb(mic_callback_t cb);
 
@@ -41,9 +54,9 @@ int mic_add_cb(mic_callback_t cb);
  *
  *  @param  cb  Callback to remove.
  *
- *  @retval 0   Callback removed.
- *  @retval -1  Callback specified is NULL.
- *  @retval -2  Callback not found in table.
+ *  @retval MIC_RC_OK           Callback removed successfully.
+ *  @retval MIC_RC_EPARAM_NULL  Callback specified is NULL.
+ *  @retval MIC_RC_ENOT_THERE   Callback not found in table.
  */
 int mic_remove_cb(mic_callback_t cb);
 
