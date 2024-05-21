@@ -307,69 +307,82 @@ void just_the_badge_tips(void)
 
     FbBackgroundColor(BLACK);
     FbColor(GREEN);
+#define SCREEN_ORIENTATION_LANDSCAPE 0 /* 0 = portrait, 1 = landscape */
+#if SCREEN_ORIENTATION_LANDSCAPE
+    /* landscape orientation */
+#   define WRITE_TIP FbRotWriteString
     FbMove(LCD_XSIZE - 8 - 4, 14);
-    FbRotWriteString(badgetips_header);
+#else
+#   define WRITE_TIP FbWriteString
+    FbMove(14, 4);
+#endif
+    WRITE_TIP(badgetips_header);
 
     FbColor(YELLOW);
+#if SCREEN_ORIENTATION_LANDSCAPE
     FbMove(LCD_XSIZE - 20 - 20 , 4);
+#else
+    FbMove(4, 20);
+#endif
+#undef SCREEN_ORIENTATION_LANDSCAPE
     switch(tipnum){
         case 0:
-            FbRotWriteString("Dont lick the\nbadge");
+            WRITE_TIP("Dont lick the\nbadge");
             break;
         case 1:
-            FbRotWriteString("These are land\ndwelling badges.\nAvoid water");
+            WRITE_TIP("These are land\ndwelling badges.\nAvoid water");
             break;
         case 2:
-            FbRotWriteString("Known to the\nstate of cancer to\ncause California");
+            WRITE_TIP("Known to the\nstate of cancer to\ncause California");
             break;
         case 3:
-            FbRotWriteString("Wash your hands\nnext time.");
+            WRITE_TIP("Wash your hands\nnext time.");
             break;
         case 4:
-            FbRotWriteString("Say hi to\nthe creators\nover at hackrva");
+            WRITE_TIP("Say hi to\nthe creators\nover at hackrva");
             break;
         case 5:
-            FbRotWriteString("Have another\nbeer.");
+            WRITE_TIP("Have another\nbeer.");
             break;
         case 6:
-            FbRotWriteString("This badge is\nzombie load\nenabled");
+            WRITE_TIP("This badge is\nzombie load\nenabled");
             break;
         case 7:
-            FbRotWriteString("This badge is\nloyal to Mark\nZuckyZuck");
+            WRITE_TIP("This badge is\nloyal to Mark\nZuckyZuck");
             break;
         case 8:
-            FbRotWriteString("checkout the\nCTF!");
+            WRITE_TIP("checkout the\nCTF!");
             break;
         case 9:
-            FbRotWriteString("Its impolite\nto start at\nother peoples\nbadges.");
+            WRITE_TIP("Its impolite\nto start at\nother peoples\nbadges.");
             break;
         case 10:
-            FbRotWriteString("Every badge is\ndifferent. Find\nthe bugs in\nyours!");
+            WRITE_TIP("Every badge is\ndifferent. Find\nthe bugs in\nyours!");
             break;
         case 11:
-            FbRotWriteString("Badges can be\nvery social.\nTry playing\nIR games");
+            WRITE_TIP("Badges can be\nvery social.\nTry playing\nIR games");
             break;
         case 12:
-            FbRotWriteString("Its a thin line\nbetween a badge\nand an bodge");
+            WRITE_TIP("Its a thin line\nbetween a badge\nand an bodge");
             break;
         case 13:
-            FbRotWriteString("If you cant\nread this your\nbadge is broken");
+            WRITE_TIP("If you cant\nread this your\nbadge is broken");
             break;
         case 14:
-            FbRotWriteString("Youll find the\nsource code\nonline after\nthe conference.");
+            WRITE_TIP("Youll find the\nsource code\nonline after\nthe conference.");
             break;
         case 15:
-            FbRotWriteString("The badge is\nnot a touch\nscreen");
+            WRITE_TIP("The badge is\nnot a touch\nscreen");
             break;
         case 16:
-            FbRotWriteString("Badges need\nlove. Pet\nyour badge\nregularly");
+            WRITE_TIP("Badges need\nlove. Pet\nyour badge\nregularly");
             break;
         case 17:
-            FbRotWriteString("These are\nartisanal\nbadges");
+            WRITE_TIP("These are\nartisanal\nbadges");
             break;
         case 18:
         default:
-            FbRotWriteString("Badges are\nhand crafted\nat hackrva");
+            WRITE_TIP("Badges are\nhand crafted\nat hackrva");
             break;
     }
 
