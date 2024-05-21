@@ -961,14 +961,17 @@ void menus()
         return;
     }
 
-    if (G_currMenu == NULL || (menu_redraw_main_menu)){
-        menu_redraw_main_menu = 0;
+    if (G_currMenu == NULL || menu_redraw_main_menu) {
+	G_menuCnt = 0;
         G_menuStack[G_menuCnt].currMenu = (struct menu_t *) main_m;
         G_menuStack[G_menuCnt].selectedMenu = NULL;
         G_currMenu = (struct menu_t *)main_m;
         //selectedMenu = G_currMenu;
         G_selectedMenu = NULL;
+        if (menu_redraw_main_menu) /* screensaver exiting? */
+            SUPPRESS_ANIMATION(1, "screensaver exit");
         G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
+        menu_redraw_main_menu = 0;
     }
 
     int down_latches = button_down_latches();
