@@ -896,19 +896,31 @@ extern unsigned char is_dormant;
 
 static int user_made_selection(struct menu_t *menu, int down_latches)
 {
-	int selection_direction;
+	int answer, selection_direction;
+
 	if (display_menu == new_display_menu && menu_has_icons(menu))
 		selection_direction = BADGE_BUTTON_DOWN;
 	else
 		selection_direction = BADGE_BUTTON_RIGHT;
 
-	return	
+	/* suppress use of down button to select because people hate what they don't understand */
+	if (selection_direction != BADGE_BUTTON_DOWN) {
+		answer =
 #if BADGE_HAS_ROTARY_SWITCHES
-		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 #endif
-		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-		BUTTON_PRESSED(selection_direction, down_latches);
+			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+			BUTTON_PRESSED(selection_direction, down_latches);
+	} else {
+		answer =
+#if BADGE_HAS_ROTARY_SWITCHES
+			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+#endif
+			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches);
+	}
+	return answer;
 }
 
 static int user_moved_to_previous_item(struct menu_t *menu, int down_latches,
