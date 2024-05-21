@@ -100,6 +100,8 @@ static const struct menu_t games_m[] = {
 static const struct menu_t menu_style_menu_m[] = {
 	{"New Menus", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = select_new_menu_style }, NULL, },
 	{"Legacy Menus", VERT_ITEM, FUNCTION, { .func = select_legacy_menu_style }, NULL, },
+	{"Down Select", VERT_ITEM, FUNCTION, { .func = enable_down_as_select }, NULL, },
+	{"No Down Select", VERT_ITEM, FUNCTION, { .func = disable_down_as_select }, NULL, },
 	{"Back", VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 
@@ -893,6 +895,7 @@ static void display_menu_item_description(__attribute__((unused)) struct menu_t 
 }
 
 extern unsigned char is_dormant;
+static int down_acts_as_select = 0;
 
 static int user_made_selection(struct menu_t *menu, int down_latches)
 {
@@ -904,7 +907,7 @@ static int user_made_selection(struct menu_t *menu, int down_latches)
 		selection_direction = BADGE_BUTTON_RIGHT;
 
 	/* suppress use of down button to select because people hate what they don't understand */
-	if (selection_direction != BADGE_BUTTON_DOWN) {
+	if (selection_direction != BADGE_BUTTON_DOWN || down_acts_as_select) {
 		answer =
 #if BADGE_HAS_ROTARY_SWITCHES
 			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
@@ -921,6 +924,18 @@ static int user_made_selection(struct menu_t *menu, int down_latches)
 			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches);
 	}
 	return answer;
+}
+
+void enable_down_as_select(__attribute__((unused)) struct menu_t *menu)
+{
+	down_acts_as_select = 1;
+	returnToMenus();
+}
+
+void disable_down_as_select(__attribute__((unused)) struct menu_t *menu)
+{
+	down_acts_as_select = 0;
+	returnToMenus();
 }
 
 static int user_moved_to_previous_item(struct menu_t *menu, int down_latches,

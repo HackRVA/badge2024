@@ -92,5 +92,7 @@ void select_new_menu_style(struct menu_t *m);
 void select_menu_speed_fast(struct menu_t *m);
 void select_menu_speed_medium(struct menu_t *m);
 void select_menu_speed_slow(struct menu_t *m);
+void enable_down_as_select(struct menu_t *m);
+void disable_down_as_select(struct menu_t *m);
 
 #endif
