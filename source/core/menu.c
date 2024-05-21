@@ -381,6 +381,7 @@ static struct menu_animation_state {
 	struct menu_t *root_menu;
 	struct menu_t *selected;
 	int text_label_x;
+	int suppress_animation; /* used when exiting apps */
 } menu_animation;
 
 /* The reason that legacy_display_menu returns a menu_t * instead of void
@@ -769,6 +770,11 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
     menu_animation.root_menu = root_menu;
     menu_animation.selected = selected;
 
+    if (menu_animation.suppress_animation) {
+        menu_animation.frame = 255;
+        menu_animation.suppress_animation = 0;
+    }
+
     if (selected)
 	previous_icon = selected->icon;
     else
@@ -816,10 +822,11 @@ static void pop_menu(void)
 
 /*
    NOTE-
-     apps will call this but since this returns to the callback
-     code will execute up the the fuction return()
+     apps will call this only via returnToMenus() below, but since this returns to the callback
+     code will execute up the the function return()
 */
-void returnToMenus() {
+static void internalReturnToMenus(void)
+{
     /* Clear any stray buttons left over from the app */
     (void) button_down_latches();
 
@@ -833,6 +840,13 @@ void returnToMenus() {
     menu_animation.frame = 0;
     G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_UNKNOWN);
     runningApp = NULL;
+}
+
+/* This is called by apps */
+void returnToMenus(void)
+{
+	menu_animation.suppress_animation = 1;
+	internalReturnToMenus();
 }
 
 static char *menu_item_description = NULL;
@@ -858,7 +872,7 @@ static void display_menu_item_description(__attribute__((unused)) struct menu_t 
 		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-		returnToMenus();
+		internalReturnToMenus();
 	}
 }
 
@@ -1018,33 +1032,33 @@ void menus()
 void select_new_menu_style(__attribute__((unused)) struct menu_t *m)
 {
 	display_menu = new_display_menu;
-	returnToMenus();
+	internalReturnToMenus();
 }
 
 void select_legacy_menu_style(__attribute__((unused)) struct menu_t *m)
 {
 	display_menu = legacy_display_menu;
-	returnToMenus();
+	internalReturnToMenus();
 }
 
 void select_menu_speed_fast(__attribute__((unused)) struct menu_t *m)
 {
 	menu_animation_speed = 40;
 	flash_kv_store_int("MENU_SPEED", menu_animation_speed);
-	returnToMenus();
+	internalReturnToMenus();
 }
 
 void select_menu_speed_medium(__attribute__((unused)) struct menu_t *m)
 {
 	menu_animation_speed = 20;
 	flash_kv_store_int("MENU_SPEED", menu_animation_speed);
-	returnToMenus();
+	internalReturnToMenus();
 }
 
 void select_menu_speed_slow(__attribute__((unused)) struct menu_t *m)
 {
 	menu_animation_speed = 10;
 	flash_kv_store_int("MENU_SPEED", menu_animation_speed);
-	returnToMenus();
+	internalReturnToMenus();
 }
 
