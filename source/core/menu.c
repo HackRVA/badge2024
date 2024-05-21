@@ -925,7 +925,7 @@ void menus()
 	animate_menu(&menu_animation);
 	return;
     }
-    if (runningApp != NULL && !is_dormant) { /* running app is set by menus() not genericMenus() */
+    if (runningApp != NULL && !is_dormant) { /* running app is set by menus() */
 	/* Call the runningApp if non-NULL and the screen saver is not active */
         (*runningApp)(NULL);
         return;
@@ -1012,113 +1012,6 @@ void menus()
         pop_menu();
         if (G_menuCnt == 0)
             return; /* stack is empty, error or main menu */
-    }
-}
-
-/*
-  ripped from above for app menus
-  this is not meant for persistant menus
-  like the main menu
-*/
-void genericMenu(struct menu_t *L_menu, MENU_STYLE style, uint32_t down_latches) {
-    static struct menu_t *L_currMenu = NULL; /* LOCAL not to be confused to much with menu()*/
-    static struct menu_t *L_selectedMenu = NULL; /* LOCAL ditto   "    "    */
-    static unsigned char L_menuCnt=0; // index for G_menuStack
-    static struct menu_t *L_menuStack[4] = { 0 }; // track user traversing menus
-
-    if (L_menu == NULL) return; /* no thanks */
-
-    if (L_currMenu == NULL) {
-        L_menuCnt = 0;
-        L_menuStack[L_menuCnt] = L_menu;
-        L_currMenu = L_menu;
-        //L_selectedMenu = L_menu;
-        L_selectedMenu = NULL;
-        L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_UNKNOWN);
-        return;
-    }
-
-    if (
-#if BADGE_HAS_ROTARY_SWITCHES
-	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-#endif
-        BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
-        BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-        switch (L_selectedMenu->type) {
-            case MORE: /* jump to next page of menu */
-                menu_beep(MORE_FREQ); /* a */
-                L_currMenu += PAGESIZE;
-                L_selectedMenu = L_currMenu;
-                break;
-
-            case BACK: /* return from menu */
-                menu_beep(BACK_FREQ); /* b */
-                if (L_menuCnt == 0) return; /* stack is empty, error or main menu */
-                L_menuCnt--;
-                L_currMenu = L_menuStack[L_menuCnt] ;
-                L_selectedMenu = L_currMenu;
-                L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_CHILD);
-                break;
-
-            case TEXT: /* maybe highlight if clicked?? */
-                menu_beep(TEXT_FREQ); /* c */
-                break;
-
-            case MENU: /* drills down into menu if clicked */
-                menu_beep(MENU_FREQ); /* d */
-                L_menuStack[L_menuCnt++] = L_currMenu; /* push onto stack  */
-                if (L_menuCnt == MAX_MENU_DEPTH) L_menuCnt--; /* too deep, undo */
-                L_currMenu = (struct menu_t *)L_selectedMenu->data.menu; /* go into this menu */
-                //L_selectedMenu = L_currMenu;
-                L_selectedMenu = NULL;
-                L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_PARENT);
-                break;
-
-            case FUNCTION: /* call the function pointer if clicked */
-                menu_beep(FUNC_FREQ); /* e */
-                (*L_selectedMenu->data.func)(L_selectedMenu);
-
-                /* clean up for nex call back */
-                L_menu = NULL;
-                L_currMenu = NULL;
-                L_selectedMenu = NULL;
-
-                L_menuCnt = 0;
-                L_menuStack[L_menuCnt] = NULL;
-                break;
-
-            default:
-                break;
-        }
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
-        /* handle slider/soft button clicks */
-        menu_beep(TEXT_FREQ); /* f */
-
-        /* make sure not on first menu item */
-        if (L_selectedMenu > L_currMenu) {
-            L_selectedMenu--;
-
-            while ((L_selectedMenu->attrib & SKIP_ITEM)
-                    && L_selectedMenu > L_currMenu) {
-                L_selectedMenu--;
-            }
-
-            L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_NEXT);
-        }
-    } else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
-        menu_beep(MORE_FREQ); /* g */
-
-        /* make sure not on last menu item */
-        if (!(L_selectedMenu->attrib & LAST_ITEM)) {
-            L_selectedMenu++;
-
-            //Last item should never be a skipped item!!
-            while (L_selectedMenu->attrib & SKIP_ITEM) {
-                L_selectedMenu++;
-            }
-
-            L_selectedMenu = display_menu(L_currMenu, L_selectedMenu, style, MENU_PREVIOUS);
-        }
     }
 }
 
