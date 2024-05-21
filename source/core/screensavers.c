@@ -266,27 +266,28 @@ void matrix(void)
 	}
 
 	for (int i = 0; i < NUM_MATRIX_DOODADS; i++) {
-		if (x[i] > 0)
+		if (y[i] * 8 < LCD_YSIZE - 8) /* not bottom row? */
 			FbColor(x11_light_green);
 		else
 			FbColor(x11_dark_green);
 		FbBackgroundColor(BLACK);
 		unsigned char ch = random_num(63) + 'A';
 		FbMove(x[i] * 8, y[i] * 8);
-		FbRotCharacter(ch);
+		FbCharacter(ch);
 		if (random_num(1000) < 900) {
-			int nx = x[i] + 1;
-			if (nx * 8 <= LCD_XSIZE - 8) {
+			int ny = y[i] - 1;
+			if (ny >= 0) { /* if it's not off the top of the screen */
 				FbColor(x11_dark_green);
-				FbMove(nx * 8, y[i] * 8);
+				FbMove(x[i] * 8, ny * 8);
 				ch = random_num(63) + 'A';
-				FbRotCharacter(ch);
+				FbCharacter(ch);
 			}
 		}
-		x[i] -= 1;
-		if (x[i] < 0) {
-			x[i] = (LCD_XSIZE - 8) / 8;
-			y[i] = random_num(LCD_YSIZE / 8);
+		y[i] += 1;
+		if (y[i] > (LCD_YSIZE - 8) / 8) { /* hit bottom of screen? */
+			/* choose new location, random x, y = top of screen */
+			x[i] = random_num(LCD_XSIZE / 8);
+			y[i] = 0;
 		}
 	}
 	FbPushBuffer();
