@@ -16,16 +16,9 @@ static const ss_func ss[] = {
 	just_the_badge_tips,
 	dotty,
 	disp_asset_saver,
-	hack_the_dragon,
-	stupid_rects,
-	carzy_tunnel_animator,
-	for_president,
-	smiley,
 	matrix,
-	bluescreen,
 	qix,
 	hyperspace_screen_saver,
-	holly_screensaver,
 	nametag_screensaver,
 };
 static const int num_screen_savers = sizeof(ss) / sizeof(ss[0]);

@@ -109,7 +109,7 @@ void do_screen_save_popup(void)
     if(popup_time){
         
         if(prob_val < MEDIUM_PROB_THRESH){
-            
+ #if 0
             switch(current_screen_saver%4){
                 case 0:
                     smiley();
@@ -124,23 +124,21 @@ void do_screen_save_popup(void)
                     for_president();
                     break;
             }
+#endif
         }
         else if(prob_val < HIGH_PROB_THRESH){
             switch(current_screen_saver%10){
                 case 0:
-                    disp_asset_saver();
-                    break;
                 case 1:
-                    stupid_rects();
+                case 3:
+		case 8:
+                    disp_asset_saver();
                     break;
                 case 2:
                     dotty();
                     break;
-                case 3:
-                    carzy_tunnel_animator();
-                    break;
                 case 4:
-                    just_the_badge_tips();
+                    just_the_badge_tips(); /* need to rework this */
                     break;
                 case 5:
                     qix();
@@ -150,9 +148,6 @@ void do_screen_save_popup(void)
                     break;
                 case 7:
                     hyperspace_screen_saver();
-                    break;
-                case 8:
-                    holly_screensaver();
                     break;
                 case 9:
                     nametag_screensaver();
