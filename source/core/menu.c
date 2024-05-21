@@ -384,6 +384,16 @@ static struct menu_animation_state {
 	int suppress_animation; /* used when exiting apps */
 } menu_animation;
 
+#define DEBUG_SUPPRESS_ANIMATION 1
+#if DEBUG_SUPPRESS_ANIMATION
+#define SUPPRESS_ANIMATION(v, msg) do { \
+		menu_animation.suppress_animation = v; \
+		printf("animation:%d %s %s:%d\n", v, msg, __FILE__, __LINE__); \
+	} while (0)
+#else
+#define SUPPRESS_ANIMATION(v, msg) do { menu_animation.suppress_animation = v; } while (0)
+#endif
+
 /* The reason that legacy_display_menu returns a menu_t * instead of void
    as you might expect is because sometimes it skips over unselectable
    items.
@@ -774,7 +784,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
 
     if (menu_animation.suppress_animation) {
         menu_animation.frame = 255;
-        menu_animation.suppress_animation = 0;
+	SUPPRESS_ANIMATION(0, "DM");
     }
 
     if (selected)
@@ -809,15 +819,19 @@ static void push_menu(const struct menu_t *menu)
 	G_selectedMenu = (struct menu_t *) menu; /* first item of current menu */
 }
 
-static void pop_menu(void)
+static void pop_menu(int call_display_menu)
 {
 	if (G_menuCnt == 0)
 		return; /* stack is empty, error or main menu */
+
+	if (!menu_has_icons(G_currMenu))
+		SUPPRESS_ANIMATION(1, "popmenu");
 	G_menuCnt--;
 	G_currMenu = G_menuStack[G_menuCnt].currMenu;
 	G_selectedMenu = G_menuStack[G_menuCnt].selectedMenu;
 	menu_scroll_start_item = G_menuStack[G_menuCnt].menu_scroll_start_item;
-        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_CHILD);
+	if (call_display_menu)
+		G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_CHILD);
 	menu_animation_in_progress = 1;
 	menu_animation.frame = 0;
 }
@@ -847,7 +861,7 @@ static void internalReturnToMenus(void)
 /* This is called by apps */
 void returnToMenus(void)
 {
-	menu_animation.suppress_animation = 1;
+	SUPPRESS_ANIMATION(1, "rtm");
 	internalReturnToMenus();
 }
 
@@ -973,16 +987,22 @@ void menus()
                 G_selectedMenu = G_currMenu;
                 break;
 
-            case BACK: /* return from menu */
+            case BACK: { /* return from menu */
+		int suppress_animation = 0;
                 menu_beep(BACK_FREQ);
-		pop_menu();
+		if (!menu_has_icons(G_currMenu)) {
+			suppress_animation = 1;
+		}
+		pop_menu(0);
+		if (suppress_animation)
+			SUPPRESS_ANIMATION(1, "BCK2");
 		via_back_item = 1;
                 if (G_menuCnt == 0) {
 			menu_animation.came_from = MENU_UNKNOWN;
 			return; /* stack is empty, error or main menu */
 		}
                 break;
-
+		}
             case TEXT: /* maybe highlight if clicked?? */
                 menu_beep(TEXT_FREQ); /* c */
                 break;
@@ -1024,8 +1044,13 @@ void menus()
 	maybe_scroll_to(G_selectedMenu, G_currMenu);
 	G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_PREVIOUS);
     } else if (user_backed_out(G_currMenu, down_latches)) {
+	int suppress_animation = !menu_has_icons(G_currMenu);
         menu_beep(BACK_FREQ);
-        pop_menu();
+        pop_menu(0);
+	if (suppress_animation)
+		SUPPRESS_ANIMATION(1, "BCK3A");
+        G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE,
+			MENU_CHILD);
         if (G_menuCnt == 0)
             return; /* stack is empty, error or main menu */
     }
