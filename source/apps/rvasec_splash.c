@@ -36,7 +36,7 @@ static const char splash_words_btn2[] = "to continue!";
 static void brand_preproduction_firmware(int blink)
 {
 	(void) blink;
-#define PREPRODUCTION_FIRMWARE 0
+#define PREPRODUCTION_FIRMWARE 1
 #if PREPRODUCTION_FIRMWARE
 	if (!blink)
 		return;
@@ -95,6 +95,8 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
     } else if(wait <160){
         FbMove(0, 0);
         FbImage2(&RVAsec_13, 0);
+#if 0
+	/* Draw the griddy horizon thing */
         FbMove(10,SPLASH_SHIFT_DOWN);
         FbColor(GREEN);
         FbLine(0,60,132,60);
@@ -112,7 +114,9 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         FbLine(45, 60,25,77);
         FbLine(35, 60,5,77);
         FbLine(25, 60,0,65);
+#endif
 
+        FbColor(RED);
         FbMove(1, 90);
         FbWriteLine(splash_words_btn1);
 
