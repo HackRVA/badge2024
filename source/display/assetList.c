@@ -13,9 +13,6 @@
 #define DRBOB_HIRES
 #include "drbob.h"
 
-#define RVASEC2016BITS_LORES
-#include "rvasec2016.h"
-
 #include "rvasec_logo.h"
 
 //#include "font_2.xbm" // for size reasons just A-Z and a couple others
@@ -54,7 +51,6 @@ const struct asset assetList[] = {
         { DRBOB, DRBOB_BITS, 1, DRBOB_WIDTH, DRBOB_HEIGHT, (const char *)DRBOB_CMAP, (const char *)DRBOB_DATA, (dummy_draw) },
         { HACKRVA4, HACKRVA4_BITS, 1, HACKRVA4_WIDTH, HACKRVA4_HEIGHT, (const char *)HACKRVA4_CMAP, (const char *)HACKRVA4_DATA, (dummy_draw) },
 // partial font    { FONT, PICTURE1BIT, 42, 8, 8, (const char *)BW_cmap, (const char *)font_2_bits, (dummy_draw) },
-        { RVASEC2016, RVASEC2016_BITS, 1, RVASEC2016_WIDTH, RVASEC2016_HEIGHT, (const char *)RVASEC2016_CMAP, (const char *)RVASEC2016_DATA, (dummy_draw) },
         { RVASEC_LOGO, RVASEC_LOGO_BITS, 1, RVASEC_LOGO_WIDTH, RVASEC_LOGO_HEIGHT, (const char *)RVASEC_LOGO_CMAP, (const char *)RVASEC_LOGO_DATA, (dummy_draw) },
         { FONT, PICTURE1BIT, 128, 8, 8, (const char *)BW_cmap, (const char *)font8x8_bits, (dummy_draw) },
 	{ ROTATED_FONT, PICTURE1BIT, 128, 8, 8, (const char *)BW_cmap, (const char *)font8x8_rotated_bits, (dummy_draw) },

@@ -207,7 +207,7 @@ void disp_asset_saver(void)
 
         case 2:
             FbMove(0,20);
-            FbImage2bit(&assetList[RVASEC2016], 0);
+            FbImage(&assetList[RVASEC_LOGO], 0);
             break;
 
         case 3:

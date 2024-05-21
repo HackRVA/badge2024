@@ -68,7 +68,7 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         //PowerSaveIdle();
     } else if(wait < 80){
         FbMove(0, 2);
-        FbImage2bit(&assetList[RVASEC2016], 0);
+        FbImage2bit(&assetList[RVASEC_LOGO], 0);
         FbMove(10,SPLASH_SHIFT_DOWN);
 
         FbColor(WHITE);
@@ -93,7 +93,7 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
 
     } else if(wait <160){
         FbMove(0, 2);
-        FbImage2bit(&assetList[RVASEC2016], 0);
+        FbImage2bit(&assetList[RVASEC_LOGO], 0);
         FbMove(10,SPLASH_SHIFT_DOWN);
         FbColor(GREEN);
         FbLine(0,60,132,60);
