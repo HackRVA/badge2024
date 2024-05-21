@@ -913,15 +913,13 @@ static int user_made_selection(struct menu_t *menu, int down_latches)
 			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 #endif
 			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
 			BUTTON_PRESSED(selection_direction, down_latches);
 	} else {
 		answer =
 #if BADGE_HAS_ROTARY_SWITCHES
 			BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
 #endif
-			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
-			BUTTON_PRESSED(BADGE_BUTTON_B, down_latches);
+			BUTTON_PRESSED(BADGE_BUTTON_A, down_latches);
 	}
 	return answer;
 }
@@ -973,7 +971,8 @@ static int user_backed_out(struct menu_t *menu, int down_latches)
 	/* Left rotary encoder switch can be used to back out of menus */
 	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
 #endif
-	BUTTON_PRESSED(back_out_button, down_latches);
+	BUTTON_PRESSED(back_out_button, down_latches) ||
+	BUTTON_PRESSED(BADGE_BUTTON_B, down_latches);
 }
 
 void menus()
