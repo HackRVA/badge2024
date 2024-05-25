@@ -4,7 +4,9 @@
 
 #include "new_badge_monsters.h"
 #define DEFINE_IMAGE_ASSET_DATA
-#include "new_badge_monsters_assets.h"
+/* #include "new_badge_monsters_assets.h" */
+#include "assetList.h"
+#include "2024-badge-monsters/2024-badge-monsters.h"
 #undef DEFINE_IMAGE_ASSET_DATA
 #include "new_badge_monsters_ir.h"
 #include "audio.h"
@@ -106,210 +108,147 @@ struct new_monster new_monsters[] = {
         true,
         RED,
         "This one\nonly roars\nin\ncrypto-\ncurrency",
-        &CryptoRaptor
+        &bm1
     }
   , {
         "2FactorTiger",
         false,
         RED,
         "Double the\nsecurity,\ndouble\nthe fun",
-        &TwoFactorTiger
+        &bm2
     }
   , {
         "firewallFlyer",
         false,
         RED,
         "Can't touch\nthis, unless\nyou're an\nallowed IP",
-        &FirewallFlyer
+        &bm3
     }
   , {
         "trojanTurtle",
         false,
         RED,
         "Slow and\nsneaky, never\nunderestimate\nit",
-        &TrojanTurtle
+        &bm4
     }
   , {
         "phishinPhoenix",
         false,
         RED,
         "Spams your\ninbox, then\nrises from \nits ashes",
-        &PhishingPhoenix
+        &bm5
     }
   , {
         "hackerHawk",
         false,
         RED,
         "Always\nwatching\nfrom above,\nwaiting to\nswoop in",
-        &HackerHawk
+        &bm6
     }
   , {
         "malwareMantis",
         false,
         RED,
         "Prays on\nyour\nsystem's\nvulner-\nabilities",
-        &MalwareMantis
+        &bm7
     }
   , {
         "ddosDragon",
         false,
         RED,
         "Breathes a\nfire of\ntraffic at\nyour servers",
-        &DDoS_Dragon
+        &bm8
     }
   , {
         "keylogKoala",
         false,
         RED,
         "It's not\neucalyptus\nleaves it's\nafter",
-        &KeyloggerKoala
+        &bm8
     }
   , {
         "wormWombat",
         false,
         RED,
         "Burrows\ndeep into\nyour system",
-        &WormWombat
+        &bm9
     }
   , {
         "adwareAnteater",
         false,
         RED,
         "Feeds on\nyour browsing\nhabits",
-        &AdwareAnteater
+        &bm10
     }
   , {
         "rootkitRhino",
         false,
         RED,
         "Charges at\nyour system's\ncore",
-        &RootkitRhino
+        &bm11
     }
   , {
         "botnetBat",
         false,
         RED,
         "Flies in\nthe\ndarkness\nof the web",
-        &BotnetBat
+        &bm12
     }
   , {
         "dnsDolphin",
         false,
         RED,
         "Loves to\nplay\nredirect\ngames",
-        &DNS_Dolphin
+        &bm13
     }
   , {
         "sslShark",
         false,
         RED,
         "Swims in a\nsea of\nencrypted\ndata",
-        &SSL_Shark
+        &bm14
     }
   , {
         "spamSpider",
         false,
         RED,
         "Weaves a\nweb of\nunwanted\nemails",
-        &SpamSpider
+        &bm15
     }
   , {
         "ransomRabbit",
         false,
         RED,
         "Hops into\nyour files,\nthen locks\nthem up",
-        &RansomwareRabbit
+        &bm16
     }
   , {
         "snifferSnail",
         false,
         RED,
         "Slow but\ncan smell\nyour data\nfrom miles\naway",
-        &SnifferSnail
+        &bm17
     }
   , {
         "backdoorBee",
         false,
         RED,
         "Buzzes into\nyour system\nthrough the\nback",
-        &BackdoorBee
+        &bm18
     }
   , {
         "exploitEagle",
         false,
         RED,
         "Soars high\nto find\nunpatched\nvulner-\nabilities",
-        &ExploitEagle
+        &bm19
     }
   , {
         "bruFrcBaboon",
         false,
         RED,
         "Not subtle,\nbut\nsometimes\nit works",
-        &BruteForceBaboon
-    }
-  , {
-        "socNgnrSqrl",
-        false,
-        RED,
-        "Collects\nyour info\nlike acorns",
-        &SocialEngineerSquirrel
-    }
-  , {
-        "packSnifPuma",
-        false,
-        RED,
-        "Stealthily\nstalks your\nnetwork\ntraffic",
-        &PacketSnifferPuma
-    }
-  , {
-        "proxyPorcupn",
-        false,
-        RED,
-        "Its spikes\nare like\nmultiple IP\naddresses",
-        &ProxyPorcupine
-    }
-  , {
-        "intDetIguana",
-        false,
-        RED,
-        "Keeps a\ncold-blooded\nwatch on\nyour network",
-        &IntrusionDetectionIguana
-    }
-  , {
-        "penTestPengo",
-        false,
-        RED,
-        "Slides into\nyour defenses\nwith ease",
-        &PenTestPenguin
-    }
-  , {
-        "axsCtrlGator",
-        false,
-        RED,
-        "Keeps\nunauthorized\nusers at bay,\nsnappily",
-        &AccessControlAlligator
-    }
-  , {
-        "idsImpalas",
-        false,
-        RED,
-        "Fast and\nefficient\nat detecting\nintrusions",
-        &IDS_Impalas
-    }
-  , {
-        "siemSloth",
-        false,
-        RED,
-        "Slow but\nsteady wins\nthe security\nrace",
-        &SIEM_Sloth
-    }
-  , {
-        "vpnVulture",
-        false,
-        RED,
-        "Flies over\ngeo-\nrestrictions\nwith ease",
-        &VPN_Vulture
+        &bm20
     }
 };
 
