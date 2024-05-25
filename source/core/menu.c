@@ -987,13 +987,15 @@ void menus()
         return;
     }
 
-    if (G_currMenu == NULL || menu_redraw_main_menu) {
+    if (G_currMenu == NULL || menu_redraw_main_menu) { /* coming back from screen saver */
 	G_menuCnt = 0;
         G_menuStack[G_menuCnt].currMenu = (struct menu_t *) main_m;
         G_menuStack[G_menuCnt].selectedMenu = NULL;
         G_currMenu = (struct menu_t *)main_m;
         //selectedMenu = G_currMenu;
-        G_selectedMenu = NULL;
+        // G_selectedMenu = NULL;
+	G_selectedMenu = (struct menu_t *) main_m; /* make it not crash after coming back from screen saver */
+						/* This is not exactly correct, though. */
         if (menu_redraw_main_menu) /* screensaver exiting? */
             SUPPRESS_ANIMATION(1, "screensaver exit");
 	if (runningApp != NULL) /* if an app is running, don't draw the menu */
