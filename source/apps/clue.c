@@ -190,16 +190,18 @@ static void deal_cards(unsigned int seed, struct deck *d)
 		card[murderer].name, card[murder_location].name, card[murder_weapon].name);
 #endif
 
-	/* Shuffle the deck */
-	for (int i = 0; i < NCARDS; i++) {
-		int n = random_num(NCARDS);
-		unsigned char tc, th;
-		tc = d->card[i];
-		th = d->held_by[i];
+	/* Shuffle the deck via Fisher Yates algorithm for uniform dist of permutations */
+	for (int i = NCARDS - 1; i > 1; i--) {
+		int n = random_num(i + 1);
+
+		/* swap cards n and i */
+		unsigned char tmp_card, tmp_held;
+		tmp_card = d->card[i];
+		tmp_held = d->held_by[i];
 		d->card[i] = d->card[n];
 		d->held_by[i] = d->held_by[n];
-		d->card[n] = tc;
-		d->held_by[n] = th;
+		d->card[n] = tmp_card;
+		d->held_by[n] = tmp_held;
 	}
 
 	/* Deal the cards to the suspects */
