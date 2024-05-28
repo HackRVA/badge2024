@@ -1316,6 +1316,7 @@ const struct point menu_speed_icon_points[] = {
 	{ -37, 29 },
 };
 
+#if 0
 const struct point bba_icon_points[] = {
 	{ -50, -51 },
 	{ -46, -16 },
@@ -1577,6 +1578,7 @@ const struct point bba_icon_points[] = {
 	{ 56, 27 },
 	{ 50, 30 },
 };
+#endif
 
 struct menu_icon games_icon = {
 	.npoints = ARRAYSIZE(games_icon_points),
@@ -1734,10 +1736,12 @@ struct menu_icon menu_speed_icon = {
 	.points = &menu_speed_icon_points[0],
 };
 
+#if 0
 struct menu_icon bba_icon = {
 	.npoints = ARRAYSIZE(bba_icon_points),
 	.color = GREEN,
 	.points = &bba_icon_points[0],
 };
+#endif
 
 #endif
