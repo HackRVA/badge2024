@@ -69,7 +69,7 @@ static struct point menu_animation_direction[] = {
 };
 
 static const struct menu_t games_m[] = {
-	{"Sample App", VERT_ITEM, FUNCTION, { .func = myprogram_cb }, NULL },
+	// {"Sample App", VERT_ITEM, FUNCTION, { .func = myprogram_cb }, NULL },
 	{"Clue", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = clue_cb }, &clue_icon },
 	{"Moon Patrol", VERT_ITEM, FUNCTION, { .func = moonpatrol_cb }, &moonpatrol_icon, },
 	{"Badgey", VERT_ITEM, FUNCTION, { .func = badgey_cb }, &bba_icon },

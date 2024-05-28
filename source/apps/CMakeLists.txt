@@ -23,7 +23,7 @@ target_sources(${PRODUCT} PUBLIC
         ${CMAKE_CURRENT_LIST_DIR}/moon-patrol.c
         ${CMAKE_CURRENT_LIST_DIR}/badgey.c
         ${CMAKE_CURRENT_LIST_DIR}/image-test.c
-        ${CMAKE_CURRENT_LIST_DIR}/badge-app-template.c
+        # ${CMAKE_CURRENT_LIST_DIR}/badge-app-template.c
         )
 add_subdirectory(clue_assets)
 add_subdirectory(new_badge_monsters_assets)
