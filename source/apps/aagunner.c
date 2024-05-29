@@ -8,12 +8,80 @@
 #define INITIAL_ANGLE 64+32
 #define MIN_ANGLE 64
 #define MAX_ANGLE 127
+#define MAX_BULLETS 20
+#define BULLET_VEL 200
+#define FIRING_COOLDOWN 10
+
+static int screen_changed = 0;
 
 static struct aagunner {
 	int angle;
+	int currently_firing;
+	int firing_cooldown;
 } aagunner = {
-	INITIAL_ANGLE,
+	.angle = INITIAL_ANGLE,
+	.currently_firing = 0,
 };
+
+static struct bullet {
+	int x, y, vx, vy;
+} bullet[MAX_BULLETS];
+static int nbullets = 0;
+
+static void add_bullet(int x, int y, int vx, int vy)
+{
+	if (nbullets >= MAX_BULLETS)
+		return;
+	bullet[nbullets].x = x;
+	bullet[nbullets].y = y;
+	bullet[nbullets].vx = vx;
+	bullet[nbullets].vy = vy;
+	nbullets++;
+}
+
+static int move_bullet(int i)
+{
+	int x, y;
+	bullet[i].x += bullet[i].vx;
+	bullet[i].y += bullet[i].vy;
+
+	x = bullet[i].x / 256;
+	y = bullet[i].y / 256;
+
+	/* return 1 if offscreen (dead), 0 if still alive/onscreen */
+	return (x < 0 || x >= LCD_XSIZE || y < 0 || y >= 151);
+}
+
+static void move_bullets(void)
+{
+	if (nbullets > 0)
+		screen_changed = 1;
+	for (int i = 0; i < nbullets;) {
+		if (move_bullet(i)) { /* bullet is dead? */
+			/* delete the bullet, by swapping with the last bullet and decrementing nbullets */
+			if (i < nbullets - 1)
+				bullet[i] = bullet[nbullets - 1];
+			nbullets--;
+		} else {
+			i++;
+		}
+	}
+}
+
+static void draw_bullet(int i)
+{
+	int x = bullet[i].x / 256;
+	int y = bullet[i].y / 256;
+
+	FbPoint(x, y);
+}
+
+static void draw_bullets(void)
+{
+	FbColor(WHITE);
+	for (int i = 0; i < nbullets; i++)
+		draw_bullet(i);
+}
 
 const struct point skyline[] = {
 	{ -127, 119 },
@@ -76,7 +144,6 @@ enum aagunner_state_t {
 };
 
 static enum aagunner_state_t aagunner_state = AAGUNNER_INIT;
-static int screen_changed = 0;
 
 static void aagunner_init(void)
 {
@@ -85,6 +152,7 @@ static void aagunner_init(void)
 	aagunner_state = AAGUNNER_RUN;
 	screen_changed = 1;
 	aagunner.angle = INITIAL_ANGLE;
+	aagunner.currently_firing = 0;
 }
 
 static void check_buttons(void)
@@ -103,9 +171,21 @@ static void check_buttons(void)
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
-		aagunner_state = AAGUNNER_EXIT;
+		aagunner.currently_firing = !aagunner.currently_firing;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		aagunner_state = AAGUNNER_EXIT;
+	}
+
+	if (aagunner.firing_cooldown > 0)
+		aagunner.firing_cooldown--;
+
+	if (aagunner.firing_cooldown == 0 && aagunner.currently_firing) {
+		int vx, vy;
+
+		vx = (cosine(aagunner.angle) * BULLET_VEL) / 256;
+		vy = (sine(aagunner.angle) * BULLET_VEL) / 256;
+		aagunner.firing_cooldown = FIRING_COOLDOWN;
+		add_bullet(256 * 64, 256 * 150, vx, vy);
 	}
 }
 
@@ -135,6 +215,7 @@ static void draw_screen(void)
 		return;
 	FbDrawObject(skyline, ARRAY_SIZE(skyline), GREEN, 64, 90, 512);
 	draw_aiming_indicator();
+	draw_bullets();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
@@ -142,6 +223,7 @@ static void draw_screen(void)
 static void aagunner_run(void)
 {
 	check_buttons();
+	move_bullets();
 	draw_screen();
 }
 
