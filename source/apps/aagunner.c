@@ -10,10 +10,12 @@
 #define INITIAL_ANGLE 64+32
 #define MIN_ANGLE 64
 #define MAX_ANGLE 127
-#define MAX_BULLETS 20
+#define MAX_BULLETS 40
 #define BULLET_VEL 200
 #define FIRING_COOLDOWN 10
-#define MAX_MISSILES 100
+#define MAX_MISSILES 10
+#define MAX_SPARKS 100
+#define SPARKS_PER_MISSILE 10
 
 static const int max_missile_cooldown = 500;
 static const int min_missile_cooldown = 200;
@@ -31,6 +33,11 @@ static struct aagunner {
 	.currently_firing = 0,
 };
 
+static struct spark {
+	int x, y, vx, vy, life;
+} spark[MAX_SPARKS];
+static int nsparks = 0;
+
 static struct missile {
 	int x, y, vx, vy;
 } missile[MAX_MISSILES];
@@ -40,6 +47,67 @@ static struct bullet {
 	int x, y, vx, vy;
 } bullet[MAX_BULLETS];
 static int nbullets = 0;
+
+static void add_spark(int x, int y, int vx, int vy)
+{
+	static unsigned int state = 0xa5a5a5a5;
+
+	if (nsparks >= MAX_BULLETS)
+		return;
+	spark[nsparks].x = x;
+	spark[nsparks].y = y;
+	spark[nsparks].vx = vx;
+	spark[nsparks].vy = vy;
+	spark[nsparks].life = xorshift(&state) % 100 + 100;
+	nsparks++;
+}
+
+static int move_spark(int i)
+{
+	int x, y;
+	spark[i].x += spark[i].vx;
+	spark[i].y += spark[i].vy;
+	spark[i].life--;
+	if (spark[i].life == 0)
+		return 1; /* spark is dead */
+
+	x = spark[i].x / 256;
+	y = spark[i].y / 256;
+
+	/* return 1 if offscreen (dead), 0 if still alive/onscreen */
+	return (x < 0 || x >= LCD_XSIZE || y < 0 || y >= 151);
+}
+
+static void move_sparks(void)
+{
+	if (nsparks > 0)
+		screen_changed = 1;
+	for (int i = 0; i < nsparks;) {
+		if (move_spark(i)) { /* spark is dead? */
+			/* delete the spark, by swapping with the last spark and decrementing nsparks */
+			if (i < nsparks - 1)
+				spark[i] = spark[nsparks - 1];
+			nsparks--;
+		} else {
+			i++;
+		}
+	}
+}
+
+static void draw_spark(int i)
+{
+	int x = spark[i].x / 256;
+	int y = spark[i].y / 256;
+
+	FbPoint(x, y);
+}
+
+static void draw_sparks(void)
+{
+	FbColor(YELLOW);
+	for (int i = 0; i < nsparks; i++)
+		draw_spark(i);
+}
 
 static void add_bullet(int x, int y, int vx, int vy)
 {
@@ -54,6 +122,7 @@ static void add_bullet(int x, int y, int vx, int vy)
 
 static int move_bullet(int i)
 {
+	static unsigned int state = 0xa5a5a5a5;
 	int x, y;
 	bullet[i].x += bullet[i].vx;
 	bullet[i].y += bullet[i].vy;
@@ -74,7 +143,22 @@ static int move_bullet(int i)
 			j++;
 			continue;
 		}
-		/* We hit a missile, delete it. */
+
+		/* We hit a missile, add some sparks...  */
+		for (int i = 0; i < SPARKS_PER_MISSILE; i++) {
+			int x = missile[j].x;
+			int y = missile[j].y;
+			int angle = xorshift(&state) % 127;
+			int vx = missile[j].vx + (cosine(angle) * missile_vel) / 256;
+			int vy = missile[j].vy + (sine(angle) * missile_vel) / 256;
+
+			vx = (vx * (xorshift(&state) % 256)) / 256;
+			vy = (vy * (xorshift(&state) % 256)) / 256;
+
+			add_spark(x, y, vx, vy);
+		}
+
+		/* ... and delete it. */
 		if (j < nmissiles - 1)
 			missile[j] = missile[nmissiles - 1];
 		else
@@ -119,6 +203,7 @@ static void draw_bullets(void)
 	for (int i = 0; i < nbullets; i++)
 		draw_bullet(i);
 }
+
 
 static void add_missile(int x, int y, int vx, int vy)
 {
@@ -338,6 +423,7 @@ static void draw_screen(void)
 	draw_aiming_indicator();
 	draw_bullets();
 	draw_missiles();
+	draw_sparks();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
@@ -348,6 +434,7 @@ static void aagunner_run(void)
 	move_bullets();
 	launch_missiles();
 	move_missiles();
+	move_sparks();
 	draw_screen();
 }
 
