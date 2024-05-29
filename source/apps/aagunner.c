@@ -218,12 +218,17 @@ static void add_missile(int x, int y, int vx, int vy)
 
 static int move_missile(int i)
 {
+	static unsigned int state = 0xa5a5a5a5;
+
 	int x, y;
 	missile[i].x += missile[i].vx;
 	missile[i].y += missile[i].vy;
 
 	x = missile[i].x / 256;
 	y = missile[i].y / 256;
+
+	if ((xorshift(&state) & 0x0f) == 0x01)
+		add_spark(missile[i].x, missile[i].y, missile[i].vx / 2, missile[i].vy / 2);
 
 	/* return 1 if offscreen (dead), 0 if still alive/onscreen */
 	return (x < 0 || x >= LCD_XSIZE || y < 0 || y >= 151);
