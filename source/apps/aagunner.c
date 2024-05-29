@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
@@ -59,6 +60,30 @@ static int move_bullet(int i)
 
 	x = bullet[i].x / 256;
 	y = bullet[i].y / 256;
+
+
+	/* check for collisions with missiles */
+	for (int j = 0; j < nmissiles;) {
+		int dx = abs(x - missile[j].x / 256);
+		int dy = abs(y - missile[j].y / 256);
+		if (dx >= 2) {
+			j++;
+			continue;
+		}
+		if (dy >= 2) {
+			j++;
+			continue;
+		}
+		/* We hit a missile, delete it. */
+		if (j < nmissiles - 1)
+			missile[j] = missile[nmissiles - 1];
+		else
+			j++;
+		nmissiles--;
+
+		/* Also, delete this bullet */
+		return 1;
+	}
 
 	/* return 1 if offscreen (dead), 0 if still alive/onscreen */
 	return (x < 0 || x >= LCD_XSIZE || y < 0 || y >= 151);
