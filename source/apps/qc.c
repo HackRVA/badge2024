@@ -112,19 +112,19 @@ static bool check_buttons(const struct qc_button *a, size_t n)
 }
 
 static const struct qc_button QC_BTN[] = {
-    {BADGE_BUTTON_A, "A", 999, check_button, 0, 255, 0},
-    {BADGE_BUTTON_B, "B", 698, check_button, 0, 0, 255},
+    {BADGE_BUTTON_A, "A", 999 / 2, check_button, 0, 255, 0},
+    {BADGE_BUTTON_B, "B", 698 / 2, check_button, 0, 0, 255},
 
-    {BADGE_BUTTON_UP, "UP", 1046, check_button, 255, 0, 0},
-    {BADGE_BUTTON_DOWN, "DOWN", 740, check_button, 255, 127, 0},
-    {BADGE_BUTTON_LEFT, "LEFT", 784, check_button, 127, 127, 0},
-    {BADGE_BUTTON_RIGHT, "RIGHT", 932, check_button, 127, 255, 0},
+    {BADGE_BUTTON_UP, "UP", 1046 / 2, check_button, 255, 0, 0},
+    {BADGE_BUTTON_DOWN, "DOWN", 740 / 2, check_button, 255, 127, 0},
+    {BADGE_BUTTON_LEFT, "LEFT", 784 / 2, check_button, 127, 127, 0},
+    {BADGE_BUTTON_RIGHT, "RIGHT", 932 / 2, check_button, 127, 255, 0},
 #if BADGE_HAS_ROTARY_BUTTONS
-    {BADGE_BUTTON_ENCODER_SW, "ENC", 698, check_button},
-    {BADGE_BUTTON_ENCODER_A, "ENC", 440, check_encoder},
+    {BADGE_BUTTON_ENCODER_SW, "ENC", 698 / 2, check_button},
+    {BADGE_BUTTON_ENCODER_A, "ENC", 440 / 2, check_encoder},
 
-    {BADGE_BUTTON_ENCODER_2_SW, "ENC 2", 777, check_button},
-    {BADGE_BUTTON_ENCODER_2_A, "ENC 2", 666, check_encoder},
+    {BADGE_BUTTON_ENCODER_2_SW, "ENC 2", 777 / 2, check_button},
+    {BADGE_BUTTON_ENCODER_2_A, "ENC 2", 666 / 2, check_encoder},
 #endif
 };
 
