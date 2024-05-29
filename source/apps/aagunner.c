@@ -3,6 +3,17 @@
 #include "button.h"
 #include "framebuffer.h"
 #include "utils.h"
+#include "trig.h"
+
+#define INITIAL_ANGLE 64+32
+#define MIN_ANGLE 64
+#define MAX_ANGLE 127
+
+static struct aagunner {
+	int angle;
+} aagunner = {
+	INITIAL_ANGLE,
+};
 
 const struct point skyline[] = {
 	{ -127, 119 },
@@ -73,13 +84,22 @@ static void aagunner_init(void)
 	FbClear();
 	aagunner_state = AAGUNNER_RUN;
 	screen_changed = 1;
+	aagunner.angle = INITIAL_ANGLE;
 }
 
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+		aagunner.angle = aagunner.angle - 1;
+		if (aagunner.angle < MIN_ANGLE)
+			aagunner.angle = MIN_ANGLE;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
+		aagunner.angle = aagunner.angle + 1;
+		if (aagunner.angle > MAX_ANGLE)
+			aagunner.angle = MAX_ANGLE;
+		screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
@@ -89,11 +109,32 @@ static void check_buttons(void)
 	}
 }
 
+static void draw_aiming_indicator(void)
+{
+	int x, y;
+
+	const int x0 = 64;
+	const int y0 = 150;
+	FbColor(GREEN);
+
+	for (int i = 0; i < 8; i++) {
+		x = (cosine(aagunner.angle) * (i * 20)) / 256;
+		y = (sine(aagunner.angle) * (i * 20)) / 256;
+		x += x0;
+		y += y0;
+		if (x >= 0 && x < LCD_XSIZE && y >= 0 && y < LCD_YSIZE)
+			FbPoint(x, y);
+		else
+			break;
+	}
+}
+
 static void draw_screen(void)
 {
 	if (!screen_changed)
 		return;
 	FbDrawObject(skyline, ARRAY_SIZE(skyline), GREEN, 64, 90, 512);
+	draw_aiming_indicator();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
