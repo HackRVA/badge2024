@@ -2,6 +2,59 @@
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
+#include "utils.h"
+
+const struct point skyline[] = {
+	{ -127, 119 },
+	{ -62, 123 },
+	{ -62, 117 },
+	{ -58, 117 },
+	{ -57, 105 },
+	{ -55, 116 },
+	{ -52, 117 },
+	{ -49, 115 },
+	{ -43, 115 },
+	{ -43, 107 },
+	{ -39, 101 },
+	{ -37, 107 },
+	{ -29, 106 },
+	{ -30, 98 },
+	{ -22, 97 },
+	{ -21, 104 },
+	{ -14, 103 },
+	{ -13, 108 },
+	{ -6, 107 },
+	{ -4, 118 },
+	{ -4, 95 },
+	{ 3, 94 },
+	{ 4, 119 },
+	{ 4, 98 },
+	{ 15, 98 },
+	{ 14, 105 },
+	{ 20, 105 },
+	{ 20, 100 },
+	{ 27, 101 },
+	{ 27, 119 },
+	{ 28, 109 },
+	{ 29, 118 },
+	{ 45, 120 },
+	{ 44, 106 },
+	{ 49, 110 },
+	{ 51, 113 },
+	{ 54, 112 },
+	{ 54, 109 },
+	{ 57, 103 },
+	{ 58, 108 },
+	{ 58, 122 },
+	{ 126, 123 },
+	{ -128, -128 },
+	{ 33, 119 },
+	{ 33, 122 },
+	{ -128, -128 },
+	{ 40, 120 },
+	{ 40, 122 },
+	{ -128, -128 },
+};
 
 
 /* Program states.  Initial state is AAGUNNER_INIT */
@@ -40,9 +93,7 @@ static void draw_screen(void)
 {
 	if (!screen_changed)
 		return;
-	FbColor(WHITE);
-	FbMove(10, LCD_YSIZE / 2);
-	FbWriteLine("HOWDY!");
+	FbDrawObject(skyline, ARRAY_SIZE(skyline), GREEN, 64, 90, 512);
 	FbSwapBuffers();
 	screen_changed = 0;
 }
