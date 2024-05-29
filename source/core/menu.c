@@ -48,6 +48,7 @@
 #include "moon-patrol.h"
 // #include "badgey.h"
 #include "badge-app-template.h"
+#include "aagunner.h"
 
 /* BUILD_IMAGE_TEST_PROGRAM is defined (or not) in top level CMakelists.txt */
 #ifdef BUILD_IMAGE_TEST_PROGRAM
@@ -72,6 +73,7 @@ static const struct menu_t games_m[] = {
 	// {"Sample App", VERT_ITEM, FUNCTION, { .func = myprogram_cb }, NULL },
 	{"Moon Patrol", VERT_ITEM, FUNCTION, { .func = moonpatrol_cb }, &moonpatrol_icon, },
 	{"Clue", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = clue_cb }, &clue_icon },
+	{"AA Gunner", VERT_ITEM, FUNCTION, { .func = aagunner_cb }, NULL },
 	// {"Badgey", VERT_ITEM, FUNCTION, { .func = badgey_cb }, &bba_icon },
 	{"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, &battlezone_icon, },
 	{"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, &asteroids_icon, },
