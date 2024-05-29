@@ -4,6 +4,7 @@
 #include "framebuffer.h"
 #include "utils.h"
 #include "trig.h"
+#include "xorshift.h"
 
 #define INITIAL_ANGLE 64+32
 #define MIN_ANGLE 64
@@ -11,6 +12,12 @@
 #define MAX_BULLETS 20
 #define BULLET_VEL 200
 #define FIRING_COOLDOWN 10
+#define MAX_MISSILES 100
+
+static const int max_missile_cooldown = 500;
+static const int min_missile_cooldown = 200;
+static int missile_cooldown = 300;
+static const int missile_vel = 100; 
 
 static int screen_changed = 0;
 
@@ -22,6 +29,11 @@ static struct aagunner {
 	.angle = INITIAL_ANGLE,
 	.currently_firing = 0,
 };
+
+static struct missile {
+	int x, y, vx, vy;
+} missile[MAX_MISSILES];
+static int nmissiles;
 
 static struct bullet {
 	int x, y, vx, vy;
@@ -81,6 +93,90 @@ static void draw_bullets(void)
 	FbColor(WHITE);
 	for (int i = 0; i < nbullets; i++)
 		draw_bullet(i);
+}
+
+static void add_missile(int x, int y, int vx, int vy)
+{
+	if (nmissiles >= MAX_BULLETS)
+		return;
+	missile[nmissiles].x = x;
+	missile[nmissiles].y = y;
+	missile[nmissiles].vx = vx;
+	missile[nmissiles].vy = vy;
+	nmissiles++;
+}
+
+static int move_missile(int i)
+{
+	int x, y;
+	missile[i].x += missile[i].vx;
+	missile[i].y += missile[i].vy;
+
+	x = missile[i].x / 256;
+	y = missile[i].y / 256;
+
+	/* return 1 if offscreen (dead), 0 if still alive/onscreen */
+	return (x < 0 || x >= LCD_XSIZE || y < 0 || y >= 151);
+}
+
+static void move_missiles(void)
+{
+	if (nmissiles > 0)
+		screen_changed = 1;
+	for (int i = 0; i < nmissiles;) {
+		if (move_missile(i)) { /* missile is dead? */
+			/* delete the missile, by swapping with the last missile and decrementing nmissiles */
+			if (i < nmissiles - 1)
+				missile[i] = missile[nmissiles - 1];
+			nmissiles--;
+		} else {
+			i++;
+		}
+	}
+}
+
+static void launch_missiles(void)
+{
+	static unsigned int state = 0xa5a5a5a5; 
+
+	if (missile_cooldown > 0) {
+		missile_cooldown--;
+		return;
+	}
+	missile_cooldown = min_missile_cooldown + xorshift(&state) % (max_missile_cooldown - min_missile_cooldown);
+	int x, y, vx, vy, angle;
+
+	x = xorshift(&state) % LCD_XSIZE;
+	y = 0;
+	if (x < 64)
+		angle = 10 + xorshift(&state) % 22;
+	else
+		angle = 32 + xorshift(&state) % 22;
+	x = x * 256;
+	y = y * 256;
+	vx = (cosine(angle) * missile_vel) / 256;
+	vy = (sine(angle) * missile_vel) / 256;
+	add_missile(x, y, vx, vy);
+}
+
+static void draw_missile(int i)
+{
+	int x = missile[i].x / 256;
+	int y = missile[i].y / 256;
+
+	if (x < LCD_XSIZE - 2) {
+		FbPoint(x + 1, y);
+		FbPoint(x + 1, y + 1);
+	}
+	FbPoint(x, y);
+	FbPoint(x, y + 1);
+}
+
+static void draw_missiles(void)
+{
+	FbColor(WHITE);
+	for (int i = 0; i < nmissiles; i++)
+		draw_missile(i);
 }
 
 const struct point skyline[] = {
@@ -216,6 +312,7 @@ static void draw_screen(void)
 	FbDrawObject(skyline, ARRAY_SIZE(skyline), GREEN, 64, 90, 512);
 	draw_aiming_indicator();
 	draw_bullets();
+	draw_missiles();
 	FbSwapBuffers();
 	screen_changed = 0;
 }
@@ -224,6 +321,8 @@ static void aagunner_run(void)
 {
 	check_buttons();
 	move_bullets();
+	launch_missiles();
+	move_missiles();
 	draw_screen();
 }
 
