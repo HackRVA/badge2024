@@ -14,7 +14,7 @@
 #define BULLET_VEL 200
 #define FIRING_COOLDOWN 10
 #define MAX_MISSILES 10
-#define MAX_SPARKS 100
+#define MAX_SPARKS 200
 #define SPARKS_PER_MISSILE 10
 
 static const int max_missile_cooldown = 500;
@@ -229,6 +229,16 @@ static int move_missile(int i)
 
 	if ((xorshift(&state) & 0x0f) == 0x01)
 		add_spark(missile[i].x, missile[i].y, missile[i].vx / 2, missile[i].vy / 2);
+
+	if (y >= 151) {
+		for (int j = 0; j < 100; j++) {
+			int vx, vy;
+
+			vx = ((xorshift(&state) % 100) - 50);
+			vy = -(xorshift(&state) % 50);
+			add_spark(missile[i].x, missile[i].y, vx * 8, vy * 8);
+		}
+	}
 
 	/* return 1 if offscreen (dead), 0 if still alive/onscreen */
 	return (x < 0 || x >= LCD_XSIZE || y < 0 || y >= 151);
