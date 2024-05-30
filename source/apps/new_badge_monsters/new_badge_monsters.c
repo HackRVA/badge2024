@@ -44,7 +44,7 @@ struct new_monster
     char name[DYNMENU_MAX_TITLE];
     int owned;
     int color;
-    char blurb[128];
+    char *blurb;
     const struct asset2 *asset;
 };
 
@@ -104,150 +104,167 @@ static const char *menu_level_str(const enum menu_level_t menu_level);
 /***************************************** GLOBALS ***********************************************/
 struct new_monster new_monsters[] = {
     {
-        "cryptoraptor",
+        "Vorlith",
         true,
         RED,
-        "This one\nonly roars\nin\ncrypto-\ncurrency",
+        "A large, amphi-\nbious monster\nwith a biolumi-\nnescent under\nbelly, capable\n"
+	"of emitting\nelectrical dis-\ncharges under\nwater, in\nhabiting the\noceans of dis-\ntant moons.",
         &bm1
     }
   , {
-        "2FactorTiger",
+        "Nekroth",
         false,
         RED,
-        "Double the\nsecurity,\ndouble\nthe fun",
+        "A skeletal,\nundead-like\nmonster that\ndrains life\nforce from its\nvictims, "
+	"leav-\ning them as\nwithered husks",
         &bm2
     }
   , {
-        "firewallFlyer",
+        "Xarnok",
         false,
         RED,
-        "Can't touch\nthis, unless\nyou're an\nallowed IP",
+        "A heavily arm-\nored beast with\nmultiple eyes\nand sharp man-\ndibles, known\n"
+	"for its brute\nstrength and\nability to\ntunnel through\nsolid rock on\nasteroid belt",
         &bm3
     }
   , {
-        "trojanTurtle",
+        "Obsidrax",
         false,
         RED,
-        "Slow and\nsneaky, never\nunderestimate\nit",
+        "A hulking beast\nwith obsidian\nskin and the\nability to\nmanipulate\nmagma, often\nfound in volca-\nnic regions.",
         &bm4
     }
   , {
-        "phishinPhoenix",
+        "Chronor",
         false,
         RED,
-        "Spams your\ninbox, then\nrises from \nits ashes",
+        "A time manipu-\nlating entity\nthat can slow\ndown or speed\nup time around\nit, using this\n"
+	"ability to\nevade attacks\nor catch prey.",
         &bm5
     }
   , {
-        "hackerHawk",
+        "Lumorax",
         false,
         RED,
-        "Always\nwatching\nfrom above,\nwaiting to\nswoop in",
+        "A biolumine-\nscent predator\nthat uses light\nto lure prey.",
         &bm6
     }
   , {
-        "malwareMantis",
+        "Phantax",
         false,
         RED,
-        "Prays on\nyour\nsystem's\nvulner-\nabilities",
+        "An ethereal\nbeing composed\nof dark matter,\nable to pass\nthrough\n"
+	"physical ob-\njects and mani-\npulate shadows.",
         &bm7
     }
   , {
-        "ddosDragon",
+        "Thragor",
         false,
         RED,
-        "Breathes a\nfire of\ntraffic at\nyour servers",
+        "A massive, bi-\npedal monster\nwith volcanic\nrock skin and\nthe ability to\n"
+	"spew molten\nlava from its\nmouth, dwelling\nnear the cores\nof unstable\nplanets.",
         &bm8
     }
   , {
-        "keylogKoala",
+        "Glacira",
         false,
         RED,
-        "It's not\neucalyptus\nleaves it's\nafter",
-        &bm8
-    }
-  , {
-        "wormWombat",
-        false,
-        RED,
-        "Burrows\ndeep into\nyour system",
+        "An ice-covered\npredator with a\nchilling breath\nthat can freeze\n"
+	"anything in its\npath, thriving\nin icy environ-\nments.",
         &bm9
     }
   , {
-        "adwareAnteater",
+        "Quasarix",
         false,
         RED,
-        "Feeds on\nyour browsing\nhabits",
+        "A cosmic entity\nthat emits pow-\nerful radiation\nbursts, disin-\ntegrating any-\n"
+	"thing within\nits reach, and\nliving in deep\nspace.",
         &bm10
     }
   , {
-        "rootkitRhino",
+        "Pirate",
         false,
         RED,
-        "Charges at\nyour system's\ncore",
+        "TBD",
         &bm11
     }
   , {
-        "botnetBat",
+        "Blitzar",
         false,
         RED,
-        "Flies in\nthe\ndarkness\nof the web",
+        "A lightning-\nfast quadruped\nwith electric\nblue fur that\ncan generate\n"
+	"powerful static\ndischarges to\nstun its prey.",
         &bm12
     }
   , {
-        "dnsDolphin",
+        "Lunaraq",
         false,
         RED,
-        "Loves to\nplay\nredirect\ngames",
+        "A giant six-\nlegged predator\nwith a skull\nlike head and\nrazor-sharp\n"
+	"claws, using\nits speed and\nagility to hunt\nin low-gravity\nenvirnoments",
         &bm13
     }
   , {
-        "sslShark",
+        "Flarix",
         false,
         RED,
-        "Swims in a\nsea of\nencrypted\ndata",
+        "A two headed\nfire-breathing\nreptilian beast\nwith scales\nthat can with-\n"
+	"stand extreme\nheat, dwelling\nnear volcanic\nvents on molten\nplanets.",
         &bm14
     }
   , {
-        "spamSpider",
+        "Spirox",
         false,
         RED,
-        "Weaves a\nweb of\nunwanted\nemails",
+        "A spore-based\norganism that\ninfects and\ntakes control\nof other crea-\n"
+	"tures, turning\nthem into zombi-\nfied versions\nof themselves",
         &bm15
     }
   , {
-        "ransomRabbit",
+        "Skorith",
         false,
         RED,
-        "Hops into\nyour files,\nthen locks\nthem up",
+        "A predatory\ninsectoid with\na metallic exo-\nskeleton and\nacidic saliva,\n"
+	"capable of\nmelting through\nmetal to reach\nits prey.",
         &bm16
     }
   , {
-        "snifferSnail",
+        "Eclipsar",
         false,
         RED,
-        "Slow but\ncan smell\nyour data\nfrom miles\naway",
+        "A shadowy wing-\ned creature\nthat thrives in\nthe darkness,\ncapable of\ncreating areas\n"
+	"of absolute\ndarkness to\nambush its\nprey.",
         &bm17
     }
   , {
-        "backdoorBee",
+        "Nyralith",
         false,
         RED,
-        "Buzzes into\nyour system\nthrough the\nback",
+        "A crystalline,\nspider-like\nmonster that\ncan generate\npowerful energy\n"
+	"beams from its\neye, inhabiting\nthe caves of\nmineral-rich\nasteroids.",
         &bm18
     }
   , {
-        "exploitEagle",
+        "Zephyra",
         false,
         RED,
-        "Soars high\nto find\nunpatched\nvulner-\nabilities",
+        "A delicate,\nbutterfly-like\ncreature that\nflits through\nthe air with\nease, using its\n"
+	"wings to create\nmesmerizing\nlight patterns\nto attract prey.",
         &bm19
     }
   , {
-        "bruFrcBaboon",
+        "Mythra",
         false,
         RED,
-        "Not subtle,\nbut\nsometimes\nit works",
+        "A ghostly, spec-\ntral entity\nthat feeds on\nthe psychic\nenergy of sen-\n"
+	"tient beings,\nable to phase\nin and out of\nreality at\nwill.",
+        &bm20
+    }
+  , {
+        "Raven",
+        false,
+        RED,
+        "TBD",
         &bm20
     }
 };
