@@ -6,6 +6,7 @@
 #include "utils.h"
 #include "trig.h"
 #include "xorshift.h"
+#include "dynmenu.h"
 
 #define INITIAL_ANGLE 64+32
 #define MIN_ANGLE 64
@@ -47,6 +48,9 @@ static struct bullet {
 	int x, y, vx, vy;
 } bullet[MAX_BULLETS];
 static int nbullets = 0;
+
+static struct dynmenu main_menu;
+static struct dynmenu_item menu_item[15];
 
 static void add_spark(int x, int y, int vx, int vy)
 {
@@ -360,6 +364,8 @@ const struct point skyline[] = {
 /* Program states.  Initial state is AAGUNNER_INIT */
 enum aagunner_state_t {
 	AAGUNNER_INIT,
+	AAGUNNER_MENU,
+	AAGUNNER_NEW_GAME,
 	AAGUNNER_RUN,
 	AAGUNNER_EXIT,
 };
@@ -370,10 +376,21 @@ static void aagunner_init(void)
 {
 	FbInit();
 	FbClear();
-	aagunner_state = AAGUNNER_RUN;
+	aagunner_state = AAGUNNER_MENU;
 	screen_changed = 1;
+}
+
+static void aagunner_new_game(void)
+{
 	aagunner.angle = INITIAL_ANGLE;
 	aagunner.currently_firing = 0;
+	aagunner.firing_cooldown = 0;
+	nmissiles = 0;
+	nbullets = 0;
+	nsparks = 0;
+	screen_changed = 1;
+	FbClear();
+	aagunner_state = AAGUNNER_RUN;
 }
 
 static void check_buttons(void)
@@ -443,6 +460,30 @@ static void draw_screen(void)
 	screen_changed = 0;
 }
 
+static void aagunner_menu(void)
+{
+	static int menu_ready = 0;
+
+	if (!menu_ready) {
+		dynmenu_init(&main_menu, menu_item, ARRAY_SIZE(menu_item));
+		dynmenu_add_item(&main_menu, "NEW GAME", AAGUNNER_NEW_GAME, 0);
+		dynmenu_add_item(&main_menu, "QUIT", AAGUNNER_EXIT, 1);
+		menu_ready = 1;
+	}
+	if (!dynmenu_let_user_choose(&main_menu))
+		return; // let dynmenu take over as runningApp for a bit
+
+	// dynmenu is done, the user has made their choice.
+	switch (dynmenu_get_user_choice(&main_menu)) { // get choice and reset for next time.
+	case 0: /* new game */
+		aagunner_state = AAGUNNER_NEW_GAME;
+		break;
+	case 1: /* quit */
+		aagunner_state = AAGUNNER_EXIT;
+		break;
+	}
+}
+
 static void aagunner_run(void)
 {
 	check_buttons();
@@ -464,6 +505,12 @@ void aagunner_cb(__attribute__((unused)) struct menu_t *m)
 	switch (aagunner_state) {
 	case AAGUNNER_INIT:
 		aagunner_init();
+		break;
+	case AAGUNNER_MENU:
+		aagunner_menu();
+		break;
+	case AAGUNNER_NEW_GAME:
+		aagunner_new_game();
 		break;
 	case AAGUNNER_RUN:
 		aagunner_run();
