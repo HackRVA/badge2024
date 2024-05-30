@@ -24,9 +24,14 @@ static int min_missile_cooldown = 200;
 static int missile_cooldown = 300;
 static int missile_vel = 100; 
 static int missiles_killed = 0;
+static int missiles_killed_this_wave = 0;
 static int shots_fired = 0;
+static int shots_fired_this_wave = 0;
 static int missile_impacts = 0;
+static int missile_impacts_this_wave = 0;
 static int missiles_this_wave = 0;
+static int casualties = 0;
+static int total_casualties = 0;
 
 static int screen_changed = 0;
 
@@ -111,7 +116,7 @@ static struct aagunner_wave {
 
 static const int nwaves = ARRAY_SIZE(wave);
 static int current_wave = 0;
-static const int wave_pause_time = 50;
+static const int wave_pause_time = 100;
 
 static struct aagunner {
 	int angle;
@@ -211,6 +216,7 @@ static void add_bullet(int x, int y, int vx, int vy)
 	bullet[nbullets].vy = vy;
 	nbullets++;
 	shots_fired++;
+	shots_fired_this_wave++;
 }
 
 static int move_bullet(int i)
@@ -249,8 +255,9 @@ static int move_bullet(int i)
 			vy = (vy * (xorshift(&state) % 256)) / 256;
 
 			add_spark(x, y, vx, vy);
-			missiles_killed++;
 		}
+		missiles_killed++;
+		missiles_killed_this_wave++;
 
 		/* ... and delete it. */
 		if (j < nmissiles - 1)
@@ -334,6 +341,8 @@ static int move_missile(int i)
 			add_spark(missile[i].x, missile[i].y, vx * 8, vy * 8);
 		}
 		missile_impacts++;
+		missile_impacts_this_wave++;
+		casualties += 10 + (64 - abs((missile[i].x / 256) - 64)) * 5;
 	}
 
 	/* return 1 if offscreen (dead), 0 if still alive/onscreen */
@@ -496,8 +505,13 @@ static void aagunner_new_game(void)
 	FbClear();
 	aagunner_state = AAGUNNER_BEGIN_WAVE;
 	missiles_killed = 0;
+	missiles_killed_this_wave = 0;
 	missile_impacts = 0;
+	missile_impacts_this_wave = 0;
 	shots_fired = 0;
+	shots_fired_this_wave = 0;
+	casualties = 0;
+	total_casualties = 0;
 }
 
 static void aagunner_begin_wave(void)
@@ -533,27 +547,39 @@ static void aagunner_begin_wave(void)
 		nmissiles = 0;
 		nsparks = 0;
 		nbullets = 0;
+		shots_fired_this_wave = 0;
+		missile_impacts_this_wave = 0;
+		casualties = 0;
 	}
 }
 
 static void aagunner_end_wave(void)
 {
-	static int count = 0;
 	static int screen_changed = 1;
-	char buf[100];
+	char buf[300];
 
 	if (screen_changed) {
 		FbClear();
-		snprintf(buf, sizeof(buf), "WAVE %d\nSURVIVED!", current_wave);
-		FbMove(2 * 8, 4 * 8);
+		snprintf(buf, sizeof(buf), "WAVE %d ENDS\n\n"
+					"SHOTS:%d\n"
+					"CASUALTIES:\n %d\n"
+					"IMPACTS:%d\n"
+					"KILLS: %d\n\n"
+					"   PRESS A TO\n"
+					"     CONTINUE",
+			current_wave,
+			shots_fired_this_wave,
+			casualties,
+			missile_impacts_this_wave,
+			missiles_killed_this_wave);
+		FbMove(0, 4 * 8);
 		FbWriteString(buf);
 		FbSwapBuffers();
 		screen_changed = 0;
 	}
 
-	count++;
-	if (count > wave_pause_time) {
-		count = 0;
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		screen_changed = 1;
 		aagunner_state = AAGUNNER_BEGIN_WAVE;
 	}
