@@ -265,7 +265,7 @@ struct new_monster new_monsters[] = {
         false,
         RED,
         "TBD",
-        &bm20
+        &bm21
     }
 };
 
