@@ -22,6 +22,9 @@ static const int max_missile_cooldown = 500;
 static const int min_missile_cooldown = 200;
 static int missile_cooldown = 300;
 static const int missile_vel = 100; 
+static int missiles_killed = 0;
+static int shots_fired = 0;
+static int missile_impacts = 0;
 
 static int screen_changed = 0;
 
@@ -122,6 +125,7 @@ static void add_bullet(int x, int y, int vx, int vy)
 	bullet[nbullets].vx = vx;
 	bullet[nbullets].vy = vy;
 	nbullets++;
+	shots_fired++;
 }
 
 static int move_bullet(int i)
@@ -160,6 +164,7 @@ static int move_bullet(int i)
 			vy = (vy * (xorshift(&state) % 256)) / 256;
 
 			add_spark(x, y, vx, vy);
+			missiles_killed++;
 		}
 
 		/* ... and delete it. */
@@ -242,6 +247,7 @@ static int move_missile(int i)
 			vy = -(xorshift(&state) % 50);
 			add_spark(missile[i].x, missile[i].y, vx * 8, vy * 8);
 		}
+		missile_impacts++;
 	}
 
 	/* return 1 if offscreen (dead), 0 if still alive/onscreen */
@@ -391,6 +397,9 @@ static void aagunner_new_game(void)
 	screen_changed = 1;
 	FbClear();
 	aagunner_state = AAGUNNER_RUN;
+	missiles_killed = 0;
+	missile_impacts = 0;
+	shots_fired = 0;
 }
 
 static void check_buttons(void)
