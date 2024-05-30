@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include "colors.h"
 #include "menu.h"
 #include "button.h"
@@ -18,15 +19,99 @@
 #define MAX_SPARKS 200
 #define SPARKS_PER_MISSILE 10
 
-static const int max_missile_cooldown = 500;
-static const int min_missile_cooldown = 200;
+static int max_missile_cooldown = 500;
+static int min_missile_cooldown = 200;
 static int missile_cooldown = 300;
-static const int missile_vel = 100; 
+static int missile_vel = 100; 
 static int missiles_killed = 0;
 static int shots_fired = 0;
 static int missile_impacts = 0;
+static int missiles_this_wave = 0;
 
 static int screen_changed = 0;
+
+static struct aagunner_wave {
+	char *name;
+	int missile_count;
+	int min_missile_cooldown;
+	int max_missile_cooldown;
+	int missile_vel;
+} wave[] = {
+	{
+		.name = "LUHANSK",
+		.missile_count = 5,
+		.min_missile_cooldown = 200,
+		.max_missile_cooldown = 500,
+		.missile_vel = 100,
+	},
+	{
+		.name = "HORLIVKA",
+		.missile_count = 5,
+		.min_missile_cooldown = 100,
+		.max_missile_cooldown = 400,
+		.missile_vel = 120,
+	},
+	{
+		.name = "KRAMATORSK",
+		.missile_count = 5,
+		.min_missile_cooldown = 50,
+		.max_missile_cooldown = 300,
+		.missile_vel = 150,
+	},
+	{
+		.name = "DONETSK",
+		.missile_count = 5,
+		.min_missile_cooldown = 50,
+		.max_missile_cooldown = 300,
+		.missile_vel = 150,
+	},
+	{
+		.name = "ODESA",
+		.missile_count = 5,
+		.min_missile_cooldown = 50,
+		.max_missile_cooldown = 300,
+		.missile_vel = 150,
+	},
+	{
+		.name = "MYKOLAIV",
+		.missile_count = 5,
+		.min_missile_cooldown = 50,
+		.max_missile_cooldown = 300,
+		.missile_vel = 150,
+	},
+	{
+		.name = "KUPYANSK",
+		.missile_count = 5,
+		.min_missile_cooldown = 50,
+		.max_missile_cooldown = 300,
+		.missile_vel = 150,
+	},
+	{
+		.name = "BAKHMUT",
+		.missile_count = 5,
+		.min_missile_cooldown = 50,
+		.max_missile_cooldown = 300,
+		.missile_vel = 150,
+	},
+	{
+		.name = "ZAPORIZHZHIA",
+		.missile_count = 5,
+		.min_missile_cooldown = 50,
+		.max_missile_cooldown = 300,
+		.missile_vel = 150,
+	},
+	{
+		.name = "KYIV",
+		.missile_count = 5,
+		.min_missile_cooldown = 50,
+		.max_missile_cooldown = 300,
+		.missile_vel = 150,
+	},
+};
+
+static const int nwaves = ARRAY_SIZE(wave);
+static int current_wave = 0;
+static const int wave_pause_time = 50;
 
 static struct aagunner {
 	int angle;
@@ -173,6 +258,7 @@ static int move_bullet(int i)
 		else
 			j++;
 		nmissiles--;
+		missiles_this_wave++;
 
 		/* Also, delete this bullet */
 		return 1;
@@ -264,6 +350,7 @@ static void move_missiles(void)
 			if (i < nmissiles - 1)
 				missile[i] = missile[nmissiles - 1];
 			nmissiles--;
+			missiles_this_wave++;
 		} else {
 			i++;
 		}
@@ -278,6 +365,10 @@ static void launch_missiles(void)
 		missile_cooldown--;
 		return;
 	}
+
+	if (missiles_this_wave > wave[current_wave].missile_count)
+		return;
+
 	missile_cooldown = min_missile_cooldown + xorshift(&state) % (max_missile_cooldown - min_missile_cooldown);
 	int x, y, vx, vy, angle;
 
@@ -372,6 +463,8 @@ enum aagunner_state_t {
 	AAGUNNER_INIT,
 	AAGUNNER_MENU,
 	AAGUNNER_NEW_GAME,
+	AAGUNNER_BEGIN_WAVE,
+	AAGUNNER_END_WAVE,
 	AAGUNNER_RUN,
 	AAGUNNER_EXIT,
 };
@@ -391,15 +484,79 @@ static void aagunner_new_game(void)
 	aagunner.angle = INITIAL_ANGLE;
 	aagunner.currently_firing = 0;
 	aagunner.firing_cooldown = 0;
+	current_wave = 0;
+	min_missile_cooldown = wave[current_wave].min_missile_cooldown;
+	max_missile_cooldown = wave[current_wave].max_missile_cooldown;
+	missile_vel = wave[current_wave].missile_vel;
+	missile_cooldown = wave[current_wave].max_missile_cooldown;
 	nmissiles = 0;
 	nbullets = 0;
 	nsparks = 0;
 	screen_changed = 1;
 	FbClear();
-	aagunner_state = AAGUNNER_RUN;
+	aagunner_state = AAGUNNER_BEGIN_WAVE;
 	missiles_killed = 0;
 	missile_impacts = 0;
 	shots_fired = 0;
+}
+
+static void aagunner_begin_wave(void)
+{
+	char buf[100];
+	static int screen_changed = 1;
+	static int count = 0;
+
+	if (screen_changed) {
+		snprintf(buf, sizeof(buf), "WAVE %d\n%s\n\nGET READY!",
+			current_wave + 1, wave[current_wave].name);
+		FbClear();
+		FbMove(0, 4 * 8);
+		FbColor(WHITE);
+		FbWriteString(buf);
+		FbSwapBuffers();
+		screen_changed = 0;
+	}
+	count++;
+
+	if (count > wave_pause_time) {
+		count = 0;
+		screen_changed = 1;
+		aagunner_state = AAGUNNER_RUN;
+		aagunner.angle = INITIAL_ANGLE;
+		aagunner.currently_firing = 0;
+		aagunner.firing_cooldown = 0;
+		min_missile_cooldown = wave[current_wave].min_missile_cooldown;
+		max_missile_cooldown = wave[current_wave].max_missile_cooldown;
+		missile_vel = wave[current_wave].missile_vel;
+		missile_cooldown = wave[current_wave].min_missile_cooldown;
+		missiles_this_wave = 0;
+		nmissiles = 0;
+		nsparks = 0;
+		nbullets = 0;
+	}
+}
+
+static void aagunner_end_wave(void)
+{
+	static int count = 0;
+	static int screen_changed = 1;
+	char buf[100];
+
+	if (screen_changed) {
+		FbClear();
+		snprintf(buf, sizeof(buf), "WAVE %d\nSURVIVED!", current_wave);
+		FbMove(2 * 8, 4 * 8);
+		FbWriteString(buf);
+		FbSwapBuffers();
+		screen_changed = 0;
+	}
+
+	count++;
+	if (count > wave_pause_time) {
+		count = 0;
+		screen_changed = 1;
+		aagunner_state = AAGUNNER_BEGIN_WAVE;
+	}
 }
 
 static void check_buttons(void)
@@ -493,6 +650,21 @@ static void aagunner_menu(void)
 	}
 }
 
+static void maybe_end_wave(void)
+{
+	static int count = 0;
+
+	if (missiles_this_wave > wave[current_wave].missile_count) {
+		count++;
+		if (count > 100) {
+			count = 0;
+			if (current_wave < nwaves - 1)
+				current_wave++;
+			aagunner_state = AAGUNNER_END_WAVE;
+		}
+	}
+}
+
 static void aagunner_run(void)
 {
 	check_buttons();
@@ -501,6 +673,7 @@ static void aagunner_run(void)
 	move_missiles();
 	move_sparks();
 	draw_screen();
+	maybe_end_wave();
 }
 
 static void aagunner_exit(void)
@@ -520,6 +693,12 @@ void aagunner_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case AAGUNNER_NEW_GAME:
 		aagunner_new_game();
+		break;
+	case AAGUNNER_BEGIN_WAVE:
+		aagunner_begin_wave();
+		break;
+	case AAGUNNER_END_WAVE:
+		aagunner_end_wave();
 		break;
 	case AAGUNNER_RUN:
 		aagunner_run();
