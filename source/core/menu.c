@@ -383,7 +383,7 @@ static struct menu_animation_state {
 	int suppress_animation; /* used when exiting apps */
 } menu_animation;
 
-#define DEBUG_SUPPRESS_ANIMATION 1
+#define DEBUG_SUPPRESS_ANIMATION 0
 #if DEBUG_SUPPRESS_ANIMATION
 #define SUPPRESS_ANIMATION(v, msg) do { \
 		menu_animation.suppress_animation = v; \
