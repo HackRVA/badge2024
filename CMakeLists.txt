@@ -32,6 +32,7 @@ endif()
 # Initialize the SDK
 if (${TARGET} STREQUAL "PICO")
     add_compile_definitions(TARGET_PICO)
+    add_compile_definitions(PICO_XOSC_STARTUP_DELAY_MULTIPLIER=64)
     pico_sdk_init()
 elseif(${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR" OR ${TARGET} STREQUAL "WASM")
     add_compile_definitions(TARGET_SIMULATOR)
