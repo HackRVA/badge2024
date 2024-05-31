@@ -618,12 +618,12 @@ static void aagunner_end_wave(void)
 static void check_buttons(void)
 {
     int down_latches = button_down_latches();
-	if (BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches)) {
+	if (button_poll(BADGE_BUTTON_LEFT)) {
 		aagunner.angle = aagunner.angle - 1;
 		if (aagunner.angle < MIN_ANGLE)
 			aagunner.angle = MIN_ANGLE;
 		screen_changed = 1;
-	} else if (BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches)) {
+	} else if (button_poll(BADGE_BUTTON_RIGHT)) {
 		aagunner.angle = aagunner.angle + 1;
 		if (aagunner.angle > MAX_ANGLE)
 			aagunner.angle = MAX_ANGLE;
