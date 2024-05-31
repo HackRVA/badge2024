@@ -139,7 +139,7 @@ static struct aagunner {
 };
 
 static struct spark {
-	int x, y, vx, vy, life;
+	int x, y, vx, vy, life, color;
 } spark[MAX_SPARKS];
 static int nsparks = 0;
 
@@ -157,7 +157,7 @@ static int nbullets = 0;
 static struct dynmenu main_menu;
 static struct dynmenu_item menu_item[15];
 
-static void add_spark(int x, int y, int vx, int vy)
+static void add_spark(int x, int y, int vx, int vy, int color)
 {
 	static unsigned int state = 0xa5a5a5a5;
 
@@ -168,6 +168,7 @@ static void add_spark(int x, int y, int vx, int vy)
 	spark[nsparks].vx = vx;
 	spark[nsparks].vy = vy;
 	spark[nsparks].life = xorshift(&state) % 100 + 100;
+	spark[nsparks].color = color;
 	nsparks++;
 }
 
@@ -208,12 +209,12 @@ static void draw_spark(int i)
 	int x = spark[i].x / 256;
 	int y = spark[i].y / 256;
 
+	FbColor(spark[i].color);
 	FbPoint(x, y);
 }
 
 static void draw_sparks(void)
 {
-	FbColor(YELLOW);
 	for (int i = 0; i < nsparks; i++)
 		draw_spark(i);
 }
@@ -266,7 +267,7 @@ static int move_bullet(int i)
 			vx = (vx * (xorshift(&state) % 256)) / 256;
 			vy = (vy * (xorshift(&state) % 256)) / 256;
 
-			add_spark(x, y, vx, vy);
+			add_spark(x, y, vx, vy, YELLOW);
 		}
 		missiles_killed++;
 		missiles_killed_this_wave++;
@@ -343,7 +344,7 @@ static int move_missile(int i)
 	y = missile[i].y / 256;
 
 	if ((xorshift(&state) & 0x0f) == 0x01)
-		add_spark(missile[i].x, missile[i].y, missile[i].vx / 2, missile[i].vy / 2);
+		add_spark(missile[i].x, missile[i].y, missile[i].vx / 2, missile[i].vy / 2, RED);
 
 	if (y >= 40 && missile[i].mirv_count > 0) {
 		struct missile *m = &missile[i];
@@ -358,7 +359,7 @@ static int move_missile(int i)
 
 			vx = ((xorshift(&state) % 100) - 50);
 			vy = -(xorshift(&state) % 50);
-			add_spark(missile[i].x, missile[i].y, vx * 8, vy * 8);
+			add_spark(missile[i].x, missile[i].y, vx * 8, vy * 8, YELLOW);
 		}
 		missile_impacts++;
 		missile_impacts_this_wave++;
