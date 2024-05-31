@@ -355,11 +355,13 @@ static int move_missile(int i)
 
 	if (y >= 151) {
 		for (int j = 0; j < 100; j++) {
-			int vx, vy;
+			int angle, v, vx, vy;
 
-			vx = ((xorshift(&state) % 100) - 50);
-			vy = -(xorshift(&state) % 50);
-			add_spark(missile[i].x, missile[i].y, vx * 8, vy * 8, YELLOW);
+			angle = 64 + xorshift(&state) % 64;
+			v = (xorshift(&state) % 50) + 1;
+			vx = (cosine(angle) * v) / 8;
+			vy = (sine(angle) * v) / 8;
+			add_spark(missile[i].x, missile[i].y, vx, vy, YELLOW);
 		}
 		missile_impacts++;
 		missile_impacts_this_wave++;
