@@ -15,8 +15,8 @@
 #define MAX_BULLETS 40
 #define BULLET_VEL 200
 #define FIRING_COOLDOWN 10
-#define MAX_MISSILES 10
-#define MAX_SPARKS 200
+#define MAX_MISSILES 100
+#define MAX_SPARKS 400
 #define SPARKS_PER_MISSILE 10
 
 static int max_missile_cooldown = 500;
@@ -41,6 +41,7 @@ static struct aagunner_wave {
 	int min_missile_cooldown;
 	int max_missile_cooldown;
 	int missile_vel;
+	int mirv_chance; /* out of 255 */
 } wave[] = {
 	{
 		.name = "LUHANSK",
@@ -48,6 +49,7 @@ static struct aagunner_wave {
 		.min_missile_cooldown = 200,
 		.max_missile_cooldown = 500,
 		.missile_vel = 100,
+		.mirv_chance = 0,
 	},
 	{
 		.name = "HORLIVKA",
@@ -55,6 +57,7 @@ static struct aagunner_wave {
 		.min_missile_cooldown = 100,
 		.max_missile_cooldown = 400,
 		.missile_vel = 120,
+		.mirv_chance = 0,
 	},
 	{
 		.name = "KRAMATORSK",
@@ -62,6 +65,7 @@ static struct aagunner_wave {
 		.min_missile_cooldown = 50,
 		.max_missile_cooldown = 300,
 		.missile_vel = 150,
+		.mirv_chance = 0,
 	},
 	{
 		.name = "DONETSK",
@@ -69,6 +73,7 @@ static struct aagunner_wave {
 		.min_missile_cooldown = 50,
 		.max_missile_cooldown = 250,
 		.missile_vel = 150,
+		.mirv_chance = 0,
 	},
 	{
 		.name = "ODESA",
@@ -76,6 +81,7 @@ static struct aagunner_wave {
 		.min_missile_cooldown = 25,
 		.max_missile_cooldown = 250,
 		.missile_vel = 150,
+		.mirv_chance = 0,
 	},
 	{
 		.name = "MYKOLAIV",
@@ -83,34 +89,39 @@ static struct aagunner_wave {
 		.min_missile_cooldown = 20,
 		.max_missile_cooldown = 200,
 		.missile_vel = 150,
+		.mirv_chance = 50,
 	},
 	{
 		.name = "KUPYANSK",
-		.missile_count = 8,
+		.missile_count = 10,
 		.min_missile_cooldown = 20,
 		.max_missile_cooldown = 200,
 		.missile_vel = 175,
+		.mirv_chance = 50,
 	},
 	{
 		.name = "BAKHMUT",
-		.missile_count = 8,
+		.missile_count = 12,
 		.min_missile_cooldown = 20,
 		.max_missile_cooldown = 200,
 		.missile_vel = 175,
+		.mirv_chance = 75,
 	},
 	{
 		.name = "ZAPORIZHZHIA",
-		.missile_count = 10,
+		.missile_count = 20,
 		.min_missile_cooldown = 20,
 		.max_missile_cooldown = 150,
 		.missile_vel = 175,
+		.mirv_chance = 128,
 	},
 	{
 		.name = "KYIV",
-		.missile_count = 20,
+		.missile_count = 50,
 		.min_missile_cooldown = 10,
 		.max_missile_cooldown = 100,
 		.missile_vel = 190,
+		.mirv_chance = 255,
 	},
 };
 
@@ -134,6 +145,7 @@ static int nsparks = 0;
 
 static struct missile {
 	int x, y, vx, vy;
+	int mirv_count;
 } missile[MAX_MISSILES];
 static int nmissiles;
 
@@ -307,7 +319,7 @@ static void draw_bullets(void)
 }
 
 
-static void add_missile(int x, int y, int vx, int vy)
+static void add_missile(int x, int y, int vx, int vy, int mirv_count)
 {
 	if (nmissiles >= MAX_MISSILES)
 		return;
@@ -315,6 +327,7 @@ static void add_missile(int x, int y, int vx, int vy)
 	missile[nmissiles].y = y;
 	missile[nmissiles].vx = vx;
 	missile[nmissiles].vy = vy;
+	missile[nmissiles].mirv_count = mirv_count;
 	nmissiles++;
 }
 
@@ -331,6 +344,13 @@ static int move_missile(int i)
 
 	if ((xorshift(&state) & 0x0f) == 0x01)
 		add_spark(missile[i].x, missile[i].y, missile[i].vx / 2, missile[i].vy / 2);
+
+	if (y >= 40 && missile[i].mirv_count > 0) {
+		struct missile *m = &missile[i];
+		add_missile(m->x, m->y, m->vx + 50, m->vy, 0);
+		add_missile(m->x, m->y, m->vx - 50, m->vy, 0);
+		m->mirv_count = 0;
+	}
 
 	if (y >= 151) {
 		for (int j = 0; j < 100; j++) {
@@ -391,13 +411,22 @@ static void launch_missiles(void)
 	y = y * 256;
 	vx = (cosine(angle) * missile_vel) / 256;
 	vy = (sine(angle) * missile_vel) / 256;
-	add_missile(x, y, vx, vy);
+
+	int chance = xorshift(&state) & 0xff;
+	int mirv_count = chance < wave[current_wave].mirv_chance ? 3 : 0;
+	printf("mirv_count = %d, mirv_chance = %d, chance = %d\n", mirv_count, wave[current_wave].mirv_chance, chance);
+	add_missile(x, y, vx, vy, mirv_count);
 }
 
 static void draw_missile(int i)
 {
 	int x = missile[i].x / 256;
 	int y = missile[i].y / 256;
+
+	if (missile[i].mirv_count > 0)
+		FbColor(RED);
+	else
+		FbColor(WHITE);
 
 	if (x < LCD_XSIZE - 2) {
 		FbPoint(x + 1, y);
@@ -409,7 +438,6 @@ static void draw_missile(int i)
 
 static void draw_missiles(void)
 {
-	FbColor(WHITE);
 	for (int i = 0; i < nmissiles; i++)
 		draw_missile(i);
 }
