@@ -30,7 +30,7 @@ static const char *splash_word_things[] = {"Cognition Module",
     "badgedows defender", "sshd", "cryptolocker",
 };
 
-static const char splash_words_btn1[] = "Press the button";
+static const char splash_words_btn1[] = "Press any button";
 static const char splash_words_btn2[] = "to continue!";
 
 static void brand_preproduction_firmware(int blink)
@@ -117,6 +117,8 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
 #endif
 
         FbColor(RED);
+	//FbBackgroundColor(PACKRGB(10,60,9));
+	FbBackgroundColor(0x21c5);
         FbMove(1, 90);
         FbWriteLine(splash_words_btn1);
 
@@ -135,11 +137,8 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
     // Sam: had some buzzer code here prior
     int down_latches = button_down_latches();
 
-    if(
-#if BADGE_HAS_ROTARY_SWITCHES
-	BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
-#endif
-       BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)){
+    if (0 != down_latches) {
+	FbBackgroundColor(BLACK);
         returnToMenus();
     }
 }

@@ -60,7 +60,7 @@ void UserInit(void)
 }
 
 
-// dormant returns 1 if touch/buttons and IR messages are dormant for 2 minutes, otherwise returns 0
+// dormant returns 1 if touch/buttons and IR messages are dormant for 30 seconds, otherwise returns 0
 unsigned char dormant(void) {
     uint32_t timestamp = (uint32_t)rtc_get_ms_since_boot();
     if (timestamp >= (button_last_input_timestamp() + 1000 * 30)){
@@ -200,6 +200,7 @@ uint64_t ProcessIO(void)
         led_pwm_disable(BADGE_LED_RGB_GREEN);
         FbClear();
         FbColor(BLACK);
+	FbBackgroundColor(BLACK);
         FbSwapBuffers();
     }
     
