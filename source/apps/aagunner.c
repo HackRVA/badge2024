@@ -417,7 +417,6 @@ static void launch_missiles(void)
 
 	int chance = xorshift(&state) & 0xff;
 	int mirv_count = chance < wave[current_wave].mirv_chance ? 3 : 0;
-	printf("mirv_count = %d, mirv_chance = %d, chance = %d\n", mirv_count, wave[current_wave].mirv_chance, chance);
 	add_missile(x, y, vx, vy, mirv_count);
 }
 
