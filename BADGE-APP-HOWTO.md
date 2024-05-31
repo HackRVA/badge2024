@@ -832,6 +832,18 @@ The first time, you'd call it like:
 
 Look into gulag.c for an example of how to create a kind of "explosiony" sound.
 
+# Microphone
+
+The 2024 badge incorporates a PDM microhpone. This is provided by the 
+`mic_pdm.h` header and uses the `audio.h` header for the sample definition and
+general signal processing primitives.
+
+To get audio samples from the microhpone, use `mic_add_cb()` and
+`mic_remove_cb()`. Only one instance of a given callback may be registered at
+any time and adding another will return `MIC_RC_EALREADY_EXISTS`. If this is
+expected, you may add the callback multiple times. However, removing it even
+once will remove the callback completely.
+
 
 Setting the Flair LED Color
 ---------------------------
