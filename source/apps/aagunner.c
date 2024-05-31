@@ -149,7 +149,7 @@ static void add_spark(int x, int y, int vx, int vy)
 {
 	static unsigned int state = 0xa5a5a5a5;
 
-	if (nsparks >= MAX_BULLETS)
+	if (nsparks >= MAX_SPARKS)
 		return;
 	spark[nsparks].x = x;
 	spark[nsparks].y = y;
@@ -309,7 +309,7 @@ static void draw_bullets(void)
 
 static void add_missile(int x, int y, int vx, int vy)
 {
-	if (nmissiles >= MAX_BULLETS)
+	if (nmissiles >= MAX_MISSILES)
 		return;
 	missile[nmissiles].x = x;
 	missile[nmissiles].y = y;
