@@ -43,6 +43,8 @@ typedef void (*mic_callback_t)(const audio_sample_t *samples, size_t len);
  *
  *  @param  cb  Callback to add.
  *
+ *  @note   Automatically starts microphone if not already running.
+ *
  *  @retval MIC_RC_OK               Successfully added callback.
  *  @retval MIC_RC_EPARAM_NULL      Callback is NULL.
  *  @retval MIC_RC_EALREADY_EXISTS  Callback already in table.
@@ -53,6 +55,8 @@ int mic_add_cb(mic_callback_t cb);
 /*! Remove microphone input callback.
  *
  *  @param  cb  Callback to remove.
+ *
+ *  @note   Automatically stops microphone if no callbacks remain.
  *
  *  @retval MIC_RC_OK           Callback removed successfully.
  *  @retval MIC_RC_EPARAM_NULL  Callback specified is NULL.
