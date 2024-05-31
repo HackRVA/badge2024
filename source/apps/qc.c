@@ -233,7 +233,6 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
             analog_set_sensor_power(ANALOG_SENSOR_POWER_ENABLED);
             //color_sensor_power_ctl(COLOR_SENSOR_POWER_CMD_UP);
             ir_add_callback(ir_callback, IR_APP0);
-            mic_start();
             mic_add_cb(qc_mic_cb);
             FbTransparentIndex(0);
             FbColor(GREEN);
@@ -269,7 +268,6 @@ void QC_cb(__attribute__((unused)) struct menu_t *menu)
                 //color_sensor_power_ctl(COLOR_SENSOR_POWER_CMD_DOWN);
                 ir_remove_callback(ir_callback, IR_APP0);
                 mic_remove_cb(qc_mic_cb);
-                mic_stop();
 		led_pwm_disable(BADGE_LED_RGB_RED);
 		led_pwm_disable(BADGE_LED_RGB_GREEN);
 		led_pwm_disable(BADGE_LED_RGB_BLUE);

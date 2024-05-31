@@ -39,6 +39,8 @@ const struct pdm_microphone_config config = {
 // variables
 static int16_t sample_buffer[256];
 static volatile int samples_read = 0;
+static bool mic_running = false;
+static int mic_cb_count = 0;
 static mic_callback_t mic_cb_table[MIC_CALLBACK_TABLE_SIZE] = {0};
 
 static void on_pdm_samples_ready()
@@ -57,11 +59,23 @@ void mic_init(void){
 };
 
 void mic_start(void){
+    if (mic_running) {
+        printf("\r\nmic already running");
+        return;
+    }
     pdm_microphone_start();
+    mic_running = true;
+    printf("\r\nstarted mic");
 };
 
 void mic_stop(void){
+    if (!mic_running) {
+        printf("\r\nmic already stopped");
+        return;
+    }
     pdm_microphone_stop();
+    mic_running = false;
+    printf("\r\nstopped mic");
 };
 
 int mic_add_cb(mic_callback_t cb)
@@ -87,6 +101,13 @@ int mic_add_cb(mic_callback_t cb)
 
     /* Assign the available entry. */
     mic_cb_table[available] = cb;
+    mic_cb_count++;
+
+    /* Automagically start microphone if not running. */
+    if (!mic_running) {
+        mic_start();
+    }
+
     return MIC_RC_OK;
 }
 
@@ -99,6 +120,13 @@ int mic_remove_cb(mic_callback_t cb)
     for (size_t i = 0; i < (sizeof(mic_cb_table) / sizeof(mic_cb_table[0])); i++) {
         if (mic_cb_table[i] == cb) {
             mic_cb_table[i] = NULL;
+            mic_cb_count--;
+
+            /* Automagically stop mic if there are no cbs remaining. */
+            if ((mic_cb_count == 0) && (mic_running)) {
+                mic_stop();
+            }
+
             return MIC_RC_OK;
         }
     }
