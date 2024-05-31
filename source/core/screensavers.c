@@ -326,9 +326,9 @@ void just_the_badge_tips(void)
 {
     static unsigned char tipnum = 0;
     if(!animation_count){
-        int random;
-        random_insecure_bytes((uint8_t*)&random, sizeof(int));
-        tipnum = random % 19;
+        uint8_t random;
+        random_insecure_bytes(&random, sizeof(random));
+        tipnum = (tipnum + random) % 19;
         animation_count++;
     }
 
@@ -352,62 +352,62 @@ void just_the_badge_tips(void)
 #endif
     switch(tipnum){
         case 0:
-            WRITE_TIP("Dont lick the\nbadge");
+            WRITE_TIP("Do NOT lick\nthe badge.");
             break;
         case 1:
-            WRITE_TIP("These are land\ndwelling badges.\nAvoid water");
+            WRITE_TIP("These are land\ndwelling badges.\nAvoid water.");
             break;
         case 2:
-            WRITE_TIP("Known to the\nstate of cancer to\ncause California");
+            WRITE_TIP("Known to the\nstate of cancer\nto cause\nCalifornia.");
             break;
         case 3:
-            WRITE_TIP("Wash your hands\nnext time.");
+            WRITE_TIP("Wash your hands\nevery time.");
             break;
         case 4:
-            WRITE_TIP("Say hi to\nthe creators\nover at hackrva");
+            WRITE_TIP("Say \"hi\" to the\ncreators over\nat HackRVA!");
             break;
         case 5:
-            WRITE_TIP("Have another\nbeer.");
+            WRITE_TIP("I gotta pee.");
             break;
         case 6:
-            WRITE_TIP("This badge is\nzombie load\nenabled");
+            WRITE_TIP("This badge is\nAI powered.");
             break;
         case 7:
-            WRITE_TIP("This badge is\nloyal to Mark\nZuckyZuck");
+            WRITE_TIP("This badge will\nself-destruct\nin 10 seconds.");
             break;
         case 8:
-            WRITE_TIP("checkout the\nCTF!");
+            WRITE_TIP("Checkout CTF!\n\n8CC36AE8\n862F8B73\nC32DCF62\n745B3303");
             break;
         case 9:
-            WRITE_TIP("Its impolite\nto start at\nother peoples\nbadges.");
+            WRITE_TIP("Its impolite\nto stare at\nother peoples\nbadges.");
             break;
         case 10:
             WRITE_TIP("Every badge is\ndifferent. Find\nthe bugs in\nyours!");
             break;
         case 11:
-            WRITE_TIP("Badges can be\nvery social.\nTry playing\nIR games");
+            WRITE_TIP("Badges are\nvery social.\nTry playing\nIR games.");
             break;
         case 12:
-            WRITE_TIP("Its a thin line\nbetween a badge\nand an bodge");
+            WRITE_TIP("Its a thin line\nbetween a badge\nand an bodge.");
             break;
         case 13:
-            WRITE_TIP("If you cant\nread this your\nbadge is broken");
+            WRITE_TIP("If you can't\nread this then\nyour badge is\nbroken.");
             break;
         case 14:
-            WRITE_TIP("Youll find the\nsource code\nonline after\nthe conference.");
+            WRITE_TIP("Youll find the\nsource code\nonline on\nGitHub.");
             break;
         case 15:
-            WRITE_TIP("The badge is\nnot a touch\nscreen");
+            WRITE_TIP("The badge is\nnot a touch\nscreen.");
             break;
         case 16:
-            WRITE_TIP("Badges need\nlove. Pet\nyour badge\nregularly");
+            WRITE_TIP("Badges need\nlove. Pet\nyour badge\nregularly.");
             break;
         case 17:
-            WRITE_TIP("These are\nartisanal\nbadges");
+            WRITE_TIP("These are\nartisanal\nbadges.");
             break;
         case 18:
         default:
-            WRITE_TIP("Badges are\nhand crafted\nat hackrva");
+            WRITE_TIP("Badges are\nhand crafted\nat HackRVA.");
             break;
     }
 
