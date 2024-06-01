@@ -36,7 +36,7 @@ static const char splash_words_btn2[] = "to continue!";
 static void brand_preproduction_firmware(int blink)
 {
 	(void) blink;
-#define PREPRODUCTION_FIRMWARE 1
+#define PREPRODUCTION_FIRMWARE 0
 #if PREPRODUCTION_FIRMWARE
 	if (!blink)
 		return;
