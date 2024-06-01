@@ -19,6 +19,8 @@
 #include "delay.h"
 #include "init.h"
 
+unsigned escape_count = 0;
+
 int exit_process(__attribute__((unused)) char *args) {
     return -1;
 }
@@ -82,6 +84,20 @@ int badge_main(__attribute__((unused)) int argc, __attribute__((unused)) char** 
             printf("Frame time was long: %lu\n", (unsigned long)(current_time - frame_time));
             frame_time = current_time;
             continue;
+        }
+
+        if (button_poll(BADGE_BUTTON_A)
+            && button_poll(BADGE_BUTTON_B)
+            && button_poll(BADGE_BUTTON_UP)
+            && button_poll(BADGE_BUTTON_DOWN)
+            && button_poll(BADGE_BUTTON_LEFT)
+            && button_poll(BADGE_BUTTON_RIGHT)) {
+            if (++escape_count > 60) {
+                /* If all buttons pressed for 60 frames, exit application. */
+                return 0;
+            }
+        } else {
+            escape_count = 0;
         }
 
         frame_time = frame_period_us + frame_time;
