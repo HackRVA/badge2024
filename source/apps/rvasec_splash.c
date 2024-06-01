@@ -117,7 +117,6 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
 #endif
 
         FbColor(RED);
-	//FbBackgroundColor(PACKRGB(10,60,9));
 	FbBackgroundColor(0x21c5);
         FbMove(1, 90);
         FbWriteLine(splash_words_btn1);
@@ -126,6 +125,7 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         FbWriteLine(splash_words_btn2);
 
         brand_preproduction_firmware(!((wait / 5) & 0x01) || wait > 158);
+	FbBackgroundColor(BLACK);
         FbSwapBuffers();
     }
 
