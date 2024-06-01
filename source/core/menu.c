@@ -49,6 +49,7 @@
 // #include "badgey.h"
 #include "badge-app-template.h"
 #include "aagunner.h"
+#include "rover_adventure.h"
 
 /* BUILD_IMAGE_TEST_PROGRAM is defined (or not) in top level CMakelists.txt */
 #ifdef BUILD_IMAGE_TEST_PROGRAM
@@ -91,6 +92,7 @@ static const struct menu_t games_m[] = {
 #ifdef BUILD_IMAGE_TEST_PROGRAM
 	{"Image Test", VERT_ITEM, FUNCTION, { .func = image_test_cb }, NULL },
 #endif
+	{"Rover Adventure", VERT_ITEM, FUNCTION, { .func = rover_adventure_cb }, &bba_icon },
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 
