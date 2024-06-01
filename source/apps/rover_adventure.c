@@ -12,6 +12,7 @@
 /* C std lib */
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 /* Badge system */
 #include <colors.h>
@@ -61,32 +62,10 @@ static struct dynmenu m_radv_menu;
 static struct dynmenu_item m_radv_menu_items[100]; // FIXME idk n yet -PMW
 
 /*----- Audio ----------------------------------------------------------------*/
-static unsigned mic_index_wrapped;
-static unsigned mic_index;
-#define PEAK 50
-#define AVG 20
-static audio_sample_t mic_peaks[128] = {
-	PEAK, PEAK, PEAK, PEAK, 
-	PEAK, PEAK, PEAK, PEAK,
-	PEAK, PEAK, PEAK, PEAK,
-	PEAK, PEAK, PEAK, PEAK,
-	PEAK, PEAK, PEAK, PEAK, 
-	PEAK, PEAK, PEAK, PEAK,
-	PEAK, PEAK, PEAK, PEAK,
-	PEAK, PEAK, PEAK, PEAK,
-};
-static audio_sample_t mic_averages[128] = {
-	AVG, AVG, AVG, AVG,
-	AVG, AVG, AVG, AVG,
-	AVG, AVG, AVG, AVG,
-	AVG, AVG, AVG, AVG,
-	AVG, AVG, AVG, AVG,
-	AVG, AVG, AVG, AVG,
-	AVG, AVG, AVG, AVG,
-	AVG, AVG, AVG, AVG,
-};
-#undef AVG
-#undef PEAK
+static volatile unsigned mic_index_wrapped;
+static volatile unsigned mic_index;
+static audio_sample_t mic_peaks[128];
+static audio_sample_t mic_averages[128];
 static int8_t m_radv_peak_dBFS;
 static int8_t m_radv_avg_dBFS;
 
@@ -216,6 +195,8 @@ static void radv_init(void)
 	/* Add mic calback. */
 	mic_index = 0;
 	mic_index_wrapped = 0;
+	memset(mic_peaks, 0, sizeof(mic_peaks));
+	memset(mic_averages, 0, sizeof(mic_averages));
 	m_radv_peak_dBFS = -30;
 	m_radv_avg_dBFS = -30;
 	mic_add_cb(radv_mic_cb);
@@ -252,7 +233,7 @@ static void radv_exit(void)
 static void radv_menu(void)
 {
 	dynmenu_draw(&m_radv_menu); // Force draw always bc screensavers suck -PMW
-        FbPushBuffer();
+        FbSwapBuffers();
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
 		dynmenu_change_current_selection(&m_radv_menu, 1);
@@ -308,7 +289,7 @@ static void radv_audio(void)
 
 	radv_b_for_back(button_down_latches());
 
-	FbPushBuffer();
+        FbSwapBuffers();
 }
 
 void rover_adventure_cb(__attribute__((unused)) struct menu_t *m)
