@@ -14,6 +14,7 @@
 #include "settings.h"
 #include "uid.h"
 #include "xorshift.h"
+#include "mic_pdm.h"
 
 /*
   inital system data, will be save/restored from flash
@@ -62,6 +63,10 @@ void UserInit(void)
 
 // dormant returns 1 if touch/buttons and IR messages are dormant for 60 seconds, otherwise returns 0
 unsigned char dormant(void) {
+    if (mic_running()) {
+        // Going dormant with the mic running seems to cause problems -PMW
+        return 0;
+    }
     uint32_t timestamp = (uint32_t)rtc_get_ms_since_boot();
     if (timestamp >= (button_last_input_timestamp() + 1000 * 60)){
         if(!ir_messages_seen(false)){
