@@ -5,12 +5,6 @@
 #ifndef BADGE_C_MIC_PDM_H
 #define BADGE_C_MIC_PDM_H
 
-#include <stddef.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 #include <audio.h>
 
 #define MIC_CALLBACK_TABLE_SIZE (4) /*!< Number of microphone input callbacks simultaneously active. */

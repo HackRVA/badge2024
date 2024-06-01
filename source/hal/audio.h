@@ -13,8 +13,9 @@
 #ifndef BADGE_C_AUDIO_H
 #define BADGE_C_AUDIO_H
 
-#include <stdint.h>
+#include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 /*! @defgroup   BADGE_AUDIO Audio Driver
  *  @{
