@@ -98,10 +98,19 @@ void dynmenu_draw(struct dynmenu *dm)
 	y = LCD_YSIZE / 2 - 10 * (dm->current_item - first_item);
     /* draw each menu item, color the current item green */
 	for (i = first_item; i <= last_item; i++) {
-		if (i == dm->current_item)
-			FbColor(GREEN);
-		else
-			FbColor(WHITE);
+		if (i == dm->current_item) {
+			if (dm->selected_color != 0) {
+				FbColor(dm->selected_color);
+			} else {
+				FbColor(GREEN);
+			}
+		} else {
+			if (dm->color !=0) {
+				FbColor(dm->color);
+			} else {
+				FbColor(WHITE);
+			}
+		}
 		FbMove(10, y);
 		FbWriteLine(dm->item[i].text);
 		y += 10;
