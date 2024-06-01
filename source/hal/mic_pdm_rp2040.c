@@ -55,6 +55,7 @@ static void on_pdm_samples_ready()
 
 void mic_init(void){
     pdm_microphone_init(&config);
+    pdm_microphone_set_filter_gain(2);
     pdm_microphone_set_samples_ready_handler(on_pdm_samples_ready);
 };
 
