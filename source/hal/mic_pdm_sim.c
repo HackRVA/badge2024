@@ -14,13 +14,18 @@
 static mic_callback_t mic_cb_table[MIC_CALLBACK_TABLE_SIZE] = {0};
 
 void mic_init(void){
-};
+}
 
 void mic_start(void){
-};
+}
 
 void mic_stop(void){
-};
+}
+
+bool mic_running(){
+	return false;
+}
+
 
 int mic_add_cb(mic_callback_t cb)
 {

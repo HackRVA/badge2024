@@ -5,6 +5,7 @@
 #ifndef BADGE_C_MIC_PDM_H
 #define BADGE_C_MIC_PDM_H
 
+#include <stdbool.h>
 #include <audio.h>
 
 #define MIC_CALLBACK_TABLE_SIZE (4) /*!< Number of microphone input callbacks simultaneously active. */
@@ -25,6 +26,9 @@ void mic_start(void);
 
 /*! Manually stop the microphone. */
 void mic_stop(void);
+
+/*! Check if the microhpone is running. */
+bool mic_running(void);
 
 /*! Microphone input callback.
  *
