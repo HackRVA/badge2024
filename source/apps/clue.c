@@ -18,6 +18,7 @@
 #include "init.h"
 #include "clue_assets.h"
 #include "rtc.h"
+#include "delay.h"
 
 #define BADGE_IR_CLUE_GAME_ADDRESS IR_APP3
 #define BADGE_IR_BROADCAST_ID 0
@@ -68,7 +69,9 @@ enum clue_state_t {
 	CLUE_ACCUSE,
 	CLUE_CHECK_ACCUSATION,
 	CLUE_TRANSMIT_QUESTION,
+	CLUE_DELAY_QUERY_RESPONSE,
 	CLUE_TRANSMIT_ANSWER,
+	CLUE_DELAY_AFTER_QUERY,
 	CLUE_LUCKY,
 	CLUE_CLEVER,
 	CLUE_WRONG_ACCUSATION,
@@ -1089,20 +1092,19 @@ static void build_and_send_packet(unsigned char address, unsigned short badge_id
 
 static void clue_transmit_answer(void)
 {
-	static int counter = 0;
 	uint64_t payload;
 
-	payload = CLUESOE | (uint64_t) playing_as_character;
-	counter++;
-	if ((counter % 10) == 0) { /* transmit IR packet */
-		build_and_send_packet(BADGE_IR_CLUE_GAME_ADDRESS, BADGE_IR_BROADCAST_ID, payload);
-		audio_out_beep(500, 100);
-	}
+	audio_out_beep(880, 200);
 	FbClear();
 	FbMove(10, 60);
 	FbWriteLine("TRANSMITTING\n");
-	FbWriteLine("ANSWER");
+	FbWriteLine("ANSWER\n");
+	screen_changed = 1;
 	update_screen();
+
+	payload = CLUESOE | (uint64_t) playing_as_character;
+	build_and_send_packet(BADGE_IR_CLUE_GAME_ADDRESS, BADGE_IR_BROADCAST_ID, payload);
+	sleep_ms(1000);
 
 	clue_run_idle_time = rtc_get_ms_since_boot();
 	change_clue_state(CLUE_RUN);
@@ -1111,22 +1113,80 @@ static void clue_transmit_answer(void)
 static void clue_transmit_question(void)
 {
 	uint64_t question_packet;
-	static int counter = 0;
 
 	memcpy(&question_packet, "CLUE????", 8);
 
-	counter++;
-	if ((counter % 10) == 0) { /* transmit IR packet */
-		build_and_send_packet(BADGE_IR_CLUE_GAME_ADDRESS, BADGE_IR_BROADCAST_ID, question_packet);
-		audio_out_beep(500, 100);
-	}
+	build_and_send_packet(BADGE_IR_CLUE_GAME_ADDRESS, BADGE_IR_BROADCAST_ID, question_packet);
+	audio_out_beep(220, 200);
+
 	FbClear();
 	FbMove(10, 60);
-	FbWriteLine("ASKING");
-	FbMove(10, 70);
-	FbWriteLine("QUESTION");
+	FbWriteString("ASKING\nQUESTION\n");
+#if 0
+	/* Debug output */
+	char buf[100];
+	memcpy(buf, &question_packet, 8);
+	buf[8] = '\0';
+	FbWriteString(buf);
+#endif
+	screen_changed = 1;
 	update_screen();
 
+	button_reset_last_input_timestamp(); /* suppress the goddam screensaver */
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+#if BADGE_HAS_ROTARY_SWITCHES
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_SW, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_ENCODER_2_SW, down_latches) ||
+#endif
+		BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
+		change_clue_state(CLUE_INTERVIEW);
+	} else {
+		change_clue_state(CLUE_DELAY_AFTER_QUERY);
+	}
+}
+
+static void clue_delay_then_transition(int delay_ms, enum clue_state_t next_state, int *just_begun, uint64_t *resume_time)
+{
+	uint64_t right_now;
+
+	if (*just_begun) {
+		*resume_time = rtc_get_ms_since_boot() + delay_ms;
+		*just_begun = 0;
+	} else {
+		right_now = rtc_get_ms_since_boot();
+		if (right_now >= *resume_time) {
+			change_clue_state(next_state);
+			*just_begun = 1;
+		}
+	}
+	sleep_ms(1);
+	return;
+}
+/* Give the other badge time to turn its IR service routine back on */
+static void clue_delay_query_response(void)
+{
+	static int just_begun = 1;
+	static uint64_t resume_time;
+
+	clue_delay_then_transition(400, CLUE_TRANSMIT_ANSWER, &just_begun, &resume_time);
+}
+
+/* After querying, delay before sending next query so we have a chance to receive response */
+static void clue_delay_after_query(void)
+{
+	static int just_begun = 1;
+	static uint64_t resume_time;
+
+	clue_delay_then_transition(3000, CLUE_TRANSMIT_QUESTION, &just_begun, &resume_time);
+
+	/* give user chance to abort this process */
 	int down_latches = button_down_latches();
 	if (BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches) ||
 		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
@@ -1153,15 +1213,45 @@ static uint64_t clue_get_payload(IR_DATA* packet)
 static void clue_process_packet(IR_DATA* packet)
 {
 	uint64_t payload;
+	char buf[100];
 
 	payload = clue_get_payload(packet);
 	udpdebug(stderr, "Got IR packet: %016lx\n", payload);
-	if (memcmp(&payload, "CLUE????", 8) == 0) {
-		change_clue_state(CLUE_TRANSMIT_ANSWER);
+	if (memcmp(&payload, "CLUE????", 8) == 0) { /* received a query */
+		audio_out_beep(1740, 100);
+
+		FbBackgroundColor(GREEN);
+		FbClear();
+		FbBackgroundColor(BLACK);
+#if 0
+		/* Debug output */
+		FbMove(8, 40);
+		memcpy(buf, &payload, 8);
+		buf[8] = '\0';
+		strcat(buf, "\n");
+		FbWriteString("payload:\n");
+		FbWriteString(buf);
+		FbWriteString("\n\nWait to reply\n");
+#else
+		FbWriteString("QUERY RCVD\n");
+#endif
+		FbSwapBuffers();
+
+		/* We must delay the response to give the other badge time
+		 * to turn its IR interrupt service routine back on.
+		 */
+		change_clue_state(CLUE_DELAY_QUERY_RESPONSE);
+
 		return;
 	}
 
-	if ((payload & 0xffffffff00000000ul) == CLUESOE) {
+	if ((payload & 0xffffffff00000000ul) == CLUESOE) { /* received an answer to a query */
+		audio_out_beep(4000, 100);
+		FbBackgroundColor(BLUE);
+		FbClear();
+		FbBackgroundColor(BLACK);
+		FbSwapBuffers();
+			
 		udpdebug(stderr, "Clue got answer payload\n");
 		question_answer = (payload & 0x7);
 		if (question_answer > NSUSPECTS - 1)
@@ -1169,7 +1259,25 @@ static void clue_process_packet(IR_DATA* packet)
 		udpdebug(stderr, "clue answer is suspect %d\n", question_answer);
 		change_clue_state(CLUE_RECEIVED_ANSWER);
 		return;
+	} else { /* received something unknown */
+		FbBackgroundColor(RED);
+		FbClear();
+		FbBackgroundColor(BLACK);
+		FbMove(0, 0);
+		for (int i = 0; i < 8; i++) {
+			unsigned char *x = (unsigned char *) &payload;
+			if (i == 4)
+				FbWriteString("\n");
+			snprintf(buf, sizeof(buf), "%02x ", x[i]);
+			FbWriteString(buf);
+		}
+		FbMove(0, 40);
+		FbWriteString("MALFORMED\nDATA RCVD\n");
+		FbSwapBuffers();
+		audio_out_beep(7000, 100);
+		sleep_ms(1000);
 	}
+
 	udpdebug(stderr, "Clue: got unexpected packet: 0x%016lx\n", payload);
 }
 
@@ -1239,8 +1347,14 @@ void clue_cb(__attribute__((unused)) struct menu_t *m)
 	case CLUE_TRANSMIT_QUESTION:
 		clue_transmit_question();
 		break;
+	case CLUE_DELAY_QUERY_RESPONSE:
+		clue_delay_query_response();
+		break;
 	case CLUE_TRANSMIT_ANSWER:
 		clue_transmit_answer();
+		break;
+	case CLUE_DELAY_AFTER_QUERY:
+		clue_delay_after_query();
 		break;
 	case CLUE_LUCKY:
 		clue_lucky();

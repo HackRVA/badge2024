@@ -666,6 +666,28 @@ Note that it must disable interrupts while touching the queue to avoid
 a race condition with the interrupt handler.  clue_process_packet()
 does whatever it needs to with the data.
 
+Note also, when designing an IR protocol that involves an IR query and IR reply,
+one must be aware that when a badge transmits an IR packet, *it disables its
+IR interrupt handler for the duration of the transmission plus an additional
+200ms.*  This means that when one badge needs to respond to an IR query with
+an IR reply, it must delay the reply by at least 200ms (300ms may be a better
+idea) or else the badge it is replying to will not receive that reply.
+
+Likewise, if you are repeatedly transmitting a query to which you expect a response,
+you must not continuously transmit the query without any pauses, or you will not
+be able to receive the response.
+
+Furthermore, the delay values you choose to use after transmitting a query,
+and before replying to a query must be chosen such that the two badges aren't
+adversely synchronized such that they manage to not receive messages.  For
+example a delay value of 3000ms after transmitting a query and 400ms before
+sending a reply seem to work alright in the CLUE app.
+
+If you imagine a conversation between two people, it's as if each person plugs
+their ears while speaking and for an additional period after speaking.  So if
+you answer a question too quickly, the answer will not be heard, and if you
+speak continuously, you will never hear a reply.
+
 Badge ID and User Name:
 -----------------------
 
