@@ -187,7 +187,7 @@ static int radv_color_senor_bright_eval(__attribute__((unused)) void *argument)
 	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 2000)
 	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 1000)
 	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 8000)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] < 500)) {
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] < 1000)) {
 		bright_count++;
 	} else {
 		bright_count = 0;
@@ -200,14 +200,14 @@ static int radv_color_senor_dim_eval(__attribute__((unused)) void *argument)
 {
 	/* Dim but NOT dark. -PMW */
 	static int dim_count = 0;
-	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 70)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] < 150)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 140)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] < 300)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 70)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] < 150)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] < 500)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 250)
+	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 25)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] < 60)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 50)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] < 100)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 20)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] < 55)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] < 320)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 80)
 	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] < 100)) {
 		dim_count++;
 	} else {
@@ -220,11 +220,12 @@ static int radv_color_senor_dim_eval(__attribute__((unused)) void *argument)
 static int radv_color_senor_outside_eval(__attribute__((unused)) void *argument)
 {
 	static int outside_count = 0;
-	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 1000)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 2000)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 1000)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 10000)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] > 3000)) {
+	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 10000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 20000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 10000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 30000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] < UINT16_MAX)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] > 10000)) {
 		outside_count++;
 	} else {
 		outside_count = 0;

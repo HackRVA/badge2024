@@ -292,7 +292,7 @@ static void color_sensor_up(struct color_sensor_context *ctx)
     /* Additional configuration goes here. */
     rc = i2c_regmodify(ctx, CLS_REG_CLS_TIME,
                        (uint8_t) ~(CLS_CLSCONV | CLS_INT_TIME), 
-                       (0xf << CLS_CLSCONV_BITPOS) | CLS_INT_TIME_16, 
+                       (0xf << CLS_CLSCONV_BITPOS) | CLS_INT_TIME_4, 
                        CLS_TRX_TIMEOUT_US);
 
     ctx->state = COLOR_SENSOR_STATE_READY;
