@@ -20,8 +20,8 @@ static const char *splash_word_things[] = {
     "useless bits",
     "backdoor.sh",
     "exploit inside",
-    "sub-zero",
     "lifting tables",
+    "flipping tables",
     "personal data",
     "important bits",
     "bitcoin miner",
@@ -34,9 +34,9 @@ static const char *splash_word_things[] = {
     "Wall hacks",
     "huawei 5G",
     "Key logger",
-    "badgedows defender",
-    "sshd",
-    "cryptolocker",
+    "W****** Defender",
+    "xz utils",
+    "...wait not yet!",
 };
 
 static const char splash_words_btn1[] = "Press any button";
@@ -92,6 +92,7 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         FbMove(5, SPLASH_SHIFT_DOWN+1);
         FbColor(GREEN);
         FbFilledRectangle((load_bar++ * 3 / 2) + 1,18);
+        led_pwm_enable(BADGE_LED_RGB_RED, 10 * 255 / 100);
         led_pwm_enable(BADGE_LED_RGB_GREEN, 10 * 255 / 100);
 
         FbColor(WHITE);
@@ -136,12 +137,17 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         FbWriteLine(splash_words_btn2);
 
         brand_preproduction_firmware(!((wait / 5) & 0x01) || wait > 158);
+
+        led_pwm_enable(BADGE_LED_RGB_RED, 10 * 255 / 100);
+        led_pwm_disable(BADGE_LED_RGB_GREEN);
+
 	FbBackgroundColor(BLACK);
         FbSwapBuffers();
     } else {
         int down_latches = button_down_latches();
         if (0 != down_latches) {
             FbBackgroundColor(BLACK);
+            led_pwm_disable(BADGE_LED_RGB_RED);
             returnToMenus();
         }
     }
