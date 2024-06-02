@@ -11,10 +11,12 @@
 #include "music.h"
 #include "rvasec_splash.h"
 #include "hackrvanewlogo.h"
+#include "utils.h"
 
 static const char splash_words1[] = "Loading";
-#define NUM_WORD_THINGS 18
-static const char *splash_word_things[] = {"Cognition Module",
+#define NUM_WORD_THINGS ARRAY_SIZE(splash_word_things)
+static const char *splash_word_things[] = {
+    "Cognition Module",
     "useless bits",
     "backdoor.sh",
     "exploit inside",
@@ -23,12 +25,18 @@ static const char *splash_word_things[] = {"Cognition Module",
     "personal data",
     "important bits",
     "bitcoin miner",
-    "GozNym",
+    "advanced AI(tm)",
     "broken feature",
-    "NTFS", "Wall hacks",
+    "NTFS",
+    "ZFS",
+    "BTRFS",
+    "All the FS",
+    "Wall hacks",
     "huawei 5G",
     "Key logger",
-    "badgedows defender", "sshd", "cryptolocker",
+    "badgedows defender",
+    "sshd",
+    "cryptolocker",
 };
 
 static const char splash_words_btn1[] = "Press any button";
@@ -128,6 +136,12 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         brand_preproduction_firmware(!((wait / 5) & 0x01) || wait > 158);
 	FbBackgroundColor(BLACK);
         FbSwapBuffers();
+    } else {
+        int down_latches = button_down_latches();
+        if (0 != down_latches) {
+            FbBackgroundColor(BLACK);
+            returnToMenus();
+        }
     }
 
     wait++;
@@ -135,13 +149,6 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
     if (wait == 0)
         wait -= 1000;
 
-    // Sam: had some buzzer code here prior
-    int down_latches = button_down_latches();
-
-    if (0 != down_latches) {
-	FbBackgroundColor(BLACK);
-        returnToMenus();
-    }
 }
 
 
