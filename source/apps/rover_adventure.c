@@ -15,6 +15,7 @@
 #include <string.h>
 
 /* Badge system */
+#include <badge.h>
 #include <colors.h>
 #include <menu.h>
 #include <dynmenu.h>
@@ -26,6 +27,8 @@
 #include <audio.h>
 #include <button.h>
 #include <mic_pdm.h>
+#include <color_sensor.h>
+#include <led_pwm.h>
 #include <delay.h>
 
 #include "rover_adventure.h"
@@ -42,6 +45,10 @@ enum rover_adventure_state {
 	ROVER_ADVENTURE_MENU,
 	ROVER_ADVENTURE_EXIT,
 	ROVER_ADVENTURE_AUDIO,
+	ROVER_ADVENTURE_COLOR,
+	ROVER_ADVENTURE_CONDUCTIVITY,
+	ROVER_ADVENTURE_MAGNOMETER,
+	ROVER_ADVENTURE_TEMPERATURE,
 };
 
 enum rover_todo {
@@ -52,6 +59,13 @@ enum rover_todo {
 
 	TODO_AUDIO_START = TODO_AUDIO_VLOUD,
 	TODO_AUDIO_END = TODO_AUDIO_VQUIET,
+
+	TODO_COLOR_BRIGHT,
+	TODO_COLOR_DIM,
+	TODO_COLOR_OUTSIDE,
+
+	TODO_COLOR_START = TODO_COLOR_BRIGHT,
+	TODO_COLOR_END = TODO_COLOR_OUTSIDE,
 
 	TODO_COUNT
 };
@@ -129,6 +143,70 @@ static uint16_t radb_color_from_dBFS(int8_t dB)
 		return BLUE;
 }
 
+/*----- Color sensor ---------------------------------------------------------*/
+static struct color_sample m_radv_color_sample;
+
+static void radv_color_sample(void)
+{
+	(void) color_sensor_get_sample(&m_radv_color_sample);
+	printf("\nsampled color:");
+	for (int i = 0; i < COLOR_SAMPLE_INDEX_COUNT; i++) {
+		printf(" %d", m_radv_color_sample.rgbwi[i]);
+	}
+}
+
+static int radv_color_senor_bright_eval(__attribute__((unused)) void *argument)
+{
+	static int bright_count = 0;
+	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 1000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 2000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 1000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 8000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] < 500)) {
+		bright_count++;
+	} else {
+		bright_count = 0;
+	}
+
+	return bright_count > 100;
+}
+
+static int radv_color_senor_dim_eval(__attribute__((unused)) void *argument)
+{
+	/* Dim but NOT dark. -PMW */
+	static int dim_count = 0;
+	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 70)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] < 150)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 140)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] < 300)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 70)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] < 150)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] < 500)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 250)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] < 100)) {
+		dim_count++;
+	} else {
+		dim_count = 0;
+	}
+
+	return dim_count > 100;
+}
+
+static int radv_color_senor_outside_eval(__attribute__((unused)) void *argument)
+{
+	static int outside_count = 0;
+	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 1000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 2000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 1000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 10000)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] > 3000)) {
+		outside_count++;
+	} else {
+		outside_count = 0;
+	}
+
+	return outside_count > 100;
+}
 
 /*----- Rover TODO List ------------------------------------------------------*/
 static uint32_t m_radv_todo;
@@ -142,6 +220,9 @@ static struct radv_todo {
 	{"loud", radv_mic_eval_loud, NULL},
 	{"quiet", radv_mic_eval_quiet, NULL},
 	{"v. quiet", radv_mic_eval_vquiet, NULL},
+	{"bright", radv_color_senor_bright_eval, NULL},
+	{"dim", radv_color_senor_dim_eval, NULL},
+	{"go\n outside", radv_color_senor_outside_eval, NULL},
 }; 
 
 /*----- Helpers --------------------------------------------------------------*/
@@ -159,7 +240,7 @@ static void radv_todos(enum rover_todo first, enum rover_todo last)
 		}
 
 		/* Draw */
-		char s[10];
+		char s[16];
 		(void) snprintf(s, sizeof(s), "+%s\n", t->str);
 		if (m_radv_todo & m) {
 			FbColor(GREEN);
@@ -202,6 +283,9 @@ static void radv_init(void)
 	m_radv_avg_dBFS = -30;
 	mic_add_cb(radv_mic_cb);
 
+	/* Clear previous color sample. */
+	memset(&m_radv_color_sample, 0, sizeof(m_radv_color_sample));
+
 	/* Setup top level menu. */
 	if (m_radv_menu.max_items == 0) {
 		dynmenu_init(&m_radv_menu, m_radv_menu_items,
@@ -210,9 +294,10 @@ static void radv_init(void)
 		dynmenu_set_colors(&m_radv_menu, PURPLE, GREEN);
 		dynmenu_set_title(&m_radv_menu, "ROVER'S BIG", "ADVENTURE", "");
 		dynmenu_add_item(&m_radv_menu, "AUDIO", ROVER_ADVENTURE_AUDIO, -1);
+		dynmenu_add_item(&m_radv_menu, "LIGHT", ROVER_ADVENTURE_COLOR, -1);
 		dynmenu_add_item(&m_radv_menu, "EXIT", ROVER_ADVENTURE_EXIT, -1);
 	}
-	
+
 	/* Jump to menu. */
 	m_radv_state = ROVER_ADVENTURE_MENU;
 }
@@ -225,6 +310,11 @@ static void radv_exit(void)
 	/* Remove mic callback. */
 	mic_remove_cb(radv_mic_cb);
 
+	/* Turn off any LEDs we have set. */
+	led_pwm_disable(BADGE_LED_RGB_RED);
+	led_pwm_disable(BADGE_LED_RGB_GREEN);
+	led_pwm_disable(BADGE_LED_RGB_BLUE);
+
 	/* Reset for next. */
 	m_radv_state = ROVER_ADVENTURE_INIT;
 
@@ -233,6 +323,16 @@ static void radv_exit(void)
 
 static void radv_menu(void)
 {
+	if (m_radv_todo == ((1 << TODO_COUNT) - 1)) {
+		led_pwm_disable(BADGE_LED_RGB_RED);
+		led_pwm_enable(BADGE_LED_RGB_GREEN, 100);
+		led_pwm_disable(BADGE_LED_RGB_BLUE);
+	} else {
+		led_pwm_enable(BADGE_LED_RGB_RED, 5);
+		led_pwm_disable(BADGE_LED_RGB_GREEN);
+		led_pwm_enable(BADGE_LED_RGB_BLUE, 50);
+	}
+
 	dynmenu_draw(&m_radv_menu); // Force draw always bc screensavers suck -PMW
         FbSwapBuffers();
 	int down_latches = button_down_latches();
@@ -298,6 +398,30 @@ static void radv_audio(void)
 	sleep_ms(30);
 }
 
+static void radv_color(void)
+{
+	/* Update color sample. */
+	radv_color_sample();
+
+	/* Clear the screen. */
+	FbBackgroundColor(BLACK);
+	FbClear();
+
+	/* Write the banner */
+	FbMove(8,8);
+	FbColor(WHITE);
+	FbWriteString("LIGHT\n\nBring me\nsomewhere...\n\n");
+
+	/* Draw and evaluate todos. */
+	radv_todos(TODO_COLOR_START, TODO_COLOR_END);
+
+	int down_latches = button_down_latches();
+
+	radv_b_for_back(down_latches);
+
+        FbSwapBuffers();
+}
+
 void rover_adventure_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (m_radv_state) {
@@ -312,6 +436,9 @@ void rover_adventure_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case ROVER_ADVENTURE_AUDIO:
 		radv_audio();
+		break;
+	case ROVER_ADVENTURE_COLOR:
+		radv_color();
 		break;
 	default:
 		/* Always return to know good state through INIT */
