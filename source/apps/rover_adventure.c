@@ -30,6 +30,7 @@
 #include <color_sensor.h>
 #include <led_pwm.h>
 #include <delay.h>
+#include <analog.h>
 
 #include "rover_adventure.h"
 
@@ -66,6 +67,29 @@ enum rover_todo {
 
 	TODO_COLOR_START = TODO_COLOR_BRIGHT,
 	TODO_COLOR_END = TODO_COLOR_OUTSIDE,
+
+	TODO_CONDUCTIVITY_SHORT,
+	TODO_CONDUCTIVITY_MID,
+	TODO_CONDUCTIVITY_LOW,
+	TODO_CONDUCTIVITY_LOW_BATT,
+
+	TODO_CONDUCTIVITY_START = TODO_CONDUCTIVITY_SHORT,
+	TODO_CONDUCTIVITY_END = TODO_CONDUCTIVITY_LOW_BATT,
+
+	TODO_MAGNOMETER_NORTH,
+	TODO_MAGNOMETER_SOUTH,
+	TODO_MAGNOMETER_ALTERNATING,
+
+	TODO_MAGNOMETER_START = TODO_MAGNOMETER_NORTH,
+	TODO_MAGNOMETER_END = TODO_MAGNOMETER_ALTERNATING,
+
+	TODO_TEMPERATURE_HOT,
+	TODO_TEMPERATURE_WARM,
+	TODO_TEMPERATURE_COOL,
+	TODO_TEMPERATURE_COLD,
+
+	TODO_TEMPERATURE_START = TODO_TEMPERATURE_HOT,
+	TODO_TEMPERATURE_END = TODO_TEMPERATURE_COLD,
 
 	TODO_COUNT
 };
@@ -208,6 +232,143 @@ static int radv_color_senor_outside_eval(__attribute__((unused)) void *argument)
 	return outside_count > 100;
 }
 
+/*----- Conductivity ---------------------------------------------------------*/
+float m_radv_resistance = 1e6f;
+
+struct radv_conductivity_spec {
+	float lbound;
+	float ubound;
+};
+
+static const struct radv_conductivity_spec radv_conductivity_short = {
+	.lbound = 0.0f,
+	.ubound = 20.0f
+};
+
+static const struct radv_conductivity_spec radv_conductivity_mid = {
+	.lbound = 20.0f,
+	.ubound = 2e4f,
+};
+
+static const struct radv_conductivity_spec radv_conductivity_low = {
+	.lbound = 2e4f,
+	.ubound = 2e5f,
+};
+
+static int radv_conductivity_eval(void *argument)
+{
+	const struct radv_conductivity_spec *spec = argument;
+	if ((m_radv_resistance > spec->lbound)
+	    && (m_radv_resistance < spec->ubound)) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static int radv_conductivity_low_batt_eval(__attribute__((unused)) void *arg)
+{
+	uint32_t mV = analog_get_batt_mV();
+	return (mV > 1000) && (mV < 2000);
+}
+
+static void radv_conductivity_measure(void)
+{
+	uint32_t mV = analog_get_chan_mV(ANALOG_CHAN_CONDUCTIVITY);
+	m_radv_resistance = analog_calc_resistance_ohms(mV);
+}
+
+/*----- Magnometer -----------------------------------------------------------*/
+unsigned m_magnet_index = 0;
+unsigned m_magnet_wrapped = 0;
+int8_t m_magnet_samples[30] = {0};
+
+static int radv_magnometer_north_eval(__attribute__((unused)) void *arg)
+{
+	if (m_magnet_wrapped == 0) {
+		return 0;
+	}
+
+	int8_t min = INT8_MAX;
+	for (unsigned i = 0; i < ARRAY_SIZE(m_magnet_samples); i++) {
+		int32_t sample = m_magnet_samples[i];
+		min = MIN(sample, min);
+	}
+
+	return min > 80;
+}
+
+static int radv_magnometer_south_eval(__attribute__((unused)) void *arg)
+{
+	if (m_magnet_wrapped == 0) {
+		return 0;
+	}
+
+	int8_t max = INT8_MIN;
+	for (unsigned i = 0; i < ARRAY_SIZE(m_magnet_samples); i++) {
+		int32_t sample = m_magnet_samples[i];
+		max = MAX(sample, max);
+	}
+
+	return max < -80;
+}
+
+static int radv_magnometer_alternating_eval(__attribute__((unused)) void *arg)
+{
+	return 0; // FIXME
+}
+
+static void radv_magnometer_measure(void)
+{
+	uint32_t mV = analog_get_chan_mV(ANALOG_CHAN_HALL_EFFECT);
+	int8_t mT = analog_calc_hall_effect_mT(mV);
+
+	m_magnet_samples[m_magnet_index++] = mT;
+	if (m_magnet_index >= ARRAY_SIZE(m_magnet_samples)) {
+		m_magnet_index = 0;
+		m_magnet_wrapped = 1;
+	}
+}	
+
+/*----- Temperature ----------------------------------------------------------*/
+struct radv_temperature_spec {
+	int8_t lbound;
+	int8_t ubound;
+};
+
+static const struct radv_temperature_spec radv_temperature_hot = {
+	.lbound = 55,
+	.ubound = INT8_MAX,
+};
+
+static const struct radv_temperature_spec radv_temperature_warm = {
+	.lbound = 35, // should be attainable with skin/body temp
+	.ubound = 45,
+};
+
+static const struct radv_temperature_spec radv_temperature_cool = {
+	.lbound = 5,
+	.ubound = 20, // This is ~room temp but still needs active cooling
+};
+
+static const struct radv_temperature_spec radv_temperature_cold = {
+	.lbound = INT8_MIN,
+	.ubound = 5, // Be careful if using ice water!
+};
+
+static int radv_temperature_eval(void *arg)
+{
+	uint32_t mV = analog_get_chan_mV(ANALOG_CHAN_THERMISTOR);
+	int8_t tC = analog_calc_thermistor_temp_C(mV);
+
+	const struct radv_temperature_spec *spec = arg;
+	if ((tC > spec->lbound) && (tC < spec->ubound)) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
 /*----- Rover TODO List ------------------------------------------------------*/
 static uint32_t m_radv_todo;
 
@@ -220,9 +381,24 @@ static struct radv_todo {
 	{"loud", radv_mic_eval_loud, NULL},
 	{"quiet", radv_mic_eval_quiet, NULL},
 	{"v. quiet", radv_mic_eval_vquiet, NULL},
+
 	{"bright", radv_color_senor_bright_eval, NULL},
-	{"dim", radv_color_senor_dim_eval, NULL},
+	{"dim\n", radv_color_senor_dim_eval, NULL},
 	{"go\n outside", radv_color_senor_outside_eval, NULL},
+
+	{"conductive", radv_conductivity_eval, (void *) &radv_conductivity_short},
+	{"resistive", radv_conductivity_eval, (void *) &radv_conductivity_mid},
+	{"almost\n insulative\n", radv_conductivity_eval, (void *) &radv_conductivity_low},
+	{"operate\n on low\n battery", radv_conductivity_low_batt_eval, NULL},
+
+	{"north pole", radv_magnometer_north_eval, NULL},
+	{"south pole\n", radv_magnometer_south_eval, NULL},
+	{"alternating\n poles", radv_magnometer_alternating_eval, NULL},
+
+	{"hot", radv_temperature_eval, (void *) &radv_temperature_hot},
+	{"warm", radv_temperature_eval, (void *) &radv_temperature_warm},
+	{"cool", radv_temperature_eval, (void *) &radv_temperature_cool},
+	{"cold", radv_temperature_eval, (void *) &radv_temperature_cold},
 }; 
 
 /*----- Helpers --------------------------------------------------------------*/
@@ -240,7 +416,7 @@ static void radv_todos(enum rover_todo first, enum rover_todo last)
 		}
 
 		/* Draw */
-		char s[16];
+		char s[32];
 		(void) snprintf(s, sizeof(s), "+%s\n", t->str);
 		if (m_radv_todo & m) {
 			FbColor(GREEN);
@@ -286,6 +462,11 @@ static void radv_init(void)
 	/* Clear previous color sample. */
 	memset(&m_radv_color_sample, 0, sizeof(m_radv_color_sample));
 
+	/* Clear previous magnetometer samples. */
+	m_magnet_index = 0;
+	m_magnet_wrapped = 0;
+	memset(m_magnet_samples, 0, sizeof(m_magnet_samples));
+
 	/* Setup top level menu. */
 	if (m_radv_menu.max_items == 0) {
 		dynmenu_init(&m_radv_menu, m_radv_menu_items,
@@ -295,6 +476,9 @@ static void radv_init(void)
 		dynmenu_set_title(&m_radv_menu, "ROVER'S BIG", "ADVENTURE", "");
 		dynmenu_add_item(&m_radv_menu, "AUDIO", ROVER_ADVENTURE_AUDIO, -1);
 		dynmenu_add_item(&m_radv_menu, "LIGHT", ROVER_ADVENTURE_COLOR, -1);
+		dynmenu_add_item(&m_radv_menu, "ELECTRONICS", ROVER_ADVENTURE_CONDUCTIVITY, -1);
+		dynmenu_add_item(&m_radv_menu, "MAGNETICS", ROVER_ADVENTURE_MAGNOMETER, -1);
+		dynmenu_add_item(&m_radv_menu, "TEMPERATURE", ROVER_ADVENTURE_TEMPERATURE, -1);
 		dynmenu_add_item(&m_radv_menu, "EXIT", ROVER_ADVENTURE_EXIT, -1);
 	}
 
@@ -365,7 +549,9 @@ static void radv_audio(void)
 	/* Write the banner */ 
 	FbMove(8,8);
 	FbColor(WHITE);
-	FbWriteString("AUDIO\n\nBring me\nsomewhere...\n\n");
+	FbWriteString("AUDIO\n\n");
+	FbColor(PURPLE);
+	FbWriteString("Bring me\nsomewhere...\n\n");
 	
 	/* Draw and evaluate todos. */
 	radv_todos(TODO_AUDIO_START, TODO_AUDIO_END);
@@ -410,10 +596,92 @@ static void radv_color(void)
 	/* Write the banner */
 	FbMove(8,8);
 	FbColor(WHITE);
-	FbWriteString("LIGHT\n\nBring me\nsomewhere...\n\n");
+	FbWriteString("LIGHT\n\n");
+	FbColor(PURPLE);
+	FbWriteString("Bring me\nsomewhere...\n\n");
 
 	/* Draw and evaluate todos. */
 	radv_todos(TODO_COLOR_START, TODO_COLOR_END);
+
+	int down_latches = button_down_latches();
+
+	radv_b_for_back(down_latches);
+
+        FbSwapBuffers();
+}
+
+void radv_conductivity(void)
+{
+	/* Clear the screen. */
+	FbBackgroundColor(BLACK);
+	FbClear();
+
+	/* Write the banner */
+	FbMove(8,8);
+	FbColor(WHITE);
+	FbWriteString("ELECTRONICS\n\n");
+	FbColor(PURPLE);
+	FbWriteString("Probe\nsomething...\n\n");
+
+	/* Draw and evaluate todos. */
+	radv_todos(TODO_CONDUCTIVITY_START, TODO_CONDUCTIVITY_END);
+
+	int down_latches = button_down_latches();
+
+	/* Press A to measure. */
+	FbMove(8,LCD_YSIZE - 32);
+	FbColor(GREY16);
+	FbWriteLine("(A) Measure");
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
+		radv_conductivity_measure();
+	}
+
+	radv_b_for_back(down_latches);
+
+        FbSwapBuffers();
+}
+
+void radv_magnometer(void)
+{
+	/* Measure mT */
+	radv_magnometer_measure();
+
+	/* Clear the screen. */
+	FbBackgroundColor(BLACK);
+	FbClear();
+
+	/* Write the banner */
+	FbMove(8,8);
+	FbColor(WHITE);
+	FbWriteString("MAGNETICS\n\n");
+	FbColor(PURPLE);
+	FbWriteString("Bring me a...\n\n");
+
+	/* Draw and evaluate todos. */
+	radv_todos(TODO_MAGNOMETER_START, TODO_MAGNOMETER_END);
+
+	int down_latches = button_down_latches();
+
+	radv_b_for_back(down_latches);
+
+        FbSwapBuffers();
+}
+
+void radv_temperature(void)
+{
+	/* Clear the screen. */
+	FbBackgroundColor(BLACK);
+	FbClear();
+
+	/* Write the banner */
+	FbMove(8,8);
+	FbColor(WHITE);
+	FbWriteString("TEMPERATURE\n\n");
+	FbColor(PURPLE);
+	FbWriteString("Bring me\nsomewhere...\n\n");
+
+	/* Draw and evaluate todos. */
+	radv_todos(TODO_TEMPERATURE_START, TODO_TEMPERATURE_END);
 
 	int down_latches = button_down_latches();
 
@@ -439,6 +707,15 @@ void rover_adventure_cb(__attribute__((unused)) struct menu_t *m)
 		break;
 	case ROVER_ADVENTURE_COLOR:
 		radv_color();
+		break;
+	case ROVER_ADVENTURE_CONDUCTIVITY:
+		radv_conductivity();
+		break;
+	case ROVER_ADVENTURE_MAGNOMETER:
+		radv_magnometer();
+		break;
+	case ROVER_ADVENTURE_TEMPERATURE:
+		radv_temperature();
 		break;
 	default:
 		/* Always return to know good state through INIT */
