@@ -12,6 +12,7 @@
 #include "led_pwm.h"
 #include "assetList.h"
 #include "key_value_storage.h"
+#include "slot-machine-assets/slot-machine-assets.h"
 
 /* Program states.  Initial state is MYPROGRAM_INIT */
 static enum slot_machine_state_t
@@ -90,7 +91,7 @@ static const enum Symbol REEL[REEL_COUNT][REEL_SIZE] =
 
 	 /*
 	  *  The second reel must be appropriately stingy to prevent excessive 
-	  *  payouts for payscales which require only the first to symbols. 
+	  *  payouts for payscales which require only the first two symbols. 
 	  */
 	{SYM_BAR3, SYM_SEVEN, SYM_BAR2, SYM_BAR1,
 	 SYM_NONE, SYM_NONE, SYM_BAR1, SYM_NONE,
@@ -341,6 +342,7 @@ static enum Payout payout_get(void)
 #define RENDER_REELS_OUTLINE_COLOR WHITE
 #define REND_BAR_V2 1
 
+#if 0
 static const char SYM_REPR_NONE_CMAP[1][3] =
 {
 	0
@@ -602,6 +604,17 @@ static const struct asset SYM_REPR[SYM_COUNT] =
 	{0, PICTURE2BIT, 1, 16, 16, SYM_REPR_SEVEN_CMAP[0], SYM_REPR_SEVEN_PIX, NULL},
 	{0, PICTURE2BIT, 1, 16, 16, SYM_REPR_BONUS_CMAP[0], SYM_REPR_BONUS_PIX, NULL},
 };
+#endif
+
+static const struct asset2 *SYM_REPR[SYM_COUNT] = {
+	&slot_rocket,
+	&slot_galaxy,
+	&slot_star,
+	&slot_planet,
+	&slot_astronaut,
+	&slot_comet,
+	&slot_earth,
+};
 
 static void render_symbol(size_t reel, int offset)
 {
@@ -609,7 +622,7 @@ static void render_symbol(size_t reel, int offset)
 	if (sym < (sizeof(SYM_REPR) / sizeof(SYM_REPR[0])))
 	{
 		FbMoveRelative(-8,-8);
-		FbImage(&SYM_REPR[sym], 0);
+		FbImage2(SYM_REPR[sym], 0);
 	}
 }
 
