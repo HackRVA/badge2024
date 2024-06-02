@@ -26,6 +26,7 @@
 #include <audio.h>
 #include <button.h>
 #include <mic_pdm.h>
+#include <delay.h>
 
 #include "rover_adventure.h"
 
@@ -290,6 +291,11 @@ static void radv_audio(void)
 	radv_b_for_back(button_down_latches());
 
         FbSwapBuffers();
+
+	/* I don't know why, I don't want to know why, I shouldn't have to
+	 * wonder why, but if this delay isn't here or at least 30 ms long the
+	 * microphone stops working right within this app. -PMW */
+	sleep_ms(30);
 }
 
 void rover_adventure_cb(__attribute__((unused)) struct menu_t *m)
