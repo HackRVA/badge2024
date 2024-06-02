@@ -8,6 +8,7 @@
 #include "slot-astronaut.h"
 #include "slot-comet.h"
 #include "slot-earth.h"
+#include "slot-none.h"
 
 #endif
 

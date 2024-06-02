@@ -607,12 +607,12 @@ static const struct asset SYM_REPR[SYM_COUNT] =
 #endif
 
 static const struct asset2 *SYM_REPR[SYM_COUNT] = {
-	&slot_rocket,
-	&slot_galaxy,
+	&slot_none,
 	&slot_star,
-	&slot_planet,
-	&slot_astronaut,
 	&slot_comet,
+	&slot_galaxy,
+	&slot_planet,
+	&slot_rocket,
 	&slot_earth,
 };
 
