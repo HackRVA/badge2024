@@ -12,6 +12,7 @@
 /* C std lib */
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Badge system */
@@ -313,9 +314,59 @@ static int radv_magnometer_south_eval(__attribute__((unused)) void *arg)
 	return max < -80;
 }
 
+static int calc_sign(int n)
+{
+	return n > 0 ? 1 : n < 0 ? -1 : 0;
+}
+
+static int zero_crossed(int n, int prev_sign)
+{
+	int sign = calc_sign(n);
+	if (((sign != 0) && (0 == prev_sign))
+	    || ((sign > 0) && (prev_sign < 0))
+	    || ((sign < 0) && (prev_sign > 0))) {
+		return sign;
+	} else {
+		return 0;
+	}
+}
+
 static int radv_magnometer_alternating_eval(__attribute__((unused)) void *arg)
 {
-	return 0; // FIXME
+	unsigned start = m_magnet_index + ARRAY_SIZE(m_magnet_samples);
+	start %= ARRAY_SIZE(m_magnet_samples);
+
+	int8_t sign_change_count = 0;
+	int8_t local_extreme = m_magnet_samples[start];
+	int8_t sign = calc_sign(local_extreme);
+
+	for (unsigned u = 0; u < ARRAY_SIZE(m_magnet_samples); u++) {
+		unsigned i = (start + u) % ARRAY_SIZE(m_magnet_samples);
+		int8_t mT = m_magnet_samples[i];
+		
+		/* Update local extreme. */
+		if (((sign > 0) && (mT > local_extreme))
+		    || ((sign < 0) && (mT < local_extreme))) {
+			local_extreme = mT;
+		}
+		
+		/* Check for zero crossing. */
+		if (zero_crossed(mT, sign)) {
+			/* The local extreme must be at least 10 mT in magnitude. */
+			if (abs(local_extreme) >= 10) {
+				sign_change_count++;
+			} else {
+				/* Only count consecutive eligible excursions. */
+				sign_change_count = 0;
+			}
+
+			local_extreme = mT;
+			sign = calc_sign(mT);
+		}
+	}
+
+	/* If we have at least MANY sign changes, achieved. */
+	return sign_change_count >= 11;
 }
 
 static void radv_magnometer_measure(void)
@@ -347,13 +398,13 @@ static const struct radv_temperature_spec radv_temperature_warm = {
 };
 
 static const struct radv_temperature_spec radv_temperature_cool = {
-	.lbound = 5,
-	.ubound = 20, // This is ~room temp but still needs active cooling
+	.lbound = 12,
+	.ubound = 22, // This is ~room temp but still needs active cooling to get
 };
 
 static const struct radv_temperature_spec radv_temperature_cold = {
 	.lbound = INT8_MIN,
-	.ubound = 5, // Be careful if using ice water!
+	.ubound = 10, // Be careful if using ice water!
 };
 
 static int radv_temperature_eval(void *arg)
@@ -462,7 +513,9 @@ static void radv_init(void)
 	/* Clear previous color sample. */
 	memset(&m_radv_color_sample, 0, sizeof(m_radv_color_sample));
 
-	/* Clear previous magnetometer samples. */
+	/* Enable magnometer and clear previous magnetometer samples. */
+	analog_set_sensor_power(ANALOG_SENSOR_POWER_ENABLED);
+
 	m_magnet_index = 0;
 	m_magnet_wrapped = 0;
 	memset(m_magnet_samples, 0, sizeof(m_magnet_samples));
@@ -498,6 +551,9 @@ static void radv_exit(void)
 	led_pwm_disable(BADGE_LED_RGB_RED);
 	led_pwm_disable(BADGE_LED_RGB_GREEN);
 	led_pwm_disable(BADGE_LED_RGB_BLUE);
+
+	/* Turn off magnometer. */
+	analog_set_sensor_power(ANALOG_SENSOR_POWER_DISABLED);
 
 	/* Reset for next. */
 	m_radv_state = ROVER_ADVENTURE_INIT;
