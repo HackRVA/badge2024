@@ -7,9 +7,6 @@
 
 #include "assetList.h"
 
-//#define HACKRVA4BIT_LORES
-#include "hackrva4bit.h"
-
 #define DRBOB_HIRES
 #include "drbob.h"
 
@@ -47,7 +44,6 @@ void dummy_draw(unsigned char aid, int frame)
 
 const struct asset assetList[] = {
         { DRBOB, DRBOB_BITS, 1, DRBOB_WIDTH, DRBOB_HEIGHT, (const char *)DRBOB_CMAP, (const char *)DRBOB_DATA, (dummy_draw) },
-        { HACKRVA4, HACKRVA4_BITS, 1, HACKRVA4_WIDTH, HACKRVA4_HEIGHT, (const char *)HACKRVA4_CMAP, (const char *)HACKRVA4_DATA, (dummy_draw) },
 // partial font    { FONT, PICTURE1BIT, 42, 8, 8, (const char *)BW_cmap, (const char *)font_2_bits, (dummy_draw) },
         { FONT, PICTURE1BIT, 128, 8, 8, (const char *)BW_cmap, (const char *)font8x8_bits, (dummy_draw) },
 	{ ROTATED_FONT, PICTURE1BIT, 128, 8, 8, (const char *)BW_cmap, (const char *)font8x8_rotated_bits, (dummy_draw) },

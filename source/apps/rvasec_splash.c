@@ -10,6 +10,7 @@
 #include "menu.h"
 #include "music.h"
 #include "rvasec_splash.h"
+#include "hackrvanewlogo.h"
 
 static const char splash_words1[] = "Loading";
 #define NUM_WORD_THINGS 18
@@ -64,7 +65,7 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         //if(buzzer)
         audio_out_beep(NOTE_C3, 50);
     } else if(wait < 40){
-        FbImage4bit(&assetList[HACKRVA4], 0);
+        FbImage4bit2(&hackrva_badge_logo, 0);
         FbSwapBuffers();
         //PowerSaveIdle();
     } else if(wait < 80){

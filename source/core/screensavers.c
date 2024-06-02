@@ -13,6 +13,8 @@
 #include "new_badge_monsters/new_badge_monsters.h"
 #include <string.h>
 
+extern const struct asset2 hackrva_badge_logo;
+
 #define SCREEN_ORIENTATION_LANDSCAPE 0 /* 0 = portrait, 1 = landscape */
 
 #define DEFINE_IMAGE_ASSET_DATA
@@ -226,7 +228,7 @@ void disp_asset_saver(void)
     switch(imgnum){
         case 1:
             FbMove(0,0);
-            FbImage(&assetList[HACKRVA4], 0);
+            FbImage2(&hackrva_badge_logo, 0);
             break;
 
 	case 0:
