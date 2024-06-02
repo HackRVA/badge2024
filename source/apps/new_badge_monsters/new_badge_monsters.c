@@ -108,7 +108,7 @@ static const char *menu_level_str(const enum menu_level_t menu_level);
 struct new_monster new_monsters[] = {
     {
         "Vorlith",
-        true,
+        false,
         RED,
         "A large, amphi-\nbious monster\nwith a biolumi-\nnescent under\nbelly, capable\n"
 	"of emitting\nelectrical dis-\ncharges under\nwater, in\nhabiting the\noceans of dis-\ntant moons.",
@@ -188,7 +188,7 @@ struct new_monster new_monsters[] = {
         "Pirate",
         false,
         RED,
-        "TBD",
+        "Arrrr matey! I\nfly like Iron\nMan!",
         &bm11
     }
   , {
@@ -265,9 +265,10 @@ struct new_monster new_monsters[] = {
     }
   , {
         "Raven",
-        false,
+        true,
         RED,
-        "TBD",
+        "A haunting omen\ndriving you\ninto madness.\n\nAppears along-\nside rapping at\n"
+        "your chamber\ndoor...",
         &bm21
     }
 };
