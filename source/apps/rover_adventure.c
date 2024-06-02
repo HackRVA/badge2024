@@ -174,10 +174,10 @@ static struct color_sample m_radv_color_sample;
 static void radv_color_sample(void)
 {
 	(void) color_sensor_get_sample(&m_radv_color_sample);
-	printf("\nsampled color:");
-	for (int i = 0; i < COLOR_SAMPLE_INDEX_COUNT; i++) {
-		printf(" %d", m_radv_color_sample.rgbwi[i]);
-	}
+//	printf("\nsampled color:");
+//	for (int i = 0; i < COLOR_SAMPLE_INDEX_COUNT; i++) {
+//		printf(" %d", m_radv_color_sample.rgbwi[i]);
+//	}
 }
 
 static int radv_color_senor_bright_eval(__attribute__((unused)) void *argument)
