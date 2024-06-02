@@ -36,6 +36,7 @@ void analog_init(void)
 void analog_init_gpio(void)
 {
     gpio_init(BADGE_GPIO_HALL_EFFECT_ENABLE);
+    gpio_put(BADGE_GPIO_HALL_EFFECT_ENABLE, false);
     gpio_set_dir(BADGE_GPIO_HALL_EFFECT_ENABLE, true);
     gpio_set_input_enabled(BADGE_GPIO_HALL_EFFECT_ENABLE, true);
     gpio_disable_pulls(BADGE_GPIO_HALL_EFFECT_ENABLE); // saves power when asserted
