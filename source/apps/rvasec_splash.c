@@ -65,7 +65,7 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
     load_bar = 0;
 
     if (wait == 0) {
-        load_bar = 10;
+        load_bar = 0;
         display_rect(0, 0, LCD_XSIZE, LCD_YSIZE);
         display_color(0);
         FbSwapBuffers();
@@ -76,32 +76,34 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         FbImage4bit2(&hackrva_badge_logo, 0);
         FbSwapBuffers();
         //PowerSaveIdle();
-    } else if(wait < 80){
+    } else if(wait < 120){
+	FbBackgroundColor(0x21c5);
         FbMove(0, 0);
         FbImage2(&RVAsec_13, 0);
-        FbMove(10,SPLASH_SHIFT_DOWN);
+        FbMove(4,SPLASH_SHIFT_DOWN);
 
         FbColor(WHITE);
-        FbRectangle(100, 20);
+        FbRectangle(120, 20);
 
         FbMove(35, SPLASH_SHIFT_DOWN - 13);
-        FbColor(YELLOW);
+        FbColor(RED);
         FbWriteLine(splash_words1);
 
-        FbMove(11, SPLASH_SHIFT_DOWN+1);
+        FbMove(5, SPLASH_SHIFT_DOWN+1);
         FbColor(GREEN);
-        FbFilledRectangle((load_bar++ << 1) + 1,19);
+        FbFilledRectangle((load_bar++ * 3 / 2) + 1,18);
         led_pwm_enable(BADGE_LED_RGB_GREEN, 10 * 255 / 100);
 
         FbColor(WHITE);
         FbMove(4, 113);
         FbWriteLine(splash_word_things[loading_txt_idx%NUM_WORD_THINGS]);
-        if(!(wait%2))
+        if(!(wait%4))
             loading_txt_idx++;
 
+	FbBackgroundColor(BLACK);
         FbSwapBuffers();
 
-    } else if(wait <160){
+    } else if(wait < 160){
         FbMove(0, 0);
         FbImage2(&RVAsec_13, 0);
 #if 0
@@ -144,10 +146,12 @@ void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
         }
     }
 
+    /* Advance "frame" in splash animation. */
     wait++;
+
     /* Don't let wait overflow, or else the splash animation will start over. */
-    if (wait == 0)
-        wait -= 1000;
+    if (wait > 1000)
+        wait = 1000;
 
 }
 
