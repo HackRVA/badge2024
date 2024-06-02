@@ -92,6 +92,8 @@ int badge_main(__attribute__((unused)) int argc, __attribute__((unused)) char** 
             && button_poll(BADGE_BUTTON_DOWN)
             && button_poll(BADGE_BUTTON_LEFT)
             && button_poll(BADGE_BUTTON_RIGHT)) {
+            /* Consume buttons if all are pressed. */
+            (void) button_down_latches();
             if (++escape_count > 60) {
                 /* If all buttons pressed for 60 frames, exit application. */
                 return 0;
