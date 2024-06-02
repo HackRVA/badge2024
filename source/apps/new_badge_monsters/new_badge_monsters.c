@@ -16,6 +16,7 @@
 #include "framebuffer.h"
 #include "key_value_storage.h"
 #include "utils.h"
+#include "rtc.h"
 
 #define ARRAYSIZE(x) (sizeof((x)) / sizeof((x)[0]))
 
@@ -33,6 +34,7 @@ enum app_states {
     SHOW_MONSTER,
     SHOW_DESCRIPTION,
     TRADE_MONSTERS,
+    TRADE_MONSTERS_DELAY,
     EXIT_APP
 #ifdef __linux__
     , ENABLE_ALL_MONSTERS //7 for testing, grants ownership of all monsters
@@ -65,6 +67,7 @@ static void monster_menu(void);
 static void show_monster(void);
 static void show_description(void);
 static void trade_monsters(void);
+static void trade_monsters_delay(void);
 static void exit_app(void);
 
 /********* INPUT HANDLERS **************************/
@@ -324,6 +327,7 @@ static state_to_function_map_fn_type state_to_function_map[] = {
     show_monster,
     show_description,
     trade_monsters,
+    trade_monsters_delay,
     exit_app,
 #ifdef __linux__
     enable_all_monsters,
@@ -433,6 +437,7 @@ static void trade_monsters(void)
         build_and_send_packet(BADGE_IR_GAME_ADDRESS, BADGE_IR_BROADCAST_ID,
                               (OPCODE_XMIT_MONSTER << 12) | (state.initial_mon & 0x01ff));
         audio_out_beep(500, 100);
+	state.app_state = TRADE_MONSTERS_DELAY;
     }
     if (!state.trading_monsters_enabled) {
         FbClear();
@@ -446,6 +451,23 @@ static void trade_monsters(void)
     trade_monsters_button_handler();
 }
 
+static void trade_monsters_delay(void)
+{
+	static int just_begun = 1;
+	static uint64_t stop_time;
+
+	if (just_begun) {
+		stop_time = rtc_get_ms_since_boot() + 1000;
+		just_begun = 0;
+	} else {
+		uint64_t now = rtc_get_ms_since_boot();
+		if (now > stop_time) {
+			just_begun = 1;
+			state.app_state = TRADE_MONSTERS;
+		}
+	}
+	trade_monsters_button_handler();
+}
 
 /*
  * Displays state.current_monster on the screen.
