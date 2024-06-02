@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "pinout_rp2040.h"
+
 #include "audio.h"
 #include "mic_pdm.h"
 
@@ -18,10 +20,10 @@
 // configuration
 const struct pdm_microphone_config config = {
     // GPIO pin for the PDM DAT signal
-    .gpio_data = 3,
+    .gpio_data = BADGE_GPIO_MIC_DAT,
 
     // GPIO pin for the PDM CLK signal
-    .gpio_clk = 4,
+    .gpio_clk = BADGE_GPIO_MIC_CLK,
 
     // PIO instance to use
     .pio = pio1,
@@ -54,6 +56,11 @@ static void on_pdm_samples_ready()
 }
 
 void mic_init(void){
+    gpio_init(BADGE_GPIO_MIC_SEL);
+    gpio_put(BADGE_GPIO_MIC_SEL, 0);
+    gpio_disable_pulls(BADGE_GPIO_MIC_SEL);
+    gpio_set_dir(BADGE_GPIO_MIC_SEL, true);
+
     pdm_microphone_init(&config);
     pdm_microphone_set_filter_gain(2);
     pdm_microphone_set_samples_ready_handler(on_pdm_samples_ready);
