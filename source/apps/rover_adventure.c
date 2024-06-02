@@ -716,8 +716,15 @@ void radv_magnometer(void)
 	/* Draw and evaluate todos. */
 	radv_todos(TODO_MAGNOMETER_START, TODO_MAGNOMETER_END);
 
-	int down_latches = button_down_latches();
+	/* Draw magnometer vector. */
+	int index = (m_magnet_index + ARRAY_SIZE(m_magnet_samples) - 1)
+		    % ARRAY_SIZE(m_magnet_samples);
+	int8_t mT = m_magnet_samples[index];
+	FbColor(mT >= 0 ? RED : BLUE);
+	FbLine(116,80,116,80 - (mT / 2));
 
+	/* B for back! */
+	int down_latches = button_down_latches();
 	radv_b_for_back(down_latches);
 
         FbSwapBuffers();
