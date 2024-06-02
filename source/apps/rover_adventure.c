@@ -739,8 +739,17 @@ void radv_temperature(void)
 	/* Draw and evaluate todos. */
 	radv_todos(TODO_TEMPERATURE_START, TODO_TEMPERATURE_END);
 
-	int down_latches = button_down_latches();
+	/* Draw thermometer. */
+	uint32_t mV = analog_get_chan_mV(ANALOG_CHAN_THERMISTOR);
+	int8_t tC = analog_calc_thermistor_temp_C(mV);
+	int8_t height = tC + 40; // Add 40 to keep it positive... if we are that cold!
+	height = height > 1 ? height : 1; // lbound to pass positive to Fb
+	FbColor(tC < 8 ? PURPLE : tC < 20 ? BLUE : tC > 40 ? RED : tC > 30 ? YELLOW : GREEN);
+	FbMove(112, LCD_YSIZE - (8 + height));
+	FbFilledRectangle(8, height);
 
+	/* B for back! */
+	int down_latches = button_down_latches();
 	radv_b_for_back(down_latches);
 
         FbSwapBuffers();
