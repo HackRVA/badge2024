@@ -72,27 +72,27 @@ static struct point menu_animation_direction[] = {
 
 static const struct menu_t games_m[] = {
 	// {"Sample App", VERT_ITEM, FUNCTION, { .func = myprogram_cb }, NULL },
+	{"Rover Adventure", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = rover_adventure_cb }, &bba_icon },
+	{"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, &badge_monsters_icon, },
 	{"Moon Patrol", VERT_ITEM, FUNCTION, { .func = moonpatrol_cb }, &moonpatrol_icon, },
-	{"Clue", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = clue_cb }, &clue_icon },
 	{"AA Gunner", VERT_ITEM, FUNCTION, { .func = aagunner_cb }, &aagunner_icon },
+	{"Clue", VERT_ITEM, FUNCTION, { .func = clue_cb }, &clue_icon },
 	// {"Badgey", VERT_ITEM, FUNCTION, { .func = badgey_cb }, &bba_icon },
-	{"Battlezone", VERT_ITEM|DEFAULT_ITEM, FUNCTION, { .func = battlezone_cb }, &battlezone_icon, },
 	{"Asteroids", VERT_ITEM, FUNCTION, { .func = asteroids_cb }, &asteroids_icon, },
+	{"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, &lunar_rescue_icon, },
+	{"Battlezone", VERT_ITEM, FUNCTION, { .func = battlezone_cb }, &battlezone_icon, },
+	{"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, &slotmachine_icon, },
+	{"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, &breakout_icon, },
+	{"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, &hacker_sim_icon, },
+	{"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, &game_of_life_icon, },
+#ifdef BUILD_IMAGE_TEST_PROGRAM
+	{"Image Test", VERT_ITEM, FUNCTION, { .func = image_test_cb }, NULL },
+#endif
 	// {"Etch-a-Sketch", VERT_ITEM, FUNCTION, { .func = etch_a_sketch_cb }, NULL, },
 	// {"Magic-8-Ball",     VERT_ITEM, FUNCTION, { .func = magic_8_ball_cb }, NULL, },
 	// {"Goodbye Gulag", VERT_ITEM, FUNCTION, { .func = gulag_cb }, NULL, },
 	// {"Pong", VERT_ITEM, FUNCTION, { .func = pong_cb }, NULL, },
 	// {"Tank vs Tank", VERT_ITEM, FUNCTION, { .func = tank_vs_tank_cb }, NULL, },
-	{"Lunar Rescue",  VERT_ITEM, FUNCTION, { .func = lunarlander_cb}, &lunar_rescue_icon, },
-	{"Badge Monsters",VERT_ITEM, FUNCTION, { .func = badge_monsters_cb }, &badge_monsters_icon, },
-	{"Smashout",      VERT_ITEM, FUNCTION, { .func = smashout_cb }, &breakout_icon, },
-	{"Hacking Sim",   VERT_ITEM, FUNCTION, { .func = hacking_simulator_cb }, &hacker_sim_icon, },
-	{"Game of Life", VERT_ITEM, FUNCTION, { .func = game_of_life_cb }, &game_of_life_icon, },
-	{"Slot Machine", VERT_ITEM, FUNCTION, { .func = slot_machine_cb }, &slotmachine_icon, },
-#ifdef BUILD_IMAGE_TEST_PROGRAM
-	{"Image Test", VERT_ITEM, FUNCTION, { .func = image_test_cb }, NULL },
-#endif
-	{"Rover Adventure", VERT_ITEM, FUNCTION, { .func = rover_adventure_cb }, &bba_icon },
 	{"Back",         VERT_ITEM|LAST_ITEM, BACK, { NULL }, NULL, },
 };
 
@@ -127,8 +127,8 @@ static const struct menu_t settings_m[] = {
 };
 
 static const struct menu_t main_m[] = {
-   {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, &schedule_icon, },
    {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = games_m }, &games_icon, },
+   {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, &schedule_icon, },
    {"Settings",    VERT_ITEM, MENU, { .menu = settings_m }, &settings_icon, },
    // {"Test SS",	VERT_ITEM, FUNCTION, { .func = test_screensavers_cb }, NULL, },
    {"About Badge",    VERT_ITEM|LAST_ITEM, FUNCTION, { .func = about_badge_cb }, &about_icon, },
