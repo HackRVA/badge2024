@@ -75,7 +75,7 @@ const struct menu_t games_m[] = {
 #include "menu.h"
 #include "button.h"
 #include "framebuffer.h"
-
+#include "badge.h"
 
 /* Program states.  Initial state is MYPROGRAM_INIT */
 enum myprogram_state_t {
@@ -133,7 +133,7 @@ static void myprogram_exit(void)
 }
 
 /* You will need to rename myprogram_cb() something else. */
-void myprogram_cb(__attribute__((unused)) struct menu_t *m)
+void myprogram_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (myprogram_state) {
 	case MYPROGRAM_INIT:

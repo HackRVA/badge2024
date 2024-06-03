@@ -1620,7 +1620,7 @@ static void battlezone_exit(void)
 	returnToMenus();
 }
 
-void battlezone_cb(__attribute__((unused)) struct menu_t *m)
+void battlezone_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (battlezone_state) {
 	case BATTLEZONE_INIT:

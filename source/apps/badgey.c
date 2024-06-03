@@ -6048,7 +6048,7 @@ static void badgey_exit(void)
 }
 
 /* You will need to rename badgey_cb() something else. */
-void badgey_cb(__attribute__((unused)) struct menu_t *m)
+void badgey_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (badgey_state) {
 	case BADGEY_INIT:

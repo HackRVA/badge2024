@@ -386,7 +386,7 @@ static void game_of_life_exit(void)
 	returnToMenus();
 }
 
-void game_of_life_cb(__attribute__((unused)) struct menu_t *m)
+void game_of_life_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (game_of_life_state)
 	{

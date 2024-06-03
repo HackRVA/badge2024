@@ -447,7 +447,7 @@ static void smashout_game_exit(void)
 	returnToMenus();
 }
 
-void smashout_cb(__attribute__((unused)) struct menu_t *m)
+void smashout_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (smashout_program_state) {
 	case SMASHOUT_GAME_INIT:

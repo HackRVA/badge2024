@@ -64,7 +64,7 @@ static void about_badge_exit(void)
 	returnToMenus();
 }
 
-void about_badge_cb(__attribute__((unused)) struct menu_t *m)
+void about_badge_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (about_badge_state) {
 	case ABOUT_BADGE_INIT:

@@ -7,6 +7,7 @@
 #include "framebuffer.h"
 #include "random.h"
 #include "xorshift.h"
+#include "badge.h"
 
 /* Program states.  Initial state is PONG_INIT */
 enum pong_state_t {
@@ -244,7 +245,7 @@ static void pong_exit(void)
 	returnToMenus();
 }
 
-void pong_cb(__attribute__((unused)) struct menu_t *m)
+void pong_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (pong_state) {
 	case PONG_INIT:

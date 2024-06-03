@@ -337,7 +337,7 @@ static state_to_function_map_fn_type state_to_function_map[] = {
 
 /***************************************** End of GLOBALS ****************************************/
 
-void badge_monsters_cb(__attribute__((unused)) struct menu_t *m)
+void badge_monsters_cb(__attribute__((unused)) struct badge_app *app)
 {
     state_to_function_map[state.app_state]();
 }

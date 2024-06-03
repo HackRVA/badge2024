@@ -237,7 +237,7 @@ static void magic_8_ball_exit(void)
 	returnToMenus();
 }
 
-void magic_8_ball_cb(__attribute__((unused)) struct menu_t *m)
+void magic_8_ball_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (magic_8_ball_state) {
 	case MAGIC8BALL_INIT:

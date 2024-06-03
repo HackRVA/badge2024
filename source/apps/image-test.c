@@ -911,7 +911,7 @@ static void image_test_exit(void)
 	returnToMenus();
 }
 
-void image_test_cb(__attribute__((unused)) struct menu_t *m)
+void image_test_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (image_test_state) {
 	case IMAGE_TEST_INIT:

@@ -268,7 +268,7 @@ static void app_init(void)
 	app_state = DRAW_SCREEN;
 }
 
-void username_cb(__attribute__((unused)) struct menu_t *m)
+void username_cb(__attribute__((unused)) struct badge_app *app)
 {
 	state_to_function_map[app_state]();
 }

@@ -880,7 +880,7 @@ static void slot_machine_exit(void)
 	returnToMenus();
 }
 
-void slot_machine_cb(__attribute__((unused)) struct menu_t *m)
+void slot_machine_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (slot_machine_state) {
 	case SLOT_MACHINE_INIT:

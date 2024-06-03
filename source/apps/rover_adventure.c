@@ -763,7 +763,7 @@ void radv_temperature(void)
         FbSwapBuffers();
 }
 
-void rover_adventure_cb(__attribute__((unused)) struct menu_t *m)
+void rover_adventure_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (m_radv_state) {
 	case ROVER_ADVENTURE_INIT:

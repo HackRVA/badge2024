@@ -6,7 +6,7 @@
 #include "menu.h"
 #include "dynmenu.h"
 
-void badge_monsters_cb(struct menu_t *m);
+void badge_monsters_cb(struct badge_app *app);
 void enable_monster(const int monster_id);
 void render_screen_save_monsters(void);
 

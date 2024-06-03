@@ -11,6 +11,7 @@
 #include "random.h"
 #include "xorshift.h"
 #include "dynmenu.h"
+#include "badge.h"
 
 #define ARRAYSIZE(x) (sizeof(x) / sizeof((x)[0]))
 
@@ -652,7 +653,7 @@ static void tank_vs_tank_confirm_exit(void)
 	}
 }
 
-void tank_vs_tank_cb(__attribute__((unused)) struct menu_t *m)
+void tank_vs_tank_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (tank_vs_tank_state) {
 	case TANK_VS_TANK_INIT:

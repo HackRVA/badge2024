@@ -612,7 +612,7 @@ static void asteroids_exit(void)
 	returnToMenus();
 }
 
-void asteroids_cb(__attribute__((unused)) struct menu_t *m)
+void asteroids_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (asteroids_state) {
 	case ASTEROIDS_INIT:

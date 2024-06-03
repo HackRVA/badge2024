@@ -1485,7 +1485,7 @@ static void moonpatrol_exit(void)
 	returnToMenus();
 }
 
-void moonpatrol_cb(__attribute__((unused)) struct menu_t *m)
+void moonpatrol_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (moonpatrol_state) {
 	case MOONPATROL_INIT:

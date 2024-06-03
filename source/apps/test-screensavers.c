@@ -143,7 +143,7 @@ static void test_screensavers_exit(void)
 	returnToMenus();
 }
 
-void test_screensavers_cb(__attribute__((unused)) struct menu_t *m)
+void test_screensavers_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (test_screensavers_state) {
 	case TEST_SCREENSAVERS_INIT:

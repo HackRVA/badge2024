@@ -762,7 +762,7 @@ static void lunarlander_exit(void)
 	returnToMenus();
 }
 
-int lunarlander_cb(__attribute__((unused)) struct menu_t *m)
+int lunarlander_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (lunarlander_state) {
 	case LUNARLANDER_INIT:

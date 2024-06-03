@@ -2,6 +2,6 @@
 #define GULAG__
 
 
-void gulag_cb(struct menu_t *m);
+void gulag_cb(struct badge_app *app);
 
 #endif

@@ -148,7 +148,7 @@ static void etch_a_sketch_exit(void)
 	returnToMenus();
 }
 
-void etch_a_sketch_cb(__attribute__((unused)) struct menu_t *m)
+void etch_a_sketch_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (etch_a_sketch_state) {
 	case ETCH_A_SKETCH_INIT:

@@ -1088,7 +1088,7 @@ static void hackingsimulator_quit_confirm(void)
 	}
 }
 
-void hacking_simulator_cb(__attribute__((unused)) struct menu_t *m)
+void hacking_simulator_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (hacking_simulator_state)
 	{

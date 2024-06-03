@@ -5222,7 +5222,7 @@ static void gulag_safe_cracked(void)
 		gulag_state = GULAG_RUN;
 }
 
-void gulag_cb(__attribute__((unused)) struct menu_t *m)
+void gulag_cb(__attribute__((unused)) struct badge_app *app)
 {
 	game_timer++;
 	switch (gulag_state) {

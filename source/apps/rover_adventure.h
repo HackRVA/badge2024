@@ -12,7 +12,7 @@
 #ifndef _ROVER_ADVENTURE_H_
 #define _ROVER_ADVENTURE_H_
 
-void rover_adventure_cb(struct menu_t *m);
+void rover_adventure_cb(struct badge_app *app);
 
 #endif /* _ROVER_ADVENTURE_H_ */
 

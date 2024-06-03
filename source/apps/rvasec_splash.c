@@ -12,6 +12,7 @@
 #include "rvasec_splash.h"
 #include "hackrvanewlogo.h"
 #include "utils.h"
+#include "badge.h"
 
 static const char splash_words1[] = "Loading";
 #define NUM_WORD_THINGS ARRAY_SIZE(splash_word_things)
@@ -57,7 +58,7 @@ static void brand_preproduction_firmware(int blink)
 }
 
 #define SPLASH_SHIFT_DOWN 85
-void rvasec_splash_cb(__attribute__((unused)) struct menu_t *m)
+void rvasec_splash_cb(__attribute__((unused)) struct badge_app *app)
 {
     extern const struct asset2 RVAsec_13;
     static unsigned short wait = 0;

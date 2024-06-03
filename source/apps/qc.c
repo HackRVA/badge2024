@@ -214,7 +214,7 @@ bool qc_mic(void)
     return true;
 }
 
-void QC_cb(__attribute__((unused)) struct menu_t *menu)
+void QC_cb(__attribute__((unused)) struct badge_app *app)
 {
     //static unsigned char call_count = 0;
     static int QC_state=0;
