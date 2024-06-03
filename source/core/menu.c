@@ -139,7 +139,6 @@ unsigned char menu_redraw_main_menu = 0;
 
 /* Frequency in Hz of beeps to make for various menu actions */
 /* Use low pentatonic scale to make it not quite so annoying. */
-#define MORE_FREQ NOTE_C3
 #define BACK_FREQ NOTE_D3
 #define TEXT_FREQ NOTE_E3
 #define MENU_FREQ NOTE_G3
@@ -160,8 +159,6 @@ static void menu_beep(uint16_t freq)
 #  define INITIAL_BADGE_APP rvasec_splash_cb;
 #endif
 void (*runningApp)(struct menu_t *menu) = INITIAL_BADGE_APP;
-
-#define MORE_INC 4
 
 struct menuStack_t {
    struct menu_t *selectedMenu;
@@ -1012,12 +1009,6 @@ void menus()
         // do_animation = 1;
         switch (G_selectedMenu->type) {
 
-            case MORE: /* jump to next page of menu */
-                menu_beep(MORE_FREQ); /* a */
-                G_currMenu += PAGESIZE;
-                G_selectedMenu = G_currMenu;
-                break;
-
             case BACK: { /* return from menu */
 		int suppress_animation = 0;
                 menu_beep(BACK_FREQ);
@@ -1068,7 +1059,7 @@ void menus()
 	maybe_scroll_to(G_selectedMenu, G_currMenu); /* Scroll up if necessary */
 	G_selectedMenu = display_menu(G_currMenu, G_selectedMenu, MAIN_MENU_STYLE, MENU_NEXT);
     } else if (user_moved_to_next_item(G_currMenu, down_latches, rotary0, rotary1)) {
-        menu_beep(MORE_FREQ); /* g */
+        menu_beep(TEXT_FREQ); /* f */
 	int skip_back_menu_items = display_menu == new_display_menu && menu_has_icons(G_currMenu);
 	G_selectedMenu = find_next_menu_item(G_currMenu, G_selectedMenu,
 				SKIP_ITEM, skip_back_menu_items);

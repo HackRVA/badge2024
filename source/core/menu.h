@@ -24,8 +24,7 @@ enum attrib_bits {
 #define LAST_ITEM (1 << LAST_BIT)
 
 enum menu_item_type {
-   MORE=0, /* if the menu is too long to fit (but menus scroll now, so you shouldn't need this) */
-   TEXT,   /* text to display */
+   TEXT = 0,   /* text to display */
    BACK,    /* return to previous menu */
    MENU,    /* sub menu type */
    FUNCTION, /* c function */
