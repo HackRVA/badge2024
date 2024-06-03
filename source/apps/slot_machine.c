@@ -877,7 +877,7 @@ static void slot_machine_exit(void)
 {
 	slot_machine_state = SLOT_MACHINE_INIT;
 	led_rgb_off();
-	returnToMenus();
+	pop_app();
 }
 
 void slot_machine_cb(__attribute__((unused)) struct badge_app *app)

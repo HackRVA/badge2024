@@ -140,7 +140,7 @@ static void test_screensavers_exit(void)
 	/* Restore the original screensaver_disabled value */
 	badge_system_data()->screensaver_disabled = saved_screensaver_disabled;
 	display_reset(); /* In case the display got messed up (for unknown reasons it happens). */
-	returnToMenus();
+	pop_app();
 }
 
 void test_screensavers_cb(__attribute__((unused)) struct badge_app *app)

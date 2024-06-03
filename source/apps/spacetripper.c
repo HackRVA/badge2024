@@ -2559,7 +2559,7 @@ int spacetripper_cb(void)
 		break;
 	case ST_EXIT:
 		st_program_state = ST_GAME_INIT;
-		returnToMenus();
+		pop_app();
 		break;
 	case ST_DRAW_MENU:
 		st_draw_menu();

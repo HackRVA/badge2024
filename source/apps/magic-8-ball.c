@@ -234,7 +234,7 @@ static void magic_8_ball_exit(void)
 	FbSwapBuffers();
 	/* Make sure the screen brightness is turned back up */
 	led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, 255);
-	returnToMenus();
+	pop_app();
 }
 
 void magic_8_ball_cb(__attribute__((unused)) struct badge_app *app)

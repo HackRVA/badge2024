@@ -908,7 +908,7 @@ static void image_test_run(void)
 static void image_test_exit(void)
 {
 	image_test_state = IMAGE_TEST_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 void image_test_cb(__attribute__((unused)) struct badge_app *app)

@@ -89,7 +89,7 @@ static void check_the_buttons(void)
 static void exit_app(void)
 {
 	app_state = INIT_APP_STATE;
-	returnToMenus();
+	pop_app();
 }
 
 static void app_init(void)

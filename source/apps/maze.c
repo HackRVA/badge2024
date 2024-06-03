@@ -2016,7 +2016,7 @@ int maze_cb(void)
          break;
     case MAZE_EXIT:
         maze_program_state = MAZE_GAME_INIT;
-        returnToMenus();
+        pop_app();
         break;
     case MAZE_WIN_CONDITION:
         game_is_won = 1;

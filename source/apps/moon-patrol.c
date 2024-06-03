@@ -1482,7 +1482,7 @@ static void moonpatrol_exit(void)
 {
 	stop_tune();
 	moonpatrol_state = MOONPATROL_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 void moonpatrol_cb(__attribute__((unused)) struct badge_app *app)

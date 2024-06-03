@@ -149,7 +149,7 @@ void rvasec_splash_cb(__attribute__((unused)) struct badge_app *app)
         if (0 != down_latches) {
             FbBackgroundColor(BLACK);
             led_pwm_disable(BADGE_LED_RGB_RED);
-            returnToMenus();
+            pop_app();
         }
     }
 

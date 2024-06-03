@@ -96,7 +96,7 @@ static void ghostdetector_run(void)
 static void ghostdetector_exit(void)
 {
 	ghostdetector_state = GHOSTDETECTOR_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 /* You will need to rename ghostdetector_cb() something else. */

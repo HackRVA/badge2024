@@ -6044,7 +6044,7 @@ static void badgey_exit_confirm(void)
 static void badgey_exit(void)
 {
 	set_badgey_state(BADGEY_CONTINUE); /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 /* You will need to rename badgey_cb() something else. */

@@ -609,7 +609,7 @@ static void asteroids_maybe_exit(void)
 static void asteroids_exit(void)
 {
 	asteroids_state = ASTEROIDS_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 void asteroids_cb(__attribute__((unused)) struct badge_app *app)

@@ -242,7 +242,7 @@ static void pong_run(void)
 static void pong_exit(void)
 {
 	pong_state = PONG_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 void pong_cb(__attribute__((unused)) struct badge_app *app)

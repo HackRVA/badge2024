@@ -444,7 +444,7 @@ static void smashout_game_maybe_exit(void)
 static void smashout_game_exit(void)
 {
 	smashout_program_state = SMASHOUT_GAME_INIT;
-	returnToMenus();
+	pop_app();
 }
 
 void smashout_cb(__attribute__((unused)) struct badge_app *app)

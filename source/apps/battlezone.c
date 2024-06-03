@@ -1617,7 +1617,7 @@ static void battlezone_run(void)
 static void battlezone_exit(void)
 {
 	battlezone_state = BATTLEZONE_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 void battlezone_cb(__attribute__((unused)) struct badge_app *app)

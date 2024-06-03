@@ -623,7 +623,7 @@ static void tank_vs_tank_run(void)
 static void tank_vs_tank_exit(void)
 {
 	tank_vs_tank_state = TANK_VS_TANK_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 static void tank_vs_tank_confirm_exit(void)

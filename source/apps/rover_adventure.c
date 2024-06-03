@@ -559,7 +559,7 @@ static void radv_exit(void)
 	/* Reset for next. */
 	m_radv_state = ROVER_ADVENTURE_INIT;
 
-	returnToMenus();
+	pop_app();
 }
 
 static void radv_menu(void)

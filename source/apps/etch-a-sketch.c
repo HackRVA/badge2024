@@ -145,7 +145,7 @@ static void etch_a_sketch_run(void)
 static void etch_a_sketch_exit(void)
 {
 	etch_a_sketch_state = ETCH_A_SKETCH_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 void etch_a_sketch_cb(__attribute__((unused)) struct badge_app *app)

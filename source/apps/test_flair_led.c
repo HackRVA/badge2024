@@ -134,7 +134,7 @@ static void test_flair_run()
 static void test_flair_exit()
 {
 	test_flair_state = TEST_FLAIR_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 int test_flair_led_cb(void)

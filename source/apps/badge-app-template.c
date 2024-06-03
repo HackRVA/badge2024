@@ -129,7 +129,7 @@ static void myprogram_run(void)
 static void myprogram_exit(void)
 {
 	myprogram_state = MYPROGRAM_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 /* You will need to rename myprogram_cb() something else. */

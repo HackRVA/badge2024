@@ -388,7 +388,7 @@ static void exit_app(void)
     state.app_state = APP_INIT;
     save_to_flash();
     unregister_ir_packet_callback(ir_packet_callback);
-    returnToMenus();
+    pop_app();
 }
 
 static void game_menu(void)

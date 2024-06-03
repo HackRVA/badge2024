@@ -254,7 +254,7 @@ static void exit_app(void)
 {
 	save_username_to_flash(username, sizeof(username));
 	app_state = INIT_APP_STATE;
-	returnToMenus();
+	pop_app();
 }
 
 static void app_init(void)

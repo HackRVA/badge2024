@@ -275,7 +275,7 @@ void QC_cb(__attribute__((unused)) struct badge_app *app)
                 FbWriteLine("EXITING");
                 FbSwapBuffers();
                 sleep_ms(500);
-                returnToMenus();
+                pop_app();
                 return;
             }
 

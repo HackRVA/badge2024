@@ -238,7 +238,7 @@ int cube_cb(void)
 		break;
 	case CUBE_EXIT:
 		cube_state = CUBE_INIT;
-		returnToMenus();
+		pop_app();
 		break;
 	default:
 		break;

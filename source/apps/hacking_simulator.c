@@ -1059,7 +1059,7 @@ static void hackingsimulator_run(void)
 static void hackingsimulator_exit(void)
 {
 	hacking_simulator_state = HACKINGSIMULATOR_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 static struct dynmenu quitmenu;

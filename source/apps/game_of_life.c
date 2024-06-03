@@ -383,7 +383,7 @@ static void game_of_life_run(void)
 static void game_of_life_exit(void)
 {
 	game_of_life_state = GAME_OF_LIFE_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
 void game_of_life_cb(__attribute__((unused)) struct badge_app *app)

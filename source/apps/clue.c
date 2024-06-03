@@ -464,7 +464,7 @@ static void clue_exit(void)
 	change_clue_state(CLUE_INIT); /* So that when we start again, we do not immediately exit */
 	ir_remove_callback(clue_ir_packet_callback, BADGE_IR_CLUE_GAME_ADDRESS);
 	scan_for_incoming_packets = 0;
-	returnToMenus();
+	pop_app();
 }
 
 static void write_suspect_initial(int x, int y, int color, char *initial)
