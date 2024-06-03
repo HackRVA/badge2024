@@ -225,6 +225,9 @@ static void maybe_start_screensaver(void)
 }
 
 extern const struct menu_t main_m[];
+extern void QC_cb(struct badge_app *app);
+extern void rvasec_splash_cb(struct badge_app *app);
+#define INITIAL_BADGE_APP rvasec_splash_cb
 
 uint64_t ProcessIO(void)
 {
@@ -232,10 +235,15 @@ uint64_t ProcessIO(void)
     static const uint64_t frame_interval_us_default = 1000000/30;
     static struct default_menu_app_context menu_context;
 
-    if (app_stack_idx == -1) {
+    if (app_stack_idx == -1) { /* No apps at all yet? */
+
+	/* Push main menu app first, then initial badge app on top of that */
+	/* When the initial badge app exits, it will pop off, leaving the menu */
+
 	init_default_menu_app_context(&menu_context, (void *) &main_m[0]);
 	default_menu_app.app_context = &menu_context;
 	push_app(default_menu_app);
+	push_app((struct badge_app) { .app_func = INITIAL_BADGE_APP, .app_context = 0, .wake_up = 1 });
     }
     maybe_start_screensaver();
     app_stack[app_stack_idx].app_func(&app_stack[app_stack_idx]);
