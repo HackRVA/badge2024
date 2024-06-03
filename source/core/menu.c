@@ -468,9 +468,7 @@ static struct menu_t *legacy_display_menu(struct menu_t *menu,
             cursor_y += (CHAR_HEIGHT + 2 * SCAN_BLANK);
         }
 
-        if (!(menu->attrib & HORIZ_ITEM)) {
-            cursor_x = MENU_LEFT;
-        }
+        cursor_x = MENU_LEFT;
 
         if (selected == menu) {
             // If we happen to be on a skip ITEM, just increment off it
@@ -724,9 +722,7 @@ static struct menu_t *new_display_menu(struct menu_t *menu,
             cursor_y += (CHAR_HEIGHT + 2 * SCAN_BLANK);
         }
 
-        if (!(menu->attrib & HORIZ_ITEM)) {
-            cursor_x = MENU_LEFT;
-        }
+        cursor_x = MENU_LEFT;
 
         if (selected == menu) {
             // If we happen to be on a skip ITEM, just increment off it

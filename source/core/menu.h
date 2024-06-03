@@ -11,14 +11,12 @@
 */
 enum attrib_bits {
     VERT_BIT=9, /* max 16 bits in unsigned short */
-    HORIZ_BIT,
     SKIP_BIT, /* skip when scrolling */
     DEFAULT_BIT,
     LAST_BIT,
 };
 
 #define VERT_ITEM    (1 << VERT_BIT)
-#define HORIZ_ITEM   (1 << HORIZ_BIT)
 #define SKIP_ITEM    (1 << SKIP_BIT)
 #define DEFAULT_ITEM (1 << DEFAULT_BIT)
 #define LAST_ITEM (1 << LAST_BIT)
