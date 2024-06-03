@@ -86,6 +86,36 @@ static void go_back(void)
 	}
 }
 
+static void display_menu_item_description(struct badge_app *app)
+{
+	static int screen_changed = 1;
+
+	if (app->wake_up)
+		screen_changed = 1;
+
+	if (screen_changed) {
+		struct menu_t *m = app->app_context;
+		FbColor(CYAN);
+		FbBackgroundColor(BLACK);
+		FbClear();
+		FbMove(0, 0);
+		FbWriteString(m->data.description);
+		FbSwapBuffers();
+		screen_changed = 0;
+	}
+
+	int down_latches = button_down_latches();
+	if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_B, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_LEFT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_RIGHT, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_UP, down_latches) ||
+		BUTTON_PRESSED(BADGE_BUTTON_DOWN, down_latches)) {
+		screen_changed = 1;
+		pop_app();
+	}
+}
+
 static void do_selection(void)
 {
 	struct menu_t *m = current_context->menu;
@@ -95,8 +125,6 @@ static void do_selection(void)
 	switch (t) {
 	case MENU:
 		if (current_menu_stack_idx < MAX_APP_STACK_DEPTH - 1) {
-			struct badge_app app;
-
 			current_menu_stack_idx++;
 			app.app_func = default_menu_app_cb;
 			app.wake_up = 1;
@@ -110,10 +138,20 @@ static void do_selection(void)
 		go_back();
 		break;
 	case FUNCTION:
+
 		app.app_func = m[current_context->current_item].data.func;
 		app.app_context = NULL;
 		app.wake_up = 1;
 		push_app(app);
+		break;
+	case ITEM_DESC:
+		app.app_func = display_menu_item_description;
+		app.app_context = &m[current_context->current_item];
+		push_app(app);
+		break;
+	case TEXT:
+		/* Doesn't do anything if selected. */
+		/* This is only used in conjunction with SKIP_ITEM attribute anyway. */
 		break;
 	}
 }
