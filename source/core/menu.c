@@ -126,7 +126,7 @@ static const struct menu_t settings_m[] = {
    {"Back",         VERT_ITEM|LAST_ITEM, BACK, {NULL}, NULL, },
 };
 
-static const struct menu_t main_m[] = {
+const struct menu_t main_m[] = {
    {"Games",       VERT_ITEM|DEFAULT_ITEM, MENU, { .menu = games_m }, &games_icon, },
    {"Schedule",    VERT_ITEM, MENU, { .menu = schedule_m }, &schedule_icon, },
    {"Settings",    VERT_ITEM, MENU, { .menu = settings_m }, &settings_icon, },

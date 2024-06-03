@@ -1,6 +1,6 @@
 #include "colors.h"
 #include "assetList.h"
-// #include "menu.h"
+#include "menu.h"
 #include "button.h"
 #include "screensavers.h"
 #include "framebuffer.h"
@@ -189,6 +189,7 @@ void pop_app(void)
 {
 	if (app_stack_idx > 0)
 		app_stack_idx--;
+	app_stack[app_stack_idx].wake_up = 1;
 }
 
 void push_app(struct badge_app app)
@@ -197,16 +198,23 @@ void push_app(struct badge_app app)
 		return;
 	app_stack_idx++;
 	app_stack[app_stack_idx] = app;
+	app_stack[app_stack_idx].wake_up = 1;
 }
+
+extern const struct menu_t main_m[];
 
 uint64_t ProcessIO(void)
 {
     // 30 fps
     static const uint64_t frame_interval_us_default = 1000000/30;
+    static struct default_menu_app_context menu_context;
 
-    if (app_stack_idx == -1)
+    if (app_stack_idx == -1) {
+	init_default_menu_app_context(&menu_context, (void *) &main_m[0]);
+	default_menu_app.app_context = &menu_context;
 	push_app(default_menu_app);
-    app_stack[app_stack_idx].app_func(app_stack[app_stack_idx].app_context);
+    }
+    app_stack[app_stack_idx].app_func(&app_stack[app_stack_idx]);
 
     /*
 	this ProcessIO() is the badge main loop

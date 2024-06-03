@@ -7,8 +7,9 @@
 #define MAX_APP_STACK_DEPTH 10
 
 struct badge_app {
-	void (*app_func)(void *context);
+	void (*app_func)(struct badge_app *app);
 	void *app_context;
+	int wake_up;
 };
 
 void push_app(struct badge_app app);
