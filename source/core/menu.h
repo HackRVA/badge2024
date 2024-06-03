@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include <badge.h>
+
 /* Must ... resist ... temptation ... to rewrite ... all of whatever this is. */
 
 /*
@@ -44,7 +46,7 @@ struct menu_t {
    union { /* when initializing the union, use designated
 	    * initializers, e.g, "{ .menu = blah }", "{ .func = blah }" */
       const struct menu_t *menu;
-      void (*func)(struct menu_t *m);
+      void (*func)(struct badge_app *);
       char *description;
       void *generic;
    } data;

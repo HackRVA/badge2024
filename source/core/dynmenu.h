@@ -75,7 +75,6 @@ struct dynmenu {
 #define DYNMENU_SELECTION_VOID (-1)
 #define DYNMENU_SELECTION_ABORTED (-2)
 	int selection_made;		/* For use by dynmenu_let_user_choose(). */
-	void (*original_app)(struct menu_t *menu); /* used by dynmenu_let_user_choose(). */
 };
 
 /* dynmenu_init(): Initialize a dynamic menu, dm.

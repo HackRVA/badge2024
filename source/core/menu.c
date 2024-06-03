@@ -855,8 +855,10 @@ static void internalReturnToMenus(void)
 /* This is called by apps */
 void returnToMenus(void)
 {
-	SUPPRESS_ANIMATION(1, "rtm");
-	internalReturnToMenus();
+	// SUPPRESS_ANIMATION(1, "rtm");
+	// internalReturnToMenus();
+extern void pop_app(void);
+	pop_app();
 }
 
 static char *menu_item_description = NULL;

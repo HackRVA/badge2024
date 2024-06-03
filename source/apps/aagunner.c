@@ -8,6 +8,7 @@
 #include "trig.h"
 #include "xorshift.h"
 #include "dynmenu.h"
+#include "badge.h"
 
 #define INITIAL_ANGLE 64+32
 #define MIN_ANGLE 64
@@ -735,10 +736,10 @@ static void aagunner_run(void)
 static void aagunner_exit(void)
 {
 	aagunner_state = AAGUNNER_INIT; /* So that when we start again, we do not immediately exit */
-	returnToMenus();
+	pop_app();
 }
 
-void aagunner_cb(__attribute__((unused)) struct menu_t *m)
+void aagunner_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (aagunner_state) {
 	case AAGUNNER_INIT:

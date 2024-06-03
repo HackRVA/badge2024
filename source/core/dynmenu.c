@@ -4,10 +4,9 @@
 #include "button.h"
 #include "framebuffer.h"
 #include "dynmenu.h"
+#include "badge.h"
 #include <string.h>
 #include <stdio.h>
-
-extern void (*runningApp)(struct menu_t *menu);
 
 static struct dynmenu *current_menu = NULL;
 
@@ -16,7 +15,6 @@ void dynmenu_init(struct dynmenu *dm, struct dynmenu_item *item, unsigned char m
 	dm->item = item;
 	dm->max_items = max_items;
 	dm->selection_made = DYNMENU_SELECTION_VOID;
-	dm->original_app = runningApp; /* save current badge app */
 }
 
 void dynmenu_set_colors(struct dynmenu *dm, int color, int selected_color)
@@ -143,7 +141,7 @@ void dynmenu_change_current_selection(struct dynmenu *dm, int direction)
  * through the runningApp function pointer after dynmenu_let_user_choose temporarily
  * takes over the running app to get a user selection.
  */
-static void dynmenu_cb(__attribute__((unused)) struct menu_t *m)
+static void dynmenu_cb(__attribute__((unused)) struct badge_app *app)
 {
 	static int local_screen_changed = 1;
 
@@ -161,11 +159,11 @@ static void dynmenu_cb(__attribute__((unused)) struct menu_t *m)
                 local_screen_changed = 1;
         } else if (BUTTON_PRESSED(BADGE_BUTTON_A, down_latches)) {
 		current_menu->selection_made = current_menu->chosen_cookie;
-		runningApp = current_menu->original_app; /* switch back to badge app */
+		pop_app();
 		local_screen_changed = 1;
 	} else if (BUTTON_PRESSED(BADGE_BUTTON_B, down_latches)) {
 		current_menu->selection_made = DYNMENU_SELECTION_ABORTED;
-		runningApp = current_menu->original_app; /* switch back to badge app */
+		pop_app();
 		local_screen_changed = 1;
 	}
 	/* I thought about calling current_menu->original_app() here to allow
@@ -181,11 +179,16 @@ static void dynmenu_cb(__attribute__((unused)) struct menu_t *m)
  */
 int dynmenu_let_user_choose(struct dynmenu *dm)
 {
+	struct badge_app app;
+
 	if (dm->selection_made != DYNMENU_SELECTION_VOID)
 		return 1;
 	current_menu = dm;
-	current_menu->original_app = runningApp; /* just in case they didn't call dynmenu_init */
-	runningApp = dynmenu_cb; /* make menu.c call dynmenu code instead of badge app */
+	app.app_func = dynmenu_cb;
+	app.app_context = 0;
+	app.wake_up = 1;
+	push_app(app);
+
 	return 0;
 }
 

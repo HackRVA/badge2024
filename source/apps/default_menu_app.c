@@ -90,8 +90,9 @@ static void do_selection(void)
 {
 	struct menu_t *m = current_context->menu;
 	enum menu_item_type t = m[current_context->current_item].type;
+	struct badge_app app;
 
-	switch(t) {
+	switch (t) {
 	case MENU:
 		if (current_menu_stack_idx < MAX_APP_STACK_DEPTH - 1) {
 			struct badge_app app;
@@ -107,6 +108,12 @@ static void do_selection(void)
 		break;
 	case BACK:
 		go_back();
+		break;
+	case FUNCTION:
+		app.app_func = m[current_context->current_item].data.func;
+		app.app_context = NULL;
+		app.wake_up = 1;
+		push_app(app);
 		break;
 	}
 }
