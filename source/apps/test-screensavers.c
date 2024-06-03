@@ -6,8 +6,6 @@
 #include "screensavers.h"
 #include "badge.h"
 
-extern unsigned short popup_time;
-
 typedef void (*ss_func)(void);
 
 static bool saved_screensaver_disabled = 0;
@@ -40,7 +38,6 @@ static void test_screensavers_init(void)
 	FbClear();
 	test_screensavers_state = TEST_SCREENSAVERS_RUN;
 	current_screen_saver = -1;
-	popup_time = 9 * 30;
 
 	/* Disable the actual screensaver while the screensaver test app is running */
 	saved_screensaver_disabled = badge_system_data()->screensaver_disabled;
@@ -124,9 +121,6 @@ static void test_screensavers_run(void)
 {
 	check_buttons();
 	draw_screen();
-	popup_time--;
-	if (popup_time == 0)
-		popup_time = 9 * 30;
 
 	/* Prevent badge from going "dormant" so screen will stay lit */
 	button_reset_last_input_timestamp();
@@ -136,7 +130,6 @@ static void test_screensavers_exit(void)
 {
 	/* So that when we start again, we do not immediately exit */
 	test_screensavers_state = TEST_SCREENSAVERS_INIT;
-	popup_time = 0;
 	/* Restore the original screensaver_disabled value */
 	badge_system_data()->screensaver_disabled = saved_screensaver_disabled;
 	display_reset(); /* In case the display got messed up (for unknown reasons it happens). */
