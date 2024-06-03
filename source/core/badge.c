@@ -16,6 +16,7 @@
 #include "xorshift.h"
 #include "mic_pdm.h"
 #include "default_menu_app.h"
+#include "screensaver_app.h"
 
 /*
   inital system data, will be save/restored from flash
@@ -201,6 +202,28 @@ void push_app(struct badge_app app)
 	app_stack[app_stack_idx].wake_up = 1;
 }
 
+static void maybe_start_screensaver(void)
+{
+	if (app_stack[app_stack_idx].app_func == screensaver_cb) /* screensaver already running? */
+		return;
+
+	if (badge_system_data()->screensaver_disabled)
+		return;
+
+	if (!dormant())
+		return;
+
+	int now = rtc_get_ms_since_boot();
+	if (now - button_last_input_timestamp() > 30000) { /* time to start screensaver? */
+		struct badge_app app;
+
+		app.app_func = screensaver_cb;
+		app.app_context = 0;
+		app.wake_up = 1;
+		push_app(app); /* start screensaver */
+	}
+}
+
 extern const struct menu_t main_m[];
 
 uint64_t ProcessIO(void)
@@ -214,6 +237,7 @@ uint64_t ProcessIO(void)
 	default_menu_app.app_context = &menu_context;
 	push_app(default_menu_app);
     }
+    maybe_start_screensaver();
     app_stack[app_stack_idx].app_func(&app_stack[app_stack_idx]);
 
     /*
