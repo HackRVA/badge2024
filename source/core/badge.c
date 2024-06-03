@@ -15,6 +15,7 @@
 #include "uid.h"
 #include "xorshift.h"
 #include "mic_pdm.h"
+#include "default_menu_app.h"
 
 /*
   inital system data, will be save/restored from flash
@@ -198,31 +199,13 @@ void push_app(struct badge_app app)
 	app_stack[app_stack_idx] = app;
 }
 
-static void default_app_func(__attribute__((unused)) void *context)
-{
-	/* TODO, this should be replaced with a real menu app */
-	static int screen_changed = 1;
-
-	if (screen_changed) {
-		FbClear();
-		FbMove(10, 50);
-		FbWriteString("Howdy!\n");
-		FbSwapBuffers();
-	}
-}
-
-struct badge_app default_app = {
-	.app_func = default_app_func,
-	.app_context = NULL,
-};
-
 uint64_t ProcessIO(void)
 {
     // 30 fps
     static const uint64_t frame_interval_us_default = 1000000/30;
 
     if (app_stack_idx == -1)
-	push_app(default_app);
+	push_app(default_menu_app);
     app_stack[app_stack_idx].app_func(app_stack[app_stack_idx].app_context);
 
     /*

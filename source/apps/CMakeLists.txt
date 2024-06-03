@@ -26,6 +26,7 @@ target_sources(${PRODUCT} PUBLIC
         # ${CMAKE_CURRENT_LIST_DIR}/badge-app-template.c
 	${CMAKE_CURRENT_LIST_DIR}/aagunner.c
 	${CMAKE_CURRENT_LIST_DIR}/rover_adventure.c
+	${CMAKE_CURRENT_LIST_DIR}/default_menu_app.c
         )
 add_subdirectory(clue_assets)
 add_subdirectory(new_badge_monsters_assets)
