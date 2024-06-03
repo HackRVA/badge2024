@@ -1,6 +1,6 @@
 #include "colors.h"
 #include "assetList.h"
-#include "menu.h"
+// #include "menu.h"
 #include "button.h"
 #include "screensavers.h"
 #include "framebuffer.h"
@@ -11,7 +11,7 @@
 #include "ir.h"
 #include "rtc.h"
 #include "key_value_storage.h"
-#include "settings.h"
+// #include "settings.h"
 #include "uid.h"
 #include "xorshift.h"
 #include "mic_pdm.h"
@@ -37,6 +37,7 @@ SYSTEM_DATA* badge_system_data(void) {
     return &G_sysData;
 }
 
+/* UserInit is very first thing called by main() */
 void UserInit(void)
 {
     flash_kv_init();
@@ -57,7 +58,7 @@ void UserInit(void)
         display_set_display_mode_inverted();
     }
 
-    setup_settings_menus();
+    // setup_settings_menus();
 }
 
 
@@ -180,10 +181,49 @@ void do_screen_save_popup(void)
 unsigned char is_dormant = 0;
 unsigned char screen_save_lockout = 0;
 
+static struct badge_app app_stack[MAX_APP_STACK_DEPTH];
+static int app_stack_idx = -1;
+
+void pop_app(void)
+{
+	if (app_stack_idx > 0)
+		app_stack_idx--;
+}
+
+void push_app(struct badge_app app)
+{
+	if (app_stack_idx >= MAX_APP_STACK_DEPTH)
+		return;
+	app_stack_idx++;
+	app_stack[app_stack_idx] = app;
+}
+
+static void default_app_func(__attribute__((unused)) void *context)
+{
+	/* TODO, this should be replaced with a real menu app */
+	static int screen_changed = 1;
+
+	if (screen_changed) {
+		FbClear();
+		FbMove(10, 50);
+		FbWriteString("Howdy!\n");
+		FbSwapBuffers();
+	}
+}
+
+struct badge_app default_app = {
+	.app_func = default_app_func,
+	.app_context = NULL,
+};
+
 uint64_t ProcessIO(void)
 {
     // 30 fps
     static const uint64_t frame_interval_us_default = 1000000/30;
+
+    if (app_stack_idx == -1)
+	push_app(default_app);
+    app_stack[app_stack_idx].app_func(app_stack[app_stack_idx].app_context);
 
     /*
 	this ProcessIO() is the badge main loop
@@ -192,11 +232,11 @@ uint64_t ProcessIO(void)
     */
 
     //IRhandler(); /* do any pending IR callbacks */
-    menus();
+    // menus();
 
     //initialize assuming the badge is active (backlight is powered);
+#if 0
     brightScreen = 1;
-    
     if(dormant() && !is_dormant && !screen_save_lockout) {
         is_dormant = 1;
         // Turn off LED to allow sleep modes
@@ -244,6 +284,7 @@ uint64_t ProcessIO(void)
             do_screen_save_popup();
         }
     }
+#endif
 
     return frame_interval_us_default;
 }

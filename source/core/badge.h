@@ -4,6 +4,16 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define MAX_APP_STACK_DEPTH 10
+
+struct badge_app {
+	void (*app_func)(void *context);
+	void *app_context;
+};
+
+void push_app(struct badge_app app);
+void pop_app(void);
+
 typedef struct {
     char name[16];
     uint64_t badgeId;
