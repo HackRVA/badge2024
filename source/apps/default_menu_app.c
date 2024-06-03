@@ -19,6 +19,7 @@ void init_default_menu_app_context(struct default_menu_app_context *c, struct me
 	c->current_item = 0;
 	c->selected_item = -1;
 	c->screen_changed = 1;
+
 }
 
 void default_menu_app_cb(struct badge_app *app);
@@ -26,6 +27,10 @@ void default_menu_app_cb(struct badge_app *app);
 struct badge_app default_menu_app = {
 	.app_func = default_menu_app_cb,
 	.app_context = 0,
+	.wake_up = 1,
+	/* these are set in do_selection just before calling app_func() */
+	.menu = 0,
+	.current_selection = 0,
 };
 
 /* Program states.  Initial state is DEFAULT_MENU_APP_INIT */
@@ -131,6 +136,8 @@ static void do_selection(void)
 			app.app_context = &context_stack[current_menu_stack_idx];
 			init_default_menu_app_context(app.app_context,
 				(struct menu_t *) &m[current_context->current_item].data.menu[0]);
+			app.menu = m;
+			app.current_selection = current_context->current_item;
 			push_app(app);
 		}
 		break;
@@ -140,13 +147,17 @@ static void do_selection(void)
 	case FUNCTION:
 
 		app.app_func = m[current_context->current_item].data.func;
-		app.app_context = NULL;
+		app.app_context = 0;
 		app.wake_up = 1;
+		app.menu = m;
+		app.current_selection = current_context->current_item;
 		push_app(app);
 		break;
 	case ITEM_DESC:
 		app.app_func = display_menu_item_description;
 		app.app_context = &m[current_context->current_item];
+		app.menu = m;
+		app.current_selection = current_context->current_item;
 		push_app(app);
 		break;
 	case TEXT:

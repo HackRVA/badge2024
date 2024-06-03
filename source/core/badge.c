@@ -11,7 +11,7 @@
 #include "ir.h"
 #include "rtc.h"
 #include "key_value_storage.h"
-// #include "settings.h"
+#include "settings.h"
 #include "uid.h"
 #include "xorshift.h"
 #include "mic_pdm.h"
@@ -60,7 +60,7 @@ void UserInit(void)
         display_set_display_mode_inverted();
     }
 
-    // setup_settings_menus();
+    setup_settings_menus();
 }
 
 

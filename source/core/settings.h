@@ -21,7 +21,7 @@ extern struct menu_t myBadgeid_m[];
 
 // Use badge system data to init settings menu position.
 void setup_settings_menus(void);
-void clear_nvram_cb(struct menu_t *m);
+void clear_nvram_cb(struct badge_app *app);
 
 #ifdef	__cplusplus
 }

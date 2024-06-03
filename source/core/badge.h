@@ -6,9 +6,14 @@
 
 #define MAX_APP_STACK_DEPTH 10
 
+struct menu_t;
+
 struct badge_app {
 	void (*app_func)(struct badge_app *app);
 	void *app_context;
+	/* menu and current_selection are filled in when app_func() is called from apps/default_menu_app */
+	struct menu_t *menu; 
+	int current_selection;
 	int wake_up;
 };
 

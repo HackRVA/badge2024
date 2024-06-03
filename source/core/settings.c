@@ -22,7 +22,7 @@ static void save_settings(void) {
     flash_kv_store_binary("sysdata", badge_system_data(), sizeof(SYSTEM_DATA));
 }
 
-void ping_cb(__attribute__((unused)) struct menu_t *menu)
+void ping_cb(__attribute__((unused)) struct badge_app *app)
 {
     static unsigned char num_pinged = 0;
 
@@ -64,7 +64,7 @@ void ping_cb(__attribute__((unused)) struct menu_t *menu)
     sleep_ms(10);
 #endif
 
-    returnToMenus();
+    pop_app();
 }
 
 const struct menu_t ping_m[] = {
@@ -77,11 +77,10 @@ const struct menu_t ping_m[] = {
     set badge Id
 */
 static const char *hextab = "0123456789ABCDEF";
-void myBadgeid_cb(__attribute__((unused)) struct menu_t *h) {
+void myBadgeid_cb(struct badge_app *app) {
     struct menu_t *selectedMenu;
 
-    //dstMenu = getSelectedMenuStack(1);
-    selectedMenu = getSelectedMenu();
+    selectedMenu = &app->menu[app->current_selection];
 
     uint64_t badge_id = badge_system_data()->badgeId;
 
@@ -91,9 +90,7 @@ void myBadgeid_cb(__attribute__((unused)) struct menu_t *h) {
     {
         selectedMenu->name[15-i] = hextab[(badge_id >> 4 * (i - 1)) & 0xF];
     }
-
-    //strcpy(dstMenu->name, selectedMenu->name);
-    returnToMenus();
+    pop_app();
 }
 
 struct menu_t myBadgeid_m[] = {
@@ -101,25 +98,7 @@ struct menu_t myBadgeid_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
-
-/*
-    backlight
-*/
-void backlight_cb(__attribute__((unused)) struct menu_t *h) {
-   struct menu_t *dstMenu, *selectedMenu;
-
-   dstMenu = getSelectedMenuStack(1);
-   selectedMenu = getSelectedMenu();
-
-   /* update calling menu's name field */
-   strcpy(dstMenu->name, selectedMenu->name);
-
-   badge_system_data()->backlight = selectedMenu->attrib & 0x1FF;
-   led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, badge_system_data()->backlight);
-   save_settings();
-
-   returnToMenus();
-}
+void backlight_cb(struct badge_app *app);
 
 const struct menu_t backlightList_m[] = {
 //    {"       ", 0|VERT_ITEM, FUNCTION, { .func = backlight_cb} }, oh support... why is my screen black?
@@ -139,6 +118,20 @@ struct menu_t backlight_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
+void backlight_cb(struct badge_app *app)
+{
+   const struct menu_t *selectedMenu = &backlightList_m[app->current_selection];
+
+   /* update calling menu's name field with the new value  */
+   strcpy(backlight_m[0].name, selectedMenu->name);
+
+   badge_system_data()->backlight = selectedMenu->attrib & 0x1FF;
+   led_pwm_enable(BADGE_LED_DISPLAY_BACKLIGHT, badge_system_data()->backlight);
+   save_settings();
+
+   pop_app();
+}
+
 #if 0
 /*
    rotate screen
@@ -150,11 +143,11 @@ void rotate_cb(__attribute__((unused)) struct menu_t *h) {
     display_set_rotation(badge_system_data()->display_rotated);
     save_settings();
 
-    returnToMenus();
+    pop_app();
 };
 #endif
 
-static void invert_cb(__attribute__((unused)) struct menu_t *h) {
+static void invert_cb(__attribute__((unused)) struct badge_app *app) {
 
     SYSTEM_DATA *system_data = badge_system_data();
     bool inverted = !system_data->display_inverted;
@@ -167,7 +160,7 @@ static void invert_cb(__attribute__((unused)) struct menu_t *h) {
     }
 
     save_settings();
-	returnToMenus();
+	pop_app();
 }
 
 const struct menu_t rotate_m[] = {
@@ -175,26 +168,7 @@ const struct menu_t rotate_m[] = {
     {"Back",      VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
-
-
-/*
-    LED brightness
-*/
-void LEDlight_cb(__attribute__((unused)) struct menu_t *h) {
-    struct menu_t *dstMenu, *selectedMenu;
-
-    dstMenu = getSelectedMenuStack(1);
-    selectedMenu = getSelectedMenu();
-
-    strcpy(dstMenu->name, selectedMenu->name);
-
-    badge_system_data()->ledBrightness = selectedMenu->attrib & 0xFF;
-    led_pwm_set_scale(badge_system_data()->ledBrightness);
-
-    save_settings();
-    returnToMenus();
-}
-
+void LEDlight_cb(struct badge_app *app);
 
 const struct menu_t LEDlightList_m[] = {
 //    {"       ", 7|VERT_ITEM, FUNCTION, { .func = LEDlight_cb} },
@@ -213,20 +187,23 @@ struct menu_t LEDlight_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM| DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
-void buzzer_config_cb(__attribute__((unused)) struct menu_t *menu)
+void LEDlight_cb(struct badge_app *app) /* LED brightness */
 {
     struct menu_t *dstMenu, *selectedMenu;
 
-    dstMenu = getSelectedMenuStack(1); /* parent menu */
-    selectedMenu = getSelectedMenu();
+    dstMenu = &LEDlight_m[0];
+    selectedMenu = &app->menu[app->current_selection];
 
     strcpy(dstMenu->name, selectedMenu->name);
 
-    badge_system_data()->mute = selectedMenu->attrib & 0x1; /* low order bits of attrib can store values */
+    badge_system_data()->ledBrightness = selectedMenu->attrib & 0xFF;
+    led_pwm_set_scale(badge_system_data()->ledBrightness);
 
     save_settings();
-    returnToMenus();
+    pop_app();
 }
+
+void buzzer_config_cb(struct badge_app *app);
 
 const struct menu_t buzzer_config_m[] = {
     {"Audio: On",   0|VERT_ITEM,     FUNCTION, { .func = buzzer_config_cb}, NULL },
@@ -242,18 +219,33 @@ struct menu_t buzzer_m[] = {
     {"Back", VERT_ITEM|LAST_ITEM|DEFAULT_ITEM, BACK, {NULL}, NULL },
 };
 
-void screen_save_lock_cb(__attribute__((unused)) struct menu_t *h) {
-    struct menu_t *selectedMenu;
-    selectedMenu = getSelectedMenu();
-    badge_system_data()->screensaver_disabled = selectedMenu->attrib & 0x1FF;
-    returnToMenus(); 
+void buzzer_config_cb(struct badge_app *app)
+{
+    struct menu_t *dstMenu, *selectedMenu;
+
+    dstMenu = &buzzer_m[0];
+    selectedMenu = &app->menu[app->current_selection];
+
+    strcpy(dstMenu->name, selectedMenu->name);
+
+    badge_system_data()->mute = selectedMenu->attrib & 0x1; /* low order bits of attrib can store values */
+
+    save_settings();
+    pop_app();
 }
 
-void screen_save_invert_cb(__attribute__((unused)) struct menu_t *menu)
+void screen_save_lock_cb(struct badge_app *app)
+{
+    struct menu_t *selectedMenu = &app->menu[app->current_selection];
+    badge_system_data()->screensaver_disabled = selectedMenu->attrib & 0x1FF;
+    pop_app(); 
+}
+
+void screen_save_invert_cb(__attribute__((unused)) struct badge_app *app)
 {
     SYSTEM_DATA *system_data = badge_system_data();
     system_data->screensaver_inverted = !system_data->screensaver_inverted;
-    returnToMenus();
+    pop_app();
 }
 
 const struct menu_t screen_lock_m[] = {
@@ -344,7 +336,7 @@ static void clear_nvram_run(void)
 static void clear_nvram_exit(void)
 {
 	clear_nvram_state = CLEAR_NVRAM_INIT;
-	returnToMenus();
+	pop_app();
 }
 
 static void clear_nvram_unplug(void)
@@ -371,7 +363,7 @@ static void clear_nvram_wipe(void)
 	clear_nvram_state = CLEAR_NVRAM_UNPLUG;
 }
 
-void clear_nvram_cb(__attribute__((unused)) struct menu_t *unused)
+void clear_nvram_cb(__attribute__((unused)) struct badge_app *app)
 {
 	switch (clear_nvram_state) {
 	case CLEAR_NVRAM_INIT:
