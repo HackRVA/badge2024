@@ -136,12 +136,12 @@ static int radv_mic_eval_loud(__attribute__((unused)) void *arg)
 
 static int radv_mic_eval_quiet(__attribute__((unused)) void *arg)
 {
-	return (m_radv_avg_dBFS > -50) && (m_radv_avg_dBFS < -40);
+	return (m_radv_avg_dBFS > -80) && (m_radv_avg_dBFS < -50);
 }
 
 static int radv_mic_eval_vquiet(__attribute__((unused)) void *arg)
 {
-	return m_radv_avg_dBFS < -60;
+	return m_radv_avg_dBFS <= -80;
 }
 
 static int radv_mic_eval_gt(void *argument)
