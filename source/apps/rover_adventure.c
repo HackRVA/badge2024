@@ -200,14 +200,14 @@ static int radv_color_senor_dim_eval(__attribute__((unused)) void *argument)
 {
 	/* Dim but NOT dark. -PMW */
 	static int dim_count = 0;
-	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 25)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] < 60)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 50)
+	if ((m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] > 10)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_RED] < 50)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] > 20)
 	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_GREEN] < 100)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 20)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] < 55)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] < 320)
-	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 80)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] > 10)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_BLUE] < 50)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] < 200)
+	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_WHITE] > 40)
 	     && (m_radv_color_sample.rgbwi[COLOR_SAMPLE_INDEX_IR] < 100)) {
 		dim_count++;
 	} else {
