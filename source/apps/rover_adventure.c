@@ -391,7 +391,7 @@ struct radv_temperature_spec {
 };
 
 static const struct radv_temperature_spec radv_temperature_hot = {
-	.lbound = 55,
+	.lbound = 75,
 	.ubound = INT8_MAX,
 };
 
@@ -407,7 +407,7 @@ static const struct radv_temperature_spec radv_temperature_cool = {
 
 static const struct radv_temperature_spec radv_temperature_cold = {
 	.lbound = INT8_MIN,
-	.ubound = 10, // Be careful if using ice water!
+	.ubound = 8, // Be careful if using ice water!
 };
 
 static int radv_temperature_eval(void *arg)
