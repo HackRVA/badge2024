@@ -282,8 +282,7 @@ void matrix(void)
 {
 #define NUM_MATRIX_DOODADS 5
 	static int x[NUM_MATRIX_DOODADS], y[NUM_MATRIX_DOODADS];
-	static int started = 0;
-	if (!started) {
+	if (!animation_count) {
 		FbColor(x11_light_green);
 		FbBackgroundColor(BLACK);
 		FbClear();
@@ -291,7 +290,7 @@ void matrix(void)
 			x[i] = random_num(LCD_XSIZE / 8);
 			y[i] = random_num(LCD_YSIZE / 8);
 		}
-		started = 1;
+		animation_count = 1;
 	}
 
 	for (int i = 0; i < NUM_MATRIX_DOODADS; i++) {
