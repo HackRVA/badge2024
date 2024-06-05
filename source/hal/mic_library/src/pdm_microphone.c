@@ -95,7 +95,7 @@ int pdm_microphone_init(const struct pdm_microphone_config* config) {
 
     pdm_mic.filter.Fs = config->sample_rate;
     pdm_mic.filter.LP_HZ = config->sample_rate / 2;
-    pdm_mic.filter.HP_HZ = 10;
+    pdm_mic.filter.HP_HZ = 100;
     pdm_mic.filter.In_MicChannels = 1;
     pdm_mic.filter.Out_MicChannels = 1;
     pdm_mic.filter.Decimation = PDM_DECIMATION;
