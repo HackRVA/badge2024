@@ -162,10 +162,12 @@ static uint16_t radb_color_from_dBFS(int8_t dB)
 		return RED;
 	else if (dB > -18)
 		return YELLOW;
-	else if (dB > -44)
+	else if (dB > -48)
 		return GREEN;
-	else
+	else if (dB > -72)
 		return BLUE;
+	else
+		return PURPLE;
 }
 
 /*----- Color sensor ---------------------------------------------------------*/
