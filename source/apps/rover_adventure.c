@@ -619,16 +619,22 @@ static void radv_audio(void)
 	unsigned i = mic_index + ARRAY_SIZE(mic_peaks) - 1;
 	i %= ARRAY_SIZE(mic_peaks);
 
+	static int8_t prev_peak_dBFS = INT8_MIN;
 	int8_t peak_dBFS = audio_dBFS(mic_peaks[i]);
+	if (prev_peak_dBFS > peak_dBFS) {
+		peak_dBFS = --prev_peak_dBFS;
+	} else {
+		prev_peak_dBFS = peak_dBFS;
+	}
 	FbColor(radb_color_from_dBFS(peak_dBFS));
-	int peak_height = (80 + peak_dBFS) * 1;
+	int peak_height = (90 + peak_dBFS) * 1;
 	if (peak_height < 1) peak_height = 1;
 	FbMove(102, LCD_YSIZE - (8 + peak_height));
 	FbRectangle(16, 1);
 
 	int8_t avg_dBFS = audio_dBFS(mic_averages[i]);
 	FbColor(radb_color_from_dBFS(avg_dBFS));
-	int avg_height = (80 + avg_dBFS) * 1;
+	int avg_height = (90 + avg_dBFS) * 1;
 	if (avg_height < 1) avg_height = 1;
 	FbMove(102, LCD_YSIZE - (8 + avg_height));
 	FbFilledRectangle(16, avg_height);
