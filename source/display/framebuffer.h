@@ -61,6 +61,11 @@ void FbTransparentIndex(unsigned short color);
 // void FbSprite(unsigned char picId, unsigned char imageNo);
 void FbCharacter(unsigned char charin);
 void FbRotCharacter(unsigned char charin);
+/*
+ * FbRoundedRect is just a rect where the edges do not touch.
+ * On a small screen, it kind of gives the illusion of a rounded rect.
+ */
+void FbRoundedRect(unsigned char width, unsigned char height, unsigned char stroke);
 void FbFilledRectangle(unsigned char width, unsigned char height);
 void FbPoint(unsigned char x, unsigned char y);
 // void FbPrintChar(unsigned char charin, unsigned char x, unsigned char y);
@@ -79,6 +84,7 @@ void FbWriteString(const char *string);
 void FbRotWriteLine(const char *string); /* write text rotated 90 degrees clockwise */
 void FbRotWriteString(const char *string);
 void FbRectangle(unsigned char width, unsigned char height);
+void FbDDACircle(int center_x, int center_y, int radius);
 void FbCircle(int x, int y, int r);
 
 /** @brief Render the asset with its upper left corner at the current frame buffer location.

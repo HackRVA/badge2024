@@ -801,6 +801,51 @@ void FbRotCharacter(unsigned char charin)
     G_Fb.changed = 1;
 }
 
+
+
+void FbRoundedRect(unsigned char width, unsigned char height, unsigned char stroke)
+{
+    if (width <= stroke * 2 || height <= stroke * 2) return;
+
+    unsigned char y_min = G_Fb.pos.y;
+    unsigned char y_max = G_Fb.pos.y + height - 1;
+    unsigned char x_min = G_Fb.pos.x;
+    unsigned char x_max = G_Fb.pos.x + width - 1;
+
+    if (y_max >= LCD_YSIZE) y_max = LCD_YSIZE - 1;
+    if (y_min >= LCD_YSIZE) y_min = LCD_YSIZE - 1;
+
+    for (int i = 0; i < stroke; i++) {
+        for (int x = x_min + stroke; x < x_max - stroke; x++) {
+            if (FbOnScreen(x, y_min + i)) {
+                FbPoint(x, y_min + i);
+                fb_mark_row_changed(x, y_min + i);
+            }
+            if (FbOnScreen(x, y_max - stroke + i)) {
+                FbPoint(x, y_max - stroke + i);
+                fb_mark_row_changed(x, y_max - stroke + i);
+            }
+        }
+    }
+
+    for (int i = 0; i < stroke; i++) {
+        for (int y = y_min + stroke; y < y_max - stroke; y++) {
+            if (FbOnScreen(x_min + i, y)) {
+                FbPoint(x_min + i, y);
+                fb_mark_row_changed(x_min + i, y);
+            }
+            if (FbOnScreen(x_max - stroke + i, y)) {
+                FbPoint(x_max - stroke + i, y);
+                fb_mark_row_changed(x_max - stroke + i, y);
+            }
+        }
+    }
+
+    G_Fb.changed = 1;
+}
+
+
+
 void FbFilledRectangle(unsigned char width, unsigned char height)
 {
     unsigned int y, x, endX, endY;
@@ -999,6 +1044,40 @@ int FbOnScreen(int x, int y)
 	if (y < 0 || y >= LCD_YSIZE)
 		return 0;
 	return 1;
+}
+
+void FbDDACircle(int center_x, int center_y, int radius)
+{
+	int current_x = center_x;
+	int current_y = center_y;
+
+	int r2 = radius + radius;
+	int x = radius;
+	int y = 0;
+	int delta_y = -2;
+	int delta_x = r2 + r2 - 4;
+	int delta = r2 - 1;
+
+	while (y <= x) {
+		FbPoint(current_x - x, current_y - y);
+		FbPoint(current_x + x, current_y - y);
+		FbPoint(current_x - x, current_y + y);
+		FbPoint(current_x + x, current_y + y);
+
+		FbPoint(current_x - y, current_y - x);
+		FbPoint(current_x + y, current_y - x);
+		FbPoint(current_x - y, current_y + x);
+		FbPoint(current_x + y, current_y + x);
+
+		delta += delta_y;
+		delta_y -= 4;
+		++y;
+
+		int mask = (delta >> 31);
+		delta += delta_x & mask;
+		delta_x -= 4 & mask;
+		x += mask;
+	}
 }
 
 void FbCircle(int cx, int cy, int r)
