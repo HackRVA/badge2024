@@ -801,8 +801,6 @@ void FbRotCharacter(unsigned char charin)
     G_Fb.changed = 1;
 }
 
-
-
 void FbRoundedRect(unsigned char width, unsigned char height, unsigned char stroke)
 {
     if (width <= stroke * 2 || height <= stroke * 2) return;
