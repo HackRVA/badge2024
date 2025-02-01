@@ -37,6 +37,28 @@ static const char *menu_items[NUM_MENU_ITEMS] = {
 	"exit",
 };
 
+static struct palette default_palette = {
+	.colors =
+		{
+			PACKRGB888(0, 0, 0),
+			PACKRGB888(127, 36, 84),
+			PACKRGB888(28, 43, 83),
+			PACKRGB888(0, 135, 81),
+			PACKRGB888(171, 82, 54),
+			PACKRGB888(96, 88, 79),
+			PACKRGB888(195, 195, 198),
+			PACKRGB888(255, 241, 233),
+			PACKRGB888(237, 27, 81),
+			PACKRGB888(250, 162, 27),
+			PACKRGB888(247, 236, 47),
+			PACKRGB888(93, 187, 77),
+			PACKRGB888(81, 166, 220),
+			PACKRGB888(131, 118, 156),
+			PACKRGB888(241, 118, 166),
+			PACKRGB888(252, 204, 171),
+		},
+};
+
 static uint64_t board = 0;
 static uint64_t prev_board = 0;
 static unsigned int random_num_state = 0;
@@ -258,7 +280,7 @@ static void twenty_forty_eight_init(void)
 {
 	FbInit();
 	FbClear();
-	palette_init();
+
 	twenty_forty_eight_state = TWENTY_FORTY_EIGHT_MENU;
 	screen_changed = 1;
 
@@ -349,19 +371,24 @@ static void draw_menu(void)
 			.height = MENU_ITEM_HEIGHT,
 			.text = menu_items[i],
 			.outline_size = 3,
-			.outline_color = palette_color_from_index(12),
-			.fill_color = palette_color_from_index(2),
-			.text_color = palette_color_from_index(7),
+			.outline_color =
+				palette_color_from_index(default_palette, 12),
+			.fill_color =
+				palette_color_from_index(default_palette, 2),
+			.text_color =
+				palette_color_from_index(default_palette, 7),
 		};
 
 		if (i == current_menu_item) {
-			button.outline_color = palette_color_from_index(6);
+			button.outline_color =
+				palette_color_from_index(default_palette, 6);
 			if (current_menu_item_selected)
-				button.fill_color = palette_color_from_index(5);
+				button.fill_color = palette_color_from_index(
+					default_palette, 5);
 		}
 
 		ui_button_dither_fill(button, button.fill_color,
-			palette_color_from_index(0), 1);
+			palette_color_from_index(default_palette, 0), 1);
 		ui_button_draw_outline(button, button.outline_color);
 		ui_button_draw_label(button, button.text_color);
 	}
@@ -457,13 +484,17 @@ static void draw_game_board(void)
 				.width = scaled_size,
 				.height = scaled_size,
 				.outline_size = 2,
-				.outline_color = palette_color_from_index(7),
+				.outline_color = palette_color_from_index(
+					default_palette, 7),
 				.fill_color = tile_value == 6
-					? palette_color_from_index(0)
+					? palette_color_from_index(
+						  default_palette, 0)
 					: palette_color_from_index(
+						  default_palette,
 						  tile_value + 1),
 				.text_color = tile_value == 0
-					? palette_color_from_index(1)
+					? palette_color_from_index(
+						  default_palette, 1)
 					: WHITE,
 			};
 

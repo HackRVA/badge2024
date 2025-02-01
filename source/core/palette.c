@@ -6,72 +6,41 @@
 #include "framebuffer.h"
 #include "palette.h"
 
-static const uint32_t default_palette[16] = {
-	PACKRGB888(0, 0, 0),
-	PACKRGB888(127, 36, 84),
-	PACKRGB888(28, 43, 83),
-	PACKRGB888(0, 135, 81),
-	PACKRGB888(171, 82, 54),
-	PACKRGB888(96, 88, 79),
-	PACKRGB888(195, 195, 198),
-	PACKRGB888(255, 241, 233),
-	PACKRGB888(237, 27, 81),
-	PACKRGB888(250, 162, 27),
-	PACKRGB888(247, 236, 47),
-	PACKRGB888(93, 187, 77),
-	PACKRGB888(81, 166, 220),
-	PACKRGB888(131, 118, 156),
-	PACKRGB888(241, 118, 166),
-	PACKRGB888(252, 204, 171),
-};
+/*static const uint32_t default_palette[16] = {*/
+/*	PACKRGB888(0, 0, 0),*/
+/*	PACKRGB888(127, 36, 84),*/
+/*	PACKRGB888(28, 43, 83),*/
+/*	PACKRGB888(0, 135, 81),*/
+/*	PACKRGB888(171, 82, 54),*/
+/*	PACKRGB888(96, 88, 79),*/
+/*	PACKRGB888(195, 195, 198),*/
+/*	PACKRGB888(255, 241, 233),*/
+/*	PACKRGB888(237, 27, 81),*/
+/*	PACKRGB888(250, 162, 27),*/
+/*	PACKRGB888(247, 236, 47),*/
+/*	PACKRGB888(93, 187, 77),*/
+/*	PACKRGB888(81, 166, 220),*/
+/*	PACKRGB888(131, 118, 156),*/
+/*	PACKRGB888(241, 118, 166),*/
+/*	PACKRGB888(252, 204, 171),*/
+/*};*/
 
-static uint32_t loaded_palette[16] = {0};
-static uint8_t palette_replacements[16] = {0};
-
-void palette_init(void)
+uint16_t palette_get_color(struct palette palette, uint8_t index)
 {
-	memcpy(loaded_palette, default_palette, sizeof(default_palette));
-	for (int i = 0; i < 16; i++) {
-		palette_replacements[i] = i;
-	}
+	uint8_t replaced_index = palette.replacements[index];
+	return palette_color_from_index(palette, replaced_index);
 }
 
-uint32_t *palette_get_loaded_palette(void)
-{
-	return loaded_palette;
-}
-
-uint16_t palette_get_color(uint8_t index)
-{
-	uint8_t replaced_index = palette_replacements[index];
-	return palette_color_from_index(replaced_index);
-}
-
-void palette_load(const uint32_t palette[16])
-{
-	for (int i = 0; i < 16; i++) {
-		loaded_palette[i] = palette[i];
-	}
-}
-
-void palette_reset(void)
-{
-	memcpy(loaded_palette, default_palette, sizeof(default_palette));
-	for (int i = 0; i < 16; i++) {
-		palette_replacements[i] = i;
-	}
-}
-
-uint16_t palette_color_from_index(uint8_t index)
+uint16_t palette_color_from_index(struct palette palette, uint8_t index)
 {
 	if (index >= 16) {
 		return 0;
 	}
-	uint32_t rgb888 = loaded_palette[index];
+	uint32_t rgb888 = palette.colors[index];
 	return rgb888;
 }
 
-uint32_t palette_color_from_hex(const char *hex_digit)
+uint32_t palette_color_from_hex(struct palette palette, const char *hex_digit)
 {
 	if (strlen(hex_digit) != 1) {
 		return 0;
@@ -91,13 +60,14 @@ uint32_t palette_color_from_hex(const char *hex_digit)
 	}
 
 	if (index >= 0 && index < 16) {
-		return loaded_palette[index];
+		return palette.colors[index];
 	} else {
 		return 0;
 	}
 }
 
-void palette_draw_grid(int grid_x, int grid_y, int tile_size)
+void palette_draw_grid(
+	struct palette palette, int grid_x, int grid_y, int tile_size)
 {
 	int rect_width = tile_size * 2;
 	int rect_height = tile_size * 2;
@@ -108,7 +78,7 @@ void palette_draw_grid(int grid_x, int grid_y, int tile_size)
 		int x = grid_x + (i % 4) * (rect_width + margin);
 		int y = grid_y + (i / 4) * (rect_height + margin);
 
-		FbColor(loaded_palette[i]);
+		FbColor(palette.colors[i]);
 		FbMove(x, y);
 		FbFilledRectangle(rect_width, rect_height);
 
@@ -121,16 +91,17 @@ void palette_draw_grid(int grid_x, int grid_y, int tile_size)
 	}
 }
 
-void palette_replace_color(uint8_t original_index, uint8_t replacement_index)
+void palette_replace_color(struct palette *palette, uint8_t original_index,
+	uint8_t replacement_index)
 {
 	if (original_index < 16 && replacement_index < 16) {
-		palette_replacements[original_index] = replacement_index;
+		palette->replacements[original_index] = replacement_index;
 	}
 }
 
-void palette_clear_replacement(uint8_t original_index)
+void palette_clear_replacement(struct palette *palette, uint8_t original_index)
 {
 	if (original_index < 16) {
-		palette_replacements[original_index] = original_index;
+		palette->replacements[original_index] = original_index;
 	}
 }
