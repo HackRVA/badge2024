@@ -3,6 +3,7 @@
 
 #define RGBPACKED(R,G,B) ( ((unsigned short)(R)<<11) | ((unsigned short)(G)<<6) | (unsigned short)(B) )
 #define PACKRGB(R,G,B) ( ((unsigned short)(R)<<11) | ((unsigned short)(G)<<6) | (unsigned short)(B) )
+#define PACKRGB888(R, G, B)	(((((R) >> 3) & 0x1F) << 11) | ((((G) >> 2) & 0x3F) << 5) | (((B) >> 3) & 0x1F))
 
 #define UNPACKR(PACKED) (((PACKED & 0b1111100000000000) >> 11) &  0b11111)
 #define UNPACKG(PACKED) (((PACKED & 0b0000011111100000) >>  5) & 0b111111)
