@@ -1,21 +1,41 @@
 #!/bin/sh
+set -e
 
-echo "$PATH" | grep emscripten
-if [ "$?" = "1" ]
-then
-	echo "You need to source emsdk_env.sh first." 1>&2
-	exit 1
+EMSDK_DIR="./build_wasm/_deps/emsdk-src"
+
+if [ ! -d "$EMSDK_DIR" ]; then
+    echo "Emscripten SDK not found. Cloning..."
+    mkdir -p build_wasm/_deps
+    git clone --depth 1 https://github.com/emscripten-core/emsdk.git "$EMSDK_DIR"
+    cd "$EMSDK_DIR"
+    ./emsdk install latest
+    ./emsdk activate latest
+    cd ../../..
 fi
 
-emcmake cmake -S . -B build_wasm_sim/ -DTARGET=WASM -DCMAKE_BUILD_TYPE=DEBUG -G "Unix Makefiles"
+if [ -f "${EMSDK_DIR}/emsdk_env.sh" ]; then
+    echo "Sourcing emsdk_env.sh..."
+    source "${EMSDK_DIR}/emsdk_env.sh"
+    export PATH="$EMSDK_DIR/upstream/emscripten:$EMSDK_DIR/upstream/bin:$PATH"
+else
+    echo "Error: emsdk_env.sh not found after installation."
+    exit 1
+fi
 
-echo
-echo
-echo "Now cd build_wasm_sim and type 'emmake make'"
-echo "then cd to source, and run 'python -m SimpleHTTPServer'"
-echo "then point your browser at 'localhost:8000'"
-echo
-echo "Note: this doesn't actually seem to work yet."
-echo
-echo
+if ! command -v emcmake &> /dev/null; then
+    echo "Error: emcmake command not found. Manually adding to PATH..."
+    export PATH="$EMSDK_DIR/upstream/emscripten:$EMSDK_DIR/upstream/bin:$PATH"
+fi
 
+cd ./build_wasm/
+
+which emcmake || { echo "Error: emcmake still not found."; exit 1; }
+
+echo "Running emcmake cmake ..."
+emcmake cmake .. -DTARGET=WASM -DCMAKE_EXPORT_COMPILE_COMMANDS=1 || exit 1
+
+echo "Building with emmake ..."
+emmake make
+
+echo "Starting local HTTP server ..."
+cmake --build . --target run_server
