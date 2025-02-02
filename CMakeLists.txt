@@ -5,7 +5,7 @@ set(PICO_SDK_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK from Git. Default o
 set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git. Default on.")
 set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
 set(PRODUCT "badge2024_c")
-set(SIMULATOR_AUDIO "yes") # change to "no" to avoid compiling audio code in simulator
+set(SIMULATOR_AUDIO "no") # change to "no" to avoid compiling audio code in simulator
 set(BADGE_HAS_ROTARY_SWITCHES "no")
 set(BUILD_IMAGE_TEST_PROGRAM "no") # change to "yes" to build image test app
 
@@ -23,6 +23,10 @@ enable_testing()
 
 if (${TARGET} STREQUAL "WASM")
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+  set(PNG_LIBRARY "-sUSE_LIBPNG")
+  set(PNG_PNG_INCLUDE_DIR "${EMSCRIPTEN_ROOT}/system/include")
+  # set(ZLIB_LIBRARY "-sUSE_ZLIB")
+  # set(ZLIB_INCLUDE_DIR "${EMSCRIPTEN_ROOT}/system/include")
 endif()
 
 if (${BUILD_IMAGE_TEST_PROGRAM} STREQUAL "yes")
@@ -62,7 +66,30 @@ if (${TARGET} STREQUAL "SIMULATOR" OR ${TARGET} STREQUAL "SDL_SIMULATOR")
 endif()
 
 if (${TARGET} STREQUAL "WASM")
-	add_compile_options(-sUSE_SDL=2 -sUSE_LIBPNG)
+  add_compile_options(
+    -sUSE_SDL=2
+    -sUSE_LIBPNG
+    -sUSE_ZLIB
+    -pthread
+  )
+
+  add_link_options(
+    -sALLOW_MEMORY_GROWTH=1 
+    -pthread 
+    -sPTHREAD_POOL_SIZE_STRICT=8
+    -sUSE_SDL=2 
+    -sUSE_LIBPNG
+    -sUSE_ZLIB
+    -sASYNCIFY
+    --preload-file ${CMAKE_SOURCE_DIR}/images@/images
+  )
+
+  # this step assumes you have go installed.
+  add_custom_target(run_server
+    COMMAND go run ${CMAKE_SOURCE_DIR}/tools/wasm_serve.go
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    COMMENT "Starting local HTTP server with required headers on localhost:8000"
+  )
 endif()
 
 if (${BADGE_HAS_ROTARY_SWITCHES} STREQUAL "yes")

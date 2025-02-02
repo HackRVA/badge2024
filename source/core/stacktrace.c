@@ -1,6 +1,9 @@
 #ifdef TARGET_SIMULATOR
 #include <signal.h>
+#ifdef __EMSCRIPTEN__
+#else
 #include <execinfo.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,6 +11,10 @@
 
 void stacktrace(char *msg)
 {
+#ifdef __EMSCRIPTEN__
+	(void)msg;
+	/*not supported in wasm builds*/
+#else
 	void *trace[30];
 	char **traceline = (char **) NULL;
 	int i, trace_size = 0;
@@ -23,5 +30,6 @@ void stacktrace(char *msg)
 	for (i=0; i < trace_size; ++i)
 		fprintf(stderr, "- %s\n", traceline[i]);
 	free(traceline);
+#endif
 }
 #endif
