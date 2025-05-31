@@ -66,6 +66,7 @@ func main() {
 	})
 
 	fmt.Printf("Serving on http://localhost:%s\n", port)
+	fmt.Printf("http://localhost:8080/badge2024_c.html")
 	err = http.ListenAndServe("0.0.0.0:"+port, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error starting server: %v\n", err)

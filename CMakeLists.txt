@@ -5,7 +5,7 @@ set(PICO_SDK_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK from Git. Default o
 set(PICO_EXTRAS_FETCH_FROM_GIT ON CACHE BOOL "Download Pico SDK Extras from Git. Default on.")
 set(TARGET "PICO" CACHE STRING "Target hardware. For now, only Pico, in the future, badge/simulator")
 set(PRODUCT "badge2024_c")
-set(SIMULATOR_AUDIO "no") # change to "no" to avoid compiling audio code in simulator
+set(SIMULATOR_AUDIO "yes") # change to "no" to avoid compiling audio code in simulator
 set(BADGE_HAS_ROTARY_SWITCHES "no")
 set(BUILD_IMAGE_TEST_PROGRAM "no") # change to "yes" to build image test app
 
@@ -23,10 +23,9 @@ enable_testing()
 
 if (${TARGET} STREQUAL "WASM")
 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
-  set(PNG_LIBRARY "-sUSE_LIBPNG")
-  set(PNG_PNG_INCLUDE_DIR "${EMSCRIPTEN_ROOT}/system/include")
-  # set(ZLIB_LIBRARY "-sUSE_ZLIB")
-  # set(ZLIB_INCLUDE_DIR "${EMSCRIPTEN_ROOT}/system/include")
+	set(SIMULATOR_AUDIO "no") # portaudio doesn't work in our wasm build
+	set(PNG_LIBRARY "-sUSE_LIBPNG")
+	set(PNG_PNG_INCLUDE_DIR "${EMSCRIPTEN_ROOT}/system/include")
 endif()
 
 if (${BUILD_IMAGE_TEST_PROGRAM} STREQUAL "yes")

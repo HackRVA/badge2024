@@ -60,6 +60,7 @@ dkms.conf
 # Build artifacts
 build/
 build_sim/
+build_wasm/
 build-pico/
 build-simulator/
 build_sdl_sim/
