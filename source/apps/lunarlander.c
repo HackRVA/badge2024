@@ -762,7 +762,7 @@ static void lunarlander_exit(void)
 	returnToMenus();
 }
 
-int lunarlander_cb(__attribute__((unused)) struct menu_t *m)
+void lunarlander_cb(__attribute__((unused)) struct menu_t *m)
 {
 	switch (lunarlander_state) {
 	case LUNARLANDER_INIT:
@@ -780,5 +780,4 @@ int lunarlander_cb(__attribute__((unused)) struct menu_t *m)
 	default:
 		break;
 	}
-	return 0;
 }
