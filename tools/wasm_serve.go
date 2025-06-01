@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -42,34 +43,45 @@ func copyDir(src, dst string) error {
 	})
 }
 
+var (
+	port    = flag.String("port", "8080", "Port to serve on")
+	srcDir  = flag.String("src", "", "Source directory to copy from (optional)")
+	destDir = flag.String("dir", "./build_wasm/source/", "Destination directory to copy to")
+
+	password string
+)
+
 func main() {
-	port := "8080"
-	srcDir := "./web/wasm-simulator/"
-	destDir := "./build_wasm/source/"
+	flag.Parse()
 
-	fmt.Println("Copying files...")
-	err := copyDir(srcDir, destDir)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error copying files: %v\n", err)
-		os.Exit(1)
+	if *srcDir != "" {
+		fmt.Println("Copying files...")
+		err := copyDir(*srcDir, *destDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error copying files: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println("Files copied successfully.")
+	} else {
+		fmt.Println("No source directory specified, skipping copy.")
 	}
-	fmt.Println("Files copied successfully.")
 
-	fs := http.FileServer(http.Dir(destDir))
+	password = os.Getenv("BADGESIM_PASSWORD")
 
-	// these headers seem to be required for the pthreads to work
-	// see: https://emscripten.org/docs/porting/pthreads.html
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
-		w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
-		fs.ServeHTTP(w, r)
-	})
+	http.Handle("/", http.HandlerFunc(fileHandler))
 
-	fmt.Printf("Serving on http://localhost:%s\n", port)
-	fmt.Printf("http://localhost:8080/badge2024_c.html")
-	err = http.ListenAndServe("0.0.0.0:"+port, nil)
+	fmt.Printf("Serving on :%s\n", *port)
+	err := http.ListenAndServe("0.0.0.0:"+*port, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error starting server: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func fileHandler(w http.ResponseWriter, r *http.Request) {
+	fs := http.FileServer(http.Dir(*destDir))
+	w.Header().Set("Cross-Origin-Opener-Policy", "same-origin")
+	w.Header().Set("Cross-Origin-Embedder-Policy", "require-corp")
+
+	fs.ServeHTTP(w, r)
 }

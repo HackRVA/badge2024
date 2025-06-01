@@ -37,5 +37,5 @@ emcmake cmake .. -DTARGET=WASM -DCMAKE_EXPORT_COMPILE_COMMANDS=1 || exit 1
 echo "Building with emmake ..."
 emmake make
 
-echo "Starting local HTTP server ..."
-cmake --build . --target run_server
+# echo "Starting local HTTP server ..."
+# cmake --build . --target run_server
